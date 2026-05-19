@@ -1,0 +1,208 @@
+import { useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import AppHeader from '../components/AppHeader';
+import SyncStatusChip from '../components/SyncStatusChip';
+import StatCard from '../components/StatCard';
+import ModuleSummaryCard from '../components/ModuleSummaryCard';
+import ListRow from '../components/ListRow';
+import ProgressBar from '../components/ProgressBar';
+import { useFinanceStore } from '../store/useFinanceStore';
+import { useStudiesStore } from '../store/useStudiesStore';
+import { useFitnessStore } from '../store/useFitnessStore';
+import { useTaskStore } from '../store/useTaskStore';
+import { formatCurrency, isOverdue, isToday } from '../utils/formatters';
+
+export default function Dashboard() {
+  const navigate = useNavigate();
+  const transactions = useFinanceStore((s) => s.transactions);
+  const budgetCategories = useFinanceStore((s) => s.budgetCategories);
+  const stockQuotes = useFinanceStore((s) => s.stockQuotes);
+  const refreshPortfolio = useFinanceStore((s) => s.refreshPortfolio);
+
+  const studies = useStudiesStore((s) => s.currentImport);
+  const studyCourses = useStudiesStore((s) => s.courses);
+  const previousGpa = useStudiesStore((s) => s.previousGpa);
+  const gradeMode = useStudiesStore((s) => s.gradeMode);
+
+  const fitness = useFitnessStore((s) => s.todaySession);
+  const sessions = useFitnessStore((s) => s.sessions);
+
+  const tasks = useTaskStore((s) => s.tasks);
+
+  useEffect(() => {
+    refreshPortfolio();
+  }, []);
+
+  const monthExpenses = useMemo(() => {
+    const now = new Date();
+    return transactions
+      .filter((t) => t.type === 'expense' && new Date(t.date).getMonth() === now.getMonth())
+      .reduce((s, t) => s + t.amount, 0);
+  }, [transactions]);
+
+  const monthBudget = useMemo(
+    () => budgetCategories.reduce((s, c) => s + c.monthlyLimit, 0),
+    [budgetCategories]
+  );
+  const budgetPct = monthBudget > 0 ? Math.round((monthExpenses / monthBudget) * 100) : 0;
+
+  const tasksToday = tasks.filter((t) => !t.completed && t.dueDate && isToday(t.dueDate)).length;
+  const tasksOverdue = tasks.filter((t) => !t.completed && t.dueDate && isOverdue(t.dueDate)).length;
+  const tasksOpen = tasks.filter((t) => !t.completed);
+
+  const workoutsThisWeek = useMemo(() => {
+    const weekAgo = Date.now() - 7 * 86400000;
+    return sessions.filter((s) => new Date(s.date).getTime() > weekAgo).length;
+  }, [sessions]);
+
+  const gpaDelta = studies && previousGpa != null
+    ? `${studies.calculatedGpa - previousGpa >= 0 ? '↑' : '↓'} ${Math.abs(studies.calculatedGpa - previousGpa).toFixed(2)} pts`
+    : studies ? `${studyCourses.length} courses` : 'No imports yet';
+
+  const gpaSuffix = gradeMode === 'ib' ? '/7' : '';
+  const gpaDisplay = studies ? studies.calculatedGpa.toFixed(2) + gpaSuffix : '—';
+
+  const fitnessSets = fitness && fitness.sets.length > 0
+    ? fitness.sets
+    : sessions[0]?.sets ?? [];
+
+  return (
+    <>
+      <AppHeader
+        title="NEXUS HQ"
+        action={
+          <>
+            <button
+              onClick={() => navigate('/goals')}
+              className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary"
+            >
+              🎯 Goals
+            </button>
+            <button
+              onClick={() => navigate('/review')}
+              className="text-xs px-2 py-1 rounded-sm border border-primary/60 text-primary active:bg-primary/10"
+            >
+              📊 Review
+            </button>
+          </>
+        }
+      />
+      <div className="space-y-3">
+        <SyncStatusChip />
+
+        <div>
+          <div className="sec mb-2">Overview</div>
+          <div className="grid grid-cols-2 gap-2">
+            <StatCard
+              value={formatCurrency(Math.max(0, monthBudget - monthExpenses))}
+              label="Budget Left"
+              sub={monthBudget > 0 ? `${budgetPct}% used` : 'No budgets set'}
+              tone={budgetPct > 90 ? 'danger' : budgetPct > 70 ? 'warning' : 'success'}
+              highlight
+            />
+            <StatCard
+              value={gpaDisplay}
+              label="GPA"
+              sub={gpaDelta}
+              tone={studies ? 'success' : 'default'}
+            />
+            <StatCard
+              value={`${workoutsThisWeek}×`}
+              label="Workouts/wk"
+              sub={workoutsThisWeek >= 4 ? '↔ On target' : 'Push harder'}
+            />
+            <StatCard
+              value={tasksToday}
+              label="Tasks today"
+              sub={tasksOverdue > 0 ? `${tasksOverdue} overdue ⚠` : 'All on track'}
+              tone={tasksOverdue > 0 ? 'danger' : 'default'}
+            />
+          </div>
+        </div>
+
+        <div className="sec mb-2">Modules</div>
+        <div className="grid grid-cols-1 gap-2">
+          <ModuleSummaryCard title="Finance" icon="💰" tag={monthBudget > 0 ? 'LIVE' : 'IDLE'} to="/finance">
+            {monthBudget > 0 ? (
+              <ProgressBar
+                label="Budget used"
+                value={monthExpenses}
+                max={monthBudget || 1}
+                format={(v, m) => `${Math.round((v / m) * 100)}%`}
+              />
+            ) : (
+              <Empty msg="No budgets yet" />
+            )}
+            {stockQuotes[0] ? (
+              <ListRow
+                label={`${stockQuotes[0].ticker} ${stockQuotes[0].cached ? '(cached)' : ''}`}
+                value={`$${stockQuotes[0].quote.c.toFixed(2)}`}
+              />
+            ) : (
+              <Empty msg="No portfolio holdings" />
+            )}
+          </ModuleSummaryCard>
+
+          <ModuleSummaryCard title="Studies" icon="📚" tag={studies ? 'TRACKING' : 'IDLE'} to="/studies">
+            {studyCourses.length > 0 ? (
+              studyCourses.slice(0, 2).map((c) => (
+                <ListRow
+                  key={c.id}
+                  label={c.name}
+                  value={gradeMode === 'ib' ? `${c.grade}/7` : `${c.grade}%`}
+                />
+              ))
+            ) : (
+              <>
+                <Empty msg="No courses yet" />
+                <Empty msg="Add or import to track GPA" />
+              </>
+            )}
+            {studyCourses.length === 1 && <Empty msg=" " />}
+          </ModuleSummaryCard>
+
+          <ModuleSummaryCard title="Fitness" icon="💪" tag={fitness ? 'TODAY' : 'IDLE'} to="/fitness">
+            {fitnessSets.length > 0 ? (
+              fitnessSets.slice(0, 2).map((s) => (
+                <ListRow
+                  key={s.id}
+                  label={s.exercise}
+                  value={`${s.weightKg ?? 'BW'}${s.weightKg ? 'kg' : ''} × ${s.reps}`}
+                />
+              ))
+            ) : (
+              <>
+                <Empty msg="No workouts logged" />
+                <Empty msg="Tap to log your first set" />
+              </>
+            )}
+            {fitnessSets.length === 1 && <Empty msg=" " />}
+          </ModuleSummaryCard>
+
+          <ModuleSummaryCard title="Tasks" icon="✅" tag={tasksOverdue > 0 ? 'OVERDUE' : tasksOpen.length > 0 ? 'OPEN' : 'CLEAR'} to="/tasks">
+            {tasksOpen.length > 0 ? (
+              tasksOpen.slice(0, 2).map((t) => (
+                <ListRow
+                  key={t.id}
+                  label={t.title}
+                  tag={t.dueDate && isOverdue(t.dueDate) ? { text: 'Late', tone: 'red' } :
+                       t.dueDate && isToday(t.dueDate) ? { text: 'Today', tone: 'amber' } : undefined}
+                />
+              ))
+            ) : (
+              <>
+                <Empty msg="All clear" />
+                <Empty msg="Tap to add a task" />
+              </>
+            )}
+            {tasksOpen.length === 1 && <Empty msg=" " />}
+          </ModuleSummaryCard>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function Empty({ msg }: { msg: string }) {
+  return <div className="text-[11px] text-text-muted/70 italic">{msg}</div>;
+}

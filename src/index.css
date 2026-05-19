@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html, body, #root {
+    height: 100%;
+    background: #0D1117;
+  }
+
+  body {
+    @apply font-body text-text antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+    user-select: none;
+  }
+
+  /* Form controls keep normal selection so the user can highlight/copy text. */
+  input, textarea, [contenteditable="true"] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* The Android Chromium WebView shows a native URL preview tooltip under
+     the finger when the user long-presses an <a> tag. -webkit-touch-callout
+     is non-standard and not honored by Chromium, and it's a non-inherited
+     property anyway — body-level rules don't reach anchors. Most internal
+     navigation now uses <button> + useNavigate (see BottomTabBar). For any
+     remaining anchors (auth screens, etc.), we drop href targeting at the
+     style layer and rely on click handlers, which suppresses the preview. */
+  a:not([target="_blank"]) {
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* External links (news headlines opened via system browser) — keep the
+     native long-press menu so the user can copy/share. */
+  a[target="_blank"] {
+    -webkit-touch-callout: default;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+    letter-spacing: -0.02em;
+  }
+
+  input, textarea, select, button {
+    font-family: inherit;
+  }
+
+  /* iOS safe area helpers */
+  .safe-top { padding-top: env(safe-area-inset-top); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+}
+
+@layer components {
+  .card {
+    @apply bg-surface border border-border rounded-md p-3;
+  }
+  .card-elevated {
+    @apply bg-surface2 border border-border rounded-lg p-4;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-surface text-xs text-text-muted transition-colors active:scale-[0.98];
+  }
+  .chip-on {
+    @apply border-primary/60 bg-primary/10 text-primary;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-3 rounded-md bg-primary text-bg font-heading font-semibold text-sm tracking-tight active:scale-[0.98] disabled:opacity-50;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-3 rounded-md bg-transparent border border-border text-text font-heading font-medium text-sm active:scale-[0.98];
+  }
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs rounded-sm;
+  }
+
+  .input {
+    @apply w-full bg-surface2 border border-border rounded-md px-3 py-3 text-sm text-text placeholder:text-text-muted/60 focus:outline-none focus:border-primary;
+  }
+
+  .stat-box {
+    @apply bg-surface border border-border rounded-md p-3 flex flex-col gap-0.5;
+  }
+  .stat-box-hi {
+    @apply border-primary/40 shadow-glow;
+  }
+
+  .sec {
+    @apply text-[10px] uppercase tracking-[0.12em] text-text-muted font-medium;
+  }
+
+  .alert {
+    @apply flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-xs;
+  }
+  .alert-warn {
+    @apply border-warning/40 bg-warning/5 text-warning;
+  }
+  .alert-ok {
+    @apply border-success/40 bg-success/5 text-success;
+  }
+  .alert-danger {
+    @apply border-danger/40 bg-danger/5 text-danger;
+  }
+
+  /* Hide scrollbars in the phone shell while keeping scroll */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+

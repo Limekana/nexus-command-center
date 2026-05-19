@@ -1,0 +1,6 @@
+# Force LF on shell scripts so git hooks stay executable under Git Bash on
+# Windows. Git for Windows defaults to CRLF, which would inject \r into the
+# shebang line and break hook execution.
+.githooks/* text eol=lf
+*.sh text eol=lf
+*.mjs text eol=lf

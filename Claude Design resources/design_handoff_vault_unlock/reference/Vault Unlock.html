@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nexus — Vault Unlock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #08080A; color: #E6EDF3;
+    font-family: 'Inter', system-ui, sans-serif;
+    overflow: hidden; -webkit-font-smoothing: antialiased;
+  }
+  body {
+    display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(ellipse at 50% 0%, #0F1822 0%, #050810 60%, #000 100%);
+  }
+
+  /* ─── Stage layout — phone-sized canvas, no chrome around it ─── */
+  .stage {
+    position: relative;
+    width: 412px; height: 892px;
+    border-radius: 44px;
+    overflow: hidden;
+    background: #05080D;
+    box-shadow:
+      0 50px 120px rgba(0, 0, 0, 0.7),
+      0 0 0 1px rgba(34, 211, 238, 0.04),
+      0 0 0 8px #0A0C12,
+      0 0 0 9px #1A1E26;
+  }
+  .stage::before {
+    /* subtle screen shine */
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 30%);
+    pointer-events: none; z-index: 50;
+  }
+
+  /* ── Status bar (decorative — matches the screenshots) ── */
+  .stage-status {
+    position: absolute; top: 0; left: 0; right: 0; height: 36px; z-index: 30;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 24px 0;
+    font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
+    color: #E6EDF3; letter-spacing: 0.01em; pointer-events: none;
+  }
+  .stage-status .right { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .stage-status .battery {
+    background: rgba(255,255,255,0.15); border-radius: 10px;
+    padding: 1px 7px; font-size: 11px; font-weight: 500;
+  }
+  /* Hide status bar while locked or during unlock — content slides under */
+
+  /* ─── VAULT UNLOCK — the iris itself ─────────────────────── */
+  .vault-unlock {
+    position: absolute; inset: 0;
+    z-index: 20;
+    pointer-events: none; /* doesn't intercept taps */
+    /* Custom props are set inline by the React component */
+  }
+
+  /* Soft vignette beneath the blades — kills any thin seams */
+  .iris-vignette {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 50% 50%, #0A1018 0%, #05080D 55%, #000 100%);
+    animation: vignetteOut var(--duration) cubic-bezier(.5,.0,.2,1) forwards;
+    will-change: opacity;
+  }
+  @keyframes vignetteOut {
+    0%   { opacity: 1; }
+    70%  { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  /* SVG layer holding all blades. Sized to fully cover the stage. */
+  .iris-blades-svg {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    overflow: visible;
+    /* Single drop-shadow on the whole SVG cheaper than per-blade filter */
+    filter:
+      drop-shadow(0 0 6px rgba(21, 101, 192, 0.35))
+      drop-shadow(0 0 16px rgba(34, 211, 238, 0.16));
+  }
+
+  .iris-blade {
+    /* Rotate around the blade apex which sits at (0,0) in SVG user space
+       — i.e. the geometric center of the viewport. */
+    transform-origin: 0 0;
+    transform-box: view-box;
+    transform: rotate(var(--base-rot));
+    animation-name: bladeOpen;
+    animation-timing-function: cubic-bezier(.55, .05, .25, 1);
+    animation-fill-mode: forwards;
+    animation-delay: var(--blade-delay);
+    will-change: transform, opacity;
+  }
+
+  /* Each blade rotates ~30° around viewport center AND translates outward
+     along its local "up" axis (radial after rotation). The inner vertex
+     pulls away from center first → aperture opens from the middle out,
+     exactly like a real camera iris. The brief 0→18% hold lets the user
+     register the closed-iris state before it starts to open.
+     translateY uses viewBox user units (1 unit = 1% of stage height). */
+  @keyframes bladeOpen {
+    0%   { transform: rotate(var(--base-rot))                translateY(0)      scale(1);    opacity: 1; }
+    18%  { transform: rotate(var(--base-rot))                translateY(0)      scale(1);    opacity: 1; }
+    36%  { transform: rotate(calc(var(--base-rot) + 6deg))   translateY(-4px)   scale(1);    opacity: 1; }
+    62%  { transform: rotate(calc(var(--base-rot) + 16deg))  translateY(-26px)  scale(1.04); opacity: 1; }
+    82%  { transform: rotate(calc(var(--base-rot) + 24deg))  translateY(-60px)  scale(1.08); opacity: 0.7; }
+    100% { transform: rotate(calc(var(--base-rot) + 30deg))  translateY(-120px) scale(1.12); opacity: 0; }
+  }
+
+  /* ── Core: small glow at center, pulses & fades ── */
+  .iris-core {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 12px; height: 12px;
+    border-radius: 99px;
+    background: var(--core-color);
+    transform: translate(-50%, -50%) scale(0);
+    box-shadow:
+      0 0 12px var(--core-color),
+      0 0 28px var(--core-color),
+      0 0 60px rgba(34, 211, 238, 0.6);
+    animation: coreFlash var(--duration) cubic-bezier(.2, .8, .3, 1) forwards;
+    will-change: transform, opacity;
+  }
+  @keyframes coreFlash {
+    0%   { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+    18%  { transform: translate(-50%, -50%) scale(1.4); opacity: 1; }
+    45%  { transform: translate(-50%, -50%) scale(3.5); opacity: 0.55; }
+    75%  { transform: translate(-50%, -50%) scale(7); opacity: 0.2; }
+    100% { transform: translate(-50%, -50%) scale(11); opacity: 0; }
+  }
+
+  /* ── Scanline: thin horizontal bar that sweeps top → bottom ── */
+  .iris-scanline {
+    position: absolute;
+    left: 0; right: 0;
+    top: 0;
+    height: 2px;
+    background: var(--scanline-color);
+    box-shadow:
+      0 0 var(--scanline-glow) var(--scanline-color),
+      0 0 calc(var(--scanline-glow) * 2.5) rgba(21, 101, 192, 0.4);
+    transform: translateY(-20px);
+    opacity: 0;
+    animation: scanSweep var(--duration) cubic-bezier(.45, .1, .25, 1) forwards;
+    will-change: transform, opacity;
+    mix-blend-mode: screen;
+  }
+  @keyframes scanSweep {
+    0%   { transform: translateY(-20px); opacity: 0; }
+    10%  { opacity: 1; }
+    50%  { opacity: 1; }
+    90%  { transform: translateY(900px); opacity: 0.8; }
+    100% { transform: translateY(920px); opacity: 0; }
+  }
+
+  /* ── Lockscreen pulse ring on the fingerprint target ── */
+  @keyframes pulseRing {
+    0%, 100% {
+      box-shadow: 0 0 32px rgba(34, 211, 238, 0.25), inset 0 0 14px rgba(34, 211, 238, 0.2);
+    }
+    50% {
+      box-shadow: 0 0 48px rgba(34, 211, 238, 0.55), inset 0 0 18px rgba(34, 211, 238, 0.35);
+    }
+  }
+
+  /* ── Footer caption (small dev-mode breadcrumb under the device) ── */
+  .stage-caption {
+    position: absolute; bottom: 24px; left: 0; right: 0; text-align: center;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase;
+    color: rgba(125, 133, 144, 0.7);
+  }
+  .stage-caption b { color: rgba(34, 211, 238, 0.8); font-weight: 600; }
+
+  /* status bar — hide on lock screen so the secure modal feels full-bleed */
+  .stage-status[data-hidden="1"] { opacity: 0; }
+</style>
+</head>
+<body>
+
+<!-- Status bar (mock) -->
+<div class="stage-wrapper" style="position:relative;">
+  <div class="stage" id="stage">
+    <div class="stage-status" id="stageStatus">
+      <span>18:07&nbsp;&nbsp;Wed, May 13</span>
+      <span class="right">
+        <span style="font-size:12px;">⬆⬇ 5</span>
+        <span style="font-size:12px;">⌬</span>
+        <span class="battery">48</span>
+      </span>
+    </div>
+    <div id="root" style="position:absolute; inset: 0;"></div>
+  </div>
+  <div class="stage-caption">
+    NEXUS · <b>Vault Unlock</b> · 870ms iris · cold-start only
+  </div>
+</div>
+
+<!-- ─── React + Babel (pinned) ─── -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- Components -->
+<script type="text/babel" src="vault-unlock.jsx"></script>
+<script type="text/babel" src="screens.jsx"></script>
+<script type="text/babel" src="app.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+
+<!-- Tweak defaults — persisted by the host between sessions -->
+<script type="text/babel">
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "animationEnabled": true,
+    "simulateReducedMotion": false,
+    "bladeCount": 8,
+    "duration": 870,
+    "scanlineColor": "rgba(21, 101, 192, 0.95)",
+    "scanlineGlow": 16
+  }/*EDITMODE-END*/;
+
+  function Root() {
+    const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+    // Hide status bar while on the lock screen so the secure modal feels full-bleed.
+    React.useEffect(() => {
+      const el = document.getElementById('stageStatus');
+      const onPhase = () => {
+        const hasLock = !!document.querySelector('[data-screen="lock"]');
+        el.setAttribute('data-hidden', hasLock ? '1' : '0');
+      };
+      const ob = new MutationObserver(onPhase);
+      ob.observe(document.getElementById('root'), { childList: true, subtree: true });
+      onPhase();
+      return () => ob.disconnect();
+    }, []);
+
+    return (
+      <>
+        <NexusApp tweaks={t} />
+
+        <TweaksPanel title="Vault Unlock">
+          <TweakSection label="Animation">
+            <TweakToggle
+              label="Unlock animation"
+              value={t.animationEnabled}
+              onChange={v => setTweak('animationEnabled', v)}
+            />
+            <TweakToggle
+              label="Simulate reduced motion"
+              value={t.simulateReducedMotion}
+              onChange={v => setTweak('simulateReducedMotion', v)}
+            />
+          </TweakSection>
+
+          <TweakSection label="Iris">
+            <TweakSlider
+              label="Blade count"
+              min={4} max={12} step={1}
+              value={t.bladeCount}
+              onChange={v => setTweak('bladeCount', v)}
+            />
+            <TweakSlider
+              label="Duration"
+              min={400} max={1400} step={10}
+              value={t.duration}
+              unit="ms"
+              onChange={v => setTweak('duration', v)}
+            />
+          </TweakSection>
+
+          <TweakSection label="Scanline">
+            <TweakColor
+              label="Color"
+              value={t.scanlineColor}
+              options={[
+                'rgba(21, 101, 192, 0.95)',
+                'rgba(21, 101, 192, 0.6)',
+                'rgba(34, 211, 238, 0.9)',
+                'rgba(192, 21, 90, 0.85)',
+              ]}
+              onChange={v => setTweak('scanlineColor', v)}
+            />
+            <TweakSlider
+              label="Glow"
+              min={0} max={32} step={1}
+              value={t.scanlineGlow}
+              unit="px"
+              onChange={v => setTweak('scanlineGlow', v)}
+            />
+          </TweakSection>
+
+          <TweakSection label="Session">
+            <TweakButton
+              label="Force cold-start (reload)"
+              onClick={() => {
+                sessionStorage.removeItem('nexus.coldStartConsumed');
+                window.location.reload();
+              }}
+            />
+          </TweakSection>
+        </TweaksPanel>
+      </>
+    );
+  }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<Root />);
+</script>
+
+</body>
+</html>

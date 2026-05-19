@@ -1,0 +1,46 @@
+node_modules/
+dist/
+build/
+*.log
+.env
+.env.*
+
+# TypeScript incremental build cache — local artifact
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# Capacitor / native.
+# android/ IS tracked so manual edits in AndroidManifest.xml (security
+# hardening: allowBackup=false, usesCleartextTraffic=false, etc.) survive
+# `cap sync` regeneration. Capacitor auto-generates a nested android/.gitignore
+# that excludes build artifacts (./gradle, ./build, local.properties, captures).
+# ios/ stays ignored — this project is Android-only per package.json.
+ios/
+
+# Claude Code local state — worktrees, settings, session logs, all local-only
+.claude/
+
+# Secret material — anything that ever holds a key, cert, or credential.
+# Belt-and-suspenders against the secret-scanner pre-commit hook.
+secrets/
+*.pem
+*.key
+*.p12
+*.keystore
+*.jks
+serviceAccount*.json
+credentials.json
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Private working docs — design wireframes, internal product spec, and the
+# private integration briefs for sibling apps. Kept on disk for local
+# reference; not part of the public release.
+.kombai/
+STUDYDESK_INTEGRATION.md
+WORKOUT_TRACKER_INTEGRATION.md
+📄 Product Requirements Document (P.txt

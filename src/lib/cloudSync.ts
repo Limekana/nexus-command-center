@@ -1,0 +1,910 @@
+// Two-way sync between local Dexie and Supabase Postgres.
+//
+// Push: drain the local syncQueue, mapping each entry to the right
+// Supabase table and stamping user_id from the current session.
+//
+// Pull: fetch all rows owned by (or shared with) the current user and
+// upsert them into Dexie. RLS guarantees we only see what we're allowed to.
+//
+// Mapping is non-trivial — the local Dexie schema uses camelCase + some
+// shape differences (e.g. local Course = one row containing both subject and
+// grade info; Supabase splits subjects + grades). All conversions live here.
+//
+// Conflict policy: per-row LWW based on actual edit time.
+//
+// Every push payload includes `updated_at` derived from the syncQueue item's
+// createdAt (i.e. when the user made the edit on this device, NOT when push
+// happens). The server's `set_updated_at` trigger (see migration
+// `stale_write_protection_lww`) compares incoming `updated_at` against the
+// row on disk and silently drops writes that are older. Two devices editing
+// offline are ordered by edit time when they sync.
+//
+// This is enough for our usage pattern (occasional cross-device edits, no
+// real concurrent collaboration). Full CRDT is overkill.
+import { supabase } from './supabase';
+import { db, SyncQueueItem } from '../db/database';
+import { listPending } from '../db/syncQueue';
+import { generateId, legacyIdToUuid } from '../utils/uuid';
+import type { Transaction, BudgetCategory, PortfolioHolding, PortfolioLot, ManualAsset, WatchlistItem } from '../types/finance';
+import type { Course, StudySession, Reading } from '../types/studies';
+import type { WorkoutSession, WorkoutSet } from '../types/fitness';
+import type { Task, TaskPriority } from '../types/tasks';
+import type { Goal, GoalType } from '../types/goals';
+
+// ============================================================================
+// Push mappers — local entity → remote upsert payload
+// ============================================================================
+
+function mapTaskPriority(p: TaskPriority): 'low' | 'normal' | 'high' | 'urgent' {
+  if (p === 'medium') return 'normal';
+  return p;
+}
+
+function mapTaskStatus(completed: boolean): 'open' | 'done' {
+  return completed ? 'done' : 'open';
+}
+
+interface PushContext {
+  userId: string;
+}
+
+async function pushTransaction(item: SyncQueueItem, ctx: PushContext): Promise<void> {
+  if (item.operation === 'delete') {
+    const { error } = await supabase
+      .from('transactions')
+      .delete()
+      .eq('id', legacyIdToUuid(item.entityId));
+    if (error) throw error;
+    return;
+  }
+  const local: Transaction = JSON.parse(item.payload);
+  const type = local.type === 'transfer' ? 'expense' : local.type;
+  const description =
+    local.type === 'transfer' && local.description
+      ? `[transfer] ${local.description}`
+      : local.description;
+  const row = {
+    id: legacyIdToUuid(local.id),
+    user_id: ctx.userId,
+    amount: local.amount,
+    currency: 'EUR',
+    type,
+    category_id: local.categoryId ? legacyIdToUuid(local.categoryId) : null,
+    description,
+    date: local.date,
+    updated_at: item.createdAt,
+  };
+  const { error } = await supabase.from('transactions').upsert(row);
+  if (error) throw error;
+}
+
+async function pushBudgetCategory(item: SyncQueueItem, ctx: PushContext): Promise<void> {
+  if (item.operation === 'delete') {
+    const { error } = await supabase
+      .from('budget_categories')
+      .delete()
+      .eq('id', legacyIdToUuid(item.entityId));
+    if (error) throw error;
+    return;
+  }
+  const local: BudgetCategory = JSON.parse(item.payload);
+  const row = {
+    id: legacyIdToUuid(local.id),
+    user_id: ctx.userId,
+    name: local.name,
+    monthly_limit: local.monthlyLimit,
+    currency: 'EUR',
+    color: local.icon ?? null,
+    updated_at: item.createdAt,
+  };
+  const { error } = await supabase.from('budget_categories').upsert(row);
+  if (error) throw error;
+}
+
+async function pushPortfolioHolding(item: SyncQueueItem, ctx: PushContext): Promise<void> {
+  if (item.operation === 'delete') {
+    const { error } = await supabase
+      .from('portfolio_holdings')
+      .delete()
+      .eq('id', legacyIdToUuid(item.entityId));
+    if (error) throw error;
+    return;
+  }
+  const local: PortfolioHolding = JSON.parse(item.payload);
+  const row = {
+    id: legacyIdToUuid(local.id),
+    user_id: ctx.userId,
+    asset_type: local.assetType,
+    ticker: local.ticker,
+    name: local.name ?? null,
+    quantity: local.quantity,
+    avg_cost_native: local.avgCostNative ?? null,
+    cost_currency: local.costCurrency ?? null,
+    sector_override: local.sectorOverride ?? null,
+    updated_at: item.createdAt,
+  };
+  const { error } = await supabase.from('portfolio_holdings').upsert(row);
+  if (error) throw error;
+}
+
+async function pushPortfolioLot(item: SyncQueueItem, ctx: PushContext): Promise<void> {
+  if (item.operation === 'delete') {
+    const { error } = await supabase
+      .from('portfolio_lots')
+      .delete()
+      .eq('id', legacyIdToUuid(item.entityId));
+    if (error) throw error;
+    return;
+  }
+  const local: PortfolioLot = JSON.parse(item.payload);
+  const updatedAt = local.updatedAt || item.createdAt;
+  const row = {
+    id: legacyIdToUuid(local.id),
+    user_id: ctx.userId,
+    holding_id: legacyIdToUuid(local.holdingId),
+    quantity: local.quantity,
+    cost_per_unit: local.costPerUnit,
+    cost_currency: local.costCurrency,
+    purchase_date: local.purchaseDate ?? null,
+    notes: local.notes ?? null,
+    updated_at: updatedAt,
+  };
+  const { error } = await supabase.from('portfolio_lots').upsert(row);
+  if (error) throw error;
+}
+
+async function pushManualAsset(item: SyncQueueItem, ctx: PushContext): Promise<void> {
+  if (item.operation === 'delete') {
+    const { error } = await supabase
+      .from('manual_assets')
+      .delete()
+      .eq('id', legacyIdToUuid(item.entityId));
+    if (error) throw error;
+    return;
+  }
+  const local: ManualAsset = JSON.parse(item.payload);
+  const updatedAt = local.updatedAt || item.createdAt;
+  const row = {
+    id: legacyIdToUuid(local.id),
+    user_id: ctx.userId,
+    name: local.name,
+    asset_type: local.assetType,
+    value: local.value,
+    currency: local.currency,
+    notes: local.notes ?? null,
+    updated_at: updatedAt,
+  };
+  const { error } = await supabase.from('manual_assets').upsert(row);
+  if (error) throw error;
+}
+
+async function pushWatchlistItem(item: SyncQueueItem, ctx: PushContext): Promise<void> {
+  if (item.operation === 'delete') {
+    const { error } = await supabase
+      .from('watchlist_items')
+      .delete()
+      .eq('id', legacyIdToUuid(item.entityId));
+    if (error) throw error;
+    return;
+  }
+  const local: WatchlistItem = JSON.parse(item.payload);
+  const updatedAt = local.updatedAt || item.createdAt;
+  const row = {
+    id: legacyIdToUuid(local.id),
+    user_id: ctx.userId,
+    ticker: local.ticker,
+    name: local.name,
+    asset_type: local.assetType,
+    notes: local.notes ?? null,
+    target_above: local.targetAbove ?? null,
+    target_below: local.targetBelow ?? null,
+    updated_at: updatedAt,
+  };
+  const { error } = await supabase.from('watchlist_items').upsert(row);
+  if (error) throw error;
+}
+
+async function pushGoal(item: SyncQueueItem, ctx: PushContext): Promise<void> {
+  if (item.operation === 'delete') {
+    // Soft-delete: write a tombstone row so other devices learn about it.
+    const { error } = await supabase
+      .from('goals')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', legacyIdToUuid(item.entityId));
+    if (error) throw error;
+    return;
+  }
+  const local: Goal = JSON.parse(item.payload);
+  const updatedAt = local.updatedAt || item.createdAt;
+  const row = {
+    id: legacyIdToUuid(local.id),
+    user_id: ctx.userId,
+    title: local.title,
+    goal_type: local.goalType,
+    target_value: local.targetValue,
+    target_date: local.targetDate ?? null,
+    start_date: local.startDate,
+    exercise_name: local.exerciseName ?? null,
+    currency: local.currency ?? null,
+    completed: local.completed,
+    completed_at: local.completedAt ?? null,
+    deleted_at: local.deletedAt ?? null,
+    updated_at: updatedAt,
+  };
+  const { error } = await supabase.from('goals').upsert(row);
+  if (error) throw error;
+}
+
+async function pushWorkoutSession(item: SyncQueueItem, ctx: PushContext): Promise<void> {
+  if (item.operation === 'delete') {
+    const { error } = await supabase
+      .from('workout_sessions')
+      .delete()
+      .eq('id', legacyIdToUuid(item.entityId));
+    if (error) throw error;
+    return;
+  }
+  const local: WorkoutSession = JSON.parse(item.payload);
+  const row = {
+    id: legacyIdToUuid(local.id),
+    user_id: ctx.userId,
+    session_type: local.sessionType,
+    date: local.date,
+    notes: local.notes ?? null,
+    updated_at: item.createdAt,
+  };
+  const { error } = await supabase.from('workout_sessions').upsert(row);
+  if (error) throw error;
+}
+
+async function pushWorkoutSet(item: SyncQueueItem, ctx: PushContext): Promise<void> {
+  if (item.operation === 'delete') {
+    const { error } = await supabase
+      .from('workout_sets')
+      .delete()
+      .eq('id', legacyIdToUuid(item.entityId));
+    if (error) throw error;
+    return;
+  }
+  const local: WorkoutSet = JSON.parse(item.payload);
+  const row = {
+    id: legacyIdToUuid(local.id),
+    user_id: ctx.userId,
+    session_id: legacyIdToUuid(local.sessionId),
+    exercise: local.exercise,
+    weight_kg: local.weightKg ?? null,
+    reps: local.reps ?? null,
+    rpe: local.rpe ?? null,
+  };
+  const { error } = await supabase.from('workout_sets').upsert(row);
+  if (error) throw error;
+}
+
+async function pushTask(item: SyncQueueItem, ctx: PushContext): Promise<void> {
+  if (item.operation === 'delete') {
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', legacyIdToUuid(item.entityId));
+    if (error) throw error;
+    return;
+  }
+  const local: Task = JSON.parse(item.payload);
+  // Prefer the entity's own updatedAt if set (captures the actual edit moment),
+  // fall back to the queue createdAt.
+  const updatedAt = local.updatedAt || item.createdAt;
+  const row = {
+    id: legacyIdToUuid(local.id),
+    user_id: ctx.userId,
+    title: local.title,
+    description: local.notes ?? null,
+    status: mapTaskStatus(local.completed),
+    priority: mapTaskPriority(local.priority),
+    due_date: local.dueDate ?? null,
+    updated_at: updatedAt,
+  };
+  const { error } = await supabase.from('tasks').upsert(row);
+  if (error) throw error;
+}
+
+async function pushStudySession(item: SyncQueueItem, ctx: PushContext): Promise<void> {
+  if (item.operation === 'delete') {
+    const { error } = await supabase
+      .from('study_sessions')
+      .delete()
+      .eq('id', legacyIdToUuid(item.entityId));
+    if (error) throw error;
+    return;
+  }
+  const local: StudySession = JSON.parse(item.payload);
+  const updatedAt = local.updatedAt || item.createdAt;
+  const row = {
+    id: legacyIdToUuid(local.id),
+    user_id: ctx.userId,
+    subject_id: local.subjectId ? legacyIdToUuid(local.subjectId) : null,
+    started_at: local.startedAt,
+    duration_minutes: local.durationMinutes,
+    notes: local.notes ?? null,
+    updated_at: updatedAt,
+  };
+  const { error } = await supabase.from('study_sessions').upsert(row);
+  if (error) throw error;
+}
+
+async function pushReading(item: SyncQueueItem, ctx: PushContext): Promise<void> {
+  if (item.operation === 'delete') {
+    const { error } = await supabase
+      .from('readings')
+      .delete()
+      .eq('id', legacyIdToUuid(item.entityId));
+    if (error) throw error;
+    return;
+  }
+  const local: Reading = JSON.parse(item.payload);
+  const updatedAt = local.updatedAt || item.createdAt;
+  const row = {
+    id: legacyIdToUuid(local.id),
+    user_id: ctx.userId,
+    title: local.title,
+    author: local.author ?? null,
+    status: local.status,
+    total_pages: local.totalPages ?? null,
+    pages_read: local.pagesRead ?? null,
+    rating: local.rating ?? null,
+    subject_id: local.subjectId ? legacyIdToUuid(local.subjectId) : null,
+    started_at: local.startedAt ?? null,
+    finished_at: local.finishedAt ?? null,
+    notes: local.notes ?? null,
+    updated_at: updatedAt,
+  };
+  const { error } = await supabase.from('readings').upsert(row);
+  if (error) throw error;
+}
+
+async function pushCourse(item: SyncQueueItem, ctx: PushContext): Promise<void> {
+  // Local Course = 1 row containing subject info + a grade.
+  // Remote = 1 subjects row + 1 grades row (we reuse course.id mapped to UUID
+  // for both PKs).
+  if (item.operation === 'delete') {
+    const uuid = legacyIdToUuid(item.entityId);
+    await supabase.from('grades').delete().eq('id', uuid);
+    const { error } = await supabase.from('subjects').delete().eq('id', uuid);
+    if (error) throw error;
+    return;
+  }
+  const local: Course = JSON.parse(item.payload);
+  const uuid = legacyIdToUuid(local.id);
+  const subjectRow = {
+    id: uuid,
+    user_id: ctx.userId,
+    name: local.name,
+    credits: local.weight,
+    semester: local.semester ?? null,
+    updated_at: item.createdAt,
+  };
+  const gradeRow = {
+    id: uuid,
+    user_id: ctx.userId,
+    subject_id: uuid,
+    grade: local.grade,
+    weight: 1,
+    date: local.createdAt?.slice(0, 10) ?? null,
+    updated_at: item.createdAt,
+  };
+  let { error } = await supabase.from('subjects').upsert(subjectRow);
+  if (error) throw error;
+  ({ error } = await supabase.from('grades').upsert(gradeRow));
+  if (error) throw error;
+}
+
+const pushHandlers: Record<SyncQueueItem['entityType'], (item: SyncQueueItem, ctx: PushContext) => Promise<void>> = {
+  transaction: pushTransaction,
+  budget_category: pushBudgetCategory,
+  portfolio_holding: pushPortfolioHolding,
+  portfolio_lot: pushPortfolioLot,
+  manual_asset: pushManualAsset,
+  watchlist_item: pushWatchlistItem,
+  goal: pushGoal,
+  workout_session: pushWorkoutSession,
+  workout_set: pushWorkoutSet,
+  task: pushTask,
+  course: pushCourse,
+  study_session: pushStudySession,
+  reading: pushReading,
+  // grade_import is a local-only snapshot concept — courses sync individually.
+  grade_import: async () => {
+    /* no-op */
+  },
+};
+
+// ============================================================================
+// Push: drain queue to Supabase
+// ============================================================================
+export interface PushResult {
+  attempted: number;
+  succeeded: number;
+  failed: number;
+  errors: { entityType: string; entityId: string; message: string }[];
+}
+
+// FK dependency order: lower numbers push first.
+// budget_categories must exist before transactions reference them; workout_sessions
+// before workout_sets; subjects before grades (subjects+grades both come from
+// 'course' entity in our local model, handled together in pushCourse).
+// study_session.subject_id and reading.subject_id are nullable FKs to subjects,
+// so courses (which push subjects) need to land first.
+const ENTITY_PRIORITY: Record<SyncQueueItem['entityType'], number> = {
+  budget_category: 1,
+  portfolio_holding: 1,
+  workout_session: 1,
+  task: 1,
+  course: 1,
+  grade_import: 1,
+  workout_set: 2, // FK → workout_sessions
+  transaction: 2, // FK → budget_categories (nullable, but order anyway)
+  study_session: 2, // FK → subjects (nullable)
+  reading: 2, // FK → subjects (nullable)
+  portfolio_lot: 2, // FK → portfolio_holdings
+  manual_asset: 1, // no FK dependencies
+  watchlist_item: 1, // no FK dependencies
+  goal: 1, // no FK dependencies
+};
+
+export async function pushQueue(userId: string): Promise<PushResult> {
+  const pending = await listPending();
+  pending.sort((a, b) => {
+    const pa = ENTITY_PRIORITY[a.entityType] ?? 99;
+    const pb = ENTITY_PRIORITY[b.entityType] ?? 99;
+    if (pa !== pb) return pa - pb;
+    return a.createdAt.localeCompare(b.createdAt);
+  });
+
+  const result: PushResult = { attempted: 0, succeeded: 0, failed: 0, errors: [] };
+  const now = new Date().toISOString();
+
+  for (const item of pending) {
+    result.attempted++;
+    const handler = pushHandlers[item.entityType];
+    if (!handler) {
+      result.failed++;
+      continue;
+    }
+    try {
+      await handler(item, { userId });
+      await db.syncQueue.update(item.id, { syncedAt: now, lastError: undefined });
+      result.succeeded++;
+    } catch (e) {
+      const msg = (e as Error).message ?? String(e);
+      await db.syncQueue.update(item.id, { lastError: msg });
+      result.errors.push({ entityType: item.entityType, entityId: item.entityId, message: msg });
+      result.failed++;
+    }
+  }
+  return result;
+}
+
+// ============================================================================
+// Pull: fetch user-owned + shared rows, upsert into Dexie
+// ============================================================================
+export interface PullResult {
+  transactions: number;
+  budgetCategories: number;
+  portfolioHoldings: number;
+  portfolioLots: number;
+  manualAssets: number;
+  watchlistItems: number;
+  subjects: number;
+  workoutSessions: number;
+  workoutSets: number;
+  tasks: number;
+  studySessions: number;
+  readings: number;
+  goals: number;
+  errors: string[];
+}
+
+export async function pullAll(_userId: string): Promise<PullResult> {
+  const errors: string[] = [];
+  const result: PullResult = {
+    transactions: 0,
+    budgetCategories: 0,
+    portfolioHoldings: 0,
+    portfolioLots: 0,
+    manualAssets: 0,
+    watchlistItems: 0,
+    subjects: 0,
+    workoutSessions: 0,
+    workoutSets: 0,
+    tasks: 0,
+    studySessions: 0,
+    readings: 0,
+    goals: 0,
+    errors,
+  };
+
+  // Helper: pull a Supabase table, filter deleted, map back to local shape, write to Dexie.
+  async function pullTable<R, L>(
+    table: string,
+    extraFilters: { column: string; op: 'is' | 'eq'; value: unknown }[],
+    mapRowToLocal: (r: R) => L | null,
+    writeToDexie: (rows: L[]) => Promise<void>
+  ): Promise<number> {
+    let q = supabase.from(table).select('*');
+    for (const f of extraFilters) {
+      if (f.op === 'is') q = q.is(f.column, f.value as null);
+      else q = q.eq(f.column, f.value as string | number);
+    }
+    const { data, error } = await q;
+    if (error) {
+      errors.push(`${table}: ${error.message}`);
+      return 0;
+    }
+    const mapped = (data as R[]).map(mapRowToLocal).filter((x): x is L => x !== null);
+    await writeToDexie(mapped);
+    return mapped.length;
+  }
+
+  result.transactions = await pullTable<any, Transaction>(
+    'transactions',
+    [{ column: 'deleted_at', op: 'is', value: null }],
+    (r) => ({
+      id: r.id,
+      amount: Number(r.amount),
+      description: r.description ?? '',
+      categoryId: r.category_id ?? undefined,
+      date: r.date,
+      type: r.type as Transaction['type'],
+      syncStatus: 'synced',
+      createdAt: r.created_at,
+    }),
+    async (rows) => {
+      await db.transactions.bulkPut(rows);
+    }
+  );
+
+  result.budgetCategories = await pullTable<any, BudgetCategory>(
+    'budget_categories',
+    [{ column: 'deleted_at', op: 'is', value: null }],
+    (r) => ({
+      id: r.id,
+      name: r.name,
+      monthlyLimit: Number(r.monthly_limit ?? 0),
+      icon: r.color ?? undefined,
+      createdAt: r.created_at,
+      ownerId: r.user_id,
+    }),
+    async (rows) => {
+      await db.budgetCategories.bulkPut(rows);
+    }
+  );
+
+  result.portfolioHoldings = await pullTable<any, PortfolioHolding>(
+    'portfolio_holdings',
+    [],
+    (r) => ({
+      id: r.id,
+      ticker: r.ticker,
+      name: r.name ?? r.ticker,
+      assetType: r.asset_type as PortfolioHolding['assetType'],
+      quantity: Number(r.quantity),
+      avgCostNative: r.avg_cost_native != null ? Number(r.avg_cost_native) : undefined,
+      costCurrency: r.cost_currency ?? undefined,
+      sectorOverride: r.sector_override ?? undefined,
+      createdAt: r.created_at,
+    }),
+    async (rows) => {
+      await db.portfolioHoldings.bulkPut(rows);
+    }
+  );
+
+  // Studies: pull subjects + grades, reconstruct Course rows for Dexie.
+  // Pull a single grade per subject (most recent).
+  try {
+    const { data: subjects, error: sErr } = await supabase
+      .from('subjects')
+      .select('*')
+      .is('deleted_at', null);
+    if (sErr) throw sErr;
+    const { data: grades, error: gErr } = await supabase
+      .from('grades')
+      .select('*')
+      .is('deleted_at', null);
+    if (gErr) throw gErr;
+
+    // Build a map: subject_id → latest grade
+    const latestGradeBySubject = new Map<string, any>();
+    for (const g of grades ?? []) {
+      const prev = latestGradeBySubject.get(g.subject_id);
+      if (!prev || (g.date ?? '') > (prev.date ?? '')) {
+        latestGradeBySubject.set(g.subject_id, g);
+      }
+    }
+
+    // Reconstruct Course rows. We don't have a remote import concept, so put
+    // everything in a single synthetic import.
+    const courses: Course[] = (subjects ?? []).map((s: any) => {
+      const g = latestGradeBySubject.get(s.id);
+      return {
+        id: s.id,
+        importId: 'cloud',
+        name: s.name,
+        weight: Number(s.credits ?? 1),
+        grade: Number(g?.grade ?? 0),
+        semester: s.semester ?? undefined,
+        createdAt: s.created_at,
+      };
+    });
+    await db.courses.bulkPut(courses);
+    result.subjects = courses.length;
+  } catch (e) {
+    errors.push(`subjects/grades: ${(e as Error).message}`);
+  }
+
+  result.workoutSessions = await pullTable<any, WorkoutSession>(
+    'workout_sessions',
+    [{ column: 'deleted_at', op: 'is', value: null }],
+    (r) => ({
+      id: r.id,
+      sessionType: r.session_type,
+      date: r.date,
+      sets: [],
+      notes: r.notes ?? undefined,
+      syncStatus: 'synced',
+      createdAt: r.created_at,
+    }),
+    async (rows) => {
+      await db.workoutSessions.bulkPut(rows);
+    }
+  );
+
+  result.workoutSets = await pullTable<any, WorkoutSet>(
+    'workout_sets',
+    [],
+    (r) => ({
+      id: r.id,
+      sessionId: r.session_id,
+      exercise: r.exercise,
+      weightKg: r.weight_kg != null ? Number(r.weight_kg) : undefined,
+      reps: r.reps ?? undefined,
+      rpe: r.rpe != null ? Number(r.rpe) : undefined,
+      createdAt: r.created_at,
+    }),
+    async (rows) => {
+      await db.workoutSets.bulkPut(rows);
+    }
+  );
+
+  result.tasks = await pullTable<any, Task>(
+    'tasks',
+    [{ column: 'deleted_at', op: 'is', value: null }],
+    (r) => ({
+      id: r.id,
+      title: r.title,
+      dueDate: r.due_date ?? undefined,
+      priority: (r.priority === 'normal' ? 'medium' : r.priority) as Task['priority'],
+      category: undefined,
+      completed: r.status === 'done',
+      notes: r.description ?? undefined,
+      syncStatus: 'synced',
+      createdAt: r.created_at,
+      updatedAt: r.updated_at,
+      ownerId: r.user_id,
+    }),
+    async (rows) => {
+      await db.tasks.bulkPut(rows);
+    }
+  );
+
+  result.studySessions = await pullTable<any, StudySession>(
+    'study_sessions',
+    [{ column: 'deleted_at', op: 'is', value: null }],
+    (r) => ({
+      id: r.id,
+      startedAt: r.started_at,
+      durationMinutes: Number(r.duration_minutes),
+      subjectId: r.subject_id ?? undefined,
+      notes: r.notes ?? undefined,
+      syncStatus: 'synced',
+      createdAt: r.created_at,
+      updatedAt: r.updated_at,
+    }),
+    async (rows) => {
+      await db.studySessions.bulkPut(rows);
+    }
+  );
+
+  result.manualAssets = await pullTable<any, ManualAsset>(
+    'manual_assets',
+    [{ column: 'deleted_at', op: 'is', value: null }],
+    (r) => ({
+      id: r.id,
+      name: r.name,
+      assetType: r.asset_type as ManualAsset['assetType'],
+      value: Number(r.value),
+      currency: r.currency,
+      notes: r.notes ?? undefined,
+      syncStatus: 'synced',
+      createdAt: r.created_at,
+      updatedAt: r.updated_at,
+    }),
+    async (rows) => {
+      await db.manualAssets.bulkPut(rows);
+    }
+  );
+
+  result.watchlistItems = await pullTable<any, WatchlistItem>(
+    'watchlist_items',
+    [{ column: 'deleted_at', op: 'is', value: null }],
+    (r) => ({
+      id: r.id,
+      ticker: r.ticker,
+      name: r.name,
+      assetType: r.asset_type as WatchlistItem['assetType'],
+      notes: r.notes ?? undefined,
+      targetAbove: r.target_above != null ? Number(r.target_above) : undefined,
+      targetBelow: r.target_below != null ? Number(r.target_below) : undefined,
+      syncStatus: 'synced',
+      createdAt: r.created_at,
+      updatedAt: r.updated_at,
+    }),
+    async (rows) => {
+      await db.watchlistItems.bulkPut(rows);
+    }
+  );
+
+  result.goals = await pullTable<any, Goal>(
+    'goals',
+    [{ column: 'deleted_at', op: 'is', value: null }],
+    (r) => ({
+      id: r.id,
+      title: r.title,
+      goalType: r.goal_type as GoalType,
+      targetValue: Number(r.target_value),
+      targetDate: r.target_date ?? undefined,
+      startDate: r.start_date,
+      exerciseName: r.exercise_name ?? undefined,
+      currency: r.currency ?? undefined,
+      completed: !!r.completed,
+      completedAt: r.completed_at ?? undefined,
+      syncStatus: 'synced',
+      createdAt: r.created_at,
+      updatedAt: r.updated_at,
+    }),
+    async (rows) => {
+      await db.goals.bulkPut(rows);
+    }
+  );
+
+  result.portfolioLots = await pullTable<any, PortfolioLot>(
+    'portfolio_lots',
+    [{ column: 'deleted_at', op: 'is', value: null }],
+    (r) => ({
+      id: r.id,
+      holdingId: r.holding_id,
+      quantity: Number(r.quantity),
+      costPerUnit: Number(r.cost_per_unit),
+      costCurrency: r.cost_currency,
+      purchaseDate: r.purchase_date ?? undefined,
+      notes: r.notes ?? undefined,
+      syncStatus: 'synced',
+      createdAt: r.created_at,
+      updatedAt: r.updated_at,
+    }),
+    async (rows) => {
+      await db.portfolioLots.bulkPut(rows);
+    }
+  );
+
+  result.readings = await pullTable<any, Reading>(
+    'readings',
+    [{ column: 'deleted_at', op: 'is', value: null }],
+    (r) => ({
+      id: r.id,
+      title: r.title,
+      author: r.author ?? undefined,
+      status: r.status as Reading['status'],
+      totalPages: r.total_pages != null ? Number(r.total_pages) : undefined,
+      pagesRead: r.pages_read != null ? Number(r.pages_read) : undefined,
+      rating: r.rating != null ? Number(r.rating) : undefined,
+      subjectId: r.subject_id ?? undefined,
+      startedAt: r.started_at ?? undefined,
+      finishedAt: r.finished_at ?? undefined,
+      notes: r.notes ?? undefined,
+      syncStatus: 'synced',
+      createdAt: r.created_at,
+      updatedAt: r.updated_at,
+    }),
+    async (rows) => {
+      await db.readings.bulkPut(rows);
+    }
+  );
+
+  return result;
+}
+
+// ============================================================================
+// Adoption: enqueue every existing local row as an insert for the new user.
+// ============================================================================
+export async function adoptLocalData(userId: string): Promise<number> {
+  const now = new Date().toISOString();
+  let count = 0;
+
+  const enqueueAll = async (
+    entityType: SyncQueueItem['entityType'],
+    rows: { id: string }[]
+  ) => {
+    for (const row of rows) {
+      await db.syncQueue.add({
+        id: generateId(),
+        entityType,
+        entityId: row.id,
+        operation: 'insert',
+        payload: JSON.stringify(row),
+        createdAt: now,
+      });
+      count++;
+    }
+  };
+
+  const [txs, budgets, holdings, lots, manualAssets, watchlistItems, sessions, sets, tasks, courses, studySessions, readings, goals] =
+    await Promise.all([
+      db.transactions.toArray(),
+      db.budgetCategories.toArray(),
+      db.portfolioHoldings.toArray(),
+      db.portfolioLots.toArray(),
+      db.manualAssets.toArray(),
+      db.watchlistItems.toArray(),
+      db.workoutSessions.toArray(),
+      db.workoutSets.toArray(),
+      db.tasks.toArray(),
+      db.courses.toArray(),
+      db.studySessions.toArray(),
+      db.readings.toArray(),
+      db.goals.toArray(),
+    ]);
+
+  await enqueueAll('transaction', txs);
+  await enqueueAll('budget_category', budgets);
+  await enqueueAll('portfolio_holding', holdings);
+  await enqueueAll('portfolio_lot', lots);
+  await enqueueAll('manual_asset', manualAssets);
+  await enqueueAll('watchlist_item', watchlistItems);
+  await enqueueAll('workout_session', sessions);
+  await enqueueAll('workout_set', sets);
+  await enqueueAll('task', tasks);
+  await enqueueAll('course', courses);
+  await enqueueAll('study_session', studySessions);
+  await enqueueAll('reading', readings);
+  await enqueueAll('goal', goals);
+
+  // Stamp user_id for later use isn't needed since the push handler reads
+  // userId from the current session.
+  void userId;
+  return count;
+}
+
+// ============================================================================
+// Full sync: push then pull. Returns combined stats.
+// ============================================================================
+export async function fullSync(userId: string): Promise<{ push: PushResult; pull: PullResult }> {
+  const push = await pushQueue(userId);
+  const pull = await pullAll(userId);
+  return { push, pull };
+}
+
+// ============================================================================
+// Heuristic: does local data exist? Used to gate the adoption prompt.
+// ============================================================================
+export async function hasLocalData(): Promise<boolean> {
+  const counts = await Promise.all([
+    db.transactions.count(),
+    db.budgetCategories.count(),
+    db.portfolioHoldings.count(),
+    db.workoutSessions.count(),
+    db.tasks.count(),
+    db.courses.count(),
+    db.studySessions.count(),
+    db.readings.count(),
+  ]);
+  return counts.some((c) => c > 0);
+}

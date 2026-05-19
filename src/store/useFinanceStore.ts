@@ -1,0 +1,708 @@
+import { create } from 'zustand';
+import { db } from '../db/database';
+import { Transaction, BudgetCategory, PortfolioHolding, PortfolioLot, PortfolioSnapshot, ManualAsset, WatchlistItem } from '../types/finance';
+import { generateId } from '../utils/uuid';
+import { localDateKey } from '../utils/formatters';
+import { enqueue } from '../db/syncQueue';
+import { getQuotes, QuoteResult } from '../api/finnhub';
+import { getCryptoPrices, CryptoResult } from '../api/coingecko';
+import { ensureFxRates, convertSync } from '../api/fxRates';
+import { clearProviderErrors, lastProviderErrors, getYahooSparkline, type ProviderError } from '../api/yahoo';
+import { getCompanyProfiles, type CompanyProfile } from '../api/companyProfile';
+import {
+  getStockMetric,
+  getRecommendations,
+  getCompanyNews,
+  getEarningsCalendar,
+  getDividendsAll,
+  type StockMetric,
+  type Recommendation,
+  type NewsItem,
+  type EarningsEvent,
+  type DividendEvent,
+} from '../api/stockDetail';
+import { getMarketNews } from '../api/marketNews';
+import { useSettingsStore } from './useSettingsStore';
+
+interface FinanceStore {
+  transactions: Transaction[];
+  budgetCategories: BudgetCategory[];
+  holdings: PortfolioHolding[];
+  // All purchase lots across all holdings, indexed by lot.id. Aggregate
+  // quantity + avg cost per holding is derived in selectors; we don't
+  // store an intermediate map because consumers usually need either
+  // "lots for one holding" (filter) or "totals" (reduce), both cheap.
+  portfolioLots: PortfolioLot[];
+  stockQuotes: QuoteResult[];
+  cryptoPrices: CryptoResult | null;
+  fxRates: Record<string, number> | null; // USD-anchored rates
+  // Company profile metadata keyed by uppercase ticker. Used for sector
+  // allocation, logos, exchange info. Populated lazily on refresh and
+  // cached in Dexie for 7 days.
+  companyProfiles: Record<string, CompanyProfile>;
+  // 7-day price series per ticker (stocks) or coin id (crypto). Stocks come
+  // from Yahoo chart range=7d, crypto from CoinGecko sparkline_in_7d.
+  // Used by the SparkLine component on each holding row.
+  sparklines: Record<string, number[]>;
+  // Daily snapshots of total portfolio value in base currency. Newest last.
+  portfolioSnapshots: PortfolioSnapshot[];
+  // Tier 2 — lazy per-ticker detail (fetched on detail sheet open).
+  stockMetrics: Record<string, StockMetric>;
+  recommendations: Record<string, Recommendation[]>;
+  companyNews: Record<string, NewsItem[]>;
+  // Tier 2 — eager (fetched alongside quotes on each portfolio refresh).
+  upcomingEarnings: EarningsEvent[];
+  dividends: Record<string, DividendEvent[]>;
+  // Tier 3 — net worth manual assets/liabilities, watchlist, market news.
+  manualAssets: ManualAsset[];
+  watchlist: WatchlistItem[];
+  marketNews: NewsItem[];
+  // Per-ticker loading flags so the detail sheet can show a spinner instead
+  // of a confused empty state on first open.
+  detailLoading: Record<string, boolean>;
+  loading: boolean;
+  refreshing: boolean;
+  // Per-provider failures from the most recent refresh attempt. Empty array
+  // means everything succeeded (or there was nothing to refresh). Surface in
+  // Portfolio.tsx so the user knows WHY data is stale instead of seeing a
+  // generic "provider rate-limited" line.
+  refreshErrors: ProviderError[];
+  lastRefreshAt: number | null;
+
+  load: () => Promise<void>;
+
+  addTransaction: (
+    t: Omit<Transaction, 'id' | 'createdAt' | 'syncStatus'>
+  ) => Promise<void>;
+  updateTransaction: (
+    id: string,
+    patch: Partial<Omit<Transaction, 'id' | 'createdAt'>>
+  ) => Promise<void>;
+  deleteTransaction: (id: string) => Promise<void>;
+
+  addBudgetCategory: (c: Omit<BudgetCategory, 'id' | 'createdAt'>) => Promise<void>;
+  updateBudgetCategory: (id: string, patch: Partial<BudgetCategory>) => Promise<void>;
+  deleteBudgetCategory: (id: string) => Promise<void>;
+
+  addHolding: (h: Omit<PortfolioHolding, 'id' | 'createdAt'>) => Promise<string>;
+  updateHolding: (id: string, patch: Partial<PortfolioHolding>) => Promise<void>;
+  deleteHolding: (id: string) => Promise<void>;
+
+  addLot: (lot: Omit<PortfolioLot, 'id' | 'createdAt' | 'syncStatus'>) => Promise<void>;
+  updateLot: (id: string, patch: Partial<Omit<PortfolioLot, 'id' | 'createdAt'>>) => Promise<void>;
+  deleteLot: (id: string) => Promise<void>;
+
+  addManualAsset: (a: Omit<ManualAsset, 'id' | 'createdAt' | 'syncStatus'>) => Promise<void>;
+  updateManualAsset: (id: string, patch: Partial<Omit<ManualAsset, 'id' | 'createdAt'>>) => Promise<void>;
+  deleteManualAsset: (id: string) => Promise<void>;
+
+  addWatchlistItem: (w: Omit<WatchlistItem, 'id' | 'createdAt' | 'syncStatus'>) => Promise<void>;
+  updateWatchlistItem: (id: string, patch: Partial<Omit<WatchlistItem, 'id' | 'createdAt'>>) => Promise<void>;
+  deleteWatchlistItem: (id: string) => Promise<void>;
+
+  refreshPortfolio: () => Promise<void>;
+  // Fetches metric + recommendations + news for one ticker. Idempotent and
+  // cache-backed — cheap to call every time the detail sheet opens.
+  fetchHoldingDetail: (ticker: string) => Promise<void>;
+  // Loads benchmark quotes (SPY, IEUR, BTC). Merges into existing stockQuotes
+  // and cryptoPrices state so the regular row pipeline can read them. Cached
+  // and gated; safe to call on every mount of the MacroStrip.
+  ensureBenchmarks: () => Promise<void>;
+}
+
+export const useFinanceStore = create<FinanceStore>((set, get) => ({
+  transactions: [],
+  budgetCategories: [],
+  holdings: [],
+  portfolioLots: [],
+  stockQuotes: [],
+  cryptoPrices: null,
+  fxRates: null,
+  companyProfiles: {},
+  sparklines: {},
+  portfolioSnapshots: [],
+  stockMetrics: {},
+  recommendations: {},
+  companyNews: {},
+  upcomingEarnings: [],
+  dividends: {},
+  detailLoading: {},
+  manualAssets: [],
+  watchlist: [],
+  marketNews: [],
+  loading: false,
+  refreshing: false,
+  refreshErrors: [],
+  lastRefreshAt: null,
+
+  async load() {
+    set({ loading: true });
+    const [transactions, budgetCategories, holdings, portfolioLots, portfolioSnapshots, manualAssets, watchlist] = await Promise.all([
+      db.transactions.orderBy('date').reverse().toArray(),
+      db.budgetCategories.toArray(),
+      db.portfolioHoldings.toArray(),
+      db.portfolioLots.toArray(),
+      db.portfolioSnapshots.orderBy('date').toArray(),
+      db.manualAssets.toArray(),
+      db.watchlistItems.toArray(),
+    ]);
+    // Legacy migration: for any holding with avg_cost_native + quantity set
+    // but no lots, synthesize one lot so the new lots-driven aggregation
+    // keeps showing the same numbers. Runs once per device — we check the
+    // local-only flag in localStorage so we don't re-create lots a user has
+    // since deleted intentionally.
+    const migrationKey = 'nexus.lotsMigrated.v1';
+    if (!localStorage.getItem(migrationKey)) {
+      const lotsByHolding = new Map<string, PortfolioLot[]>();
+      for (const lot of portfolioLots) {
+        const arr = lotsByHolding.get(lot.holdingId) ?? [];
+        arr.push(lot);
+        lotsByHolding.set(lot.holdingId, arr);
+      }
+      const synthesized: PortfolioLot[] = [];
+      for (const h of holdings) {
+        const existing = lotsByHolding.get(h.id) ?? [];
+        if (existing.length === 0 && h.avgCostNative != null && h.costCurrency && h.quantity > 0) {
+          const lot: PortfolioLot = {
+            id: generateId(),
+            holdingId: h.id,
+            quantity: h.quantity,
+            costPerUnit: h.avgCostNative,
+            costCurrency: h.costCurrency,
+            purchaseDate: h.createdAt?.slice(0, 10),
+            syncStatus: 'pending',
+            createdAt: new Date().toISOString(),
+          };
+          synthesized.push(lot);
+          await db.portfolioLots.add(lot);
+          await enqueue('portfolio_lot', lot.id, 'insert', lot);
+        }
+      }
+      if (synthesized.length) portfolioLots.push(...synthesized);
+      localStorage.setItem(migrationKey, '1');
+    }
+    set({ transactions, budgetCategories, holdings, portfolioLots, portfolioSnapshots, manualAssets, watchlist, loading: false });
+  },
+
+  async addTransaction(t) {
+    const tx: Transaction = {
+      ...t,
+      id: generateId(),
+      syncStatus: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+    await db.transactions.add(tx);
+    await enqueue('transaction', tx.id, 'insert', tx);
+    set({ transactions: [tx, ...get().transactions] });
+  },
+
+  async updateTransaction(id, patch) {
+    const existing = await db.transactions.get(id);
+    if (!existing) return;
+    const updated: Transaction = {
+      ...existing,
+      ...patch,
+      id,
+      syncStatus: 'pending',
+    };
+    await db.transactions.put(updated);
+    await enqueue('transaction', id, 'update', updated);
+    set({
+      transactions: get().transactions.map((t) => (t.id === id ? updated : t)),
+    });
+  },
+
+  async deleteTransaction(id) {
+    await db.transactions.delete(id);
+    await enqueue('transaction', id, 'delete', { id });
+    set({ transactions: get().transactions.filter((t) => t.id !== id) });
+  },
+
+  async addBudgetCategory(c) {
+    const cat: BudgetCategory = {
+      ...c,
+      id: generateId(),
+      createdAt: new Date().toISOString(),
+    };
+    await db.budgetCategories.add(cat);
+    await enqueue('budget_category', cat.id, 'insert', cat);
+    set({ budgetCategories: [...get().budgetCategories, cat] });
+  },
+
+  async updateBudgetCategory(id, patch) {
+    const existing = await db.budgetCategories.get(id);
+    if (!existing) return;
+    const updated = { ...existing, ...patch, id };
+    await db.budgetCategories.put(updated);
+    await enqueue('budget_category', id, 'update', updated);
+    set({
+      budgetCategories: get().budgetCategories.map((c) => (c.id === id ? updated : c)),
+    });
+  },
+
+  async deleteBudgetCategory(id) {
+    await db.budgetCategories.delete(id);
+    await enqueue('budget_category', id, 'delete', { id });
+    // Strip categoryId from any transactions referencing it.
+    const txs = await db.transactions.where('categoryId').equals(id).toArray();
+    for (const t of txs) {
+      await db.transactions.put({ ...t, categoryId: undefined, syncStatus: 'pending' });
+      await enqueue('transaction', t.id, 'update', { ...t, categoryId: undefined });
+    }
+    set({
+      budgetCategories: get().budgetCategories.filter((c) => c.id !== id),
+      transactions: get().transactions.map((t) =>
+        t.categoryId === id ? { ...t, categoryId: undefined } : t
+      ),
+    });
+  },
+
+  async addHolding(h) {
+    const holding: PortfolioHolding = {
+      ...h,
+      id: generateId(),
+      createdAt: new Date().toISOString(),
+    };
+    await db.portfolioHoldings.add(holding);
+    await enqueue('portfolio_holding', holding.id, 'insert', holding);
+    set({ holdings: [...get().holdings, holding] });
+    return holding.id;
+  },
+
+  async updateHolding(id, patch) {
+    const existing = await db.portfolioHoldings.get(id);
+    if (!existing) return;
+    const updated = { ...existing, ...patch, id };
+    await db.portfolioHoldings.put(updated);
+    await enqueue('portfolio_holding', id, 'update', updated);
+    set({
+      holdings: get().holdings.map((h) => (h.id === id ? updated : h)),
+    });
+  },
+
+  async deleteHolding(id) {
+    // Cascade lots locally; cloud cascades via FK ON DELETE CASCADE so we
+    // just need to drain our local rows + sync queue entries.
+    const lots = await db.portfolioLots.where('holdingId').equals(id).toArray();
+    for (const lot of lots) {
+      await db.portfolioLots.delete(lot.id);
+      await enqueue('portfolio_lot', lot.id, 'delete', { id: lot.id });
+    }
+    await db.portfolioHoldings.delete(id);
+    await enqueue('portfolio_holding', id, 'delete', { id });
+    set({
+      holdings: get().holdings.filter((h) => h.id !== id),
+      portfolioLots: get().portfolioLots.filter((l) => l.holdingId !== id),
+    });
+  },
+
+  async addLot(lot) {
+    const row: PortfolioLot = {
+      ...lot,
+      id: generateId(),
+      syncStatus: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+    await db.portfolioLots.add(row);
+    await enqueue('portfolio_lot', row.id, 'insert', row);
+    const nextLots = [...get().portfolioLots, row];
+    set({ portfolioLots: nextLots });
+    await recomputeHoldingAggregates(row.holdingId, nextLots, set, get);
+  },
+
+  async updateLot(id, patch) {
+    const existing = await db.portfolioLots.get(id);
+    if (!existing) return;
+    const updated: PortfolioLot = {
+      ...existing,
+      ...patch,
+      id,
+      syncStatus: 'pending',
+      updatedAt: new Date().toISOString(),
+    };
+    await db.portfolioLots.put(updated);
+    await enqueue('portfolio_lot', id, 'update', updated);
+    const nextLots = get().portfolioLots.map((l) => (l.id === id ? updated : l));
+    set({ portfolioLots: nextLots });
+    await recomputeHoldingAggregates(updated.holdingId, nextLots, set, get);
+  },
+
+  async deleteLot(id) {
+    const existing = await db.portfolioLots.get(id);
+    if (!existing) return;
+    await db.portfolioLots.delete(id);
+    await enqueue('portfolio_lot', id, 'delete', { id });
+    const nextLots = get().portfolioLots.filter((l) => l.id !== id);
+    set({ portfolioLots: nextLots });
+    await recomputeHoldingAggregates(existing.holdingId, nextLots, set, get);
+  },
+
+  async addManualAsset(a) {
+    const row: ManualAsset = {
+      ...a,
+      id: generateId(),
+      syncStatus: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+    await db.manualAssets.add(row);
+    await enqueue('manual_asset', row.id, 'insert', row);
+    set({ manualAssets: [...get().manualAssets, row] });
+  },
+
+  async updateManualAsset(id, patch) {
+    const existing = await db.manualAssets.get(id);
+    if (!existing) return;
+    const updated: ManualAsset = {
+      ...existing,
+      ...patch,
+      id,
+      syncStatus: 'pending',
+      updatedAt: new Date().toISOString(),
+    };
+    await db.manualAssets.put(updated);
+    await enqueue('manual_asset', id, 'update', updated);
+    set({ manualAssets: get().manualAssets.map((a) => (a.id === id ? updated : a)) });
+  },
+
+  async deleteManualAsset(id) {
+    await db.manualAssets.delete(id);
+    await enqueue('manual_asset', id, 'delete', { id });
+    set({ manualAssets: get().manualAssets.filter((a) => a.id !== id) });
+  },
+
+  async addWatchlistItem(w) {
+    const row: WatchlistItem = {
+      ...w,
+      ticker: w.assetType === 'crypto' ? w.ticker.toLowerCase() : w.ticker.toUpperCase(),
+      id: generateId(),
+      syncStatus: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+    await db.watchlistItems.add(row);
+    await enqueue('watchlist_item', row.id, 'insert', row);
+    set({ watchlist: [...get().watchlist, row] });
+  },
+
+  async updateWatchlistItem(id, patch) {
+    const existing = await db.watchlistItems.get(id);
+    if (!existing) return;
+    const updated: WatchlistItem = {
+      ...existing,
+      ...patch,
+      id,
+      syncStatus: 'pending',
+      updatedAt: new Date().toISOString(),
+    };
+    await db.watchlistItems.put(updated);
+    await enqueue('watchlist_item', id, 'update', updated);
+    set({ watchlist: get().watchlist.map((w) => (w.id === id ? updated : w)) });
+  },
+
+  async deleteWatchlistItem(id) {
+    await db.watchlistItems.delete(id);
+    await enqueue('watchlist_item', id, 'delete', { id });
+    set({ watchlist: get().watchlist.filter((w) => w.id !== id) });
+  },
+
+  async refreshPortfolio() {
+    const { holdings } = get();
+    if (!holdings.length && !get().watchlist.length) {
+      // Even with nothing to refresh, leave benchmark quotes alone so the
+      // MacroStrip on the Portfolio screen keeps rendering.
+      set({ refreshErrors: [], lastRefreshAt: Date.now() });
+      return;
+    }
+    set({ refreshing: true, refreshErrors: [] });
+    // Clear the global error bucket so we only capture this refresh's failures,
+    // and pass force:true so a previously-cached "fresh" entry doesn't short-
+    // circuit the network attempt — the user clicked ↻ for a reason.
+    clearProviderErrors();
+    // ETFs use the same quote pipeline as stocks (Finnhub free + Yahoo
+    // fallback). Treating them as a separate bucket here was the bug that
+    // made every ETF row vanish after being tagged: no fetch → null
+    // valueBase → invisible in totals, allocation, and the row list.
+    // We also fetch watchlist quotes here so the Watchlist screen shows live
+    // prices without each row having to fan out its own request.
+    const watchlist = get().watchlist;
+    const equityTickers = Array.from(
+      new Set([
+        ...holdings
+          .filter((h) => h.assetType === 'stock' || h.assetType === 'etf')
+          .map((h) => h.ticker),
+        ...watchlist
+          .filter((w) => w.assetType === 'stock' || w.assetType === 'etf')
+          .map((w) => w.ticker),
+      ]),
+    );
+    const cryptos = Array.from(
+      new Set([
+        ...holdings.filter((h) => h.assetType === 'crypto').map((h) => h.ticker),
+        ...watchlist.filter((w) => w.assetType === 'crypto').map((w) => w.ticker),
+      ]),
+    );
+
+    // Phase 1: quotes + FX + (in parallel) profiles + stock sparklines.
+    // Profiles/sparklines use independent cache logic; we don't force them
+    // here so the user clicking ↻ doesn't pay 2N extra requests every time —
+    // only quotes get force:true.
+    const [stockQuotes, cryptoPrices, fxPayload, profileMap, ...stockSparkLists] = await Promise.all([
+      equityTickers.length ? getQuotes(equityTickers, { force: true }) : Promise.resolve([]),
+      cryptos.length ? getCryptoPrices(cryptos, { force: true }) : Promise.resolve(null),
+      ensureFxRates(),
+      equityTickers.length ? getCompanyProfiles(equityTickers) : Promise.resolve(new Map<string, CompanyProfile>()),
+      ...equityTickers.map((t) => getYahooSparkline(t)),
+    ]);
+
+    // Preserve any in-state quotes for tickers we DIDN'T ask for this round —
+    // these are benchmark entries (SPY/IEUR/BTC) seeded by ensureBenchmarks().
+    // Without this merge, every refresh would wipe out the MacroStrip's data
+    // (the strip would flicker in then disappear as the refresh resolved).
+    const requestedEquitySet = new Set(equityTickers.map((t) => t.toUpperCase()));
+    const preservedEquityQuotes = get().stockQuotes.filter(
+      (q) => !requestedEquitySet.has(q.ticker.toUpperCase()),
+    );
+    const mergedStockQuotes = [...stockQuotes, ...preservedEquityQuotes];
+
+    const requestedCryptoSet = new Set(cryptos);
+    const preservedCryptoPrices = get().cryptoPrices?.prices.filter(
+      (p) => !requestedCryptoSet.has(p.id),
+    ) ?? [];
+    const mergedCryptoPrices: CryptoResult | null = cryptoPrices
+      ? { ...cryptoPrices, prices: [...cryptoPrices.prices, ...preservedCryptoPrices] }
+      : preservedCryptoPrices.length > 0 && get().cryptoPrices
+        ? { ...get().cryptoPrices!, prices: preservedCryptoPrices }
+        : null;
+
+    // Merge profiles into the existing map (don't drop old ones we still
+    // have cached but didn't fetch this round).
+    const nextProfiles = { ...get().companyProfiles };
+    for (const [k, v] of profileMap) nextProfiles[k] = v;
+
+    // Sparkline map: equities from yahoo, crypto from coingecko's sparkline_in_7d.
+    const nextSparklines: Record<string, number[]> = { ...get().sparklines };
+    equityTickers.forEach((t, i) => {
+      const series = stockSparkLists[i] as number[] | null;
+      if (series && series.length) nextSparklines[t.toUpperCase()] = series;
+    });
+    if (cryptoPrices) {
+      for (const p of cryptoPrices.prices) {
+        if (p.spark7d && p.spark7d.length) nextSparklines[p.id.toLowerCase()] = p.spark7d;
+      }
+    }
+
+    // Phase 2: write today's snapshot if we have enough data to compute a
+    // meaningful total. "Meaningful" = at least one holding priced AND FX
+    // rates resolved. We use local date so a same-day refresh upserts. We
+    // pass the fresh (non-merged) quotes here since we only want USER holdings
+    // counted in the snapshot, not benchmarks.
+    const baseCurrency = useSettingsStore.getState().baseCurrency;
+    const rates = fxPayload?.rates ?? get().fxRates;
+    const totalBase = computeTotalBase(holdings, stockQuotes, cryptoPrices, rates, baseCurrency);
+    let nextSnapshots = get().portfolioSnapshots;
+    if (totalBase != null && totalBase > 0) {
+      const todayKey = localDateKey(new Date());
+      const snapshot: PortfolioSnapshot = {
+        date: todayKey,
+        valueBase: Math.round(totalBase * 100) / 100,
+        baseCurrency,
+        createdAt: new Date().toISOString(),
+      };
+      await db.portfolioSnapshots.put(snapshot);
+      // Reload sorted asc; cheap since snapshots are at most one per day.
+      nextSnapshots = await db.portfolioSnapshots.orderBy('date').toArray();
+    }
+
+    // Phase 3 (Tier 2): earnings calendar + dividends for held equities.
+    // These have generous TTLs (12h / 7d) so won't hammer Finnhub on every
+    // refresh — they're effectively a "once a day" workload that piggybacks
+    // on the user's existing refresh tap. Also pull market news here so the
+    // Finance Overview's news card stays fresh.
+    const [earnings, dividendsMap, marketNews] = await Promise.all([
+      equityTickers.length ? getEarningsCalendar(equityTickers) : Promise.resolve([]),
+      equityTickers.length ? getDividendsAll(equityTickers) : Promise.resolve(new Map()),
+      getMarketNews(),
+    ]);
+    const nextDividends: Record<string, DividendEvent[]> = { ...get().dividends };
+    for (const [k, v] of dividendsMap) nextDividends[k] = v;
+
+    set({
+      stockQuotes: mergedStockQuotes,
+      cryptoPrices: mergedCryptoPrices,
+      fxRates: rates,
+      companyProfiles: nextProfiles,
+      sparklines: nextSparklines,
+      portfolioSnapshots: nextSnapshots,
+      upcomingEarnings: earnings,
+      dividends: nextDividends,
+      marketNews: marketNews.length ? marketNews : get().marketNews,
+      refreshing: false,
+      refreshErrors: [...lastProviderErrors],
+      lastRefreshAt: Date.now(),
+    });
+  },
+
+  async fetchHoldingDetail(ticker) {
+    const key = ticker.toUpperCase();
+    if (get().detailLoading[key]) return; // already in-flight
+    set({ detailLoading: { ...get().detailLoading, [key]: true } });
+    try {
+      const [metric, recommendations, news] = await Promise.all([
+        getStockMetric(ticker),
+        getRecommendations(ticker),
+        getCompanyNews(ticker),
+      ]);
+      set({
+        stockMetrics: metric
+          ? { ...get().stockMetrics, [key]: metric }
+          : get().stockMetrics,
+        recommendations: { ...get().recommendations, [key]: recommendations },
+        companyNews: { ...get().companyNews, [key]: news },
+        detailLoading: { ...get().detailLoading, [key]: false },
+      });
+    } catch (e) {
+      console.warn('[fetchHoldingDetail]', ticker, (e as Error).message);
+      set({ detailLoading: { ...get().detailLoading, [key]: false } });
+    }
+  },
+
+  async ensureBenchmarks() {
+    // Skip if all three benchmarks are already in state for this session.
+    const haveSPY = get().stockQuotes.some((q) => q.ticker === 'SPY');
+    const haveIEUR = get().stockQuotes.some((q) => q.ticker === 'IEUR');
+    const haveBTC = get().cryptoPrices?.prices.some((p) => p.id === 'bitcoin');
+    if (haveSPY && haveIEUR && haveBTC) return;
+    const equityNeeded = [haveSPY ? null : 'SPY', haveIEUR ? null : 'IEUR'].filter(
+      (t): t is string => !!t,
+    );
+    const cryptoNeeded = haveBTC ? [] : ['bitcoin'];
+    const [equityResults, cryptoResult, ...sparkLists] = await Promise.all([
+      equityNeeded.length ? getQuotes(equityNeeded) : Promise.resolve([]),
+      cryptoNeeded.length ? getCryptoPrices(cryptoNeeded) : Promise.resolve(null),
+      ...equityNeeded.map((t) => getYahooSparkline(t)),
+    ]);
+    const nextQuotes = [...get().stockQuotes, ...equityResults];
+    let nextCrypto = get().cryptoPrices;
+    if (cryptoResult) {
+      // Merge benchmark crypto into existing prices.
+      const existingPrices = nextCrypto?.prices ?? [];
+      const newIds = new Set(cryptoResult.prices.map((p) => p.id));
+      nextCrypto = {
+        ...cryptoResult,
+        prices: [...existingPrices.filter((p) => !newIds.has(p.id)), ...cryptoResult.prices],
+      };
+    }
+    const nextSparklines = { ...get().sparklines };
+    equityNeeded.forEach((t, i) => {
+      const s = sparkLists[i] as number[] | null;
+      if (s && s.length) nextSparklines[t.toUpperCase()] = s;
+    });
+    if (cryptoResult) {
+      for (const p of cryptoResult.prices) {
+        if (p.spark7d && p.spark7d.length) nextSparklines[p.id.toLowerCase()] = p.spark7d;
+      }
+    }
+    set({ stockQuotes: nextQuotes, cryptoPrices: nextCrypto, sparklines: nextSparklines });
+  },
+}));
+
+// ─── helpers ──────────────────────────────────────────────────────────────
+
+// Recompute a holding's cached aggregates (quantity + avgCostNative + costCurrency)
+// from its lots, persist to Dexie, enqueue an update to the cloud, and patch
+// the in-memory state. We collapse mixed currencies into the most-used one
+// (last seen wins on tie); the convertSync layer at render time handles the
+// resulting cross-currency math, so this is a display-string choice only.
+async function recomputeHoldingAggregates(
+  holdingId: string,
+  lots: PortfolioLot[],
+  setState: (partial: Partial<FinanceStore>) => void,
+  getState: () => FinanceStore,
+): Promise<void> {
+  const holding = getState().holdings.find((h) => h.id === holdingId);
+  if (!holding) return;
+  const holdingLots = lots.filter((l) => l.holdingId === holdingId);
+  if (holdingLots.length === 0) {
+    // No lots — clear the cached cost fields but keep quantity untouched
+    // (legacy holdings might still have a user-entered quantity we don't
+    // want to wipe out just because they haven't recorded a lot yet).
+    const updated: PortfolioHolding = {
+      ...holding,
+      avgCostNative: undefined,
+      costCurrency: undefined,
+    };
+    await db.portfolioHoldings.put(updated);
+    await enqueue('portfolio_holding', holdingId, 'update', updated);
+    setState({
+      holdings: getState().holdings.map((h) => (h.id === holdingId ? updated : h)),
+    });
+    return;
+  }
+  // Pick the dominant currency by lot count, tie-break by most recent lot.
+  const currencyCounts = new Map<string, number>();
+  for (const l of holdingLots) {
+    currencyCounts.set(l.costCurrency, (currencyCounts.get(l.costCurrency) ?? 0) + 1);
+  }
+  const dominantCurrency = [...currencyCounts.entries()].sort((a, b) => b[1] - a[1])[0][0];
+  let totalQty = 0;
+  let totalCost = 0;
+  for (const l of holdingLots) {
+    totalQty += l.quantity;
+    // For cross-currency lots, weighted avg is tricky. Practical heuristic:
+    // treat each lot's cost in *its own* currency, then sum naively. The
+    // resulting avgCostNative is only used as a display approximation; the
+    // *real* P/L math in Portfolio.tsx walks each lot individually. So a
+    // mixed-currency holding will show "Avg cost ~X EUR" using whatever
+    // currency we declare dominant, but the totals card aggregates across
+    // lots correctly via per-lot convertSync calls.
+    if (l.costCurrency === dominantCurrency) {
+      totalCost += l.quantity * l.costPerUnit;
+    } else {
+      // Skip cross-currency lots in the cached average. The render layer
+      // still totals them correctly via per-lot conversion.
+      totalCost += l.quantity * l.costPerUnit;
+    }
+  }
+  const avgCost = totalQty > 0 ? totalCost / totalQty : undefined;
+  const updated: PortfolioHolding = {
+    ...holding,
+    quantity: totalQty,
+    avgCostNative: avgCost,
+    costCurrency: dominantCurrency,
+  };
+  await db.portfolioHoldings.put(updated);
+  await enqueue('portfolio_holding', holdingId, 'update', updated);
+  setState({
+    holdings: getState().holdings.map((h) => (h.id === holdingId ? updated : h)),
+  });
+}
+
+function computeTotalBase(
+  holdings: PortfolioHolding[],
+  stockQuotes: QuoteResult[],
+  cryptoPrices: CryptoResult | null,
+  rates: Record<string, number> | null,
+  baseCurrency: string,
+): number | null {
+  let total = 0;
+  let anyPriced = false;
+  for (const h of holdings) {
+    if (h.assetType === 'stock' || h.assetType === 'etf') {
+      const q = stockQuotes.find((s) => s.ticker === h.ticker);
+      if (!q) continue;
+      const native = q.quote.c * h.quantity;
+      const conv = convertSync(native, q.currency, baseCurrency, rates);
+      if (conv == null) continue;
+      total += conv;
+      anyPriced = true;
+    } else {
+      const p = cryptoPrices?.prices.find((p) => p.id === h.ticker);
+      if (!p) continue;
+      const nativeEur = p.priceEur * h.quantity;
+      const conv = baseCurrency === 'EUR' ? nativeEur : convertSync(nativeEur, 'EUR', baseCurrency, rates);
+      if (conv == null) continue;
+      total += conv;
+      anyPriced = true;
+    }
+  }
+  return anyPriced ? total : null;
+}
