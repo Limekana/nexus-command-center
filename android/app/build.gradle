@@ -44,11 +44,18 @@ dependencies {
 
 apply from: 'capacitor.build.gradle'
 
-try {
-    def servicesJSON = file('google-services.json')
-    if (servicesJSON.text) {
-        apply plugin: 'com.google.gms.google-services'
-    }
-} catch(Exception e) {
-    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
-}
+// The Capacitor template originally included a conditional `apply plugin:`
+// block here for the GMS Gradle plugin (used to bootstrap Firebase Cloud
+// Messaging from a config JSON). That block has been removed so the build
+// has zero classpath references to Play-Services-bound plugins — required
+// for F-Droid compliance, since the fdroidserver scanner flags those
+// references as non-free dependencies even when the plugin is unused at
+// runtime.
+//
+// We don't need it: the app uses @capacitor/local-notifications for the
+// Weekly Review reminder, which is purely on-device (AlarmManager +
+// NotificationManager). No FCM is wired anywhere.
+//
+// If you ever add FCM, restore the plugin and accept that the F-Droid
+// listing will gain a NonFreeDep anti-feature — or use a Gradle build
+// flavor to ship FOSS and Play-Services variants separately.
