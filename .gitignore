@@ -31,6 +31,11 @@ secrets/
 serviceAccount*.json
 credentials.json
 
+# Android signing config — references the release keystore + passwords.
+# Lives in android/key.properties at runtime, never committed.
+android/key.properties
+key.properties
+
 # Editors / OS
 .idea/
 .vscode/

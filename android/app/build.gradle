@@ -1,5 +1,18 @@
 apply plugin: 'com.android.application'
 
+// ── Release signing ──────────────────────────────────────────────────────
+// Loads keystore credentials from android/key.properties (gitignored). If
+// the file is absent (fresh clone, CI without secrets, debug-only build)
+// we fall through to no signing config on release — `assembleRelease` will
+// then produce an unsigned APK and `bundleRelease` will fail loudly, which
+// is the correct signal that release signing isn't configured yet.
+def keystorePropertiesFile = rootProject.file("key.properties")
+def keystoreProperties = new Properties()
+def hasReleaseKeystore = keystorePropertiesFile.exists()
+if (hasReleaseKeystore) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace "com.limecore.nexus"
     compileSdk rootProject.ext.compileSdkVersion
@@ -16,10 +29,31 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+
+    signingConfigs {
+        if (hasReleaseKeystore) {
+            release {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                // Enable both v1 (jar signing) and v2 (APK Signature Scheme).
+                // v2 is required for Android 7.0+, v1 is required so Android
+                // 6.0 and earlier (minSdk 26 here means we're fine without v1,
+                // but enabling it costs nothing and broadens compatibility).
+                v1SigningEnabled true
+                v2SigningEnabled true
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (hasReleaseKeystore) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }
