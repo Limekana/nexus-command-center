@@ -17,7 +17,14 @@ import { CapacitorHttp } from '@capacitor/core';
 import type { FinnhubQuote } from './finnhub';
 import { readCache, writeCache, shouldFetch, recordCall } from './cache';
 
-const BASE_URL = 'https://query1.finance.yahoo.com/v8/finance/chart';
+// Native (Android): hit Yahoo directly via CapacitorHttp which bypasses
+// the WebView CORS check. Web dev preview: go through the Vite proxy at
+// /yfin (configured in vite.config.ts). Yahoo refuses cross-origin XHR
+// from localhost so without the proxy every dev fetch fails with the
+// generic "Network Error" axios message.
+const BASE_URL = Capacitor.isNativePlatform()
+  ? 'https://query1.finance.yahoo.com/v8/finance/chart'
+  : '/yfin/v8/finance/chart';
 
 const BROWSER_HEADERS: Record<string, string> = {
   Accept: 'application/json, text/javascript, */*; q=0.01',

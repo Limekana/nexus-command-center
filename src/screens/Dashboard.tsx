@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppHeader from '../components/AppHeader';
 import SyncStatusChip from '../components/SyncStatusChip';
@@ -17,10 +17,10 @@ export default function Dashboard() {
   const transactions = useFinanceStore((s) => s.transactions);
   const budgetCategories = useFinanceStore((s) => s.budgetCategories);
   const stockQuotes = useFinanceStore((s) => s.stockQuotes);
-  const refreshPortfolio = useFinanceStore((s) => s.refreshPortfolio);
 
   const studies = useStudiesStore((s) => s.currentImport);
   const studyCourses = useStudiesStore((s) => s.courses);
+  const studyGrades = useStudiesStore((s) => s.grades);
   const previousGpa = useStudiesStore((s) => s.previousGpa);
   const gradeMode = useStudiesStore((s) => s.gradeMode);
 
@@ -29,9 +29,16 @@ export default function Dashboard() {
 
   const tasks = useTaskStore((s) => s.tasks);
 
-  useEffect(() => {
-    refreshPortfolio();
-  }, []);
+  // Portfolio auto-refresh used to live here, but Dashboard mounts as a child
+  // of AppShell — at first-mount the holdings store is still empty (AppShell's
+  // load() is in flight), so the refresh saw `holdings: []` and bailed on the
+  // empty-portfolio early-return. The net-worth widgets then sat on stale data
+  // until the user navigated to /finance/portfolio, which has its own
+  // mount-effect refresh that runs *after* holdings are populated.
+  //
+  // Auto-refresh now lives in AppShell, gated on `holdings.length` so it only
+  // fires once holdings are actually loaded. Keep the selector above so the
+  // Dashboard can still see live state — but no longer trigger a refresh here.
 
   const monthExpenses = useMemo(() => {
     const now = new Date();
@@ -145,13 +152,26 @@ export default function Dashboard() {
 
           <ModuleSummaryCard title="Studies" icon="📚" tag={studies ? 'TRACKING' : 'IDLE'} to="/studies">
             {studyCourses.length > 0 ? (
-              studyCourses.slice(0, 2).map((c) => (
-                <ListRow
-                  key={c.id}
-                  label={c.name}
-                  value={gradeMode === 'ib' ? `${c.grade}/7` : `${c.grade}%`}
-                />
-              ))
+              studyCourses.slice(0, 2).map((c) => {
+                // Weighted-average across the subject's grades. We compute
+                // inline (vs. memo) because the dashboard renders 2 subjects
+                // at most — not worth the bookkeeping.
+                const subjGrades = studyGrades.filter((g) => g.subjectId === c.id);
+                const totW = subjGrades.reduce((s, g) => s + (g.weight || 0), 0);
+                const score = subjGrades.length === 0
+                  ? null
+                  : totW === 0
+                    ? subjGrades.reduce((s, g) => s + g.grade, 0) / subjGrades.length
+                    : subjGrades.reduce((s, g) => s + g.grade * (g.weight || 0), 0) / totW;
+                const label = score == null
+                  ? '—'
+                  : gradeMode === 'ib'
+                    ? `${score.toFixed(1)}/7`
+                    : `${score.toFixed(1)}%`;
+                return (
+                  <ListRow key={c.id} label={c.name} value={label} />
+                );
+              })
             ) : (
               <>
                 <Empty msg="No courses yet" />

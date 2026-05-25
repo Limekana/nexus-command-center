@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { Preferences } from '@capacitor/preferences';
 import { db } from '../db/database';
-import { Course, GradeImport, StudySession, Reading, ReadingStatus } from '../types/studies';
+import { Course, Grade, GradeImport, StudySession, Reading, ReadingStatus } from '../types/studies';
 import { calculateGPA, GradeMode } from '../utils/gpa';
 import { generateId } from '../utils/uuid';
 import { enqueue } from '../db/syncQueue';
@@ -24,9 +24,22 @@ async function setPref(key: string, value: string): Promise<void> {
   }
 }
 
+// Build a Map<subjectId, Grade[]> from a flat grades array. Used by the GPA
+// aggregator and by the StudiesOverview UI to show per-subject grade lists.
+function indexGradesBySubject(grades: Grade[]): Map<string, Grade[]> {
+  const map = new Map<string, Grade[]>();
+  for (const g of grades) {
+    const arr = map.get(g.subjectId);
+    if (arr) arr.push(g);
+    else map.set(g.subjectId, [g]);
+  }
+  return map;
+}
+
 interface StudiesStore {
   currentImport: GradeImport | null;
   courses: Course[];
+  grades: Grade[];
   previousGpa: number | null;
   gradeMode: GradeMode;
   loading: boolean;
@@ -38,13 +51,14 @@ interface StudiesStore {
   load: () => Promise<void>;
   setGradeMode: (mode: GradeMode) => Promise<void>;
 
-  confirmImport: (
-    parsed: Omit<Course, 'id' | 'createdAt' | 'importId'>[]
-  ) => Promise<GradeImport>;
-
   addCourse: (c: Omit<Course, 'id' | 'createdAt' | 'importId'>) => Promise<void>;
   updateCourse: (id: string, patch: Partial<Course>) => Promise<void>;
   deleteCourse: (id: string) => Promise<void>;
+
+  // Grades (per-subject assessments) — added v1.0.3
+  addGrade: (g: Omit<Grade, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'>) => Promise<void>;
+  updateGrade: (id: string, patch: Partial<Grade>) => Promise<void>;
+  deleteGrade: (id: string) => Promise<void>;
 
   // Study Sessions
   addStudySession: (
@@ -81,9 +95,14 @@ async function recomputeImport(importId: string, mode: GradeMode): Promise<Grade
   const imp = await db.gradeImports.get(importId);
   if (!imp) return null;
   const courses = await db.courses.where('importId').equals(importId).toArray();
+  // Pull the grades for these courses to feed the multi-grade GPA aggregator.
+  // We pull all grades and index by subject — for small course counts (the
+  // realistic case) this is much cheaper than N round-trips.
+  const allGrades = await db.grades.toArray();
+  const idx = indexGradesBySubject(allGrades);
   const updated: GradeImport = {
     ...imp,
-    calculatedGpa: calculateGPA(courses, mode),
+    calculatedGpa: calculateGPA(courses, idx, mode),
     courses,
     importedAt: new Date().toISOString(),
   };
@@ -94,6 +113,7 @@ async function recomputeImport(importId: string, mode: GradeMode): Promise<Grade
 export const useStudiesStore = create<StudiesStore>((set, get) => ({
   currentImport: null,
   courses: [],
+  grades: [],
   previousGpa: null,
   gradeMode: 'us',
   loading: false,
@@ -104,8 +124,9 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
     set({ loading: true });
     const stored = await getPref(GRADE_MODE_KEY);
     const gradeMode: GradeMode = stored === 'ib' ? 'ib' : 'us';
-    const [imports, studySessions, readings] = await Promise.all([
+    const [imports, allGrades, studySessions, readings] = await Promise.all([
       db.gradeImports.orderBy('importedAt').reverse().toArray(),
+      db.grades.toArray(),
       db.studySessions.orderBy('startedAt').reverse().toArray(),
       db.readings.orderBy('updatedAt').reverse().toArray(),
     ]);
@@ -115,9 +136,13 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
     if (latest) {
       courses = await db.courses.where('importId').equals(latest.id).toArray();
     }
+    const idx = indexGradesBySubject(allGrades);
     set({
-      currentImport: latest ? { ...latest, courses, calculatedGpa: calculateGPA(courses, gradeMode) } : null,
+      currentImport: latest
+        ? { ...latest, courses, calculatedGpa: calculateGPA(courses, idx, gradeMode) }
+        : null,
       courses,
+      grades: allGrades,
       previousGpa: previous ? previous.calculatedGpa : null,
       gradeMode,
       studySessions,
@@ -132,42 +157,11 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
     // Recompute current import GPA under the new scale.
     const imp = get().currentImport;
     if (imp) {
-      const updated = { ...imp, calculatedGpa: calculateGPA(get().courses, mode) };
+      const idx = indexGradesBySubject(get().grades);
+      const updated = { ...imp, calculatedGpa: calculateGPA(get().courses, idx, mode) };
       await db.gradeImports.put(updated);
       set({ currentImport: updated });
     }
-  },
-
-  async confirmImport(parsed) {
-    const importId = generateId();
-    const now = new Date().toISOString();
-    const courses: Course[] = parsed.map((c) => ({
-      ...c,
-      id: generateId(),
-      importId,
-      createdAt: now,
-    }));
-    const gpa = calculateGPA(courses, get().gradeMode);
-    const previousGpa = get().currentImport?.calculatedGpa ?? null;
-
-    const imp: GradeImport = {
-      id: importId,
-      importedAt: now,
-      source: 'csv',
-      calculatedGpa: gpa,
-      courses,
-    };
-
-    await db.transaction('rw', [db.courses, db.gradeImports], async () => {
-      await db.courses.clear();
-      await db.gradeImports.clear();
-      await db.gradeImports.add(imp);
-      await db.courses.bulkAdd(courses);
-    });
-    await enqueue('grade_import', importId, 'insert', imp);
-
-    set({ currentImport: imp, courses, previousGpa });
-    return imp;
   },
 
   async addCourse(c) {
@@ -205,6 +199,14 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
   async deleteCourse(id) {
     const existing = await db.courses.get(id);
     if (!existing) return;
+    // Cascade: delete the subject's grades locally + enqueue grade deletes so
+    // the cloud follows. StudyDesk does the same cascade server-side, but we
+    // can't rely on that for offline use.
+    const childGrades = await db.grades.where('subjectId').equals(id).toArray();
+    for (const g of childGrades) {
+      await db.grades.delete(g.id);
+      await enqueue('grade', g.id, 'delete', { id: g.id });
+    }
     await db.courses.delete(id);
     await enqueue('course', id, 'delete', { id });
     const recomputed = existing.importId
@@ -212,8 +214,78 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
       : null;
     set({
       courses: get().courses.filter((c) => c.id !== id),
+      grades: get().grades.filter((g) => g.subjectId !== id),
       currentImport: recomputed ?? get().currentImport,
     });
+  },
+
+  // ── Grades (per-subject assessments) ──────────────────────────────────
+  async addGrade(input) {
+    const now = new Date().toISOString();
+    const grade: Grade = {
+      ...input,
+      id: generateId(),
+      syncStatus: 'pending',
+      createdAt: now,
+      updatedAt: now,
+    };
+    await db.grades.add(grade);
+    await enqueue('grade', grade.id, 'insert', grade);
+    const nextGrades = [...get().grades, grade];
+    set({ grades: nextGrades });
+    const imp = get().currentImport;
+    if (imp) {
+      const idx = indexGradesBySubject(nextGrades);
+      const updated = {
+        ...imp,
+        calculatedGpa: calculateGPA(get().courses, idx, get().gradeMode),
+      };
+      await db.gradeImports.put(updated);
+      set({ currentImport: updated });
+    }
+  },
+
+  async updateGrade(id, patch) {
+    const existing = await db.grades.get(id);
+    if (!existing) return;
+    const updated: Grade = {
+      ...existing,
+      ...patch,
+      id,
+      updatedAt: new Date().toISOString(),
+      syncStatus: 'pending',
+    };
+    await db.grades.put(updated);
+    await enqueue('grade', id, 'update', updated);
+    const nextGrades = get().grades.map((g) => (g.id === id ? updated : g));
+    set({ grades: nextGrades });
+    const imp = get().currentImport;
+    if (imp) {
+      const idx = indexGradesBySubject(nextGrades);
+      const recomputed = {
+        ...imp,
+        calculatedGpa: calculateGPA(get().courses, idx, get().gradeMode),
+      };
+      await db.gradeImports.put(recomputed);
+      set({ currentImport: recomputed });
+    }
+  },
+
+  async deleteGrade(id) {
+    await db.grades.delete(id);
+    await enqueue('grade', id, 'delete', { id });
+    const nextGrades = get().grades.filter((g) => g.id !== id);
+    set({ grades: nextGrades });
+    const imp = get().currentImport;
+    if (imp) {
+      const idx = indexGradesBySubject(nextGrades);
+      const recomputed = {
+        ...imp,
+        calculatedGpa: calculateGPA(get().courses, idx, get().gradeMode),
+      };
+      await db.gradeImports.put(recomputed);
+      set({ currentImport: recomputed });
+    }
   },
 
   // ── Study Sessions ─────────────────────────────────────────────────────
@@ -319,3 +391,7 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
     set({ readings: get().readings.filter((r) => r.id !== id) });
   },
 }));
+
+// Re-export the indexing helper so UI screens can build per-subject views
+// without re-implementing the grouping logic.
+export { indexGradesBySubject };

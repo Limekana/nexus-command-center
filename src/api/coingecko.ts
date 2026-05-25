@@ -1,8 +1,12 @@
 import axios from 'axios';
+import { Capacitor } from '@capacitor/core';
 import { readCache, writeCache, shouldFetch, recordCall } from './cache';
 import { lastProviderErrors } from './yahoo';
 
-const BASE_URL = 'https://api.coingecko.com/api/v3';
+// Native: direct. Web dev preview: through Vite proxy.
+const BASE_URL = Capacitor.isNativePlatform()
+  ? 'https://api.coingecko.com/api/v3'
+  : '/cg/api/v3';
 
 export interface CryptoPrice {
   id: string;

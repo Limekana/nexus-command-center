@@ -11,6 +11,7 @@ import { clearAllLocalData } from './db/database';
 import { supabase } from './lib/supabase';
 import { startRealtime, stopRealtime } from './lib/realtime';
 import AdoptionPrompt from './components/AdoptionPrompt';
+import NotificationsExplainerModal from './components/NotificationsExplainerModal';
 import LockScreen from './screens/LockScreen';
 import Login from './screens/auth/Login';
 import Signup from './screens/auth/Signup';
@@ -25,9 +26,8 @@ import ManageLots from './screens/finance/ManageLots';
 import NetWorth from './screens/finance/NetWorth';
 import WhatIf from './screens/finance/WhatIf';
 import Watchlist from './screens/finance/Watchlist';
+import News from './screens/finance/News';
 import StudiesOverview from './screens/studies/StudiesOverview';
-import CSVImport from './screens/studies/CSVImport';
-import ImportPreview from './screens/studies/ImportPreview';
 import StudySessions from './screens/studies/StudySessions';
 import Library from './screens/studies/Library';
 import AddReading from './screens/studies/AddReading';
@@ -146,6 +146,11 @@ export default function App() {
   return (
     <>
       <AdoptionPrompt />
+      {/* First-launch (post-upgrade) explainer for notifications. Renders
+          nothing once the user has dismissed it once via either path
+          ("Enable Notifications" or "Not Now"). Native-only — see the
+          component for the rationale. */}
+      <NotificationsExplainerModal />
       <NotificationBridge />
       <Routes>
         <Route element={<AppShell />}>
@@ -156,12 +161,11 @@ export default function App() {
           <Route path="/finance/portfolio/manage" element={<ManageHoldings />} />
           <Route path="/finance/portfolio/lots/:id" element={<ManageLots />} />
           <Route path="/finance/portfolio/watchlist" element={<Watchlist />} />
+          <Route path="/finance/news" element={<News />} />
           <Route path="/finance/networth" element={<NetWorth />} />
           <Route path="/finance/whatif" element={<WhatIf />} />
           <Route path="/finance/budgets" element={<ManageBudgets />} />
           <Route path="/studies" element={<StudiesOverview />} />
-          <Route path="/studies/import" element={<CSVImport />} />
-          <Route path="/studies/import/preview" element={<ImportPreview />} />
           <Route path="/studies/sessions" element={<StudySessions />} />
           <Route path="/studies/library" element={<Library />} />
           <Route path="/studies/library/add" element={<AddReading />} />

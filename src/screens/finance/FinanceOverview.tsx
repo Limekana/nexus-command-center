@@ -100,6 +100,12 @@ export default function FinanceOverview() {
         action={
           <>
             <button
+              onClick={() => navigate('/finance/news')}
+              className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary"
+            >
+              📰 News
+            </button>
+            <button
               onClick={() => navigate('/finance/portfolio')}
               className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary"
             >

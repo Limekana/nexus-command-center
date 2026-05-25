@@ -1,69 +1,42 @@
-// Sunday 18:00 local push reminder for the Weekly Review. Uses Capacitor
-// LocalNotifications — no server, no Firebase, no token rotation. The plugin
-// schedules a one-shot notification; on tap we navigate to /review.
+// Sunday 18:00 local push reminder for the Weekly Review.
 //
-// Why one-shot instead of `repeats: true` + schedule.on:
-//   - The on/at/every API in this plugin doesn't reliably support "next
-//     Sunday at 18:00, then every 7 days". `every: 'week'` repeats from the
-//     scheduled moment, which works fine — but Android may drop alarms after
-//     reboot or doze. To be safe we re-schedule on every app start as long
-//     as the user has the toggle enabled. Cheap insurance.
+// This module used to own the entire LocalNotifications integration (plugin
+// loader, permission flow, channel creation, tap routing). All of that is
+// now in src/lib/notifications.ts — a unified service shared by every
+// notification category (tasks, budgets, portfolio EoD, news, weekly review).
 //
-// Permission flow:
-//   - First time the user enables the toggle we request permission.
-//   - If denied, the toggle flips back off and we surface the reason.
+// What's left here is just the *scheduling logic* specific to the weekly
+// review: pick "next Sunday at 18:00", encode the /review route, schedule
+// with a stable ID in the weekly-review range. Existing callers (App.tsx +
+// Settings.tsx) keep their imports intact — the public API surface didn't
+// change shape.
 
-import { Capacitor } from '@capacitor/core';
+import {
+  ID_RANGES,
+  cancelNotifications,
+  ensureNotificationPermission,
+  notificationsAvailable as notificationsAvailableInternal,
+  onNotificationTap as onNotificationTapInternal,
+  scheduleNotification,
+  type NotificationResult,
+} from './notifications';
+import { useSettingsStore } from '../store/useSettingsStore';
 
-const NOTIFICATION_ID = 1001; // fixed so re-scheduling overwrites the prior one
-const CHANNEL_ID = 'weekly-review';
+// First slot in the weekly-review ID range. Re-scheduling with the same ID
+// overwrites the prior one so we don't accumulate orphan alarms across
+// app restarts.
+const NOTIFICATION_ID = ID_RANGES['weekly-review'].base + 1; // 1001
 
-type LocalNotificationsModule = typeof import('@capacitor/local-notifications').LocalNotifications;
-
-let cached: LocalNotificationsModule | null | undefined;
-
-async function getPlugin(): Promise<LocalNotificationsModule | null> {
-  if (cached !== undefined) return cached;
-  if (!Capacitor.isNativePlatform()) {
-    cached = null;
-    return cached;
-  }
-  try {
-    const mod = await import('@capacitor/local-notifications');
-    cached = mod.LocalNotifications;
-    return cached;
-  } catch {
-    cached = null;
-    return cached;
-  }
-}
-
-export interface NotificationResult {
-  ok: boolean;
-  reason?: string;
-}
+export type { NotificationResult } from './notifications';
 
 export async function notificationsAvailable(): Promise<boolean> {
-  return (await getPlugin()) != null;
+  return notificationsAvailableInternal();
 }
 
-async function ensureChannel(): Promise<void> {
-  // Android 8+ requires a notification channel. Plugin creates a default
-  // one but we explicitly create ours so the user can disable just this
-  // type in system settings without nuking other notifications later.
-  const plugin = await getPlugin();
-  if (!plugin) return;
-  try {
-    await plugin.createChannel({
-      id: CHANNEL_ID,
-      name: 'Weekly Review',
-      description: 'Sunday evening summary of your week across all modules',
-      importance: 3, // DEFAULT — visible but no heads-up popup
-      visibility: 1,
-    });
-  } catch {
-    /* Channels are best-effort; missing means we fall back to default. */
-  }
+/** Re-export the unified permission flow under the original name so the
+ *  Settings.tsx import doesn't have to change. */
+export async function requestNotificationPermission(): Promise<NotificationResult> {
+  return ensureNotificationPermission();
 }
 
 /** Returns the next Sunday at the given hour in local time. If today is
@@ -83,20 +56,6 @@ function nextSundayAt(hour: number, minute: number = 0): Date {
   return target;
 }
 
-export async function requestNotificationPermission(): Promise<NotificationResult> {
-  const plugin = await getPlugin();
-  if (!plugin) return { ok: false, reason: 'Notifications not available on this platform.' };
-  try {
-    const check = await plugin.checkPermissions();
-    if (check.display === 'granted') return { ok: true };
-    const req = await plugin.requestPermissions();
-    if (req.display === 'granted') return { ok: true };
-    return { ok: false, reason: 'Notification permission denied.' };
-  } catch (e) {
-    return { ok: false, reason: (e as Error).message };
-  }
-}
-
 /**
  * Schedule the Sunday 18:00 reminder. Overwrites any existing schedule
  * with the same ID. Returns ok=false if the platform doesn't support it
@@ -104,74 +63,25 @@ export async function requestNotificationPermission(): Promise<NotificationResul
  * preference; this function only touches the schedule.
  */
 export async function scheduleWeeklyReview(): Promise<NotificationResult> {
-  const plugin = await getPlugin();
-  if (!plugin) return { ok: false, reason: 'Notifications not available on this platform.' };
-
-  // Make sure we have permission. We don't re-prompt aggressively — if
-  // already denied, the caller flips the toggle back.
-  const check = await plugin.checkPermissions();
-  if (check.display !== 'granted') {
-    return { ok: false, reason: 'Notification permission not granted.' };
+  // Master kill-switch check. Schedule from the NotificationBridge fires on
+  // every app start as long as `weeklyReminder` is true — if the user has
+  // since flipped the master toggle off, we don't want to silently re-arm.
+  if (!useSettingsStore.getState().notifMasterEnabled) {
+    return { ok: false, reason: 'Notifications are turned off in Settings.' };
   }
-
-  await ensureChannel();
-  const at = nextSundayAt(18, 0);
-  try {
-    await plugin.schedule({
-      notifications: [
-        {
-          id: NOTIFICATION_ID,
-          title: 'Your week is ready',
-          body: 'Tap to see how your finances, study, fitness and tasks moved this week.',
-          channelId: CHANNEL_ID,
-          schedule: {
-            at,
-            // Repeat every 7 days. Plugin handles this as a relative
-            // recurrence from the initial trigger.
-            every: 'week',
-            allowWhileIdle: true,
-          },
-          extra: { route: '/review' },
-        },
-      ],
-    });
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, reason: (e as Error).message };
-  }
+  return scheduleNotification({
+    id: NOTIFICATION_ID,
+    category: 'weekly-review',
+    title: 'Your week is ready',
+    body: 'Tap to see how your finances, study, fitness and tasks moved this week.',
+    at: nextSundayAt(18, 0),
+    every: 'week',
+    extra: { route: '/review' },
+  });
 }
 
 export async function cancelWeeklyReview(): Promise<void> {
-  const plugin = await getPlugin();
-  if (!plugin) return;
-  try {
-    await plugin.cancel({ notifications: [{ id: NOTIFICATION_ID }] });
-  } catch {
-    /* ignore */
-  }
+  await cancelNotifications([NOTIFICATION_ID]);
 }
 
-/**
- * Subscribe to notification taps. Calls `onOpen(route)` with the route
- * encoded in the notification's `extra` payload. Returns an unsubscriber.
- *
- * Safe to call on web — returns a no-op unsubscriber.
- */
-export async function onNotificationTap(
-  onOpen: (route: string) => void,
-): Promise<() => void> {
-  const plugin = await getPlugin();
-  if (!plugin) return () => {};
-  try {
-    const handle = await plugin.addListener('localNotificationActionPerformed', (event) => {
-      const extra = event.notification?.extra as { route?: string } | undefined;
-      const route = extra?.route;
-      if (route) onOpen(route);
-    });
-    return () => {
-      handle.remove();
-    };
-  } catch {
-    return () => {};
-  }
-}
+export const onNotificationTap = onNotificationTapInternal;

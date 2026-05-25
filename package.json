@@ -1,6 +1,6 @@
 {
   "name": "nexus-dashboard",
-  "version": "3.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -18,13 +18,11 @@
     "@capacitor/app": "^7.0.0",
     "@capacitor/browser": "^7.0.5",
     "@capacitor/core": "^7.0.0",
-    "@capacitor/local-notifications": "^7.0.6",
     "@capacitor/preferences": "^7.0.0",
     "@devmaxime/capacitor-health-connect": "^1.1.0",
     "@supabase/supabase-js": "^2.105.4",
     "axios": "^1.7.7",
     "dexie": "^4.0.8",
-    "papaparse": "^5.4.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.2",
@@ -33,7 +31,6 @@
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^7.0.0",
-    "@types/papaparse": "^5.3.14",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.2",

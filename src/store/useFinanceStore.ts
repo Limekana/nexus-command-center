@@ -23,6 +23,9 @@ import {
 } from '../api/stockDetail';
 import { getMarketNews } from '../api/marketNews';
 import { useSettingsStore } from './useSettingsStore';
+import { checkBudgetThresholds } from '../lib/budgetAlerts';
+import { runPortfolioEodTick } from '../lib/portfolioEod';
+import { runNewsAlertsTick } from '../lib/newsAlerts';
 
 interface FinanceStore {
   transactions: Transaction[];
@@ -100,10 +103,18 @@ interface FinanceStore {
   updateWatchlistItem: (id: string, patch: Partial<Omit<WatchlistItem, 'id' | 'createdAt'>>) => Promise<void>;
   deleteWatchlistItem: (id: string) => Promise<void>;
 
-  refreshPortfolio: () => Promise<void>;
+  // `force: true` (default) — caller wants a fresh network round-trip; the
+  // ↻ button in the UI uses this. `force: false` — auto-refresh paths
+  // (cold-start in AppShell, resume-after-20min) should respect the cache
+  // layer so back-to-back launches don't burn the Finnhub free-tier quota.
+  refreshPortfolio: (opts?: { force?: boolean }) => Promise<void>;
   // Fetches metric + recommendations + news for one ticker. Idempotent and
   // cache-backed — cheap to call every time the detail sheet opens.
   fetchHoldingDetail: (ticker: string) => Promise<void>;
+  // Eagerly populates `companyNews` for every owned stock/ETF. Called from
+  // refreshPortfolio so the News screen has data without each row having
+  // to be opened. Per-ticker cache (6h) absorbs repeat calls.
+  loadCompanyNewsForHoldings: () => Promise<void>;
   // Loads benchmark quotes (SPY, IEUR, BTC). Merges into existing stockQuotes
   // and cryptoPrices state so the regular row pipeline can read them. Cached
   // and gated; safe to call on every mount of the MacroStrip.
@@ -194,6 +205,10 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
     await db.transactions.add(tx);
     await enqueue('transaction', tx.id, 'insert', tx);
     set({ transactions: [tx, ...get().transactions] });
+    // Budget alert hook — fire-and-forget. Recomputes spend% per category
+    // and notifies on any newly-crossed 80%/100% threshold. The helper is
+    // idempotent so re-running on every txn is fine.
+    void checkBudgetThresholds(get().transactions, get().budgetCategories);
   },
 
   async updateTransaction(id, patch) {
@@ -210,12 +225,16 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
     set({
       transactions: get().transactions.map((t) => (t.id === id ? updated : t)),
     });
+    void checkBudgetThresholds(get().transactions, get().budgetCategories);
   },
 
   async deleteTransaction(id) {
     await db.transactions.delete(id);
     await enqueue('transaction', id, 'delete', { id });
     set({ transactions: get().transactions.filter((t) => t.id !== id) });
+    // Delete can drop spend below 80% → wipe the tracker so future re-cross
+    // fires again. checkBudgetThresholds handles that bookkeeping itself.
+    void checkBudgetThresholds(get().transactions, get().budgetCategories);
   },
 
   async addBudgetCategory(c) {
@@ -238,6 +257,8 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
     set({
       budgetCategories: get().budgetCategories.map((c) => (c.id === id ? updated : c)),
     });
+    // Lowering a monthlyLimit can push current spend over a threshold — re-check.
+    void checkBudgetThresholds(get().transactions, get().budgetCategories);
   },
 
   async deleteBudgetCategory(id) {
@@ -404,7 +425,12 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
     set({ watchlist: get().watchlist.filter((w) => w.id !== id) });
   },
 
-  async refreshPortfolio() {
+  async refreshPortfolio(opts = {}) {
+    // Default to force=true so the manual ↻ button and other call sites keep
+    // their old "always hit the wire" behavior. Auto-refresh paths (cold start
+    // + resume) opt OUT by passing force:false so the cache layer absorbs
+    // back-to-back app launches.
+    const force = opts.force !== false;
     const { holdings } = get();
     if (!holdings.length && !get().watchlist.length) {
       // Even with nothing to refresh, leave benchmark quotes alone so the
@@ -413,10 +439,17 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
       return;
     }
     set({ refreshing: true, refreshErrors: [] });
-    // Clear the global error bucket so we only capture this refresh's failures,
-    // and pass force:true so a previously-cached "fresh" entry doesn't short-
-    // circuit the network attempt — the user clicked ↻ for a reason.
+    // Clear the global error bucket so we only capture this refresh's failures.
+    // `force` controls whether a previously-cached "fresh" entry short-circuits
+    // the network attempt — user-initiated refreshes want the wire, auto
+    // refreshes are happy with cached data inside the soft-TTL.
     clearProviderErrors();
+    // Belt-and-suspenders top-level guard: if any of the Promise.all calls
+    // below reject unexpectedly (e.g. a transient network error in a fetcher
+    // that wasn't supposed to throw), we'd otherwise leave refreshing=true
+    // forever AND show no error to the user. The catch surfaces the error
+    // and the finally always lifts the spinner.
+    try {
     // ETFs use the same quote pipeline as stocks (Finnhub free + Yahoo
     // fallback). Treating them as a separate bucket here was the bug that
     // made every ETF row vanish after being tagged: no fetch → null
@@ -446,8 +479,8 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
     // here so the user clicking ↻ doesn't pay 2N extra requests every time —
     // only quotes get force:true.
     const [stockQuotes, cryptoPrices, fxPayload, profileMap, ...stockSparkLists] = await Promise.all([
-      equityTickers.length ? getQuotes(equityTickers, { force: true }) : Promise.resolve([]),
-      cryptos.length ? getCryptoPrices(cryptos, { force: true }) : Promise.resolve(null),
+      equityTickers.length ? getQuotes(equityTickers, { force }) : Promise.resolve([]),
+      cryptos.length ? getCryptoPrices(cryptos, { force }) : Promise.resolve(null),
       ensureFxRates(),
       equityTickers.length ? getCompanyProfiles(equityTickers) : Promise.resolve(new Map<string, CompanyProfile>()),
       ...equityTickers.map((t) => getYahooSparkline(t)),
@@ -539,6 +572,75 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
       refreshErrors: [...lastProviderErrors],
       lastRefreshAt: Date.now(),
     });
+    // adb logcat diagnostic: shows which tickers had quotes returned vs
+    // requested. If the user has 10 holdings but only 3 returned data,
+    // this surfaces the gap immediately:
+    //   adb logcat | grep -i "refreshPortfolio\|nexus"
+    console.log(
+      '[refreshPortfolio] requested', equityTickers.length,
+      'equity tickers; got', stockQuotes.length, 'quotes;',
+      'errors:', lastProviderErrors.length,
+    );
+    if (lastProviderErrors.length) {
+      for (const err of lastProviderErrors.slice(0, 10)) {
+        console.warn(`[refreshPortfolio] ${err.provider}${err.ticker ? ' ' + err.ticker : ''}: ${err.message}`);
+      }
+    }
+    } catch (e) {
+      // Unexpected throw somewhere in the await chain — log it, surface in
+      // refreshErrors so the user sees something, and lift the spinner.
+      // Without this catch a single bad fetcher could leave refreshing=true
+      // forever on the next launch.
+      const msg = (e as Error).message || String(e);
+      console.warn('[refreshPortfolio] caught:', msg);
+      set({
+        refreshing: false,
+        refreshErrors: [
+          ...lastProviderErrors,
+          { provider: 'finnhub', message: `refresh threw: ${msg}` },
+        ],
+        lastRefreshAt: Date.now(),
+      });
+      return;
+    }
+    // Re-run the EoD tick so the 4:35pm backup notification's body reflects
+    // the freshest quotes. Idempotent — runs cancel-or-schedule based on
+    // current time-of-day in ET.
+    void runPortfolioEodTick();
+    // Eagerly populate per-holding news so the News screen renders without
+    // each row needing to be opened. Fire-and-forget; failures are logged
+    // but don't block the rest of the refresh from settling.
+    void (async () => {
+      await get().loadCompanyNewsForHoldings();
+      // After per-holding news lands, score and fire any new alerts.
+      // Sequencing matters: runNewsAlertsTick reads companyNews directly,
+      // so without the await it would see the pre-refresh snapshot and
+      // miss alerts for items that just arrived.
+      await runNewsAlertsTick();
+    })();
+  },
+
+  async loadCompanyNewsForHoldings() {
+    const tickers = Array.from(
+      new Set(
+        get()
+          .holdings.filter((h) => h.assetType === 'stock' || h.assetType === 'etf')
+          .map((h) => h.ticker.toUpperCase()),
+      ),
+    );
+    if (tickers.length === 0) return;
+    // Fan out per-ticker fetches in parallel. getCompanyNews is cache-gated
+    // (6h TTL) and rate-limit-gated at the api/cache layer, so this is safe
+    // to call on every refresh — most tickers hit cache.
+    const results = await Promise.all(
+      tickers.map(async (t) => ({ ticker: t, news: await getCompanyNews(t) })),
+    );
+    const next: Record<string, NewsItem[]> = { ...get().companyNews };
+    for (const r of results) {
+      // Stamp ticker on each item so the News screen can render a badge.
+      next[r.ticker] = r.news.map((n) => ({ ...n, ticker: r.ticker }));
+    }
+    set({ companyNews: next });
   },
 
   async fetchHoldingDetail(ticker) {
@@ -566,14 +668,20 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
   },
 
   async ensureBenchmarks() {
-    // Skip if all three benchmarks are already in state for this session.
+    // Skip if all benchmarks are already in state for this session. QQQ is
+    // fetched even though the MacroStrip doesn't render it — the news
+    // alerts module (runNewsAlertsTick) reads its `dp` to detect ≥1.5%
+    // index moves alongside SPY. Cheap: cache-gated like the others.
     const haveSPY = get().stockQuotes.some((q) => q.ticker === 'SPY');
+    const haveQQQ = get().stockQuotes.some((q) => q.ticker === 'QQQ');
     const haveIEUR = get().stockQuotes.some((q) => q.ticker === 'IEUR');
     const haveBTC = get().cryptoPrices?.prices.some((p) => p.id === 'bitcoin');
-    if (haveSPY && haveIEUR && haveBTC) return;
-    const equityNeeded = [haveSPY ? null : 'SPY', haveIEUR ? null : 'IEUR'].filter(
-      (t): t is string => !!t,
-    );
+    if (haveSPY && haveQQQ && haveIEUR && haveBTC) return;
+    const equityNeeded = [
+      haveSPY ? null : 'SPY',
+      haveQQQ ? null : 'QQQ',
+      haveIEUR ? null : 'IEUR',
+    ].filter((t): t is string => !!t);
     const cryptoNeeded = haveBTC ? [] : ['bitcoin'];
     const [equityResults, cryptoResult, ...sparkLists] = await Promise.all([
       equityNeeded.length ? getQuotes(equityNeeded) : Promise.resolve([]),

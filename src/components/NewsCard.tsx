@@ -1,8 +1,11 @@
 // Compact market-news feed. Reads from useFinanceStore.marketNews which is
-// populated on every portfolio refresh (6h cache). Renders top 5; each is an
-// external link that opens in the system browser via target="_blank".
+// populated on every portfolio refresh (6h cache). Renders top 5; each
+// tap routes through openExternalUrl which uses Chrome Custom Tabs on
+// native + window.open on web. The bigger /finance/news screen is the
+// next step beyond this card.
 
 import { useFinanceStore } from '../store/useFinanceStore';
+import { openExternalUrl } from '../lib/openExternal';
 
 function relativeTime(unixSeconds: number): string {
   const diff = Date.now() / 1000 - unixSeconds;
@@ -24,18 +27,16 @@ export default function NewsCard() {
       </div>
       <div className="space-y-2">
         {news.slice(0, 5).map((n) => (
-          <a
+          <button
             key={n.id}
-            href={n.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block py-1.5 border-b border-border/40 last:border-0 active:bg-surface2/50 rounded-sm"
+            onClick={() => openExternalUrl(n.url)}
+            className="block w-full text-left py-1.5 border-b border-border/40 last:border-0 active:bg-surface2/50 rounded-sm"
           >
             <div className="text-xs font-medium leading-snug line-clamp-2">{n.headline}</div>
             <div className="text-[10px] text-text-muted mt-0.5">
               {n.source} · {relativeTime(n.datetime)}
             </div>
-          </a>
+          </button>
         ))}
       </div>
     </div>

@@ -6,10 +6,6 @@ import { useStudiesStore } from '../store/useStudiesStore';
 import { useFitnessStore } from '../store/useFitnessStore';
 import { useTaskStore } from '../store/useTaskStore';
 import { useTemplatesStore } from '../store/useTemplatesStore';
-import { calculateGPA } from '../utils/gpa';
-import { generateId } from '../utils/uuid';
-import { db } from '../db/database';
-import { enqueue } from '../db/syncQueue';
 
 type QuickTab = 'expense' | 'grade' | 'session' | 'set' | 'task';
 
@@ -141,53 +137,85 @@ function QuickExpense({ onDone }: { onDone: () => void }) {
 }
 
 function QuickGrade({ onDone }: { onDone: () => void }) {
-  const [name, setName] = useState('');
-  const [grade, setGrade] = useState('');
-  const [weight, setWeight] = useState('');
   const courses = useStudiesStore((s) => s.courses);
-  const currentImport = useStudiesStore((s) => s.currentImport);
-  const loadStudies = useStudiesStore((s) => s.load);
+  const addCourse = useStudiesStore((s) => s.addCourse);
+  const addGrade = useStudiesStore((s) => s.addGrade);
+
+  // Either select an existing course or type a new one. If new, we create
+  // the course with default credits=1 and let the user edit later in the
+  // Studies screen.
+  const [subjectId, setSubjectId] = useState<string>('');
+  const [newCourseName, setNewCourseName] = useState('');
+  const [credits, setCredits] = useState('');
+  const [grade, setGrade] = useState('');
+  const [weight, setWeight] = useState('1');
 
   const submit = async () => {
     const g = parseFloat(grade);
     const w = parseFloat(weight);
-    if (!name.trim() || isNaN(g) || isNaN(w)) return;
-    const importId = currentImport?.id ?? generateId();
-    const now = new Date().toISOString();
-    const newCourse = {
-      id: generateId(),
-      importId,
-      name: name.trim(),
-      weight: w,
-      grade: g,
-      createdAt: now,
-    };
-    if (!currentImport) {
-      await db.gradeImports.add({
-        id: importId,
-        importedAt: now,
-        source: 'manual',
-        calculatedGpa: 0,
-        courses: [],
-      });
+    if (isNaN(g) || isNaN(w)) return;
+
+    let targetSubjectId = subjectId;
+    if (!targetSubjectId) {
+      const name = newCourseName.trim();
+      if (!name) return;
+      const cr = parseFloat(credits) || 1;
+      // addCourse generates the id internally — we need it to attach the
+      // grade. The store mutator sets `courses` in state, so we read it back
+      // by name+createdAt match. Simpler: pre-generate the course shape, then
+      // call addCourse; the store will use its own generateId, so we instead
+      // call addCourse then look up the newest matching row.
+      await addCourse({ name, credits: cr });
+      // Re-read from the store via a microtask: addCourse synchronously sets
+      // `courses` in the closure-captured store state after awaiting.
+      const fresh = useStudiesStore.getState().courses;
+      const created = [...fresh].reverse().find((c) => c.name === name);
+      if (!created) return;
+      targetSubjectId = created.id;
     }
-    await db.courses.add(newCourse);
-    const allCourses = [...courses, newCourse];
-    const gpa = calculateGPA(allCourses);
-    await db.gradeImports.update(importId, { calculatedGpa: gpa });
-    await enqueue('course', newCourse.id, 'insert', newCourse);
-    await loadStudies();
+
+    await addGrade({
+      subjectId: targetSubjectId,
+      grade: g,
+      weight: w,
+      date: new Date().toISOString().slice(0, 10),
+    });
     onDone();
   };
 
   return (
     <div className="space-y-3">
-      <input
-        className="input"
-        placeholder="Course name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
+      {courses.length > 0 && (
+        <select
+          className="input"
+          value={subjectId}
+          onChange={(e) => setSubjectId(e.target.value)}
+        >
+          <option value="">— New course —</option>
+          {courses.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+      )}
+      {subjectId === '' && (
+        <>
+          <input
+            className="input"
+            placeholder="Course name"
+            value={newCourseName}
+            onChange={(e) => setNewCourseName(e.target.value)}
+          />
+          <input
+            className="input"
+            inputMode="decimal"
+            placeholder="Credits (default 1)"
+            value={credits}
+            onChange={(e) => setCredits(e.target.value)}
+          />
+        </>
+      )}
       <div className="flex gap-2">
         <input
           className="input"

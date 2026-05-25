@@ -26,7 +26,7 @@ import { db, SyncQueueItem } from '../db/database';
 import { listPending } from '../db/syncQueue';
 import { generateId, legacyIdToUuid } from '../utils/uuid';
 import type { Transaction, BudgetCategory, PortfolioHolding, PortfolioLot, ManualAsset, WatchlistItem } from '../types/finance';
-import type { Course, StudySession, Reading } from '../types/studies';
+import type { Course, Grade, StudySession, Reading } from '../types/studies';
 import type { WorkoutSession, WorkoutSet } from '../types/fitness';
 import type { Task, TaskPriority } from '../types/tasks';
 import type { Goal, GoalType } from '../types/goals';
@@ -362,12 +362,12 @@ async function pushReading(item: SyncQueueItem, ctx: PushContext): Promise<void>
 }
 
 async function pushCourse(item: SyncQueueItem, ctx: PushContext): Promise<void> {
-  // Local Course = 1 row containing subject info + a grade.
-  // Remote = 1 subjects row + 1 grades row (we reuse course.id mapped to UUID
-  // for both PKs).
+  // Local Course = subject only. Grades live in their own table now (since
+  // v1.0.3), pushed via pushGrade below. On delete, cascade-soft-delete the
+  // subject's grades server-side; StudyDesk's RLS does the same.
   if (item.operation === 'delete') {
     const uuid = legacyIdToUuid(item.entityId);
-    await supabase.from('grades').delete().eq('id', uuid);
+    await supabase.from('grades').delete().eq('subject_id', uuid);
     const { error } = await supabase.from('subjects').delete().eq('id', uuid);
     if (error) throw error;
     return;
@@ -378,22 +378,36 @@ async function pushCourse(item: SyncQueueItem, ctx: PushContext): Promise<void> 
     id: uuid,
     user_id: ctx.userId,
     name: local.name,
-    credits: local.weight,
+    credits: local.credits,
     semester: local.semester ?? null,
+    color: local.color ?? null,
     updated_at: item.createdAt,
   };
-  const gradeRow = {
-    id: uuid,
-    user_id: ctx.userId,
-    subject_id: uuid,
-    grade: local.grade,
-    weight: 1,
-    date: local.createdAt?.slice(0, 10) ?? null,
-    updated_at: item.createdAt,
-  };
-  let { error } = await supabase.from('subjects').upsert(subjectRow);
+  const { error } = await supabase.from('subjects').upsert(subjectRow);
   if (error) throw error;
-  ({ error } = await supabase.from('grades').upsert(gradeRow));
+}
+
+async function pushGrade(item: SyncQueueItem, ctx: PushContext): Promise<void> {
+  if (item.operation === 'delete') {
+    const { error } = await supabase
+      .from('grades')
+      .delete()
+      .eq('id', legacyIdToUuid(item.entityId));
+    if (error) throw error;
+    return;
+  }
+  const local: Grade = JSON.parse(item.payload);
+  const updatedAt = local.updatedAt || item.createdAt;
+  const row = {
+    id: legacyIdToUuid(local.id),
+    user_id: ctx.userId,
+    subject_id: legacyIdToUuid(local.subjectId),
+    grade: local.grade,
+    weight: local.weight,
+    date: local.date ?? null,
+    updated_at: updatedAt,
+  };
+  const { error } = await supabase.from('grades').upsert(row);
   if (error) throw error;
 }
 
@@ -409,6 +423,7 @@ const pushHandlers: Record<SyncQueueItem['entityType'], (item: SyncQueueItem, ct
   workout_set: pushWorkoutSet,
   task: pushTask,
   course: pushCourse,
+  grade: pushGrade,
   study_session: pushStudySession,
   reading: pushReading,
   // grade_import is a local-only snapshot concept — courses sync individually.
@@ -440,6 +455,7 @@ const ENTITY_PRIORITY: Record<SyncQueueItem['entityType'], number> = {
   task: 1,
   course: 1,
   grade_import: 1,
+  grade: 2, // FK → subjects (course)
   workout_set: 2, // FK → workout_sessions
   transaction: 2, // FK → budget_categories (nullable, but order anyway)
   study_session: 2, // FK → subjects (nullable)
@@ -494,6 +510,7 @@ export interface PullResult {
   manualAssets: number;
   watchlistItems: number;
   subjects: number;
+  grades: number;
   workoutSessions: number;
   workoutSets: number;
   tasks: number;
@@ -513,6 +530,7 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     manualAssets: 0,
     watchlistItems: 0,
     subjects: 0,
+    grades: 0,
     workoutSessions: 0,
     workoutSets: 0,
     tasks: 0,
@@ -597,45 +615,49 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     }
   );
 
-  // Studies: pull subjects + grades, reconstruct Course rows for Dexie.
-  // Pull a single grade per subject (most recent).
+  // Studies: pull subjects → courses (no embedded grade) AND grades → grades
+  // table separately. Each subject can have many grades, each with its own
+  // weight + date — Nexus mirrors StudyDesk's full shape now.
   try {
     const { data: subjects, error: sErr } = await supabase
       .from('subjects')
       .select('*')
       .is('deleted_at', null);
     if (sErr) throw sErr;
-    const { data: grades, error: gErr } = await supabase
+    const { data: rawGrades, error: gErr } = await supabase
       .from('grades')
       .select('*')
       .is('deleted_at', null);
     if (gErr) throw gErr;
 
-    // Build a map: subject_id → latest grade
-    const latestGradeBySubject = new Map<string, any>();
-    for (const g of grades ?? []) {
-      const prev = latestGradeBySubject.get(g.subject_id);
-      if (!prev || (g.date ?? '') > (prev.date ?? '')) {
-        latestGradeBySubject.set(g.subject_id, g);
-      }
-    }
-
-    // Reconstruct Course rows. We don't have a remote import concept, so put
-    // everything in a single synthetic import.
-    const courses: Course[] = (subjects ?? []).map((s: any) => {
-      const g = latestGradeBySubject.get(s.id);
-      return {
-        id: s.id,
-        importId: 'cloud',
-        name: s.name,
-        weight: Number(s.credits ?? 1),
-        grade: Number(g?.grade ?? 0),
-        semester: s.semester ?? undefined,
-        createdAt: s.created_at,
-      };
-    });
+    // Subjects → Course rows. We don't have a remote import concept, so put
+    // everything in a single synthetic import keyed 'cloud'.
+    const courses: Course[] = (subjects ?? []).map((s: any) => ({
+      id: s.id,
+      importId: 'cloud',
+      name: s.name,
+      credits: Number(s.credits ?? 1),
+      color: s.color ?? undefined,
+      semester: s.semester ?? undefined,
+      createdAt: s.created_at,
+    }));
     await db.courses.bulkPut(courses);
     result.subjects = courses.length;
+
+    // Grades → Grade rows. Keep every grade; subject GPA aggregator handles
+    // the weighting on the read side.
+    const grades: Grade[] = (rawGrades ?? []).map((g: any) => ({
+      id: g.id,
+      subjectId: g.subject_id,
+      grade: Number(g.grade),
+      weight: Number(g.weight ?? 1),
+      date: g.date ?? undefined,
+      syncStatus: 'synced' as const,
+      createdAt: g.created_at,
+      updatedAt: g.updated_at,
+    }));
+    await db.grades.bulkPut(grades);
+    result.grades = grades.length;
   } catch (e) {
     errors.push(`subjects/grades: ${(e as Error).message}`);
   }
@@ -846,7 +868,7 @@ export async function adoptLocalData(userId: string): Promise<number> {
     }
   };
 
-  const [txs, budgets, holdings, lots, manualAssets, watchlistItems, sessions, sets, tasks, courses, studySessions, readings, goals] =
+  const [txs, budgets, holdings, lots, manualAssets, watchlistItems, sessions, sets, tasks, courses, grades, studySessions, readings, goals] =
     await Promise.all([
       db.transactions.toArray(),
       db.budgetCategories.toArray(),
@@ -858,6 +880,7 @@ export async function adoptLocalData(userId: string): Promise<number> {
       db.workoutSets.toArray(),
       db.tasks.toArray(),
       db.courses.toArray(),
+      db.grades.toArray(),
       db.studySessions.toArray(),
       db.readings.toArray(),
       db.goals.toArray(),
@@ -873,6 +896,7 @@ export async function adoptLocalData(userId: string): Promise<number> {
   await enqueueAll('workout_set', sets);
   await enqueueAll('task', tasks);
   await enqueueAll('course', courses);
+  await enqueueAll('grade', grades);
   await enqueueAll('study_session', studySessions);
   await enqueueAll('reading', readings);
   await enqueueAll('goal', goals);
@@ -903,6 +927,7 @@ export async function hasLocalData(): Promise<boolean> {
     db.workoutSessions.count(),
     db.tasks.count(),
     db.courses.count(),
+    db.grades.count(),
     db.studySessions.count(),
     db.readings.count(),
   ]);

@@ -3,6 +3,7 @@ import { db } from '../db/database';
 import { Task } from '../types/tasks';
 import { generateId } from '../utils/uuid';
 import { enqueue } from '../db/syncQueue';
+import { cancelTaskReminder, scheduleTaskReminder } from '../lib/taskReminders';
 
 export type TaskFilter = 'all' | 'today' | 'overdue' | 'done';
 
@@ -48,6 +49,10 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     await db.tasks.add(task);
     await enqueue('task', task.id, 'insert', task);
     await get().load();
+    // Fire-and-forget — failure to schedule shouldn't block the user from
+    // creating the task. scheduleTaskReminder is itself a no-op if the
+    // tasks toggle is off or there's no future dueDate.
+    void scheduleTaskReminder(task);
   },
 
   async updateTask(id, patch) {
@@ -63,6 +68,12 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     await db.tasks.put(updated);
     await enqueue('task', id, 'update', updated);
     await get().load();
+    // Cancel-then-reschedule. The schedule call uses a stable hash → notif
+    // ID, so an unchanged dueDate would just overwrite the same alarm. But
+    // if the user cleared the dueDate or marked it completed, the schedule
+    // call is a no-op and the cancel is what we needed.
+    await cancelTaskReminder(id);
+    void scheduleTaskReminder(updated);
   },
 
   async toggleComplete(id) {
@@ -77,11 +88,19 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     await db.tasks.put(updated);
     await enqueue('task', id, 'update', updated);
     await get().load();
+    if (updated.completed) {
+      // Done → no reason to keep pinging.
+      void cancelTaskReminder(id);
+    } else {
+      // Un-completed (user changed their mind) → re-arm if dueDate still future.
+      void scheduleTaskReminder(updated);
+    }
   },
 
   async deleteTask(id) {
     await db.tasks.delete(id);
     await enqueue('task', id, 'delete', { id });
     await get().load();
+    void cancelTaskReminder(id);
   },
 }));

@@ -3,23 +3,31 @@ import { useNavigate } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
 import RowActions from '../../components/RowActions';
 import HeatmapCalendar from '../../components/HeatmapCalendar';
-import { useStudiesStore } from '../../store/useStudiesStore';
-import { gradeToLetter, gradeScaleLabel, ibBand } from '../../utils/gpa';
+import { useStudiesStore, indexGradesBySubject } from '../../store/useStudiesStore';
+import { gradeToLetter, gradeScaleLabel, ibBand, subjectScore } from '../../utils/gpa';
 import { localDateKey } from '../../utils/formatters';
-import { Course } from '../../types/studies';
+import { Course, Grade } from '../../types/studies';
 
 export default function StudiesOverview() {
   const navigate = useNavigate();
   const currentImport = useStudiesStore((s) => s.currentImport);
   const courses = useStudiesStore((s) => s.courses);
+  const grades = useStudiesStore((s) => s.grades);
   const previousGpa = useStudiesStore((s) => s.previousGpa);
   const gradeMode = useStudiesStore((s) => s.gradeMode);
   const setGradeMode = useStudiesStore((s) => s.setGradeMode);
   const addCourse = useStudiesStore((s) => s.addCourse);
   const updateCourse = useStudiesStore((s) => s.updateCourse);
   const deleteCourse = useStudiesStore((s) => s.deleteCourse);
+  const addGrade = useStudiesStore((s) => s.addGrade);
+  const updateGrade = useStudiesStore((s) => s.updateGrade);
+  const deleteGrade = useStudiesStore((s) => s.deleteGrade);
   const studySessions = useStudiesStore((s) => s.studySessions);
   const readings = useStudiesStore((s) => s.readings);
+
+  // Per-subject grade index — single computation reused for the GPA badge,
+  // the per-course display value, and the inline grade list.
+  const gradesBySubject = useMemo(() => indexGradesBySubject(grades), [grades]);
 
   // Weekly study minutes — past 7 days, sum of durationMinutes.
   const weeklyStudyMinutes = useMemo(() => {
@@ -66,69 +74,144 @@ export default function StudiesOverview() {
     );
   }, [readings]);
 
-  const [editing, setEditing] = useState<Course | null>(null);
-  const [adding, setAdding] = useState(false);
+  // Course edit/add form state
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  const [addingCourse, setAddingCourse] = useState(false);
   const [name, setName] = useState('');
-  const [grade, setGrade] = useState('');
-  const [weight, setWeight] = useState('');
+  const [credits, setCredits] = useState('');
+  const [color, setColor] = useState('');
   const [semester, setSemester] = useState('');
 
-  const startAdd = () => {
-    setEditing(null);
-    setAdding(true);
+  // Grade add/edit form state — scoped to a single subject
+  const [addingGradeFor, setAddingGradeFor] = useState<string | null>(null);
+  const [editingGrade, setEditingGrade] = useState<Grade | null>(null);
+  const [gradeValue, setGradeValue] = useState('');
+  const [gradeWeight, setGradeWeight] = useState('');
+  const [gradeDate, setGradeDate] = useState('');
+
+  // Per-subject expand/collapse for the grade list
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const startAddCourse = () => {
+    setEditingCourse(null);
+    setAddingCourse(true);
     setName('');
-    setGrade('');
-    setWeight('');
+    setCredits('');
+    setColor('');
     setSemester('');
   };
 
-  const startEdit = (c: Course) => {
-    setAdding(false);
-    setEditing(c);
+  const startEditCourse = (c: Course) => {
+    setAddingCourse(false);
+    setEditingCourse(c);
     setName(c.name);
-    setGrade(String(c.grade));
-    setWeight(String(c.weight));
+    setCredits(String(c.credits));
+    setColor(c.color ?? '');
     setSemester(c.semester ?? '');
   };
 
-  const cancel = () => {
-    setEditing(null);
-    setAdding(false);
+  const cancelCourse = () => {
+    setEditingCourse(null);
+    setAddingCourse(false);
   };
 
-  const save = async () => {
-    const g = parseFloat(grade);
-    const w = parseFloat(weight);
-    if (!name.trim() || isNaN(g) || isNaN(w)) return;
-    if (gradeMode === 'ib' && (g < 1 || g > 7)) {
-      alert('IB grade must be between 1 and 7.');
+  const saveCourse = async () => {
+    const cr = parseFloat(credits);
+    if (!name.trim() || isNaN(cr) || cr <= 0) {
+      alert('Course name and credit value (> 0) required.');
       return;
     }
-    if (gradeMode === 'us' && (g < 0 || g > 100)) {
-      alert('Grade must be between 0 and 100.');
-      return;
-    }
-    if (editing) {
-      await updateCourse(editing.id, {
+    const colorClean = color.trim() || undefined;
+    if (editingCourse) {
+      await updateCourse(editingCourse.id, {
         name: name.trim(),
-        grade: g,
-        weight: w,
+        credits: cr,
+        color: colorClean,
         semester: semester.trim() || undefined,
       });
     } else {
       await addCourse({
         name: name.trim(),
-        grade: g,
-        weight: w,
+        credits: cr,
+        color: colorClean,
         semester: semester.trim() || undefined,
       });
     }
-    cancel();
+    cancelCourse();
+  };
+
+  const startAddGrade = (courseId: string) => {
+    setEditingGrade(null);
+    setAddingGradeFor(courseId);
+    setGradeValue('');
+    setGradeWeight('1');
+    setGradeDate(new Date().toISOString().slice(0, 10));
+    // Open the subject's grade list so the user sees what they're editing
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      next.add(courseId);
+      return next;
+    });
+  };
+
+  const startEditGrade = (g: Grade) => {
+    setAddingGradeFor(null);
+    setEditingGrade(g);
+    setGradeValue(String(g.grade));
+    setGradeWeight(String(g.weight));
+    setGradeDate(g.date ?? '');
+  };
+
+  const cancelGrade = () => {
+    setEditingGrade(null);
+    setAddingGradeFor(null);
+  };
+
+  const saveGrade = async () => {
+    const gv = parseFloat(gradeValue);
+    const gw = parseFloat(gradeWeight);
+    if (isNaN(gv) || isNaN(gw)) {
+      alert('Grade and weight required.');
+      return;
+    }
+    if (gradeMode === 'ib' && (gv < 1 || gv > 7)) {
+      alert('IB grade must be between 1 and 7.');
+      return;
+    }
+    if (gradeMode === 'us' && (gv < 0 || gv > 100)) {
+      alert('Grade must be between 0 and 100.');
+      return;
+    }
+    const dateClean = gradeDate.trim() || undefined;
+    if (editingGrade) {
+      await updateGrade(editingGrade.id, {
+        grade: gv,
+        weight: gw,
+        date: dateClean,
+      });
+    } else if (addingGradeFor) {
+      await addGrade({
+        subjectId: addingGradeFor,
+        grade: gv,
+        weight: gw,
+        date: dateClean,
+      });
+    }
+    cancelGrade();
+  };
+
+  const toggleExpanded = (id: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
   const gpa = currentImport?.calculatedGpa;
   const delta = gpa != null && previousGpa != null ? gpa - previousGpa : null;
-  const editingNow = adding || editing != null;
+  const editingNow = addingCourse || editingCourse != null;
 
   return (
     <>
@@ -136,15 +219,9 @@ export default function StudiesOverview() {
         title="Studies"
         action={
           <>
-            <button
-              onClick={() => navigate('/studies/import')}
-              className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary"
-            >
-              Import
-            </button>
             {!editingNow && (
               <button
-                onClick={startAdd}
+                onClick={startAddCourse}
                 className="text-xs px-2 py-1 rounded-sm border border-primary text-primary active:bg-primary/10"
               >
                 + Course
@@ -201,7 +278,7 @@ export default function StudiesOverview() {
         {editingNow && (
           <div className="card space-y-2">
             <div className="font-heading font-semibold text-sm">
-              {editing ? 'Edit Course' : 'New Course'}
+              {editingCourse ? 'Edit Course' : 'New Course'}
             </div>
             <input
               className="input"
@@ -213,17 +290,16 @@ export default function StudiesOverview() {
             <div className="flex gap-2">
               <input
                 className="input"
-                placeholder={gradeMode === 'ib' ? 'Grade (1–7)' : 'Grade (0–100)'}
+                placeholder="Credits (e.g. 5)"
                 inputMode="decimal"
-                value={grade}
-                onChange={(e) => setGrade(e.target.value)}
+                value={credits}
+                onChange={(e) => setCredits(e.target.value)}
               />
               <input
                 className="input"
-                placeholder="Weight (e.g. 25)"
-                inputMode="decimal"
-                value={weight}
-                onChange={(e) => setWeight(e.target.value)}
+                placeholder="Color (e.g. #4f46e5)"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
               />
             </div>
             <input
@@ -233,10 +309,10 @@ export default function StudiesOverview() {
               onChange={(e) => setSemester(e.target.value)}
             />
             <div className="flex gap-2">
-              <button className="btn flex-1" onClick={save}>
-                {editing ? 'Save' : 'Add'}
+              <button className="btn flex-1" onClick={saveCourse}>
+                {editingCourse ? 'Save' : 'Add'}
               </button>
-              <button className="btn-ghost flex-1" onClick={cancel}>
+              <button className="btn-ghost flex-1" onClick={cancelCourse}>
                 Cancel
               </button>
             </div>
@@ -246,42 +322,149 @@ export default function StudiesOverview() {
         <div className="card">
           <div className="flex items-center justify-between mb-3">
             <span className="font-heading font-semibold text-sm">Course Grades</span>
-            {currentImport && (
-              <span className="text-[9px] uppercase tracking-wider text-text-muted border border-border rounded-sm px-1.5 py-0.5">
-                {currentImport.source === 'csv' ? 'StudyDesk CSV' : 'Manual'}
-              </span>
-            )}
+            {/* Source tag removed in v1.0.1 — CSV import path is gone now
+                that StudyDesk grades flow in via realtime Supabase sync. */}
           </div>
           <div className="space-y-1">
             {courses.length === 0 && (
               <div className="text-xs text-text-muted text-center py-4">
-                No courses yet — tap + Course or Import a CSV
+                No courses yet — tap + Course or sync from StudyDesk
               </div>
             )}
-            {courses.map((c) => (
-              <div key={c.id} className="flex items-center gap-2 py-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary/60 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm truncate">{c.name}</div>
-                  {c.semester && (
-                    <div className="text-[10px] text-text-muted">{c.semester}</div>
+            {courses.map((c) => {
+              const subjectGrades = (gradesBySubject.get(c.id) ?? []).slice().sort(
+                (a, b) => (b.date ?? '').localeCompare(a.date ?? ''),
+              );
+              const score = subjectScore(subjectGrades);
+              const isExpanded = expanded.has(c.id);
+              const showAddGradeForm = addingGradeFor === c.id;
+              const dotStyle = c.color
+                ? { backgroundColor: c.color }
+                : undefined;
+              return (
+                <div key={c.id} className="border-b border-white/5 last:border-0 pb-1.5 last:pb-0">
+                  <button
+                    onClick={() => toggleExpanded(c.id)}
+                    className="w-full flex items-center gap-2 py-1.5 text-left"
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                        c.color ? '' : 'bg-primary/60'
+                      }`}
+                      style={dotStyle}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm truncate">{c.name}</div>
+                      {c.semester && (
+                        <div className="text-[10px] text-text-muted">{c.semester}</div>
+                      )}
+                    </div>
+                    <span className="text-sm whitespace-nowrap">
+                      {score == null
+                        ? <span className="text-text-muted">—</span>
+                        : gradeMode === 'ib'
+                          ? `${score.toFixed(1)}/7`
+                          : `${gradeToLetter(score)} — ${score.toFixed(1)}%`}{' '}
+                      <span className="text-text-muted">({c.credits} cr)</span>
+                    </span>
+                    <RowActions
+                      onEdit={() => startEditCourse(c)}
+                      onDelete={() => deleteCourse(c.id)}
+                      confirmMsg={`Delete "${c.name}" and all its grades?`}
+                    />
+                  </button>
+                  {isExpanded && (
+                    <div className="pl-4 pb-2 space-y-1">
+                      {subjectGrades.length === 0 && !showAddGradeForm && (
+                        <div className="text-[10px] text-text-muted italic">
+                          No grades yet for this course.
+                        </div>
+                      )}
+                      {subjectGrades.map((g) => (
+                        <div
+                          key={g.id}
+                          className="flex items-center gap-2 text-[11px] py-1"
+                        >
+                          <span className="text-text-muted w-20 flex-shrink-0">
+                            {g.date ?? '—'}
+                          </span>
+                          <span className="flex-1">
+                            {gradeMode === 'ib'
+                              ? `${g.grade}/7`
+                              : `${g.grade}%`}{' '}
+                            <span className="text-text-muted">
+                              (weight {g.weight})
+                            </span>
+                          </span>
+                          <RowActions
+                            onEdit={() => startEditGrade(g)}
+                            onDelete={() => deleteGrade(g.id)}
+                            confirmMsg="Delete this grade?"
+                          />
+                        </div>
+                      ))}
+                      {!showAddGradeForm && !editingGrade && (
+                        <button
+                          onClick={() => startAddGrade(c.id)}
+                          className="text-[10px] text-primary active:opacity-60"
+                        >
+                          + Add grade
+                        </button>
+                      )}
+                      {(showAddGradeForm ||
+                        (editingGrade &&
+                          editingGrade.subjectId === c.id)) && (
+                        <div className="space-y-1 mt-1 p-2 bg-white/5 rounded-sm">
+                          <div className="text-[10px] font-heading uppercase tracking-wider text-text-muted">
+                            {editingGrade ? 'Edit grade' : 'New grade'}
+                          </div>
+                          <div className="flex gap-1">
+                            <input
+                              className="input text-xs"
+                              inputMode="decimal"
+                              placeholder={
+                                gradeMode === 'ib' ? 'Grade (1–7)' : 'Grade (0–100)'
+                              }
+                              value={gradeValue}
+                              onChange={(e) => setGradeValue(e.target.value)}
+                              autoFocus
+                            />
+                            <input
+                              className="input text-xs"
+                              inputMode="decimal"
+                              placeholder="Weight"
+                              value={gradeWeight}
+                              onChange={(e) => setGradeWeight(e.target.value)}
+                            />
+                          </div>
+                          <input
+                            className="input text-xs"
+                            type="date"
+                            value={gradeDate}
+                            onChange={(e) => setGradeDate(e.target.value)}
+                          />
+                          <div className="flex gap-1">
+                            <button className="btn text-xs flex-1" onClick={saveGrade}>
+                              {editingGrade ? 'Save' : 'Add'}
+                            </button>
+                            <button
+                              className="btn-ghost text-xs flex-1"
+                              onClick={cancelGrade}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
-                <span className="text-sm whitespace-nowrap">
-                  {gradeMode === 'ib' ? `${c.grade}/7` : `${gradeToLetter(c.grade)} — ${c.grade}%`}{' '}
-                  <span className="text-text-muted">({c.weight}%)</span>
-                </span>
-                <RowActions
-                  onEdit={() => startEdit(c)}
-                  onDelete={() => deleteCourse(c.id)}
-                  confirmMsg={`Delete "${c.name}"?`}
-                />
-              </div>
-            ))}
+              );
+            })}
           </div>
           {courses.length > 0 && (
             <div className="text-[10px] text-text-muted mt-2">
-              Weight-adjusted · {courses.length} courses total
+              Credits-weighted · {courses.length} courses · {grades.length} grades
             </div>
           )}
         </div>

@@ -1,9 +1,15 @@
 import axios from 'axios';
+import { Capacitor } from '@capacitor/core';
 import { readCache, writeCache, shouldFetch, recordCall } from './cache';
 import { getApiKey } from './keys';
 import { getYahooQuote, isInternationalTicker, lastProviderErrors } from './yahoo';
 
-const BASE_URL = 'https://finnhub.io/api/v1';
+// Native: direct. Web dev preview: through Vite proxy (Finnhub does send
+// CORS headers for most endpoints but flaky in some setups — proxying is
+// safer + symmetric with the other providers).
+const BASE_URL = Capacitor.isNativePlatform()
+  ? 'https://finnhub.io/api/v1'
+  : '/fh/api/v1';
 
 export interface FinnhubQuote {
   c: number;  // current price
@@ -38,7 +44,10 @@ async function finnhubFetch(
 
   const apiKey = await getApiKey('finnhub');
   if (!apiKey) {
-    lastProviderErrors.push({ provider: 'finnhub', ticker, message: 'no API key configured' });
+    // "No key" isn't an error — it's the expected fallback flow (caller
+    // will try Yahoo next). Pushing this to lastProviderErrors floods the
+    // UI's error panel with N-tickers × 2-paths worth of meaningless rows
+    // when the user simply hasn't entered a key. Just return null silently.
     if (cached) return { ticker, quote: cached.data, ageMinutes: cached.ageMinutes, currency: 'USD', cached: true, stale: true, source: 'finnhub' };
     return null;
   }

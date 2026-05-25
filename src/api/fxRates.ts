@@ -3,9 +3,16 @@
 // any from→to conversion from it.
 
 import axios from 'axios';
+import { Capacitor } from '@capacitor/core';
 import { readCache, writeCache } from './cache';
 
-const URL = 'https://open.er-api.com/v6/latest/USD';
+// Native: direct. Web dev preview: through Vite proxy. open.er-api.com
+// usually does send permissive CORS, but proxying keeps every provider on
+// a consistent dev story so failures don't bounce between "browser fault"
+// and "server fault" when debugging.
+const URL = Capacitor.isNativePlatform()
+  ? 'https://open.er-api.com/v6/latest/USD'
+  : '/fx/v6/latest/USD';
 const CACHE_KEY = 'fx_usd_anchor';
 
 interface RatesPayload {

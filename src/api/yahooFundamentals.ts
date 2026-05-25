@@ -27,10 +27,23 @@ import { shouldFetch, recordCall } from './cache';
 import { lastProviderErrors, readChartMeta } from './yahoo';
 import type { StockMetric, EarningsEvent, DividendEvent, NewsItem } from './stockDetail';
 
-const SUMMARY_URL = 'https://query2.finance.yahoo.com/v10/finance/quoteSummary';
-const SEARCH_URL = 'https://query1.finance.yahoo.com/v1/finance/search';
+// Native: direct (CapacitorHttp bypasses CORS). Web dev preview: proxied
+// through Vite. quoteSummary + crumb live on query2; search lives on query1.
+// The consent endpoint isn't proxied — it's a redirect target only hit on
+// the cookie-consent path, which is broken on web anyway (cookies don't
+// survive the proxy boundary). Tier-2 fundamentals fall through cleanly
+// when this returns null.
+const _NATIVE = Capacitor.isNativePlatform();
+const SUMMARY_URL = _NATIVE
+  ? 'https://query2.finance.yahoo.com/v10/finance/quoteSummary'
+  : '/yfin2/v10/finance/quoteSummary';
+const SEARCH_URL = _NATIVE
+  ? 'https://query1.finance.yahoo.com/v1/finance/search'
+  : '/yfin/v1/finance/search';
 const CONSENT_URL = 'https://fc.yahoo.com';
-const CRUMB_URL = 'https://query2.finance.yahoo.com/v1/test/getcrumb';
+const CRUMB_URL = _NATIVE
+  ? 'https://query2.finance.yahoo.com/v1/test/getcrumb'
+  : '/yfin2/v1/test/getcrumb';
 const TTL_MS = 24 * 60 * 60 * 1000; // 24h
 const NEWS_TTL_MS = 6 * 60 * 60 * 1000;
 const CRUMB_TTL_MS = 55 * 60 * 1000; // Yahoo's crumb lives ~1h; refresh 5min early

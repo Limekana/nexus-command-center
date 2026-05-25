@@ -1,6 +1,6 @@
 import Dexie, { Table } from 'dexie';
 import { Transaction, BudgetCategory, PortfolioHolding, PortfolioLot, ApiCacheEntry, PortfolioSnapshot, ManualAsset, WatchlistItem } from '../types/finance';
-import { Course, GradeImport, StudySession, Reading } from '../types/studies';
+import { Course, Grade, GradeImport, StudySession, Reading } from '../types/studies';
 import { WorkoutSession, WorkoutSet } from '../types/fitness';
 import { Task } from '../types/tasks';
 import { Goal } from '../types/goals';
@@ -12,6 +12,7 @@ export interface SyncQueueItem {
     | 'budget_category'
     | 'portfolio_holding'
     | 'course'
+    | 'grade'
     | 'grade_import'
     | 'workout_session'
     | 'workout_set'
@@ -38,6 +39,11 @@ class NexusDB extends Dexie {
 
   gradeImports!: Table<GradeImport, string>;
   courses!: Table<Course, string>;
+  // v7 — per-assessment grade rows. StudyDesk grades each carry their own
+  // weight + date; storing them separately lets a subject have many grades
+  // and lets us compute accurate GPAs (weighted across grades, then weighted
+  // across subjects by credits).
+  grades!: Table<Grade, string>;
 
   workoutSessions!: Table<WorkoutSession, string>;
   workoutSets!: Table<WorkoutSet, string>;
@@ -170,6 +176,71 @@ class NexusDB extends Dexie {
       goals: 'id, goalType, completed, targetDate, syncStatus',
       syncQueue: 'id, entityType, syncedAt',
     });
+    // v7 — adds `grades` table so a subject can carry multiple grades, each
+    // with its own weight + date. Faithfully mirrors StudyDesk's grades table.
+    //
+    // Upgrade hook migrates existing single-grade Courses by synthesizing one
+    // Grade row per Course (using the course's stored `grade` and a default
+    // weight of 1) and copies legacy `weight` → `credits` on the Course so
+    // the new field name has a value going forward.
+    this.version(7).stores({
+      transactions: 'id, date, type, syncStatus',
+      budgetCategories: 'id, name',
+      portfolioHoldings: 'id, ticker, assetType',
+      apiCache: 'cacheKey, expiresAt',
+      gradeImports: 'id, importedAt',
+      courses: 'id, importId, name',
+      workoutSessions: 'id, date, sessionType, syncStatus',
+      workoutSets: 'id, sessionId, exercise',
+      tasks: 'id, dueDate, completed, priority, syncStatus',
+      studySessions: 'id, startedAt, subjectId, syncStatus',
+      readings: 'id, status, subjectId, updatedAt',
+      portfolioSnapshots: 'date',
+      portfolioLots: 'id, holdingId, purchaseDate, syncStatus',
+      manualAssets: 'id, assetType, syncStatus',
+      watchlistItems: 'id, ticker, assetType, syncStatus',
+      goals: 'id, goalType, completed, targetDate, syncStatus',
+      grades: 'id, subjectId, date, syncStatus',
+      syncQueue: 'id, entityType, syncedAt',
+    }).upgrade(async (tx) => {
+      const coursesTable = tx.table('courses');
+      const gradesTable = tx.table('grades');
+      const existing = await coursesTable.toArray();
+      const now = new Date().toISOString();
+      const synthesized: Grade[] = [];
+      for (const c of existing) {
+        // Synthesize a Grade row from the legacy course.grade field, if set.
+        const legacyGrade = (c as { grade?: unknown }).grade;
+        if (typeof legacyGrade === 'number' && !isNaN(legacyGrade)) {
+          synthesized.push({
+            id: `legacy-${c.id}`,
+            subjectId: c.id,
+            grade: legacyGrade,
+            weight: 1,
+            date:
+              typeof c.createdAt === 'string'
+                ? c.createdAt.slice(0, 10)
+                : undefined,
+            syncStatus: 'synced',
+            createdAt: c.createdAt ?? now,
+            updatedAt: c.createdAt ?? now,
+          });
+        }
+        // Copy legacy `weight` → `credits` if `credits` not already set.
+        const legacyWeight = (c as { weight?: unknown }).weight;
+        const hasCredits =
+          (c as { credits?: unknown }).credits != null &&
+          typeof (c as { credits?: unknown }).credits === 'number';
+        if (!hasCredits && typeof legacyWeight === 'number') {
+          (c as { credits?: number }).credits = legacyWeight;
+          await coursesTable.put(c);
+        } else if (!hasCredits) {
+          (c as { credits?: number }).credits = 1;
+          await coursesTable.put(c);
+        }
+      }
+      if (synthesized.length) await gradesTable.bulkAdd(synthesized);
+    });
   }
 }
 
@@ -185,6 +256,7 @@ export async function clearAllLocalData(): Promise<void> {
       db.apiCache,
       db.gradeImports,
       db.courses,
+      db.grades,
       db.workoutSessions,
       db.workoutSets,
       db.tasks,
@@ -205,6 +277,7 @@ export async function clearAllLocalData(): Promise<void> {
         db.apiCache.clear(),
         db.gradeImports.clear(),
         db.courses.clear(),
+        db.grades.clear(),
         db.workoutSessions.clear(),
         db.workoutSets.clear(),
         db.tasks.clear(),

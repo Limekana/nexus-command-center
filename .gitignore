@@ -19,6 +19,9 @@ ios/
 
 # Claude Code local state — worktrees, settings, session logs, all local-only
 .claude/
+# Per-session AI memory file. Not part of the public source — re-derived on
+# demand by Claude Code from the project state.
+memory.md
 
 # Secret material — anything that ever holds a key, cert, or credential.
 # Belt-and-suspenders against the secret-scanner pre-commit hook.

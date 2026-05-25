@@ -1,13 +1,38 @@
 import { SyncStatus } from './finance';
 
+// A subject / course. Matches StudyDesk's `subjects` table (the upstream
+// system that owns this data when sync is enabled).
+//
+// Notes on shape changes vs. v1.0.0:
+//   - `grade` removed — grades live in their own table now (multiple per
+//     subject, each with its own weight + date)
+//   - `weight` renamed to `credits` to match StudyDesk semantics (course
+//     credit hours / EC points). The v7 Dexie upgrade migrates the value.
+//     Old rows may still carry a `weight` field; read paths fall back to it.
+//   - `color` added — StudyDesk stores a per-subject color; the UI uses it
+//     for the row indicator dot.
 export interface Course {
   id: string;
   importId: string;
   name: string;
-  weight: number;
-  grade: number;
+  credits: number;
+  color?: string;
   semester?: string;
   createdAt: string;
+}
+
+// A single grade entry for a subject. StudyDesk's `grades` table maps 1:1.
+// Many grades per subject; each carries its own weight (assessment weight
+// within the subject, NOT the credit hours of the subject itself) and date.
+export interface Grade {
+  id: string;
+  subjectId: string;            // FK → Course.id
+  grade: number;                // numeric value, scale depends on gradeMode
+  weight: number;               // assessment weight inside the subject (e.g. final exam = 50)
+  date?: string;                // YYYY-MM-DD, when the grade was earned
+  syncStatus: SyncStatus;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface GradeImport {

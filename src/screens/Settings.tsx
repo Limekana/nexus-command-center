@@ -15,6 +15,10 @@ import {
   scheduleWeeklyReview,
   cancelWeeklyReview,
 } from '../lib/weeklyNotification';
+import { cancelCategory, type NotificationCategory } from '../lib/notifications';
+import { rearmTaskReminders } from '../lib/taskReminders';
+import { runPortfolioEodTick } from '../lib/portfolioEod';
+import { runNewsAlertsTick } from '../lib/newsAlerts';
 import { supabase } from '../lib/supabase';
 
 // Auto-lock intervals. The "Never" option was removed deliberately — leaving
@@ -39,6 +43,18 @@ export default function Settings() {
   const setBaseCurrency = useSettingsStore((s) => s.setBaseCurrency);
   const weeklyReminder = useSettingsStore((s) => s.weeklyReminder);
   const setWeeklyReminder = useSettingsStore((s) => s.setWeeklyReminder);
+  const notifMasterEnabled = useSettingsStore((s) => s.notifMasterEnabled);
+  const setNotifMasterEnabled = useSettingsStore((s) => s.setNotifMasterEnabled);
+  const notifTasksEnabled = useSettingsStore((s) => s.notifTasksEnabled);
+  const setNotifTasksEnabled = useSettingsStore((s) => s.setNotifTasksEnabled);
+  const notifBudgetsEnabled = useSettingsStore((s) => s.notifBudgetsEnabled);
+  const setNotifBudgetsEnabled = useSettingsStore((s) => s.setNotifBudgetsEnabled);
+  const notifPortfolioEodEnabled = useSettingsStore((s) => s.notifPortfolioEodEnabled);
+  const setNotifPortfolioEodEnabled = useSettingsStore((s) => s.setNotifPortfolioEodEnabled);
+  const notifNewsEnabled = useSettingsStore((s) => s.notifNewsEnabled);
+  const setNotifNewsEnabled = useSettingsStore((s) => s.setNotifNewsEnabled);
+  const notifMacroKeywordsEnabled = useSettingsStore((s) => s.notifMacroKeywordsEnabled);
+  const setNotifMacroKeywordsEnabled = useSettingsStore((s) => s.setNotifMacroKeywordsEnabled);
   const [notifAvailable, setNotifAvailable] = useState(false);
   const [notifMsg, setNotifMsg] = useState<string | null>(null);
 
@@ -309,37 +325,207 @@ export default function Settings() {
         </Section>
 
         <Section title="Notifications">
+          {/* Informational warning when the plugin reports unavailable. Toggles
+              below are NOT locked anymore — the previous behavior gated them
+              behind `notifAvailable`, but on devices where the Capacitor
+              LocalNotifications bridge is wedged, notificationsAvailable()
+              returns false and ALL clicks were silently ignored. Now the user
+              can always toggle; downstream alert modules check their own
+              permission state before scheduling, so a misleading "off" state
+              never produces unwanted alerts. */}
+          {!notifAvailable && (
+            <div className="text-[10px] text-warning px-1 py-1">
+              Notifications plugin unavailable. Toggles still record your
+              choice, but actual notifications need a working native build +
+              OS-level permission to fire.
+            </div>
+          )}
+          {/* Master kill-switch. Off = nothing fires regardless of sub-toggle
+              state. Flipping ON triggers the OS permission prompt (same flow
+              the first-launch modal uses), so this works as the fallback if
+              the modal didn't show. Flipping OFF cancels every pending
+              notification across all 5 categories. Sub-toggles retain their
+              individual state so the user can toggle the master back on
+              without losing prior preferences. */}
           <Toggle
-            label="Weekly Review"
+            label="Notifications"
             sub={
-              notifAvailable
-                ? 'Sunday 18:00 · summary of finance, study, fitness, tasks'
-                : 'Native push only — install the Android build to enable'
+              notifMasterEnabled
+                ? 'Master switch · individual types below'
+                : 'All notifications off — turn on to enable categories below'
             }
-            value={weeklyReminder}
+            value={notifMasterEnabled}
             onChange={async (on) => {
-              if (!notifAvailable) {
-                setNotifMsg('Notifications require the native Android build.');
-                return;
-              }
               setNotifMsg(null);
               if (on) {
-                const perm = await requestNotificationPermission();
-                if (!perm.ok) {
-                  setNotifMsg(perm.reason ?? 'Permission denied.');
-                  return;
+                // OPTIMISTIC FLIP — same rationale as handleNotifToggle:
+                // flip first so the UI is responsive, request perm in the
+                // background, never block. If the plugin bridge hangs we
+                // still have a working toggle; downstream scheduling will
+                // succeed once perm is actually granted at the OS level
+                // (and silently no-op until then).
+                await setNotifMasterEnabled(true);
+                // Default the 4 main categories ON the FIRST time master
+                // is enabled (matches the explainer modal's behavior). If
+                // the user has flipped these before, leave their picks alone.
+                const anySubOn =
+                  notifTasksEnabled || notifBudgetsEnabled ||
+                  notifPortfolioEodEnabled || notifNewsEnabled || weeklyReminder;
+                if (!anySubOn) {
+                  await Promise.all([
+                    setNotifTasksEnabled(true),
+                    setNotifBudgetsEnabled(true),
+                    setNotifPortfolioEodEnabled(true),
+                    setNotifNewsEnabled(true),
+                  ]);
+                  void rearmTaskReminders();
+                  void runPortfolioEodTick();
+                  void runNewsAlertsTick();
                 }
-                const sched = await scheduleWeeklyReview();
-                if (!sched.ok) {
-                  setNotifMsg(sched.reason ?? 'Failed to schedule.');
-                  return;
-                }
-                await setWeeklyReminder(true);
+                // Background perm check. If it fails (most likely the
+                // plugin bridge is wedged), warn the user but leave the
+                // toggle on — they may have already granted at the OS
+                // level, in which case downstream scheduling works fine
+                // even though our perm-check call hangs/fails.
+                void (async () => {
+                  try {
+                    const perm = await requestNotificationPermission();
+                    if (!perm.ok) {
+                      setNotifMsg(
+                        (perm.reason ?? 'Permission check failed.') +
+                          ' If notifications already work at the OS level you can ignore this.',
+                      );
+                    }
+                  } catch (e) {
+                    setNotifMsg((e as Error).message);
+                  }
+                })();
               } else {
-                await cancelWeeklyReview();
-                await setWeeklyReminder(false);
+                await setNotifMasterEnabled(false);
+                // Wipe every pending alarm across all five categories so
+                // nothing fires after the user has explicitly turned the
+                // master switch off. Sub-toggles keep their bool state.
+                await Promise.all([
+                  cancelCategory('weekly-review'),
+                  cancelCategory('tasks'),
+                  cancelCategory('budgets'),
+                  cancelCategory('portfolio-eod'),
+                  cancelCategory('news'),
+                ]);
               }
             }}
+          />
+          <Toggle
+            label="Weekly Review"
+            sub="Sunday 18:00 · summary of finance, study, fitness, tasks"
+            value={weeklyReminder}
+            locked={!notifMasterEnabled}
+            onChange={async (on) => {
+              setNotifMsg(null);
+              if (on) {
+                // Optimistic — flip the toggle, then schedule + check perm
+                // in the background. Same rationale as the master toggle:
+                // if the plugin bridge hangs, the UI shouldn't.
+                await setWeeklyReminder(true);
+                void (async () => {
+                  try {
+                    const perm = await requestNotificationPermission();
+                    if (!perm.ok) {
+                      setNotifMsg(
+                        (perm.reason ?? 'Permission check failed.') +
+                          ' Toggle is on but reminder won’t fire until permission is granted.',
+                      );
+                      return;
+                    }
+                    const sched = await scheduleWeeklyReview();
+                    if (!sched.ok) {
+                      setNotifMsg(sched.reason ?? 'Failed to schedule.');
+                    }
+                  } catch (e) {
+                    setNotifMsg((e as Error).message);
+                  }
+                })();
+              } else {
+                await setWeeklyReminder(false);
+                await cancelWeeklyReview();
+              }
+            }}
+          />
+          <Toggle
+            label="Task Reminders"
+            sub="Heads-up when a task is due"
+            value={notifTasksEnabled}
+            locked={!notifMasterEnabled}
+            onChange={(on) => handleNotifToggle({
+              on,
+              category: 'tasks',
+              setEnabled: setNotifTasksEnabled,
+              requestPerm: requestNotificationPermission,
+              setMsg: setNotifMsg,
+              // On flip-on, schedule alarms for every existing incomplete
+              // task — otherwise the user has to add a new task before any
+              // notifications show up.
+              onAfterEnable: rearmTaskReminders,
+            })}
+          />
+          <Toggle
+            label="Budget Alerts"
+            sub="When a category nears or exceeds its monthly cap"
+            value={notifBudgetsEnabled}
+            locked={!notifMasterEnabled}
+            onChange={(on) => handleNotifToggle({
+              on,
+              category: 'budgets',
+              setEnabled: setNotifBudgetsEnabled,
+              requestPerm: requestNotificationPermission,
+              setMsg: setNotifMsg,
+            })}
+          />
+          <Toggle
+            label="Portfolio End of Day"
+            sub="Recap of today's move on US market close"
+            value={notifPortfolioEodEnabled}
+            locked={!notifMasterEnabled}
+            onChange={(on) => handleNotifToggle({
+              on,
+              category: 'portfolio-eod',
+              setEnabled: setNotifPortfolioEodEnabled,
+              requestPerm: requestNotificationPermission,
+              setMsg: setNotifMsg,
+              // Prime today's 4:05pm + 4:35pm alarms immediately on flip-on
+              // (if today is a trading day, etc.). Otherwise the user
+              // wouldn't get any notification until the next portfolio
+              // refresh or app cold-start.
+              onAfterEnable: runPortfolioEodTick,
+            })}
+          />
+          <Toggle
+            label="Market News"
+            sub="Stories about tickers you own + major market moves"
+            value={notifNewsEnabled}
+            locked={!notifMasterEnabled}
+            onChange={(on) => handleNotifToggle({
+              on,
+              category: 'news',
+              setEnabled: setNotifNewsEnabled,
+              requestPerm: requestNotificationPermission,
+              setMsg: setNotifMsg,
+              // Scan whatever news is already in store. If the portfolio
+              // hasn't refreshed yet this is a no-op; the next refresh
+              // will populate news and fire then.
+              onAfterEnable: runNewsAlertsTick,
+            })}
+          />
+          {/* Macro-headline classifier is noisier (Fed/CPI/jobs keywords on
+              general headlines), so it's off by default and gated under News.
+              When News is off this toggle does nothing — we lock it visually
+              to make that clear. */}
+          <Toggle
+            label="Include Macro Headlines"
+            sub="Fed, CPI, jobs, FOMC, inflation, recession"
+            value={notifMacroKeywordsEnabled}
+            locked={!notifMasterEnabled || !notifNewsEnabled}
+            onChange={setNotifMacroKeywordsEnabled}
           />
           {notifMsg && (
             <div className="text-[10px] text-warning mt-1">{notifMsg}</div>
@@ -443,7 +629,7 @@ export default function Settings() {
         </Section>
 
         <Section title="About">
-          <ListRow label="Version" value="3.0 (MVP)" />
+          <ListRow label="Version" value="1.0.1" />
           <ListRow label="Studio" value="Limecore" />
           <ListRow label="Build" value="Capacitor · Web → Android" />
           <button
@@ -495,6 +681,86 @@ export default function Settings() {
       )}
     </>
   );
+}
+
+// Shared turn-on/turn-off flow for every per-category notification toggle.
+//
+// Turn ON:
+//   1. Request OS permission (no-op if already granted)
+//   2. If denied, surface the reason via setMsg and bail — toggle stays off
+//   3. Save the enabled flag
+//   4. Optional `onAfterEnable` hook — used by categories that maintain
+//      per-row schedules (Task Reminders re-arms every existing task,
+//      Portfolio EoD primes its 4:05pm + 4:35pm alarms, etc.). Without this
+//      hook the user would have to add a new task / wait for the next
+//      portfolio refresh before any notifications actually appeared.
+//
+// Turn OFF:
+//   1. Save the disabled flag immediately so any racing scheduler bails
+//   2. Cancel every pending notification in the category — without this,
+//      already-scheduled alarms would still fire after the user turned the
+//      category off
+// Optimistic toggle flow. The OLD version awaited requestPerm() before
+// flipping the toggle — fine when the plugin works, but a hard hang for
+// users where the Capacitor LocalNotifications bridge gets wedged
+// (checkPermissions/requestPermissions never resolve, even with OS perm
+// granted). Symptom: the toggle visually doesn't move because the await
+// in onChange never returns.
+//
+// New flow:
+//   1. Flip the toggle state immediately so the UI is responsive.
+//   2. Kick the perm request in the background (don't await).
+//   3. If perm comes back NOT ok, show a warning — but leave the toggle ON.
+//      The downstream schedulers (budgetAlerts, taskReminders, etc.) all
+//      do their own permission check before scheduling, so if perm really
+//      is denied nothing fires. The toggle being "on" is just the user's
+//      stated intent; whether notifs actually appear depends on OS perm.
+//   4. If perm comes back ok, no message — silent success.
+//
+// Turn-off path stays synchronous because cancelling is fast and the user
+// expects "off" to mean "stop scheduling" immediately.
+async function handleNotifToggle(opts: {
+  on: boolean;
+  category: NotificationCategory;
+  setEnabled: (on: boolean) => Promise<void>;
+  requestPerm: () => Promise<{ ok: boolean; reason?: string }>;
+  setMsg: (msg: string | null) => void;
+  onAfterEnable?: () => Promise<void> | void;
+}): Promise<void> {
+  const { on, category, setEnabled, requestPerm, setMsg, onAfterEnable } = opts;
+  setMsg(null);
+  if (on) {
+    // Step 1 — flip immediately. UI is responsive even if perm hangs.
+    await setEnabled(true);
+    // Step 2 — kick perm request in background. NOT awaited.
+    void (async () => {
+      try {
+        const perm = await requestPerm();
+        if (!perm.ok) {
+          setMsg(
+            (perm.reason ?? 'Permission check failed.') +
+              ' Toggle is on but notifications may not fire until permission is granted in Android Settings.',
+          );
+        }
+      } catch (e) {
+        setMsg((e as Error).message);
+      }
+    })();
+    // Step 3 — run the per-category re-arm hook (also non-blocking from
+    // the toggle's perspective; schedulers handle their own errors).
+    if (onAfterEnable) {
+      void (async () => {
+        try {
+          await onAfterEnable();
+        } catch (e) {
+          setMsg((e as Error).message);
+        }
+      })();
+    }
+  } else {
+    await setEnabled(false);
+    await cancelCategory(category);
+  }
 }
 
 // Row for one Finnhub key slot. Shows masked value + "Set" button when empty,

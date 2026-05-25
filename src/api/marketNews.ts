@@ -12,8 +12,14 @@ import { shouldFetch, recordCall } from './cache';
 import { lastProviderErrors } from './yahoo';
 import type { NewsItem } from './stockDetail';
 
-const FINNHUB_URL = 'https://finnhub.io/api/v1/news';
-const YAHOO_TRENDING_URL = 'https://query1.finance.yahoo.com/v1/finance/search';
+// Native: direct URLs (CapacitorHttp bypasses CORS). Web dev preview:
+// through Vite proxies. See vite.config.ts for proxy definitions.
+const FINNHUB_URL = Capacitor.isNativePlatform()
+  ? 'https://finnhub.io/api/v1/news'
+  : '/fh/api/v1/news';
+const YAHOO_TRENDING_URL = Capacitor.isNativePlatform()
+  ? 'https://query1.finance.yahoo.com/v1/finance/search'
+  : '/yfin/v1/finance/search';
 const TTL_MS = 6 * 60 * 60 * 1000;
 const CACHE_KEY = 'market_news_general';
 

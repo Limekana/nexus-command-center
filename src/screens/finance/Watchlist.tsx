@@ -152,7 +152,7 @@ export default function Watchlist() {
           !editingNow && (
             <>
               <button
-                onClick={refreshPortfolio}
+                onClick={() => refreshPortfolio()}
                 className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary"
                 disabled={refreshing}
               >

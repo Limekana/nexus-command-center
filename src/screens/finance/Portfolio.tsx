@@ -350,7 +350,7 @@ export default function Portfolio() {
               Manage
             </button>
             <button
-              onClick={refreshPortfolio}
+              onClick={() => refreshPortfolio()}
               className="text-xs px-2 py-1 rounded-sm border border-primary/40 text-primary"
               disabled={refreshing}
             >
@@ -363,23 +363,41 @@ export default function Portfolio() {
         {/* Benchmarks — small strip at top giving "how is the market doing" context */}
         <MacroStrip />
 
-        {(anyStale || oldestAge > 60) && (
+        {(anyStale || oldestAge > 60 || refreshErrors.length > 0) && (
           <div className="alert alert-warn">
             <span className="w-2 h-2 rounded-full bg-warning" />
             <div className="flex-1 min-w-0">
-              <div className="font-semibold">Cache {formatCacheAge(oldestAge)}</div>
-              <div className="text-[10px] opacity-80">
+              <div className="font-semibold">
                 {refreshErrors.length > 0
-                  ? `Refresh failed: ${refreshErrors[0].provider}${refreshErrors[0].ticker ? ` (${refreshErrors[0].ticker})` : ''} — ${refreshErrors[0].message}`
-                  : 'Showing cached data. Tap retry to attempt a fresh fetch.'}
+                  ? `${refreshErrors.length} fetch error${refreshErrors.length === 1 ? '' : 's'}`
+                  : `Cache ${formatCacheAge(oldestAge)}`}
               </div>
-              {refreshErrors.length > 1 && (
-                <div className="text-[10px] opacity-60 mt-0.5">
-                  +{refreshErrors.length - 1} more provider error{refreshErrors.length - 1 === 1 ? '' : 's'}
+              {refreshErrors.length === 0 && (
+                <div className="text-[10px] opacity-80">
+                  Showing cached data. Tap retry to attempt a fresh fetch.
+                </div>
+              )}
+              {/* Expanded per-ticker error list — surfaces exactly which
+                  holdings failed and why. Capped at 8 so the alert doesn't
+                  push the rest of the screen off; the adb logcat dump in
+                  refreshPortfolio has the complete list for debugging. */}
+              {refreshErrors.length > 0 && (
+                <div className="text-[10px] opacity-90 mt-1 space-y-0.5 font-mono">
+                  {refreshErrors.slice(0, 8).map((e, i) => (
+                    <div key={i} className="truncate">
+                      · {e.provider}
+                      {e.ticker ? ` ${e.ticker}` : ''}: {e.message}
+                    </div>
+                  ))}
+                  {refreshErrors.length > 8 && (
+                    <div className="opacity-60">
+                      +{refreshErrors.length - 8} more — see adb logcat
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-            <button onClick={refreshPortfolio} className="btn-ghost btn-sm flex-shrink-0">
+            <button onClick={() => refreshPortfolio()} className="btn-ghost btn-sm flex-shrink-0">
               Retry
             </button>
           </div>
