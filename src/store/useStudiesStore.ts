@@ -91,25 +91,6 @@ async function ensureManualImport(): Promise<GradeImport> {
   return imp;
 }
 
-async function recomputeImport(importId: string, mode: GradeMode): Promise<GradeImport | null> {
-  const imp = await db.gradeImports.get(importId);
-  if (!imp) return null;
-  const courses = await db.courses.where('importId').equals(importId).toArray();
-  // Pull the grades for these courses to feed the multi-grade GPA aggregator.
-  // We pull all grades and index by subject — for small course counts (the
-  // realistic case) this is much cheaper than N round-trips.
-  const allGrades = await db.grades.toArray();
-  const idx = indexGradesBySubject(allGrades);
-  const updated: GradeImport = {
-    ...imp,
-    calculatedGpa: calculateGPA(courses, idx, mode),
-    courses,
-    importedAt: new Date().toISOString(),
-  };
-  await db.gradeImports.put(updated);
-  return updated;
-}
-
 export const useStudiesStore = create<StudiesStore>((set, get) => ({
   currentImport: null,
   courses: [],
@@ -124,24 +105,35 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
     set({ loading: true });
     const stored = await getPref(GRADE_MODE_KEY);
     const gradeMode: GradeMode = stored === 'ib' ? 'ib' : 'us';
-    const [imports, allGrades, studySessions, readings] = await Promise.all([
+    // Load ALL courses + grades regardless of importId. The importId field is
+    // a vestigial artifact from the old CSV-import path; cloud-synced subjects
+    // from StudyDesk arrive stamped 'cloud' and would otherwise be invisible
+    // to the UI. There is now a single working set of courses + grades —
+    // origin (cloud / manual / legacy CSV) no longer matters for display.
+    const [imports, allCourses, allGrades, studySessions, readings] = await Promise.all([
       db.gradeImports.orderBy('importedAt').reverse().toArray(),
+      db.courses.toArray(),
       db.grades.toArray(),
       db.studySessions.orderBy('startedAt').reverse().toArray(),
       db.readings.orderBy('updatedAt').reverse().toArray(),
     ]);
-    const latest = imports[0] ?? null;
     const previous = imports[1] ?? null;
-    let courses: Course[] = [];
-    if (latest) {
-      courses = await db.courses.where('importId').equals(latest.id).toArray();
-    }
     const idx = indexGradesBySubject(allGrades);
+    const gpa = calculateGPA(allCourses, idx, gradeMode);
+    // Synthesize a single in-memory currentImport so the UI (which consumes
+    // currentImport.calculatedGpa) gets a live aggregate even when there are
+    // zero gradeImport rows. Not persisted — recomputed on every load() and
+    // on every mutation.
+    const synthCurrentImport: GradeImport = {
+      id: 'cloud',
+      importedAt: new Date().toISOString(),
+      source: 'manual',
+      calculatedGpa: gpa,
+      courses: allCourses,
+    };
     set({
-      currentImport: latest
-        ? { ...latest, courses, calculatedGpa: calculateGPA(courses, idx, gradeMode) }
-        : null,
-      courses,
+      currentImport: synthCurrentImport,
+      courses: allCourses,
       grades: allGrades,
       previousGpa: previous ? previous.calculatedGpa : null,
       gradeMode,
@@ -154,12 +146,12 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
   async setGradeMode(mode) {
     await setPref(GRADE_MODE_KEY, mode);
     set({ gradeMode: mode });
-    // Recompute current import GPA under the new scale.
+    // Recompute the synthetic currentImport's GPA under the new scale. Not
+    // persisted — currentImport is derived state.
     const imp = get().currentImport;
     if (imp) {
       const idx = indexGradesBySubject(get().grades);
       const updated = { ...imp, calculatedGpa: calculateGPA(get().courses, idx, mode) };
-      await db.gradeImports.put(updated);
       set({ currentImport: updated });
     }
   },
@@ -174,10 +166,14 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
     };
     await db.courses.add(course);
     await enqueue('course', course.id, 'insert', course);
-    const updated = await recomputeImport(imp.id, get().gradeMode);
+    const nextCourses = [...get().courses, course];
+    const idx = indexGradesBySubject(get().grades);
+    const cur = get().currentImport;
     set({
-      courses: [...get().courses, course],
-      currentImport: updated,
+      courses: nextCourses,
+      currentImport: cur
+        ? { ...cur, courses: nextCourses, calculatedGpa: calculateGPA(nextCourses, idx, get().gradeMode) }
+        : cur,
     });
   },
 
@@ -187,12 +183,14 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
     const updated = { ...existing, ...patch, id };
     await db.courses.put(updated);
     await enqueue('course', id, 'update', updated);
-    const recomputed = existing.importId
-      ? await recomputeImport(existing.importId, get().gradeMode)
-      : null;
+    const nextCourses = get().courses.map((c) => (c.id === id ? updated : c));
+    const idx = indexGradesBySubject(get().grades);
+    const cur = get().currentImport;
     set({
-      courses: get().courses.map((c) => (c.id === id ? updated : c)),
-      currentImport: recomputed ?? get().currentImport,
+      courses: nextCourses,
+      currentImport: cur
+        ? { ...cur, courses: nextCourses, calculatedGpa: calculateGPA(nextCourses, idx, get().gradeMode) }
+        : cur,
     });
   },
 
@@ -209,13 +207,16 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
     }
     await db.courses.delete(id);
     await enqueue('course', id, 'delete', { id });
-    const recomputed = existing.importId
-      ? await recomputeImport(existing.importId, get().gradeMode)
-      : null;
+    const nextCourses = get().courses.filter((c) => c.id !== id);
+    const nextGrades = get().grades.filter((g) => g.subjectId !== id);
+    const idx = indexGradesBySubject(nextGrades);
+    const cur = get().currentImport;
     set({
-      courses: get().courses.filter((c) => c.id !== id),
-      grades: get().grades.filter((g) => g.subjectId !== id),
-      currentImport: recomputed ?? get().currentImport,
+      courses: nextCourses,
+      grades: nextGrades,
+      currentImport: cur
+        ? { ...cur, courses: nextCourses, calculatedGpa: calculateGPA(nextCourses, idx, get().gradeMode) }
+        : cur,
     });
   },
 
@@ -240,7 +241,6 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
         ...imp,
         calculatedGpa: calculateGPA(get().courses, idx, get().gradeMode),
       };
-      await db.gradeImports.put(updated);
       set({ currentImport: updated });
     }
   },
@@ -266,7 +266,6 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
         ...imp,
         calculatedGpa: calculateGPA(get().courses, idx, get().gradeMode),
       };
-      await db.gradeImports.put(recomputed);
       set({ currentImport: recomputed });
     }
   },
@@ -283,7 +282,6 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
         ...imp,
         calculatedGpa: calculateGPA(get().courses, idx, get().gradeMode),
       };
-      await db.gradeImports.put(recomputed);
       set({ currentImport: recomputed });
     }
   },
