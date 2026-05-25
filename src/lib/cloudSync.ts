@@ -520,6 +520,178 @@ export interface PullResult {
   errors: string[];
 }
 
+// ============================================================================
+// Studies hydration — explicit fetch-then-write for the three StudyDesk tables
+// ============================================================================
+// Background: NCC and StudyDesk share a Supabase project. StudyDesk owns the
+// `subjects`, `grades`, and `study_sessions` schemas. When NCC opens and the
+// user is signed in, we need to hydrate Dexie from the cloud BEFORE the
+// Realtime subscription opens — otherwise rows that exist pre-subscribe are
+// invisible to NCC (Realtime only delivers deltas from the moment you
+// subscribe, not snapshots).
+//
+// Defense-in-depth choices:
+//   - Explicit `user_id` filter on every SELECT instead of relying purely on
+//     RLS. StudyDesk's RLS should scope these anyway, but if the policy is
+//     ever wrong or missing the explicit filter limits blast radius.
+//   - Each of the three tables is fetched in its own try/catch so one
+//     table's failure doesn't lose the others.
+//   - The `deleted_at IS NULL` filter is attempted first; on column-missing
+//     (StudyDesk schema doesn't carry that column), we retry without it and
+//     post-filter client-side. That way a column mismatch never silently
+//     produces an empty hydration.
+//   - Diagnostic console logs survive into release builds so `adb logcat`
+//     can confirm row counts on device.
+
+export interface StudiesHydrationResult {
+  subjects: number;
+  grades: number;
+  studySessions: number;
+  errors: string[];
+}
+
+async function fetchWithSoftDeleteFallback(
+  table: string,
+  userId: string,
+): Promise<{ data: any[] | null; error: string | null }> {
+  // Try with `deleted_at IS NULL` first. If the column doesn't exist on
+  // StudyDesk's side, retry without that filter and post-filter in JS.
+  let { data, error } = await supabase
+    .from(table)
+    .select('*')
+    .eq('user_id', userId)
+    .is('deleted_at', null);
+  if (error) {
+    const msg = error.message ?? '';
+    // PostgREST returns "column does not exist" / 42703. Be generous in the
+    // match since wording can vary across versions.
+    const looksLikeMissingColumn =
+      /deleted_at/i.test(msg) &&
+      (/does not exist/i.test(msg) || /column/i.test(msg));
+    if (looksLikeMissingColumn) {
+      console.warn(
+        `[studies-hydrate] ${table}: deleted_at column missing — retrying without filter`,
+      );
+      const retry = await supabase.from(table).select('*').eq('user_id', userId);
+      if (retry.error) {
+        return { data: null, error: retry.error.message };
+      }
+      // Drop rows that look soft-deleted if they happen to carry the field
+      // anyway (mixed-schema deployments).
+      data = (retry.data ?? []).filter((r: any) => !r.deleted_at);
+    } else {
+      return { data: null, error: msg };
+    }
+  }
+  return { data: data ?? [], error: null };
+}
+
+async function hydrateStudiesTables(userId: string): Promise<StudiesHydrationResult> {
+  const errors: string[] = [];
+  let subjectCount = 0;
+  let gradeCount = 0;
+  let sessionCount = 0;
+
+  // --- subjects ---
+  try {
+    const { data, error } = await fetchWithSoftDeleteFallback('subjects', userId);
+    if (error) {
+      errors.push(`subjects: ${error}`);
+      console.warn('[studies-hydrate] subjects failed:', error);
+    } else if (data) {
+      const courses: Course[] = data.map((s: any) => ({
+        id: s.id,
+        importId: 'cloud',
+        name: s.name,
+        credits: Number(s.credits ?? 1),
+        color: s.color ?? undefined,
+        semester: s.semester ?? undefined,
+        createdAt: s.created_at,
+      }));
+      await db.courses.bulkPut(courses);
+      subjectCount = courses.length;
+      console.log(`[studies-hydrate] subjects=${subjectCount}`);
+    }
+  } catch (e) {
+    errors.push(`subjects: ${(e as Error).message}`);
+    console.warn('[studies-hydrate] subjects threw:', e);
+  }
+
+  // --- grades ---
+  try {
+    const { data, error } = await fetchWithSoftDeleteFallback('grades', userId);
+    if (error) {
+      errors.push(`grades: ${error}`);
+      console.warn('[studies-hydrate] grades failed:', error);
+    } else if (data) {
+      const grades: Grade[] = data.map((g: any) => ({
+        id: g.id,
+        subjectId: g.subject_id,
+        grade: Number(g.grade),
+        weight: Number(g.weight ?? 1),
+        date: g.date ?? undefined,
+        syncStatus: 'synced' as const,
+        createdAt: g.created_at,
+        updatedAt: g.updated_at,
+      }));
+      await db.grades.bulkPut(grades);
+      gradeCount = grades.length;
+      console.log(`[studies-hydrate] grades=${gradeCount}`);
+    }
+  } catch (e) {
+    errors.push(`grades: ${(e as Error).message}`);
+    console.warn('[studies-hydrate] grades threw:', e);
+  }
+
+  // --- study_sessions ---
+  try {
+    const { data, error } = await fetchWithSoftDeleteFallback(
+      'study_sessions',
+      userId,
+    );
+    if (error) {
+      errors.push(`study_sessions: ${error}`);
+      console.warn('[studies-hydrate] study_sessions failed:', error);
+    } else if (data) {
+      const sessions: StudySession[] = data.map((r: any) => ({
+        id: r.id,
+        startedAt: r.started_at,
+        durationMinutes: Number(r.duration_minutes),
+        subjectId: r.subject_id ?? undefined,
+        notes: r.notes ?? undefined,
+        syncStatus: 'synced' as const,
+        createdAt: r.created_at,
+        updatedAt: r.updated_at,
+      }));
+      await db.studySessions.bulkPut(sessions);
+      sessionCount = sessions.length;
+      console.log(`[studies-hydrate] study_sessions=${sessionCount}`);
+    }
+  } catch (e) {
+    errors.push(`study_sessions: ${(e as Error).message}`);
+    console.warn('[studies-hydrate] study_sessions threw:', e);
+  }
+
+  return {
+    subjects: subjectCount,
+    grades: gradeCount,
+    studySessions: sessionCount,
+    errors,
+  };
+}
+
+/**
+ * Public entry point used by App.tsx on sign-in. Hydrates Dexie with every
+ * StudyDesk row owned by `userId`, then returns the counts. Caller is
+ * expected to refresh the studies store after this resolves and only THEN
+ * open the Realtime subscription so subsequent deltas merge cleanly.
+ */
+export async function hydrateStudiesFromCloud(
+  userId: string,
+): Promise<StudiesHydrationResult> {
+  return hydrateStudiesTables(userId);
+}
+
 export async function pullAll(_userId: string): Promise<PullResult> {
   const errors: string[] = [];
   const result: PullResult = {
@@ -618,49 +790,15 @@ export async function pullAll(_userId: string): Promise<PullResult> {
   // Studies: pull subjects → courses (no embedded grade) AND grades → grades
   // table separately. Each subject can have many grades, each with its own
   // weight + date — Nexus mirrors StudyDesk's full shape now.
-  try {
-    const { data: subjects, error: sErr } = await supabase
-      .from('subjects')
-      .select('*')
-      .is('deleted_at', null);
-    if (sErr) throw sErr;
-    const { data: rawGrades, error: gErr } = await supabase
-      .from('grades')
-      .select('*')
-      .is('deleted_at', null);
-    if (gErr) throw gErr;
-
-    // Subjects → Course rows. We don't have a remote import concept, so put
-    // everything in a single synthetic import keyed 'cloud'.
-    const courses: Course[] = (subjects ?? []).map((s: any) => ({
-      id: s.id,
-      importId: 'cloud',
-      name: s.name,
-      credits: Number(s.credits ?? 1),
-      color: s.color ?? undefined,
-      semester: s.semester ?? undefined,
-      createdAt: s.created_at,
-    }));
-    await db.courses.bulkPut(courses);
-    result.subjects = courses.length;
-
-    // Grades → Grade rows. Keep every grade; subject GPA aggregator handles
-    // the weighting on the read side.
-    const grades: Grade[] = (rawGrades ?? []).map((g: any) => ({
-      id: g.id,
-      subjectId: g.subject_id,
-      grade: Number(g.grade),
-      weight: Number(g.weight ?? 1),
-      date: g.date ?? undefined,
-      syncStatus: 'synced' as const,
-      createdAt: g.created_at,
-      updatedAt: g.updated_at,
-    }));
-    await db.grades.bulkPut(grades);
-    result.grades = grades.length;
-  } catch (e) {
-    errors.push(`subjects/grades: ${(e as Error).message}`);
-  }
+  //
+  // Important: subjects and grades are pulled INDEPENDENTLY so one failure
+  // doesn't poison the other. StudyDesk owns these tables — if either lacks
+  // a `deleted_at` column the filter falls back to "no filter" so we don't
+  // silently drop everything on a schema mismatch.
+  const studiesHydration = await hydrateStudiesTables(_userId);
+  result.subjects = studiesHydration.subjects;
+  result.grades = studiesHydration.grades;
+  for (const e of studiesHydration.errors) errors.push(e);
 
   result.workoutSessions = await pullTable<any, WorkoutSession>(
     'workout_sessions',
@@ -717,23 +855,10 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     }
   );
 
-  result.studySessions = await pullTable<any, StudySession>(
-    'study_sessions',
-    [{ column: 'deleted_at', op: 'is', value: null }],
-    (r) => ({
-      id: r.id,
-      startedAt: r.started_at,
-      durationMinutes: Number(r.duration_minutes),
-      subjectId: r.subject_id ?? undefined,
-      notes: r.notes ?? undefined,
-      syncStatus: 'synced',
-      createdAt: r.created_at,
-      updatedAt: r.updated_at,
-    }),
-    async (rows) => {
-      await db.studySessions.bulkPut(rows);
-    }
-  );
+  // study_sessions: resilient fetch — drop the deleted_at filter on schema
+  // mismatch rather than dropping every row. See hydrateStudiesTables for
+  // the same pattern on subjects + grades.
+  result.studySessions = studiesHydration.studySessions;
 
   result.manualAssets = await pullTable<any, ManualAsset>(
     'manual_assets',

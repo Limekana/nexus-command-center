@@ -10,6 +10,8 @@ import { seedIfEmpty } from './db/seed';
 import { clearAllLocalData } from './db/database';
 import { supabase } from './lib/supabase';
 import { startRealtime, stopRealtime } from './lib/realtime';
+import { hydrateStudiesFromCloud } from './lib/cloudSync';
+import { useStudiesStore } from './store/useStudiesStore';
 import AdoptionPrompt from './components/AdoptionPrompt';
 import NotificationsExplainerModal from './components/NotificationsExplainerModal';
 import LockScreen from './screens/LockScreen';
@@ -72,19 +74,43 @@ export default function App() {
   // valid session). Adoption prompt — if shown — runs its own sync after the
   // user makes a choice, so this won't double-fire problematically.
   //
-  // Also start/stop Realtime here: while signed in, subscribe to WAL change
-  // events; on sign-out, tear it down so we don't leak the channel.
+  // Critical ordering for StudyDesk hydration:
+  //   1. Run an explicit fetch on subjects/grades/study_sessions (StudyDesk
+  //      owns these tables in the shared Supabase project) and write the
+  //      results to Dexie. Realtime ONLY delivers deltas from the moment you
+  //      subscribe — any pre-existing rows would otherwise be invisible to
+  //      NCC until the user edited them in StudyDesk.
+  //   2. Reload the studies store so the UI reflects the hydrated rows.
+  //   3. THEN open the Realtime subscription so future deltas merge cleanly.
+  //   4. Kick the full background syncNow() afterward for the other tables
+  //      (transactions, portfolio, etc.) — non-blocking.
   useEffect(() => {
-    if (session) {
-      void syncNow();
-      startRealtime();
-    } else {
+    if (!session) {
       stopRealtime();
+      return;
     }
-    return () => {
-      // No-op on cleanup of the effect itself — stop is driven by sign-out
-      // (next render with !session), not by component unmount.
-    };
+    const userId = session.user.id;
+    (async () => {
+      try {
+        const result = await hydrateStudiesFromCloud(userId);
+        console.log(
+          `[app-init] studies hydrated: subjects=${result.subjects}, grades=${result.grades}, study_sessions=${result.studySessions}, errors=${result.errors.length}`,
+        );
+        if (result.errors.length > 0) {
+          console.warn('[app-init] hydration errors:', result.errors);
+        }
+        // Refresh the studies store from Dexie so the just-written rows
+        // surface immediately. Other stores get refreshed by syncNow() below.
+        await useStudiesStore.getState().load();
+      } catch (e) {
+        console.warn('[app-init] studies hydration threw:', e);
+      }
+      // Now open the realtime channel for future deltas.
+      startRealtime();
+      // Fire-and-forget the full sync for everything else (push pending
+      // queue + pull transactions/portfolio/tasks/etc.).
+      void syncNow();
+    })();
   }, [session?.user?.id]);
 
   // OAuth deep-link handler: when Supabase redirects back via

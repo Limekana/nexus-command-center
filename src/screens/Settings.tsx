@@ -629,7 +629,7 @@ export default function Settings() {
         </Section>
 
         <Section title="About">
-          <ListRow label="Version" value="1.0.1" />
+          <ListRow label="Version" value="1.0.2" />
           <ListRow label="Studio" value="Limecore" />
           <ListRow label="Build" value="Capacitor · Web → Android" />
           <button
