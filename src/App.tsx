@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
@@ -12,6 +12,7 @@ import { supabase } from './lib/supabase';
 import { startRealtime, stopRealtime } from './lib/realtime';
 import { hydrateStudiesFromCloud } from './lib/cloudSync';
 import { useStudiesStore } from './store/useStudiesStore';
+import { isGuestMode } from './lib/guestMode';
 import AdoptionPrompt from './components/AdoptionPrompt';
 import NotificationsExplainerModal from './components/NotificationsExplainerModal';
 import LockScreen from './screens/LockScreen';
@@ -42,6 +43,8 @@ import YearReview from './screens/YearReview';
 import Goals from './screens/Goals';
 import Settings from './screens/Settings';
 import { onNotificationTap, scheduleWeeklyReview } from './lib/weeklyNotification';
+import { onNotificationAction } from './lib/notifications';
+import { useTaskStore } from './store/useTaskStore';
 import { useSettingsStore } from './store/useSettingsStore';
 
 export default function App() {
@@ -53,10 +56,24 @@ export default function App() {
   const initSession = useSessionStore((s) => s.init);
   const syncNow = useSyncStore((s) => s.syncNow);
 
+  // Guest-mode flag — when true, App.tsx skips the auth gate even with no
+  // Supabase session. Loaded once on mount, then re-evaluated whenever the
+  // Login screen dispatches `nexus:guest-mode-changed` (after tap on
+  // "Continue as guest"). Settings clears the flag when the user signs in.
+  // `null` while the initial read is in flight — render the splash same as
+  // the session-loading branch so we don't flash the Login screen for
+  // returning guest-mode users.
+  const [guestMode, setGuestModeState] = useState<boolean | null>(null);
+
   useEffect(() => {
     (async () => {
       // Init session first — we need to know auth state before anything else.
       await initSession();
+
+      // Read guest flag in parallel with session restore. Both inform the
+      // gate logic below; we resolve to a final state once both are known.
+      const guest = await isGuestMode();
+      setGuestModeState(guest);
 
       // One-time wipe of prior seeded sample data.
       if (localStorage.getItem('nexus.seeded.v1') && !localStorage.getItem('nexus.wiped.v1')) {
@@ -68,6 +85,20 @@ export default function App() {
       await initAuth();
       initSync();
     })();
+  }, []);
+
+  // Listen for guest-mode toggle events fired by Login.tsx and Settings.tsx.
+  // The Preferences plugin doesn't emit changes natively, so we use a
+  // CustomEvent contract on `window` to keep the gate reactive.
+  useEffect(() => {
+    const onGuestChange = () => {
+      void (async () => {
+        const guest = await isGuestMode();
+        setGuestModeState(guest);
+      })();
+    };
+    window.addEventListener('nexus:guest-mode-changed', onGuestChange);
+    return () => window.removeEventListener('nexus:guest-mode-changed', onGuestChange);
   }, []);
 
   // Auto-sync when a session becomes available (sign-in or app reopen with
@@ -143,8 +174,11 @@ export default function App() {
     };
   }, []);
 
-  // 1. Wait for session restoration before deciding what to show.
-  if (sessionLoading) {
+  // 1. Wait for session restoration AND guest flag read before deciding.
+  // guestMode === null means the Preferences read hasn't resolved yet —
+  // render the splash same as session-loading to avoid flashing the Login
+  // screen for returning guest-mode users on cold start.
+  if (sessionLoading || guestMode === null) {
     return (
       <div className="min-h-full bg-bg text-text flex items-center justify-center">
         <div className="text-text-muted text-xs uppercase tracking-wider">Loading</div>
@@ -152,8 +186,11 @@ export default function App() {
     );
   }
 
-  // 2. No Supabase session → show auth screens.
-  if (!session) {
+  // 2. No Supabase session AND not in guest mode → show auth screens.
+  // Guest-mode users skip this gate and land directly in the app; their
+  // Supabase-backed features (sync, SSO publishing, adoption prompt cloud
+  // flag) all no-op gracefully when `session` is null.
+  if (!session && !guestMode) {
     return (
       <Routes>
         <Route path="/auth/login" element={<Login />} />
@@ -163,7 +200,9 @@ export default function App() {
     );
   }
 
-  // 3. Session OK but device not unlocked → show LockScreen.
+  // 3. Session OK (or guest mode active) but device not unlocked → LockScreen.
+  // PIN/biometric still gates a guest-mode session if the user has set one,
+  // so the lock UX stays consistent regardless of cloud auth state.
   if (!unlocked) {
     return <LockScreen />;
   }
@@ -239,6 +278,32 @@ function NotificationBridge() {
     onNotificationTap((route) => navigate(route)).then((u) => {
       unsub = u;
     });
+    return () => unsub();
+  }, [navigate]);
+
+  // Action-button taps. Each action ID maps to a different side-effect:
+  //   'done'  → mark a task complete (extra.taskId)
+  //   'view'  → open a target route (e.g. /finance/budgets with cat id)
+  //   future actions add a case here. Unknown IDs are silently dropped.
+  // The notification is auto-dismissed by NotificationActionReceiver
+  // before this fires, so no manual cancel is needed.
+  useEffect(() => {
+    let unsub: () => void = () => {};
+    onNotificationAction((payload) => {
+      const { actionId, route, extra } = payload;
+      if (actionId === 'done' && extra && typeof extra.taskId === 'string') {
+        // Fire-and-forget — toggleComplete handles its own persistence.
+        void useTaskStore.getState().toggleComplete(extra.taskId);
+        return;
+      }
+      if (actionId === 'view' && route) {
+        navigate(route);
+        return;
+      }
+      // Unknown actionId — log so we notice if a new scheduler ships an
+      // action ID without a corresponding handler.
+      console.warn('[notifications] unhandled action', actionId);
+    }).then((u) => { unsub = u; });
     return () => unsub();
   }, [navigate]);
 

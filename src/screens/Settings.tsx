@@ -20,6 +20,7 @@ import { rearmTaskReminders } from '../lib/taskReminders';
 import { runPortfolioEodTick } from '../lib/portfolioEod';
 import { runNewsAlertsTick } from '../lib/newsAlerts';
 import { supabase } from '../lib/supabase';
+import { setGuestMode } from '../lib/guestMode';
 
 // Auto-lock intervals. The "Never" option was removed deliberately — leaving
 // a phone permanently unlocked defeats the purpose of the PIN/biometric gate.
@@ -191,21 +192,53 @@ export default function Settings() {
       <AppHeader title="Settings" showAvatar={false} />
       <div className="space-y-3">
         <Section title="Account">
-          <ListRow label="Name" value={userDisplayName(user) || '—'} />
-          <ListRow label="Email" value={user?.email ?? '—'} />
-          <button
-            className="btn-ghost w-full mt-2"
-            onClick={onChangePassword}
-            disabled={!user?.email}
-          >
-            Send Password Reset Email
-          </button>
-          <button
-            className="btn-ghost w-full mt-2 text-danger border-danger/40"
-            onClick={() => setSignOutOpen(true)}
-          >
-            Sign Out
-          </button>
+          {user ? (
+            <>
+              <ListRow label="Name" value={userDisplayName(user) || '—'} />
+              <ListRow label="Email" value={user?.email ?? '—'} />
+              <button
+                className="btn-ghost w-full mt-2"
+                onClick={onChangePassword}
+                disabled={!user?.email}
+              >
+                Send Password Reset Email
+              </button>
+              <button
+                className="btn-ghost w-full mt-2 text-danger border-danger/40"
+                onClick={() => setSignOutOpen(true)}
+              >
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <>
+              {/* Guest mode — surface an upgrade-to-cloud-sync affordance.
+                  Tapping clears the guestMode flag and reloads; App.tsx
+                  re-routes to the Login screen since `session` is still
+                  null. Local Dexie data is preserved (the AdoptionPrompt
+                  on Login → app re-entry handles the keep-or-discard
+                  choice when the user signs in). */}
+              <ListRow label="Status" value="Guest — local only" />
+              <p className="text-xs text-text-muted mt-1 mb-3 leading-relaxed">
+                You're using NCC without an account. Local data stays on this device,
+                but won't sync across devices and won't survive uninstall. Sign in
+                to enable Supabase sync and cross-app SSO with LimeLog + StudyDesk.
+              </p>
+              <button
+                className="btn w-full"
+                onClick={async () => {
+                  await setGuestMode(false);
+                  window.dispatchEvent(new CustomEvent('nexus:guest-mode-changed'));
+                  // App.tsx's gate will re-evaluate and route to Login since
+                  // !session && !guestMode is now true. No reload needed —
+                  // the CustomEvent listener triggers a state update which
+                  // causes the gate's conditional to flip.
+                }}
+              >
+                Sign in
+              </button>
+            </>
+          )}
         </Section>
 
         <Section title="Security">

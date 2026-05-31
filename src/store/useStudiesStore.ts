@@ -110,13 +110,20 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
     // from StudyDesk arrive stamped 'cloud' and would otherwise be invisible
     // to the UI. There is now a single working set of courses + grades —
     // origin (cloud / manual / legacy CSV) no longer matters for display.
-    const [imports, allCourses, allGrades, studySessions, readings] = await Promise.all([
+    const [imports, allCoursesIncludingArchived, allGrades, studySessions, readings] = await Promise.all([
       db.gradeImports.orderBy('importedAt').reverse().toArray(),
       db.courses.toArray(),
       db.grades.toArray(),
       db.studySessions.orderBy('startedAt').reverse().toArray(),
       db.readings.orderBy('updatedAt').reverse().toArray(),
     ]);
+    // v1.2 — exclude archived courses from the live working set. The full
+    // list stays in Dexie so a future "Show archived" NCC affordance can
+    // surface them; for v1.1.2 NCC is a silent consumer of StudyDesk's
+    // archive state (archived semesters disappear from Studies + GPA
+    // automatically). Archived rows continue to ride the realtime channel
+    // and re-hydrate correctly on restore.
+    const allCourses = allCoursesIncludingArchived.filter((c) => !c.archivedAt);
     const previous = imports[1] ?? null;
     const idx = indexGradesBySubject(allGrades);
     const gpa = calculateGPA(allCourses, idx, gradeMode);

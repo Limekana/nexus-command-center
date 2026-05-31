@@ -46,7 +46,9 @@ export default function BottomTabBar() {
               >
                 {t.icon}
               </span>
-              <span className="text-[10px] font-medium tracking-wide">{t.label}</span>
+              {/* v1.1 — UI/UX review #4: 10px → 11px for sustained legibility.
+                  Still fits a 5-tab row at 360dp baseline. */}
+              <span className="text-[11px] font-medium tracking-wide">{t.label}</span>
             </button>
           );
         })}

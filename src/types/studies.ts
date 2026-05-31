@@ -18,6 +18,11 @@ export interface Course {
   credits: number;
   color?: string;
   semester?: string;
+  /** v1.2 — set by StudyDesk's semester-archive UI. ISO timestamp when
+   *  the course was archived; absent/undefined means active. Filtered out
+   *  of the active studies UI and GPA computation; surfaced under an
+   *  "Archived" toggle. Sync-mirrored via subjects.archived_at column. */
+  archivedAt?: string;
   createdAt: string;
 }
 

@@ -1,8 +1,22 @@
+// First-launch sign-in surface for NCC. Order of options reflects the
+// suite-wide auth UX model:
+//
+//   1. Continue with Google — primary path. NCC is the SSO source for the
+//      suite (LimeLog + StudyDesk inherit from NCC via SessionContentProvider),
+//      so the easier we make Google sign-in here, the smoother the
+//      cross-app experience is.
+//   2. Use email instead    — collapsed by default. Still fully supported,
+//      just not the lead affordance.
+//   3. Continue as guest    — bypass auth entirely. Sets a Preferences flag
+//      so the next launch goes straight to the app. User can still sign in
+//      later from Settings to enable Supabase sync.
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import { supabase, OAUTH_REDIRECT_URL } from '../../lib/supabase';
+import { setGuestMode } from '../../lib/guestMode';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -10,6 +24,7 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [googleSubmitting, setGoogleSubmitting] = useState(false);
+  const [showEmail, setShowEmail] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +70,22 @@ export default function Login() {
     }
   };
 
+  const onGuest = async () => {
+    // Mark this device as opting out of auth. App.tsx reads the flag and
+    // skips the Login gate; the rest of the app runs on local Dexie state.
+    // The user can sign in later from Settings (which will clear the flag).
+    //
+    // v1.1 — UI/UX review #3: write the flag FIRST, then dispatch the
+    // change event so the listener observes the updated value on its
+    // re-read. The previous order (navigate → dispatch) was a no-op until
+    // the dispatch fired; now the gate flip is deterministic. No explicit
+    // navigate needed — App.tsx re-renders to Dashboard once the gate
+    // condition flips.
+    setError(null);
+    await setGuestMode(true);
+    window.dispatchEvent(new CustomEvent('nexus:guest-mode-changed'));
+  };
+
   return (
     <div className="min-h-full bg-bg text-text flex flex-col">
       <div className="flex-1 flex flex-col justify-center px-6 max-w-md mx-auto w-full">
@@ -63,71 +94,110 @@ export default function Login() {
           <p className="text-sm text-text-muted mt-1">Command Center · Sign in</p>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-3">
-          <div>
-            <label className="block text-[10px] uppercase tracking-wider text-text-muted mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              autoComplete="email"
-              required
-              className="input w-full"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-            />
-          </div>
-          <div>
-            <label className="block text-[10px] uppercase tracking-wider text-text-muted mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              autoComplete="current-password"
-              required
-              minLength={10}
-              className="input w-full"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••••"
-            />
-          </div>
-
-          {error && (
-            <div className="alert alert-warn text-xs">
-              <span className="w-2 h-2 rounded-full bg-danger" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          <button type="submit" disabled={submitting} className="btn w-full">
-            {submitting ? 'Signing in…' : 'Sign In'}
-          </button>
-        </form>
-
-        <div className="flex items-center gap-3 my-5">
-          <div className="flex-1 h-px bg-border" />
-          <span className="text-[10px] uppercase tracking-wider text-text-muted">or</span>
-          <div className="flex-1 h-px bg-border" />
-        </div>
-
+        {/* Primary affordance — Google. Suite-wide SSO source. */}
         <button
           type="button"
           onClick={onGoogle}
           disabled={googleSubmitting}
-          className="btn-ghost w-full flex items-center justify-center gap-2"
+          className="btn w-full flex items-center justify-center gap-2"
         >
           <GoogleG />
           {googleSubmitting ? 'Opening Google…' : 'Continue with Google'}
         </button>
 
-        <p className="text-center text-xs text-text-muted mt-6">
-          Don't have an account?{' '}
-          <Link to="/auth/signup" className="text-primary">
-            Sign up
-          </Link>
-        </p>
+        {/* Email/password — secondary, collapsed by default.
+            v1.1 — UI/UX review #1: was a text-only button (~18px tall).
+            Now py-3 + w-full → 44px+ tap target while keeping the
+            secondary visual treatment. */}
+        {!showEmail ? (
+          <button
+            type="button"
+            onClick={() => setShowEmail(true)}
+            className="w-full text-center text-xs text-text-muted mt-3 py-3 underline-offset-2 hover:underline rounded-md"
+          >
+            Use email instead
+          </button>
+        ) : (
+          <>
+            <div className="flex items-center gap-3 my-5">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-[10px] uppercase tracking-wider text-text-muted">or use email</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+
+            <form onSubmit={onSubmit} className="space-y-3">
+              <div>
+                <label className="block text-[10px] uppercase tracking-wider text-text-muted mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  autoComplete="email"
+                  required
+                  className="input w-full"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase tracking-wider text-text-muted mb-1">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  minLength={10}
+                  className="input w-full"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••••"
+                />
+              </div>
+
+              <button type="submit" disabled={submitting} className="btn-ghost w-full">
+                {submitting ? 'Signing in…' : 'Sign In with Email'}
+              </button>
+            </form>
+
+            <p className="text-center text-xs text-text-muted mt-4">
+              Don't have an account?{' '}
+              <Link to="/auth/signup" className="text-primary">
+                Sign up
+              </Link>
+            </p>
+          </>
+        )}
+
+        {error && (
+          <div className="alert alert-warn text-xs mt-4">
+            <span className="w-2 h-2 rounded-full bg-danger" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* Guest path — clearly last, but a real option. The line above it
+            is visually distinct so it doesn't look like a third sign-in
+            method. Caption explains the trade-off so the user knows what
+            they're opting out of.
+            v1.1 — UI/UX review #2: button was text-only (~20px tall).
+            Now full-width with py-3 + min-h-[44px] to meet WCAG 2.5.5
+            without losing the visually-tertiary treatment (no fill, no
+            border — opt-out path stays clearly de-emphasized vs the
+            sign-in CTAs above). #6: disclaimer bumped 10px → 11px. */}
+        <div className="mt-10 pt-6 border-t border-border/60 flex flex-col items-center">
+          <button
+            type="button"
+            onClick={onGuest}
+            className="w-full min-h-[44px] py-3 text-sm text-text-muted hover:text-text underline-offset-2 hover:underline rounded-md"
+          >
+            Continue as guest
+          </button>
+          <p className="text-[11px] text-text-muted mt-1.5 text-center px-4 leading-relaxed">
+            Local only — no cross-device sync. You can sign in later from Settings.
+          </p>
+        </div>
       </div>
     </div>
   );

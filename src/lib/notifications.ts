@@ -29,7 +29,9 @@
 // ────────────────────────────────────────────────────────────────────────
 
 import { Capacitor } from '@capacitor/core';
-import { NexusNotifications } from './nexusNotificationsPlugin';
+import { NexusNotifications, type NotificationAction } from './nexusNotificationsPlugin';
+
+export type { NotificationAction };
 
 export type NotificationCategory =
   | 'weekly-review'
@@ -203,6 +205,11 @@ export interface ScheduleOptions {
    *  the AlarmManager intent. The `route` field is special: if present,
    *  the tap handler navigates there. */
   extra?: Record<string, unknown> & { route?: string };
+  /** Optional inline action buttons (1-3 recommended; Android collapses
+   *  extras into an overflow). Each action's `id` is compared in the
+   *  `onNotificationAction` handler; the action's `extra` payload arrives
+   *  as a JSON-encoded string on the event. */
+  actions?: NotificationAction[];
 }
 
 /** Schedule (or overwrite) a notification. Verifies the ID falls in the
@@ -233,6 +240,7 @@ export async function scheduleNotification(opts: ScheduleOptions): Promise<Notif
       channelId: CHANNEL_SPECS[opts.category].id,
       atMillis,
       extra: opts.extra,
+      actions: opts.actions,
     });
     return { ok: true };
   } catch (e) {
@@ -291,6 +299,45 @@ export async function onNotificationTap(
     };
   } catch (e) {
     console.warn('[notifications] onNotificationTap', (e as Error).message);
+    return () => {};
+  }
+}
+
+/** Payload delivered to the action-tap handler. `extra` is the parsed
+ *  JSON of whatever was set on the action's `extra` field at schedule
+ *  time; null if the schedule call didn't include one or parsing failed. */
+export interface NotificationActionPayload {
+  actionId: string;
+  route: string;
+  extra: Record<string, unknown> | null;
+}
+
+/** Subscribe to action-button taps (NOT the notification body itself —
+ *  that's `onNotificationTap`). Handler receives the actionId, the
+ *  optional route, and the parsed extra payload. The notification is
+ *  auto-dismissed on the native side before the event reaches JS, so
+ *  the handler doesn't need to clear it. */
+export async function onNotificationAction(
+  handler: (payload: NotificationActionPayload) => void,
+): Promise<() => void> {
+  if (!Capacitor.isNativePlatform()) return () => {};
+  try {
+    const sub = await NexusNotifications.addListener('notificationAction', (event) => {
+      let extra: Record<string, unknown> | null = null;
+      if (event.extraJson) {
+        try {
+          extra = JSON.parse(event.extraJson);
+        } catch {
+          // Malformed JSON shouldn't break the handler. Just leave extra null.
+        }
+      }
+      handler({ actionId: event.actionId, route: event.route, extra });
+    });
+    return () => {
+      sub.remove();
+    };
+  } catch (e) {
+    console.warn('[notifications] onNotificationAction', (e as Error).message);
     return () => {};
   }
 }

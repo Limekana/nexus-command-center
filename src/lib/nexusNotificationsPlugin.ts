@@ -34,6 +34,23 @@ export interface ChannelSpec {
   importance?: number;
 }
 
+/** One inline action button on the notification. The Java side renders
+ *  these via NotificationCompat.addAction; clicks fire the
+ *  `notificationAction` event with this action's `id`. Auto-dismisses
+ *  the source notification on tap. */
+export interface NotificationAction {
+  /** Stable identifier compared in the JS event handler. Keep short. */
+  id: string;
+  /** Visible button label (Android wraps at ~12 chars; keep it shorter). */
+  title: string;
+  /** Optional route to navigate to after the action fires. */
+  route?: string;
+  /** Optional payload — JSON-serialized into intent extras and re-emitted
+   *  as `extraJson` in the action event. Use for IDs the handler needs
+   *  (e.g. taskId for "Mark done"). Must be plain JSON-able data. */
+  extra?: Record<string, unknown>;
+}
+
 export interface ScheduleSpec {
   // Stable numeric ID. Re-scheduling with the same ID overwrites the
   // previous alarm (via PendingIntent.FLAG_UPDATE_CURRENT on the native
@@ -50,6 +67,10 @@ export interface ScheduleSpec {
   /** Arbitrary payload — only `route` is read on tap. Keep small; this
    *  rides through the AlarmManager intent extras. */
   extra?: Record<string, unknown> & { route?: string };
+  /** Up to ~3 inline action buttons. Per Android UI conventions, more
+   *  than 3 won't all be visible; the OS may collapse extras into an
+   *  overflow. */
+  actions?: NotificationAction[];
 }
 
 export interface ScheduleResult {
@@ -70,6 +91,20 @@ export interface NotificationTapEvent {
   route: string;
 }
 
+/** Fires when the user taps an action button on a notification (NOT the
+ *  notification body itself — that's `notificationTap`). The source
+ *  notification auto-dismisses on the native side before this event
+ *  reaches JS. */
+export interface NotificationActionEvent {
+  /** Matches the `id` field of the action that was tapped. */
+  actionId: string;
+  /** Route from the action's `route` field. Empty string if unset. */
+  route: string;
+  /** JSON-encoded string of the action's `extra` payload. Empty string
+   *  if no extra was set. Caller decodes via JSON.parse. */
+  extraJson: string;
+}
+
 export interface NexusNotificationsPlugin {
   checkPermission(): Promise<PermissionResult>;
   requestPermission(): Promise<PermissionResult>;
@@ -80,6 +115,10 @@ export interface NexusNotificationsPlugin {
   addListener(
     eventName: 'notificationTap',
     listener: (event: NotificationTapEvent) => void,
+  ): Promise<PluginListenerHandle>;
+  addListener(
+    eventName: 'notificationAction',
+    listener: (event: NotificationActionEvent) => void,
   ): Promise<PluginListenerHandle>;
 }
 

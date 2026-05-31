@@ -19,7 +19,8 @@ import axios from 'axios';
 import { db } from '../db/database';
 import { getApiKey } from './keys';
 import { shouldFetch, recordCall } from './cache';
-import { lastProviderErrors, isInternationalTicker } from './yahoo';
+import { lastProviderErrors, isInternationalTicker, readChartMeta } from './yahoo';
+import { buildRelevanceCheck, isNewsRelevant } from '../lib/newsRelevance';
 import {
   getYahooMetric,
   getYahooEarnings,
@@ -222,14 +223,37 @@ export async function getCompanyNews(ticker: string): Promise<NewsItem[]> {
       timeout: 10000,
     });
     const arr = Array.isArray(data) ? data : [];
+    // BUG-3 defense in depth: Finnhub's /company-news is usually reliable, but
+    // edge cases have surfaced unrelated stories (the reported Trump/sanctuary-
+    // city story mis-tagged as Nordea was actually from the Yahoo path, but
+    // we apply the same filter here as belt-and-suspenders so any future
+    // Finnhub coverage drift can't slip junk through). companyName comes
+    // from the Yahoo chart-meta cache populated by every quote refresh.
+    const meta = await readChartMeta(ticker);
+    const check = buildRelevanceCheck(ticker, meta?.longName);
+    let rejected = 0;
     // Stamp ticker (Finnhub doesn't include it in the per-company response),
-    // sort newest first, and trim to 10 (more than that is doom-scroll noise).
+    // filter by relevance, sort newest first, and trim to 10 (more than that
+    // is doom-scroll noise).
     const stamped: NewsItem[] = arr
       .map((n) => ({ ...n, ticker: ticker.toUpperCase() }))
+      .filter((item) => {
+        const ok = isNewsRelevant(item, check);
+        if (!ok) rejected += 1;
+        return ok;
+      })
       .sort((a, b) => b.datetime - a.datetime)
       .slice(0, 10);
-    // If Finnhub returned an empty news list (rate-limited or no coverage),
-    // try Yahoo instead of leaving the user with an empty feed.
+    if (rejected > 0) {
+      console.debug(
+        `[finnhub news] ${ticker}: filtered ${rejected} off-topic ` +
+          `story/stories (check: base=${check.tickerBase} key=${check.companyKey ?? '?'})`,
+      );
+    }
+    // If Finnhub returned an empty news list (rate-limited, no coverage, or
+    // everything got filtered as off-topic), try Yahoo instead. Yahoo applies
+    // its own relevance filter inside getYahooNews so this still respects
+    // the BUG-3 contract — we won't surface junk from the fallback.
     if (stamped.length === 0) return getYahooNews(ticker);
     await writeCache(key, stamped, NEWS_TTL_MS);
     return stamped;

@@ -31,6 +31,13 @@
 
 import { create } from 'zustand';
 import { Preferences } from '@capacitor/preferences';
+import {
+  KEYSTORE_ALIAS_PIN,
+  decrypt as keystoreDecrypt,
+  encrypt as keystoreEncrypt,
+  ensureKey as keystoreEnsureKey,
+  keystoreAvailable,
+} from '@/lib/keystore';
 
 const PIN_KEY = 'auth.pin';
 const AUTOLOCK_KEY = 'auth.autoLockMin';
@@ -41,6 +48,13 @@ const PIN_LAST_FAIL_KEY = 'auth.pinLastFailAt';
 const PBKDF2_ITERATIONS = 250_000;
 const SALT_BYTES = 16;
 const HASH_FORMAT_VERSION = 'v2';
+// v1.4 — outer wrapper that AKS-encrypts the v2 string. Format:
+//   v3:<iv_b64>:<ciphertext_b64>
+// Decryption requires the Android Keystore-bound key under
+// KEYSTORE_ALIAS_PIN. On Keystore failure (web dev, very old Android,
+// or revoked key) we silently fall back to v2 plaintext storage so
+// auth continues to work.
+const KEYSTORE_WRAPPER_VERSION = 'v3';
 
 // Lockout schedule — cumulative: at N failed attempts, lock for X seconds.
 // Highest threshold wins (i.e. 20 attempts → 15min, not the sum).
@@ -145,6 +159,51 @@ function timingSafeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
+// ── v3 Keystore wrapper ─────────────────────────────────────────────────
+//
+// Encrypts the v2 (or legacy v1) hash string with an AndroidKeyStore-bound
+// AES-256-GCM key. The wrapper protects against attackers who pull
+// SharedPreferences via adb backup, a rooted-ADB shell, or a leaked
+// MODE_PRIVATE bypass: the v2 string is salted-PBKDF2 hash that's still
+// expensive to brute-force, but v3 turns that into a fully-AEAD-encrypted
+// blob whose key can't be extracted from user space.
+//
+// Defense-in-depth, not a panacea. Determined adversaries with full root +
+// secure-element exploits can still attack the device. AKS raises the bar
+// from "trivial" to "expensive + device-specific."
+
+function isV3Wrapped(stored: string): boolean {
+  return stored.startsWith(`${KEYSTORE_WRAPPER_VERSION}:`);
+}
+
+function parseV3(stored: string): { iv: string; ciphertext: string } | null {
+  const parts = stored.split(':');
+  if (parts.length !== 3 || parts[0] !== KEYSTORE_WRAPPER_VERSION) return null;
+  return { iv: parts[1], ciphertext: parts[2] };
+}
+
+/** Encrypt a v1/v2 hash string and produce the v3 wrapped form. Throws if
+ *  Keystore isn't available — caller must decide whether to fall back. */
+async function wrapV3(plaintextV2: string): Promise<string> {
+  await keystoreEnsureKey(KEYSTORE_ALIAS_PIN);
+  const { iv, ciphertext } = await keystoreEncrypt(KEYSTORE_ALIAS_PIN, plaintextV2);
+  return `${KEYSTORE_WRAPPER_VERSION}:${iv}:${ciphertext}`;
+}
+
+/** Unwrap a stored value back to the v1/v2 form. Returns null on any
+ *  decrypt failure (key missing, tampered ciphertext, etc.) so callers
+ *  can present a clean "PIN unrecoverable, please re-set" path. */
+async function unwrapV3(stored: string): Promise<string | null> {
+  const v3 = parseV3(stored);
+  if (!v3) return null;
+  try {
+    return await keystoreDecrypt(KEYSTORE_ALIAS_PIN, v3.ciphertext, v3.iv);
+  } catch (e) {
+    console.warn('[auth] v3 PIN decrypt failed:', (e as Error).message);
+    return null;
+  }
+}
+
 function getLockoutSecondsForAttempts(attempts: number): number {
   for (const tier of LOCKOUT_TIERS) {
     if (attempts >= tier.attempts) return tier.lockSeconds;
@@ -199,6 +258,29 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       getPref(PIN_LAST_FAIL_KEY),
     ]);
 
+    // v1.4 — opportunistic v2 → v3 migration. If we find a plaintext v2
+    // hash AND Keystore is available, encrypt-in-place. One-shot per
+    // user. On Keystore failure we leave v2 alone (auth still works,
+    // just without the AKS layer of defense). On v3 read failure
+    // (key revoked / GCM auth failure) we delete the stored hash so the
+    // user is prompted to set a new PIN — better than a permanent lock.
+    if (pin && !isV3Wrapped(pin) && !isLegacyHash(pin) && keystoreAvailable()) {
+      try {
+        const wrapped = await wrapV3(pin);
+        await setPref(PIN_KEY, wrapped);
+      } catch (e) {
+        console.warn('[auth] PIN v3 migration skipped:', (e as Error).message);
+      }
+    } else if (pin && isV3Wrapped(pin)) {
+      // Probe-decrypt to confirm the AKS key is reachable. If not, drop
+      // the stored hash so the user can re-set a PIN instead of being
+      // permanently locked out.
+      const unwrapped = await unwrapV3(pin);
+      if (unwrapped == null) {
+        await removePref(PIN_KEY);
+      }
+    }
+
     // Coerce legacy "Never auto-lock" (saved as 0) to a 60-minute cap. The
     // "Never" option was removed for security reasons; existing users get
     // bumped to the longest sane window instead of staying perpetually
@@ -211,8 +293,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     const lockoutSec = getLockoutSecondsForAttempts(failedAttempts);
     const lockedUntilCandidate = lastFail && lockoutSec > 0 ? lastFail + lockoutSec * 1000 : 0;
 
+    // Re-read after potential migration so `hasPin` reflects the
+    // post-migration state (we might have removed an unrecoverable v3).
+    const pinAfterMigration = await getPref(PIN_KEY);
     set({
-      hasPin: !!pin,
+      hasPin: !!pinAfterMigration,
       autoLockMinutes: autoLockMin,
       biometricEnabled: bio !== '0',
       failedAttempts,
@@ -221,8 +306,18 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   async setPin(pin) {
-    const stored = await hashPinV2(pin);
-    await setPref(PIN_KEY, stored);
+    const v2 = await hashPinV2(pin);
+    // v1.4 — wrap with Keystore when available; fall back to plaintext v2
+    // on web dev or when Keystore is broken.
+    let toStore = v2;
+    if (keystoreAvailable()) {
+      try {
+        toStore = await wrapV3(v2);
+      } catch (e) {
+        console.warn('[auth] PIN encryption skipped, storing v2 plaintext:', (e as Error).message);
+      }
+    }
+    await setPref(PIN_KEY, toStore);
     // Fresh PIN → wipe lockout state so the user isn't punished for whatever
     // PIN they were guessing before resetting.
     await removePref(PIN_ATTEMPTS_KEY);
@@ -251,19 +346,38 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     const stored = await getPref(PIN_KEY);
     if (!stored) return { ok: false };
 
+    // v1.4 — unwrap the v3 AKS layer if present. Everything below works on
+    // the v1/v2 plaintext form.
+    let plaintextHash = stored;
+    if (isV3Wrapped(stored)) {
+      const unwrapped = await unwrapV3(stored);
+      if (unwrapped == null) {
+        // Key revoked / tampered — surface as a regular miss so the
+        // counter-and-lockout flow takes over. init() will have wiped
+        // the stored hash on the next launch.
+        return { ok: false };
+      }
+      plaintextHash = unwrapped;
+    }
+
     let matched = false;
 
-    if (isLegacyHash(stored)) {
+    if (isLegacyHash(plaintextHash)) {
       // v1 path: legacy unsalted SHA-256. Verify, and on success transparently
-      // upgrade to v2 so subsequent unlocks use the safer hash.
+      // upgrade to v2 so subsequent unlocks use the safer hash. The v2
+      // string then goes through wrapV3 if Keystore is available.
       const candidate = await legacySha256(pin);
-      matched = timingSafeEqual(candidate, stored);
+      matched = timingSafeEqual(candidate, plaintextHash);
       if (matched) {
-        const upgraded = await hashPinV2(pin);
-        await setPref(PIN_KEY, upgraded);
+        const upgradedV2 = await hashPinV2(pin);
+        let toStore = upgradedV2;
+        if (keystoreAvailable()) {
+          try { toStore = await wrapV3(upgradedV2); } catch { /* fall back */ }
+        }
+        await setPref(PIN_KEY, toStore);
       }
     } else {
-      const v2 = parseV2(stored);
+      const v2 = parseV2(plaintextHash);
       if (!v2) return { ok: false };
       const candidate = await pbkdf2(pin, v2.salt);
       matched = timingSafeEqual(candidate, v2.hash);

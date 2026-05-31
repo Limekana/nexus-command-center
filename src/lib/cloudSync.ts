@@ -381,6 +381,11 @@ async function pushCourse(item: SyncQueueItem, ctx: PushContext): Promise<void> 
     credits: local.credits,
     semester: local.semester ?? null,
     color: local.color ?? null,
+    // v1.2 — bidirectional archive sync. If NCC ever exposes an archive
+    // toggle for subjects locally, this carries it upstream; for now NCC
+    // is purely a consumer of StudyDesk's archive state but the push
+    // shape stays symmetric so the LWW merge isn't lopsided.
+    archived_at: local.archivedAt ?? null,
     updated_at: item.createdAt,
   };
   const { error } = await supabase.from('subjects').upsert(subjectRow);
@@ -606,6 +611,10 @@ async function hydrateStudiesTables(userId: string): Promise<StudiesHydrationRes
         credits: Number(s.credits ?? 1),
         color: s.color ?? undefined,
         semester: s.semester ?? undefined,
+        // v1.2 — archived_at column. Null/undefined = active. The studies
+        // store filters this out of the active list + GPA but keeps the
+        // row hydrated so a "Show archived" toggle can surface it.
+        archivedAt: s.archived_at ?? undefined,
         createdAt: s.created_at,
       }));
       await db.courses.bulkPut(courses);

@@ -124,6 +124,14 @@ export async function checkBudgetThresholds(
         title,
         body,
         extra: { route: '/finance/budgets' },
+        // "View category" action — opens the budgets page with the
+        // category ID in the action extra so a downstream handler can
+        // scroll to / highlight it. Default body tap goes to the same
+        // route; the action gives users a one-tap path even when they
+        // landed on the lockscreen from another context.
+        actions: [
+          { id: 'view', title: 'View category', route: '/finance/budgets', extra: { categoryId: cat.id } },
+        ],
       });
       if (result.ok) {
         localStorage.setItem(trackerKey, String(highestCrossed));

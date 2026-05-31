@@ -1,5 +1,24 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+      v1.1 cross-app SSO — NO custom signature-level permission.
+      The original v1.1.0 design used a signature-protected custom permission
+      to guard SessionContentProvider, but real-world dev cert state across
+      three separate Android Studio projects doesn't reliably share
+      debug.keystore (Gradle signing caches, fresh installs, different
+      ~/.android setups all introduce drift). When certs drift, the OS
+      rejects the cross-app query with SecurityException before reaching
+      the provider, surfacing as silent SSO failure on device.
+
+      Replacement: application-layer guard inside SessionContentProvider.query()
+      that checks getCallingPackage() against an allowlist of sibling bundle
+      IDs (com.limecore.workouttracker + com.StudyDesk.app). The Android OS
+      sets the calling package via Binder, so it's not spoofable from the
+      caller side without OS compromise. Token bundles are also short-lived
+      (Supabase refresh), bounding blast radius of any misconfiguration.
+    -->
+
     <!--
       android:allowBackup="false" + fullBackupContent="false" — opting out of
       Android's auto-backup means the IndexedDB (which contains all finance,
@@ -75,6 +94,26 @@
         <receiver
             android:name=".NotificationAlarmReceiver"
             android:exported="false" />
+
+        <!-- Action-button broadcast receiver. Triggered by PendingIntents
+             built into each posted notification's Notification.Action
+             entries. Forwards the actionId + payload to JS via
+             NexusNotificationsPlugin.deliverAction. Not exported — our
+             own broadcasts only. -->
+        <receiver
+            android:name=".NotificationActionReceiver"
+            android:exported="false" />
+
+        <!-- v1.1 cross-app SSO publisher. Exposes the current Supabase
+             session via a read-only ContentProvider. Access control lives
+             inside SessionContentProvider.query() via a getCallingPackage()
+             allowlist (see the application-layer guard in that class).
+             android:exported="true" is required for any ContentProvider
+             that other apps need to reach. -->
+        <provider
+            android:name=".SessionContentProvider"
+            android:authorities="com.limecore.nexus.session"
+            android:exported="true" />
     </application>
 
     <!-- Permissions -->

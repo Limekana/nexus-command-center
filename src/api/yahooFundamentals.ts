@@ -25,6 +25,7 @@ import { Capacitor, CapacitorHttp } from '@capacitor/core';
 import { db } from '../db/database';
 import { shouldFetch, recordCall } from './cache';
 import { lastProviderErrors, readChartMeta } from './yahoo';
+import { buildRelevanceCheck, isNewsRelevant } from '../lib/newsRelevance';
 import type { StockMetric, EarningsEvent, DividendEvent, NewsItem } from './stockDetail';
 
 // Native: direct (CapacitorHttp bypasses CORS). Web dev preview: proxied
@@ -447,6 +448,15 @@ export async function getYahooNews(ticker: string): Promise<NewsItem[]> {
   if (cached) return cached;
   const gate = shouldFetch('yahoo-summary', 'yahoo', { force: false, maxPerMinute: 30, subKey: ticker });
   if (!gate.allow) return [];
+  // BUG-3 fix: build a relevance check up-front. Yahoo's /v1/finance/search
+  // endpoint is keyword-driven; for low-coverage / international tickers it
+  // degrades to fuzzy keyword search and returns stories that have nothing
+  // to do with the company. We filter those out client-side. companyName
+  // comes from the Yahoo chart-meta cache (populated opportunistically by
+  // every quote refresh — see yahoo.ts#writeChartMeta). If absent (fresh
+  // install, no quote fetched yet), we still match on ticker base.
+  const meta = await readChartMeta(ticker);
+  const check = buildRelevanceCheck(ticker, meta?.longName);
   try {
     recordCall('yahoo-summary', 'yahoo', ticker);
     const data = (await fetchJson(SEARCH_URL, {
@@ -455,6 +465,7 @@ export async function getYahooNews(ticker: string): Promise<NewsItem[]> {
       quotesCount: '0',
     })) as YahooSearchRaw;
     const raw = data?.news ?? [];
+    const rejectedCount = { n: 0 };
     const news: NewsItem[] = raw
       .filter((n) => n.title && n.link && n.providerPublishTime)
       .map((n, i) => ({
@@ -466,8 +477,22 @@ export async function getYahooNews(ticker: string): Promise<NewsItem[]> {
         url: n.link,
         image: n.thumbnail?.resolutions?.[0]?.url,
       }))
+      // BUG-3: strict relevance filter — drop anything not actually about
+      // this company. Better to show an empty per-holding section than to
+      // misattribute (e.g. Trump/sanctuary-city story tagged as Nordea).
+      .filter((item) => {
+        const ok = isNewsRelevant(item, check);
+        if (!ok) rejectedCount.n += 1;
+        return ok;
+      })
       .sort((a, b) => b.datetime - a.datetime)
       .slice(0, 10);
+    if (rejectedCount.n > 0) {
+      console.debug(
+        `[yahoo news] ${ticker}: filtered ${rejectedCount.n} off-topic ` +
+          `story/stories (check: base=${check.tickerBase} key=${check.companyKey ?? '?'})`,
+      );
+    }
     await writeCacheTTL(cacheKey, news, NEWS_TTL_MS);
     return news;
   } catch (e) {

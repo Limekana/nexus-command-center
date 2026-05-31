@@ -13,6 +13,9 @@ public class MainActivity extends BridgeActivity {
         // Register the custom NexusNotifications plugin BEFORE super.onCreate
         // so the bridge picks it up during initial setup.
         registerPlugin(NexusNotificationsPlugin.class);
+        // v1.4 — Android Keystore plugin for PIN hash encryption + future
+        // Dexie at-rest encryption. Same pre-super registration pattern.
+        registerPlugin(LimecoreKeystorePlugin.class);
         super.onCreate(savedInstanceState);
         handleNotificationTap(getIntent());
     }

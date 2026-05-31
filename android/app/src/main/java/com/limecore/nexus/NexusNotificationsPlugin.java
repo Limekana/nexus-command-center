@@ -76,6 +76,20 @@ public class NexusNotificationsPlugin extends Plugin {
     public static final String EXTRA_BODY = "nexus_body";
     public static final String EXTRA_CHANNEL_ID = "nexus_channel_id";
     public static final String EXTRA_ROUTE = "nexus_route";
+    // Action buttons: a JSON-stringified JSArray of {id, title, route?, extra?}
+    // packed into the alarm intent and unpacked by NotificationAlarmReceiver
+    // when building the NotificationCompat.Builder. Strings (rather than
+    // structured parcelable) so intent serialization stays simple and the
+    // payload can pass through PendingIntent boundaries without custom
+    // Parcelable plumbing.
+    public static final String EXTRA_ACTIONS_JSON = "nexus_actions_json";
+
+    // Singleton handle so the static action-receiver (which has no Plugin
+    // reference of its own) can route events back into JS via this
+    // instance's notifyListeners call. Set in load(), cleared by Capacitor's
+    // plugin lifecycle if needed.
+    private static NexusNotificationsPlugin sInstance = null;
+    public static NexusNotificationsPlugin getInstance() { return sInstance; }
 
     // ─── Permission ─────────────────────────────────────────────────────
 
@@ -169,6 +183,7 @@ public class NexusNotificationsPlugin extends Plugin {
         String channelId = call.getString("channelId", "default");
         Long atMillis = call.getLong("atMillis");
         JSObject extra = call.getObject("extra", new JSObject());
+        JSArray actions = call.getArray("actions"); // optional
 
         if (id == null) {
             call.reject("Missing id");
@@ -188,6 +203,14 @@ public class NexusNotificationsPlugin extends Plugin {
         intent.putExtra(EXTRA_CHANNEL_ID, channelId);
         if (extra != null && extra.has("route")) {
             intent.putExtra(EXTRA_ROUTE, extra.getString("route"));
+        }
+        // Pack the actions array as a JSON string. The receiver re-parses
+        // and iterates to build NotificationCompat.Action entries. We pass
+        // it through Intent#putExtra (String) rather than Parcelable because
+        // the alarm intent crosses a process boundary via AlarmManager and
+        // simple primitives survive most reliably.
+        if (actions != null && actions.length() > 0) {
+            intent.putExtra(EXTRA_ACTIONS_JSON, actions.toString());
         }
 
         // FLAG_UPDATE_CURRENT so re-scheduling with the same ID replaces
@@ -306,8 +329,21 @@ public class NexusNotificationsPlugin extends Plugin {
     // tapped. We emit a Capacitor event that JS subscribes to. If the plugin
     // instance hasn't been initialized yet (cold start from a tap), we
     // buffer the event so the first listener registration replays it.
+    //
+    // The same pattern applies to action-button taps (deliverAction below)
+    // — both share the cold-start buffering since a user can launch the
+    // app fresh from either the notification body or an action button.
 
     private static String pendingTapRoute = null;
+
+    // Action cold-start buffer. Stores the single most-recent action so the
+    // JS listener can re-emit on first subscription. Coalescing to one entry
+    // is fine — if the user taps two action buttons before opening the app,
+    // only the latter matters (and Android dismisses tapped notifications
+    // before allowing a second tap on the same one).
+    private static String pendingActionId = null;
+    private static String pendingActionRoute = null;
+    private static String pendingActionExtraJson = null;
 
     public static void deliverTap(NexusNotificationsPlugin instance, String route) {
         if (instance != null) {
@@ -319,15 +355,49 @@ public class NexusNotificationsPlugin extends Plugin {
         }
     }
 
+    /** Mirror of deliverTap for action-button taps. Forwards the action id
+     *  plus optional route + extra payload to the JS `notificationAction`
+     *  event listener. Buffered if the plugin isn't loaded yet. */
+    public static void deliverAction(
+        NexusNotificationsPlugin instance,
+        String actionId,
+        String route,
+        String extraJson
+    ) {
+        if (instance != null) {
+            JSObject ev = new JSObject();
+            ev.put("actionId", actionId == null ? "" : actionId);
+            ev.put("route", route == null ? "" : route);
+            ev.put("extraJson", extraJson == null ? "" : extraJson);
+            instance.notifyListeners("notificationAction", ev);
+        } else {
+            pendingActionId = actionId;
+            pendingActionRoute = route;
+            pendingActionExtraJson = extraJson;
+        }
+    }
+
     @Override
     public void load() {
         super.load();
+        sInstance = this;
         // Replay any tap that happened before JS subscribed (cold-start case).
         if (pendingTapRoute != null) {
             JSObject ev = new JSObject();
             ev.put("route", pendingTapRoute);
             notifyListeners("notificationTap", ev);
             pendingTapRoute = null;
+        }
+        // Same replay for a buffered action-button tap.
+        if (pendingActionId != null) {
+            JSObject ev = new JSObject();
+            ev.put("actionId", pendingActionId);
+            ev.put("route", pendingActionRoute == null ? "" : pendingActionRoute);
+            ev.put("extraJson", pendingActionExtraJson == null ? "" : pendingActionExtraJson);
+            notifyListeners("notificationAction", ev);
+            pendingActionId = null;
+            pendingActionRoute = null;
+            pendingActionExtraJson = null;
         }
     }
 }

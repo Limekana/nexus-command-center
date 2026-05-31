@@ -19,6 +19,10 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class NotificationAlarmReceiver extends BroadcastReceiver {
 
     private static final String TAG = "NexusNotifications";
@@ -60,17 +64,64 @@ public class NotificationAlarmReceiver extends BroadcastReceiver {
         );
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId)
-            // android.R.drawable.ic_dialog_info is a generic system icon —
-            // always available, never crashes if our own icon resource is
-            // missing/mis-named. Swap to R.mipmap.ic_launcher once we're
-            // confident the launcher icon name is stable.
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            // ic_stat_nexus is the white-on-transparent silhouette derived from
+            // the launcher icon (see derive_notification_icons.py in the
+            // limecore registry repo). Status-bar icons MUST be monochrome per
+            // Material guidelines or Android renders a generic exclamation
+            // triangle in their place. Color tint applied below.
+            .setSmallIcon(R.drawable.ic_stat_nexus)
+            // Cyber Slate primary cyan (matches theme/colors.ts primary).
+            // Applied as the channel/notif accent color on Android 5+ — shows
+            // as the small icon's tint and as the heads-up accent border.
+            .setColor(0xFF00D4FF)
             .setContentTitle(title)
             .setContentText(body)
             .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
             .setContentIntent(contentPi)
             .setAutoCancel(true) // dismiss on tap
             .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+        // Action buttons. JSON shape: [{id, title, route?, extra?}]. Each
+        // entry becomes a NotificationCompat.Action whose PendingIntent
+        // targets NotificationActionReceiver. We use icon=0 (no icon) so
+        // the action row stays a clean text-only button. Each action gets
+        // a unique requestCode so different actions on the same notification
+        // don't share a PendingIntent.
+        String actionsJson = intent.getStringExtra(NexusNotificationsPlugin.EXTRA_ACTIONS_JSON);
+        if (actionsJson != null && !actionsJson.isEmpty()) {
+            try {
+                JSONArray arr = new JSONArray(actionsJson);
+                for (int i = 0; i < arr.length(); i++) {
+                    JSONObject a = arr.optJSONObject(i);
+                    if (a == null) continue;
+                    String actId = a.optString("id", "");
+                    String actTitle = a.optString("title", "");
+                    if (actId.isEmpty() || actTitle.isEmpty()) continue;
+                    String actRoute = a.optString("route", null);
+                    // Re-stringify the per-action extra so we can pack it
+                    // through the action's intent extras (the plugin's JS
+                    // side parses it back). Null/missing extra → null.
+                    String actExtraJson = a.has("extra") ? a.getJSONObject("extra").toString() : null;
+
+                    Intent actIntent = new Intent(context, NotificationActionReceiver.class);
+                    actIntent.putExtra(NotificationActionReceiver.EXTRA_NOTIF_ID, id);
+                    actIntent.putExtra(NotificationActionReceiver.EXTRA_ACTION_ID, actId);
+                    if (actRoute != null) actIntent.putExtra(NotificationActionReceiver.EXTRA_ACTION_ROUTE, actRoute);
+                    if (actExtraJson != null) actIntent.putExtra(NotificationActionReceiver.EXTRA_ACTION_EXTRA_JSON, actExtraJson);
+
+                    // Unique requestCode per (notifId, actionIndex). Multiply
+                    // by 100 to avoid collision with other PendingIntents that
+                    // use the notifId directly (e.g. the tap content intent).
+                    int requestCode = id * 100 + i + 1;
+                    PendingIntent actPi = PendingIntent.getBroadcast(
+                        context, requestCode, actIntent, piFlags
+                    );
+                    builder.addAction(0, actTitle, actPi);
+                }
+            } catch (JSONException e) {
+                Log.w(TAG, "Failed to parse actions JSON: " + e.getMessage());
+            }
+        }
 
         NotificationManager nm = (NotificationManager)
             context.getSystemService(Context.NOTIFICATION_SERVICE);

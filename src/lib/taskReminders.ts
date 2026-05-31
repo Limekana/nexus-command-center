@@ -72,6 +72,14 @@ export async function scheduleTaskReminder(task: Task): Promise<void> {
       body: `${priorityTag}Due today${notesPreview}`,
       at,
       extra: { route: '/tasks' },
+      // "Mark done" action → handler in App.tsx calls
+      // useTaskStore.toggleComplete(taskId). Task ID rides in the action's
+      // extra so the handler knows which task to flip without round-
+      // tripping through the route. Notification auto-dismisses on action
+      // tap; no separate cancel call required.
+      actions: [
+        { id: 'done', title: 'Mark done', extra: { taskId: task.id } },
+      ],
     });
   } catch (e) {
     console.warn('[taskReminders] schedule', task.id, (e as Error).message);
