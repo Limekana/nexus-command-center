@@ -13,6 +13,7 @@ import AppHeader from '../../components/AppHeader';
 import RowActions from '../../components/RowActions';
 import SparkLine from '../../components/SparkLine';
 import HoldingDetailSheet from '../../components/HoldingDetailSheet';
+import RatingPill from '../../components/RatingPill';
 import { useFinanceStore } from '../../store/useFinanceStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { convertSync, normalizeCurrency } from '../../api/fxRates';
@@ -272,6 +273,13 @@ export default function Watchlist() {
                   <span className="text-[9px] uppercase tracking-wider text-text-muted truncate">
                     {r.item.assetType === 'etf' ? 'ETF' : r.item.assetType.toUpperCase()}
                   </span>
+                  {/* v1.2 — Insights tier pill. Stock + ETF only (crypto/fx
+                      out of scope for the signal engine today). */}
+                  {(r.item.assetType === 'stock' || r.item.assetType === 'etf') && (
+                    <span className="mt-1">
+                      <RatingPill ticker={r.item.ticker} compact />
+                    </span>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0 px-1">
                   {r.sparkline && r.sparkline.length >= 2 ? (

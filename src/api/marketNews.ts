@@ -10,13 +10,13 @@ import { db } from '../db/database';
 import { getApiKey } from './keys';
 import { shouldFetch, recordCall } from './cache';
 import { lastProviderErrors } from './yahoo';
+import { finnhubGet } from './finnhub';
 import type { NewsItem } from './stockDetail';
 
 // Native: direct URLs (CapacitorHttp bypasses CORS). Web dev preview:
 // through Vite proxies. See vite.config.ts for proxy definitions.
-const FINNHUB_URL = Capacitor.isNativePlatform()
-  ? 'https://finnhub.io/api/v1/news'
-  : '/fh/api/v1/news';
+// v1.2.1 — Finnhub URL constant unused now; finnhubGet owns its own URL.
+// Kept for documentary purposes / future Yahoo-only changes.
 const YAHOO_TRENDING_URL = Capacitor.isNativePlatform()
   ? 'https://query1.finance.yahoo.com/v1/finance/search'
   : '/yfin/v1/finance/search';
@@ -105,11 +105,13 @@ export async function getMarketNews(): Promise<NewsItem[]> {
   if (apiKey) {
     try {
       recordCall('finnhub-news', 'finnhub', '__market__');
-      const { data } = await axios.get<NewsItem[]>(FINNHUB_URL, {
-        params: { category: 'general' },
-        headers: { 'X-Finnhub-Token': apiKey },
-        timeout: 10_000,
-      });
+      // v1.2.1 — finnhubGet for native CapacitorHttp routing.
+      const data = await finnhubGet<NewsItem[]>(
+        '/news',
+        { category: 'general' },
+        apiKey,
+        { timeout: 10_000 },
+      );
       const arr = Array.isArray(data) ? data : [];
       const news: NewsItem[] = arr
         .sort((a, b) => b.datetime - a.datetime)

@@ -26,10 +26,12 @@ import { db, SyncQueueItem } from '../db/database';
 import { listPending } from '../db/syncQueue';
 import { generateId, legacyIdToUuid } from '../utils/uuid';
 import type { Transaction, BudgetCategory, PortfolioHolding, PortfolioLot, ManualAsset, WatchlistItem } from '../types/finance';
+import { legacyAssetTypeToAccountType } from '../types/finance';
 import type { Course, Grade, StudySession, Reading } from '../types/studies';
 import type { WorkoutSession, WorkoutSet } from '../types/fitness';
 import type { Task, TaskPriority } from '../types/tasks';
 import type { Goal, GoalType } from '../types/goals';
+import type { Habit, HabitCompletion } from '../types/habits';
 
 // ============================================================================
 // Push mappers — local entity → remote upsert payload
@@ -416,6 +418,63 @@ async function pushGrade(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (error) throw error;
 }
 
+// v1.2 — habits + habit_completions push handlers. Mirror the StudyDesk
+// course/grade pair: habit is the parent, habit_completion the child with
+// FK habit_id. ON DELETE CASCADE at the DB cleans the children when the
+// parent goes; we still push the children's local tombstones via the queue
+// for completeness so a partial outage doesn't leave them orphaned in our
+// view (the DB cascade just makes it idempotent).
+async function pushHabit(item: SyncQueueItem, ctx: PushContext): Promise<void> {
+  if (item.operation === 'delete') {
+    const uuid = legacyIdToUuid(item.entityId);
+    // Cascade-delete completions first (the DB cascade does this too, but
+    // doing it here keeps the queue tidy if the parent delete races).
+    await supabase.from('habit_completions').delete().eq('habit_id', uuid);
+    const { error } = await supabase.from('habits').delete().eq('id', uuid);
+    if (error) throw error;
+    return;
+  }
+  const local: Habit = JSON.parse(item.payload);
+  const updatedAt = local.updatedAt || item.createdAt;
+  const row = {
+    id: legacyIdToUuid(local.id),
+    user_id: ctx.userId,
+    title: local.title,
+    type: local.type,
+    target_amount: local.targetAmount ?? null,
+    unit: local.unit ?? null,
+    frequency_kind: local.frequencyKind,
+    days_of_week: local.daysOfWeek ?? null,
+    reminder_time: local.reminderTime ?? null,
+    color: local.color ?? null,
+    archived_at: local.archivedAt ?? null,
+    updated_at: updatedAt,
+  };
+  const { error } = await supabase.from('habits').upsert(row);
+  if (error) throw error;
+}
+
+async function pushHabitCompletion(item: SyncQueueItem, ctx: PushContext): Promise<void> {
+  if (item.operation === 'delete') {
+    const { error } = await supabase
+      .from('habit_completions')
+      .delete()
+      .eq('id', legacyIdToUuid(item.entityId));
+    if (error) throw error;
+    return;
+  }
+  const local: HabitCompletion = JSON.parse(item.payload);
+  const row = {
+    id: legacyIdToUuid(local.id),
+    habit_id: legacyIdToUuid(local.habitId),
+    user_id: ctx.userId,
+    date: local.date,
+    amount: local.amount,
+  };
+  const { error } = await supabase.from('habit_completions').upsert(row);
+  if (error) throw error;
+}
+
 const pushHandlers: Record<SyncQueueItem['entityType'], (item: SyncQueueItem, ctx: PushContext) => Promise<void>> = {
   transaction: pushTransaction,
   budget_category: pushBudgetCategory,
@@ -431,6 +490,8 @@ const pushHandlers: Record<SyncQueueItem['entityType'], (item: SyncQueueItem, ct
   grade: pushGrade,
   study_session: pushStudySession,
   reading: pushReading,
+  habit: pushHabit,
+  habit_completion: pushHabitCompletion,
   // grade_import is a local-only snapshot concept — courses sync individually.
   grade_import: async () => {
     /* no-op */
@@ -469,6 +530,8 @@ const ENTITY_PRIORITY: Record<SyncQueueItem['entityType'], number> = {
   manual_asset: 1, // no FK dependencies
   watchlist_item: 1, // no FK dependencies
   goal: 1, // no FK dependencies
+  habit: 1, // parent — no FK dependencies
+  habit_completion: 2, // FK → habits
 };
 
 export async function pushQueue(userId: string): Promise<PushResult> {
@@ -701,6 +764,82 @@ export async function hydrateStudiesFromCloud(
   return hydrateStudiesTables(userId);
 }
 
+// v1.2 — habits hydration. Same pattern as studies: pull everything for the
+// user into Dexie before opening realtime so the local working set is
+// authoritative from the first paint. The user's habit count is small (we
+// can comfortably grab all completions) — for power users with multi-year
+// history we may need a date-window filter later.
+export interface HabitsHydrationResult {
+  habits: number;
+  completions: number;
+  errors: string[];
+}
+
+export async function hydrateHabitsFromCloud(
+  userId: string,
+): Promise<HabitsHydrationResult> {
+  const errors: string[] = [];
+  let habitCount = 0;
+  let completionCount = 0;
+
+  try {
+    const { data, error } = await supabase
+      .from('habits')
+      .select('*')
+      .eq('user_id', userId);
+    if (error) throw error;
+    if (data) {
+      const habits: Habit[] = data.map((h: any) => ({
+        id: h.id,
+        title: h.title,
+        type: h.type,
+        targetAmount: h.target_amount != null ? Number(h.target_amount) : undefined,
+        unit: h.unit ?? undefined,
+        frequencyKind: h.frequency_kind,
+        daysOfWeek: h.days_of_week ?? undefined,
+        reminderTime: h.reminder_time ?? undefined,
+        color: h.color ?? undefined,
+        archivedAt: h.archived_at ?? undefined,
+        syncStatus: 'synced' as const,
+        createdAt: h.created_at,
+        updatedAt: h.updated_at,
+      }));
+      await db.habits.bulkPut(habits);
+      habitCount = habits.length;
+    }
+  } catch (e) {
+    const msg = (e as Error).message;
+    errors.push(`habits: ${msg}`);
+    console.warn('[habits-hydrate] habits failed:', msg);
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('habit_completions')
+      .select('*')
+      .eq('user_id', userId);
+    if (error) throw error;
+    if (data) {
+      const completions: HabitCompletion[] = data.map((c: any) => ({
+        id: c.id,
+        habitId: c.habit_id,
+        date: c.date,
+        amount: Number(c.amount),
+        syncStatus: 'synced' as const,
+        createdAt: c.created_at,
+      }));
+      await db.habitCompletions.bulkPut(completions);
+      completionCount = completions.length;
+    }
+  } catch (e) {
+    const msg = (e as Error).message;
+    errors.push(`habit_completions: ${msg}`);
+    console.warn('[habits-hydrate] completions failed:', msg);
+  }
+
+  return { habits: habitCount, completions: completionCount, errors };
+}
+
 export async function pullAll(_userId: string): Promise<PullResult> {
   const errors: string[] = [];
   const result: PullResult = {
@@ -872,17 +1011,29 @@ export async function pullAll(_userId: string): Promise<PullResult> {
   result.manualAssets = await pullTable<any, ManualAsset>(
     'manual_assets',
     [{ column: 'deleted_at', op: 'is', value: null }],
-    (r) => ({
-      id: r.id,
-      name: r.name,
-      assetType: r.asset_type as ManualAsset['assetType'],
-      value: Number(r.value),
-      currency: r.currency,
-      notes: r.notes ?? undefined,
-      syncStatus: 'synced',
-      createdAt: r.created_at,
-      updatedAt: r.updated_at,
-    }),
+    (r) => {
+      // v1.2 follow-up — CTO Account refactor. Server rows still carry the
+      // legacy `asset_type` / `value` field names; we mirror them onto the
+      // canonical `accountType` / `startingBalance` fields at hydration so
+      // the in-memory shape matches Account. legacyAssetTypeToAccountType
+      // also fixes the 'credit' → 'credit_card' rename for any rows that
+      // synced in pre-refactor.
+      const accountType = legacyAssetTypeToAccountType(r.asset_type);
+      const startingBalance = Number(r.value);
+      return {
+        id: r.id,
+        name: r.name,
+        accountType,
+        startingBalance,
+        assetType: accountType,
+        value: startingBalance,
+        currency: r.currency,
+        notes: r.notes ?? undefined,
+        syncStatus: 'synced',
+        createdAt: r.created_at,
+        updatedAt: r.updated_at,
+      } as ManualAsset;
+    },
     async (rows) => {
       await db.manualAssets.bulkPut(rows);
     }

@@ -1,10 +1,11 @@
 import { create } from 'zustand';
 import { Preferences } from '@capacitor/preferences';
 import { db } from '../db/database';
-import { Course, Grade, GradeImport, StudySession, Reading, ReadingStatus } from '../types/studies';
+import { Course, Grade, GradeImport, StudySession, Reading, ReadingStatus, ReadingShelf } from '../types/studies';
 import { calculateGPA, GradeMode } from '../utils/gpa';
 import { generateId } from '../utils/uuid';
 import { enqueue } from '../db/syncQueue';
+import { scheduleBorrowReturnReminder, cancelBorrowReturnReminder } from '../lib/libraryReminders';
 
 const GRADE_MODE_KEY = 'studies.gradeMode';
 
@@ -39,6 +40,10 @@ function indexGradesBySubject(grades: Grade[]): Map<string, Grade[]> {
 interface StudiesStore {
   currentImport: GradeImport | null;
   courses: Course[];
+  /** v1.2 — archived semester courses (archived_at IS NOT NULL). Loaded
+   *  alongside `courses` so the "Show archived" UI can surface them without
+   *  a separate cloud round-trip. Excluded from GPA computation. */
+  archivedCourses: Course[];
   grades: Grade[];
   previousGpa: number | null;
   gradeMode: GradeMode;
@@ -54,6 +59,10 @@ interface StudiesStore {
   addCourse: (c: Omit<Course, 'id' | 'createdAt' | 'importId'>) => Promise<void>;
   updateCourse: (id: string, patch: Partial<Course>) => Promise<void>;
   deleteCourse: (id: string) => Promise<void>;
+  /** v1.2 — restore an archived course (clear archivedAt). Patches the same
+   *  cloud column StudyDesk uses, so the restore propagates back to
+   *  StudyDesk via LWW (NCC's update is fresher than the archive event). */
+  restoreCourse: (id: string) => Promise<void>;
 
   // Grades (per-subject assessments) — added v1.0.3
   addGrade: (g: Omit<Grade, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'>) => Promise<void>;
@@ -73,6 +82,19 @@ interface StudiesStore {
   ) => Promise<void>;
   updateReading: (id: string, patch: Partial<Reading>) => Promise<void>;
   setReadingStatus: (id: string, status: ReadingStatus) => Promise<void>;
+  /** v1.2 — flip a book between Owned / Lent / Wishlist shelves. When
+   *  moving to Lent and a lentMeta payload is supplied, also schedules the
+   *  return-to-library reminder. When moving OFF borrowed, clears borrow
+   *  metadata + cancels the reminder.
+   *
+   *  v1.2.2 — Renamed from lentMeta to borrowMeta. The v1.2 ship inverted
+   *  the semantic ("lent OUT to a friend" vs the intended "borrowed FROM a
+   *  library"). Field names + literal updated; Dexie v10 maps existing rows. */
+  setReadingShelf: (
+    id: string,
+    shelf: ReadingShelf,
+    borrowMeta?: { borrowedFrom?: string; expectedReturnAt?: string },
+  ) => Promise<void>;
   deleteReading: (id: string) => Promise<void>;
 }
 
@@ -94,6 +116,7 @@ async function ensureManualImport(): Promise<GradeImport> {
 export const useStudiesStore = create<StudiesStore>((set, get) => ({
   currentImport: null,
   courses: [],
+  archivedCourses: [],
   grades: [],
   previousGpa: null,
   gradeMode: 'us',
@@ -117,13 +140,12 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
       db.studySessions.orderBy('startedAt').reverse().toArray(),
       db.readings.orderBy('updatedAt').reverse().toArray(),
     ]);
-    // v1.2 — exclude archived courses from the live working set. The full
-    // list stays in Dexie so a future "Show archived" NCC affordance can
-    // surface them; for v1.1.2 NCC is a silent consumer of StudyDesk's
-    // archive state (archived semesters disappear from Studies + GPA
-    // automatically). Archived rows continue to ride the realtime channel
-    // and re-hydrate correctly on restore.
+    // v1.2 — exclude archived courses from the live working set. They land
+    // in `archivedCourses` so the "Show archived" UI in StudiesOverview can
+    // surface them. Archived rows continue to ride the realtime channel and
+    // re-hydrate correctly on restore.
     const allCourses = allCoursesIncludingArchived.filter((c) => !c.archivedAt);
+    const archivedCourses = allCoursesIncludingArchived.filter((c) => !!c.archivedAt);
     const previous = imports[1] ?? null;
     const idx = indexGradesBySubject(allGrades);
     const gpa = calculateGPA(allCourses, idx, gradeMode);
@@ -141,6 +163,7 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
     set({
       currentImport: synthCurrentImport,
       courses: allCourses,
+      archivedCourses,
       grades: allGrades,
       previousGpa: previous ? previous.calculatedGpa : null,
       gradeMode,
@@ -215,14 +238,40 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
     await db.courses.delete(id);
     await enqueue('course', id, 'delete', { id });
     const nextCourses = get().courses.filter((c) => c.id !== id);
+    const nextArchived = get().archivedCourses.filter((c) => c.id !== id);
     const nextGrades = get().grades.filter((g) => g.subjectId !== id);
     const idx = indexGradesBySubject(nextGrades);
     const cur = get().currentImport;
     set({
       courses: nextCourses,
+      archivedCourses: nextArchived,
       grades: nextGrades,
       currentImport: cur
         ? { ...cur, courses: nextCourses, calculatedGpa: calculateGPA(nextCourses, idx, get().gradeMode) }
+        : cur,
+    });
+  },
+
+  // v1.2 — restore an archived course. Clears archivedAt locally + enqueues
+  // an update so the LWW sync sends the change to Supabase, which StudyDesk
+  // then sees via its realtime subscription and surfaces in the active list.
+  // Course moves from `archivedCourses` back to `courses` in local state; GPA
+  // recomputes to include it again.
+  async restoreCourse(id) {
+    const existing = await db.courses.get(id);
+    if (!existing || !existing.archivedAt) return;
+    const updated: Course = { ...existing, archivedAt: undefined };
+    await db.courses.put(updated);
+    await enqueue('course', id, 'update', updated);
+    const nextActive = [...get().courses, updated];
+    const nextArchived = get().archivedCourses.filter((c) => c.id !== id);
+    const idx = indexGradesBySubject(get().grades);
+    const cur = get().currentImport;
+    set({
+      courses: nextActive,
+      archivedCourses: nextArchived,
+      currentImport: cur
+        ? { ...cur, courses: nextActive, calculatedGpa: calculateGPA(nextActive, idx, get().gradeMode) }
         : cur,
     });
   },
@@ -390,7 +439,52 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
     await get().updateReading(id, patch);
   },
 
+  // v1.2 — shelf flip handler. Bundles borrow metadata + reminder scheduling
+  // so the UI doesn't have to remember to schedule/cancel reminders on every
+  // shelf change.
+  //
+  // Transitions:
+  //   anything → borrowed       : patch borrow fields, schedule reminder if date set
+  //   borrowed → owned/wishlist : clear borrow fields, cancel reminder
+  //   no-shelf-change           : leave borrow fields alone (shelf=borrowed stays
+  //                              borrowed with whatever metadata it has)
+  async setReadingShelf(id, shelf, borrowMeta) {
+    const existing = await db.readings.get(id);
+    if (!existing) return;
+    const now = new Date().toISOString();
+    const patch: Partial<Reading> = { shelf };
+
+    if (shelf === 'borrowed') {
+      if (borrowMeta?.borrowedFrom !== undefined) patch.borrowedFrom = borrowMeta.borrowedFrom;
+      if (borrowMeta?.expectedReturnAt !== undefined) patch.expectedReturnAt = borrowMeta.expectedReturnAt;
+      if (!existing.borrowedAt) patch.borrowedAt = now;
+    } else {
+      // Off-borrowed: clear borrow metadata + cancel any standing reminder.
+      // We clear by setting to undefined so the Dexie put() drops the keys.
+      patch.borrowedFrom = undefined;
+      patch.borrowedAt = undefined;
+      patch.expectedReturnAt = undefined;
+    }
+
+    await get().updateReading(id, patch);
+
+    // After the Dexie write, schedule or cancel the reminder. We compute the
+    // post-patch shape inline (instead of re-reading) because updateReading
+    // has already returned.
+    const after: Reading = { ...existing, ...patch, id, updatedAt: now };
+    if (shelf === 'borrowed') {
+      // Fire-and-forget — failures land in the notifications log. The shelf
+      // state itself is already persisted, so a missed reminder is not a
+      // data-integrity issue.
+      void scheduleBorrowReturnReminder(after);
+    } else {
+      void cancelBorrowReturnReminder({ id });
+    }
+  },
+
   async deleteReading(id) {
+    // Cancel any standing return-to-library reminder before we lose the row.
+    void cancelBorrowReturnReminder({ id });
     await db.readings.delete(id);
     await enqueue('reading', id, 'delete', { id });
     set({ readings: get().readings.filter((r) => r.id !== id) });

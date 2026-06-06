@@ -9,6 +9,7 @@ import EarningsStrip from '../../components/EarningsStrip';
 import DividendTracker from '../../components/DividendTracker';
 import MacroStrip from '../../components/MacroStrip';
 import InsightsCard from '../../components/InsightsCard';
+import RatingPill from '../../components/RatingPill';
 import { useFinanceStore } from '../../store/useFinanceStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { formatCacheAge } from '../../utils/formatters';
@@ -621,6 +622,14 @@ function HoldingRow({
               </>
             )}
           </span>
+          {/* v1.2 — Insights tier pill. Only for stock/ETF (no crypto/cash
+              ratings yet). RatingPill renders an unobtrusive placeholder when
+              no rating has been computed. Compact mode keeps the row tight. */}
+          {(holding.assetType === 'stock' || holding.assetType === 'etf') && (
+            <span className="mt-1">
+              <RatingPill ticker={holding.ticker} compact />
+            </span>
+          )}
         </div>
         <div className="flex-1 min-w-0 px-1">
           {sparkline && sparkline.length >= 2 ? (

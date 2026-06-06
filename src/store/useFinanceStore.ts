@@ -24,6 +24,13 @@ import {
 import { getMarketNews } from '../api/marketNews';
 import { useSettingsStore } from './useSettingsStore';
 import { checkBudgetThresholds } from '../lib/budgetAlerts';
+// v1.2 follow-up — CTO Account refactor. The BUG-6 budgetAssetBridge helper
+// is no longer wired (and the file removed): in the Account model every
+// transaction already carries `accountId`, and `computeAccountBalance`
+// derives the balance from those transactions. Mutating the account's
+// `startingBalance` from a transaction handler — what the bridge used to
+// do — would now DOUBLE-COUNT, since the derived balance already includes
+// the transaction's signed delta.
 import { runPortfolioEodTick } from '../lib/portfolioEod';
 import { runNewsAlertsTick } from '../lib/newsAlerts';
 
@@ -205,6 +212,12 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
     await db.transactions.add(tx);
     await enqueue('transaction', tx.id, 'insert', tx);
     set({ transactions: [tx, ...get().transactions] });
+    // v1.2 follow-up — CTO Account refactor. No bridge call: the Account
+    // model derives balances from transactions, so adding a transaction
+    // automatically updates every selector that reads
+    // `computeAccountBalance(account, transactions, ...)`. Previously a
+    // BUG-6 bridge mutated the account's startingBalance from this handler
+    // — that would now double-count.
     // Budget alert hook — fire-and-forget. Recomputes spend% per category
     // and notifies on any newly-crossed 80%/100% threshold. The helper is
     // idempotent so re-running on every txn is fine.
@@ -225,6 +238,10 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
     set({
       transactions: get().transactions.map((t) => (t.id === id ? updated : t)),
     });
+    // v1.2 follow-up — CTO Account refactor. No bridge calls: balance is
+    // derived from the transaction set, so changing accountId (or any
+    // other field) is automatically reflected in every account's
+    // computeAccountBalance the next time a selector reads it.
     void checkBudgetThresholds(get().transactions, get().budgetCategories);
   },
 
@@ -232,6 +249,9 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
     await db.transactions.delete(id);
     await enqueue('transaction', id, 'delete', { id });
     set({ transactions: get().transactions.filter((t) => t.id !== id) });
+    // v1.2 follow-up — CTO Account refactor. No bridge reverse: the deleted
+    // transaction simply leaves the working set, and every account's
+    // derived balance recomputes without its contribution.
     // Delete can drop spend below 80% → wipe the tracker so future re-cross
     // fires again. checkBudgetThresholds handles that bookkeeping itself.
     void checkBudgetThresholds(get().transactions, get().budgetCategories);
@@ -359,9 +379,22 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
   },
 
   async addManualAsset(a) {
+    // v1.2 follow-up — CTO Account refactor. Mirror new-name ↔ old-name on
+    // write so the on-disk row always carries BOTH `accountType`+`assetType`
+    // and `startingBalance`+`value`. Callers can pass either pair; we
+    // normalize to the canonical fields and back-fill the legacy ones.
+    const accountType = a.accountType ?? a.assetType ?? 'other';
+    const startingBalance =
+      a.startingBalance ?? (typeof a.value === 'number' ? a.value : 0);
     const row: ManualAsset = {
       ...a,
       id: generateId(),
+      accountType,
+      startingBalance,
+      // Legacy mirrors (kept in sync for back-compat with code that still
+      // reads `asset.value` / `asset.assetType`).
+      assetType: accountType,
+      value: startingBalance,
       syncStatus: 'pending',
       createdAt: new Date().toISOString(),
     };
@@ -373,16 +406,23 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
   async updateManualAsset(id, patch) {
     const existing = await db.manualAssets.get(id);
     if (!existing) return;
-    const updated: ManualAsset = {
+    // v1.2 follow-up — CTO Account refactor. Same dual-field normalization
+    // as `addManualAsset`. A patch that touches `accountType` or `value`
+    // updates both sides of the mirror so the on-disk shape stays coherent.
+    const merged: ManualAsset = {
       ...existing,
       ...patch,
       id,
       syncStatus: 'pending',
       updatedAt: new Date().toISOString(),
     };
-    await db.manualAssets.put(updated);
-    await enqueue('manual_asset', id, 'update', updated);
-    set({ manualAssets: get().manualAssets.map((a) => (a.id === id ? updated : a)) });
+    if (patch.accountType !== undefined) merged.assetType = patch.accountType;
+    if (patch.assetType !== undefined) merged.accountType = patch.assetType;
+    if (patch.startingBalance !== undefined) merged.value = patch.startingBalance;
+    if (patch.value !== undefined) merged.startingBalance = patch.value;
+    await db.manualAssets.put(merged);
+    await enqueue('manual_asset', id, 'update', merged);
+    set({ manualAssets: get().manualAssets.map((a) => (a.id === id ? merged : a)) });
   },
 
   async deleteManualAsset(id) {
@@ -712,6 +752,14 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
     set({ stockQuotes: nextQuotes, cryptoPrices: nextCrypto, sparklines: nextSparklines });
   },
 }));
+
+// v1.2 follow-up — CTO Account refactor. The BUG-6 bridge helpers that
+// used to live here (`applyTransactionAssetDelta` +
+// `reverseTransactionAssetDelta`) were removed. In the Account model an
+// account's balance is DERIVED from the transactions hitting it (see
+// `lib/accountBalance.ts:computeAccountBalance`), so the bridge's job —
+// nudging the account's `value` by the transaction's signed amount on add
+// / reverse on delete — is no longer needed. Keeping it would double-count.
 
 // ─── helpers ──────────────────────────────────────────────────────────────
 

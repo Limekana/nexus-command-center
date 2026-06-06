@@ -25,11 +25,20 @@ export default function AddTransaction() {
   const deleteTransaction = useFinanceStore((s) => s.deleteTransaction);
   const templates = useTemplatesStore((s) => s.transactions);
   const refreshTemplates = useTemplatesStore((s) => s.refresh);
+  // v1.2 follow-up — CTO Account refactor. Accounts feed the source +
+  // destination pickers. We hide archived accounts from the dropdown to
+  // keep it tidy, but accept them on edit (a transaction's account might
+  // have been archived between creation + edit).
+  const accounts = useFinanceStore((s) =>
+    s.manualAssets.filter((a) => !a.archivedAt),
+  );
 
   const [type, setType] = useState<TransactionType>('expense');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState<string>('');
+  const [accountId, setAccountId] = useState<string>('');
+  const [destinationAccountId, setDestinationAccountId] = useState<string>('');
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
@@ -42,9 +51,28 @@ export default function AddTransaction() {
     setAmount(String(tx.amount));
     setDescription(tx.description);
     setCategoryId(tx.categoryId ?? '');
+    setAccountId(tx.accountId ?? '');
+    setDestinationAccountId(tx.destinationAccountId ?? '');
     setDate(tx.date);
     setNotes(tx.notes ?? '');
   }, [editId, transactions]);
+
+  // v1.2 follow-up — CTO Account refactor. Pre-fill the source account when
+  // adding fresh: prefer the selected category's pre-set account (legacy
+  // BUG-6 field `linkedManualAssetId` now used as `defaultAccountId`),
+  // else the first available account. Only fires when no account is yet
+  // chosen, so editing a transaction (which seeds from tx.accountId) is
+  // never overridden.
+  useEffect(() => {
+    if (editId || accountId || accounts.length === 0) return;
+    const cat = categoryId ? categories.find((c) => c.id === categoryId) : null;
+    const defaultFromCat = cat?.linkedManualAssetId;
+    if (defaultFromCat && accounts.some((a) => a.id === defaultFromCat)) {
+      setAccountId(defaultFromCat);
+    } else {
+      setAccountId(accounts[0].id);
+    }
+  }, [editId, accountId, accounts, categoryId, categories]);
 
   // Refresh templates on mount so the chip row reflects any transactions
   // logged since the app opened (without this, chips lag by one app session).
@@ -55,6 +83,21 @@ export default function AddTransaction() {
   const submit = async () => {
     const n = parseFloat(amount);
     if (!n || !description.trim()) return;
+    // v1.2 follow-up — CTO Account refactor. Validation:
+    //   - Transfers require source != destination (would be a no-op)
+    //   - All transactions need an accountId for net-worth math to work;
+    //     only allow undefined when the user has zero accounts (extreme
+    //     fresh-install edge case)
+    if (type === 'transfer') {
+      if (!destinationAccountId) {
+        alert('Pick a destination account for the transfer.');
+        return;
+      }
+      if (destinationAccountId === accountId) {
+        alert('Transfer source and destination must differ.');
+        return;
+      }
+    }
     setSaving(true);
     const payload = {
       amount: n,
@@ -63,6 +106,9 @@ export default function AddTransaction() {
       date,
       type,
       notes: notes.trim() || undefined,
+      accountId: accountId || undefined,
+      destinationAccountId:
+        type === 'transfer' ? (destinationAccountId || undefined) : undefined,
     };
     if (editId) {
       await updateTransaction(editId, payload);
@@ -168,6 +214,56 @@ export default function AddTransaction() {
                   {c.icon ? `${c.icon} ` : ''}{c.name}
                 </option>
               ))}
+            </select>
+          )}
+          {/* v1.2 follow-up — CTO Account refactor. Account picker is
+              required for every transaction; the second picker for
+              transfers shows the destination. Hidden entirely when the
+              user has no accounts yet (they need to set one up first;
+              an inline link below points them at /finance/net-worth where
+              accounts are created). */}
+          {accounts.length === 0 ? (
+            <div className="glass-soft rounded-md p-3 text-[11px] text-text-muted">
+              No accounts yet —{' '}
+              <button
+                type="button"
+                onClick={() => navigate('/finance/networth')}
+                className="text-primary underline"
+              >
+                add one in Net Worth
+              </button>{' '}
+              so this transaction can hit a balance.
+            </div>
+          ) : (
+            <select
+              className="input"
+              value={accountId}
+              onChange={(e) => setAccountId(e.target.value)}
+            >
+              <option value="">
+                {type === 'transfer' ? 'From account…' : 'Account…'}
+              </option>
+              {accounts.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name} ({a.currency})
+                </option>
+              ))}
+            </select>
+          )}
+          {type === 'transfer' && accounts.length >= 2 && (
+            <select
+              className="input"
+              value={destinationAccountId}
+              onChange={(e) => setDestinationAccountId(e.target.value)}
+            >
+              <option value="">To account…</option>
+              {accounts
+                .filter((a) => a.id !== accountId)
+                .map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name} ({a.currency})
+                  </option>
+                ))}
             </select>
           )}
           <div className="flex gap-2">

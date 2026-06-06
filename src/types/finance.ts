@@ -11,6 +11,22 @@ export interface Transaction {
   notes?: string;
   syncStatus: SyncStatus;
   createdAt: string;
+  /**
+   * v1.2 follow-up — CTO Account refactor. Source account for income +
+   * expense, and the SOURCE leg of a transfer. Required for new
+   * transactions; optional on the type because the Dexie v12 upgrade hook
+   * back-fills via best-guess (category's defaultAccountId → first cash
+   * account → first checking → first account by createdAt) and falls back
+   * to undefined when no account exists yet (very new user / first launch).
+   * Selectors that compute account balances treat undefined as "skip".
+   */
+  accountId?: string;
+  /**
+   * v1.2 follow-up — CTO Account refactor. Destination account for
+   * `type === 'transfer'`. Must differ from `accountId` (enforced in the
+   * AddTransaction UI). Undefined for expense / income transactions.
+   */
+  destinationAccountId?: string;
 }
 
 export interface BudgetCategory {
@@ -23,6 +39,22 @@ export interface BudgetCategory {
   // shared *to* us by another user — the Sharing UI uses this to render a
   // "Shared by …" tag and gate destructive actions.
   ownerId?: string;
+  /**
+   * v1.2 follow-up — CTO Account refactor. PRE-SELECTED account for new
+   * transactions in this category. Replaces the old `linkedManualAssetId`
+   * "auto-debit bridge" semantics (BUG-6 patch) — that hack is no longer
+   * needed because in the Account model every transaction now carries its
+   * own `accountId` and the account's balance is DERIVED from the
+   * transaction set itself (see `lib/accountBalance.ts`). No double-
+   * bookkeeping. UI use only: AddTransaction defaults its Account picker to
+   * this value when the user selects a category that has one.
+   *
+   * Field name `linkedManualAssetId` kept rather than renamed `defaultAccountId`
+   * to avoid the Dexie row migration overhead — the on-disk shape is
+   * unchanged; semantics shift in the calling code. A future cleanup pass
+   * renames the field once the legacy bridge helpers are fully removed.
+   */
+  linkedManualAssetId?: string;
 }
 
 export type AssetType = 'stock' | 'crypto' | 'etf';
@@ -73,23 +105,116 @@ export interface PortfolioLot {
   updatedAt?: string;
 }
 
-// Manually tracked asset or liability outside the portfolio (cash savings,
-// property, vehicles, loans, credit card debt). Used to compute net worth.
-// asset_type 'loan' and 'credit' are liabilities — net worth subtracts them.
-export type ManualAssetType = 'cash' | 'savings' | 'property' | 'vehicle' | 'other' | 'loan' | 'credit';
-export const LIABILITY_TYPES: ManualAssetType[] = ['loan', 'credit'];
+// v1.2 follow-up — CTO Account-based finance refactor. Replaces the
+// "manual balance entry" mental model with a first-class Account that
+// derives its balance from the transactions hitting it.
+//
+//   derivedBalance(account, txns) =
+//     startingBalance
+//     + Σ(income.amount where accountId == account.id)
+//     − Σ(expense.amount where accountId == account.id)
+//     + Σ(transfer.amount where destinationAccountId == account.id)
+//     − Σ(transfer.amount where accountId == account.id)
+//
+// Liabilities (credit_card, loan) carry NEGATIVE startingBalance by
+// convention — a $2,000 credit-card balance owed reads as -2000. Net Worth
+// is just the sum of derivedBalance across all accounts (plus portfolio).
+// Credit card charges = expenses against the credit account (balance
+// becomes more negative); paying the credit card = a Transfer from a
+// checking account → the credit-card account (credit moves toward zero;
+// checking drops by the payment amount). No special-casing required.
+//
+// **Schema transition strategy (dual-field).** The on-disk row keeps the
+// legacy `assetType` + `value` fields alongside the new canonical
+// `accountType` + `startingBalance`. Both stay in sync — every store write
+// populates all four — so any straggling consumer reading the old field
+// names keeps working without a code change. The Dexie v12 upgrade hook
+// back-fills the new field names on existing rows. New code prefers
+// `accountType` / `startingBalance`. Once every consumer has migrated, a
+// future cleanup pass drops the legacy field names + the type alias.
+export type AccountType =
+  | 'checking'      // primary chequing-style transactional account
+  | 'savings'       // interest-bearing reserve account
+  | 'cash'          // physical / wallet cash
+  | 'credit_card'   // revolving line — liability, negative balance by convention
+  | 'investment'    // brokerage cash sleeve / managed account
+  | 'property'      // real estate at marked book value
+  | 'vehicle'       // car/boat at marked book value
+  | 'loan'          // mortgage / personal loan — liability
+  | 'other'         // catch-all
+  | 'custom';       // user-named bucket
 
-export interface ManualAsset {
+/** Account types that contribute NEGATIVELY to net worth. */
+export const LIABILITY_ACCOUNT_TYPES: AccountType[] = ['credit_card', 'loan'];
+
+/** Map any legacy ManualAsset `assetType` value to the canonical
+ *  AccountType. Used by the Dexie v12 upgrade hook and by the store's
+ *  add/update paths to keep the dual-field shape coherent. */
+export function legacyAssetTypeToAccountType(
+  legacy: string | undefined,
+): AccountType {
+  switch (legacy) {
+    case 'credit':   return 'credit_card';
+    case 'checking': // already canonical from a future row
+    case 'savings':
+    case 'cash':
+    case 'credit_card':
+    case 'investment':
+    case 'property':
+    case 'vehicle':
+    case 'loan':
+    case 'other':
+    case 'custom':
+      return legacy as AccountType;
+    default:
+      return 'other';
+  }
+}
+
+export interface Account {
   id: string;
   name: string;
-  assetType: ManualAssetType;
-  value: number;
+  /** Canonical account-type field — preferred by new code. */
+  accountType: AccountType;
+  /** Opening balance entered by the user at account creation. The DERIVED
+   *  current balance is this value plus the signed sum of every Transaction
+   *  that touches the account (income +, expense −, transfer in +, transfer
+   *  out −). For liability accounts (credit card / loan) this is NEGATIVE
+   *  by convention — a $2,000 credit-card balance owed reads as `-2000`. */
+  startingBalance: number;
   currency: string;
   notes?: string;
+  /** Soft-archive — hides from primary lists but preserves history. Set on
+   *  delete by the store so transactions referencing the account still
+   *  resolve to a row. */
+  archivedAt?: string;
   syncStatus: SyncStatus;
   createdAt: string;
   updatedAt?: string;
+  // ─── Legacy dual-field shape (kept in sync by the store) ──────────────
+  // These are REQUIRED on the in-memory shape so existing callers keep
+  // typechecking; the Dexie v12 upgrade hook back-fills them on existing
+  // rows, and every store write populates them alongside the new fields.
+  /** @deprecated mirror of `accountType` — kept on the row for back-compat
+   *  with code that hasn't migrated yet. */
+  assetType: AccountType;
+  /** @deprecated mirror of `startingBalance` — kept on the row for
+   *  back-compat with code that hasn't migrated yet. */
+  value: number;
 }
+
+// ─── Legacy aliases (transitional) ────────────────────────────────────────
+//
+// Older code that still imports `ManualAsset` / `ManualAssetType` /
+// `LIABILITY_TYPES` keeps building — the type aliases redirect to the new
+// names and existing field reads (`asset.value`, `asset.assetType`) keep
+// working because the dual-field on-disk shape preserves them.
+/** @deprecated use AccountType */
+export type ManualAssetType = AccountType;
+/** @deprecated use LIABILITY_ACCOUNT_TYPES */
+export const LIABILITY_TYPES: AccountType[] = LIABILITY_ACCOUNT_TYPES;
+/** @deprecated use Account */
+export type ManualAsset = Account;
 
 // Tickers tracked without owning. Reuses the same Finnhub+Yahoo quote
 // pipeline as portfolio_holdings; the quote results live in stockQuotes
@@ -116,6 +241,56 @@ export interface PortfolioSnapshot {
   valueBase: number;
   baseCurrency: string;
   createdAt: string;
+}
+
+/**
+ * v1.2 — named savings target. Money is allocated from the user's liquid
+ * cash+savings ManualAssets, minus the emergency buffer they set in
+ * Settings. The store guards against overdraft; the UI surfaces "available
+ * cash" so the user knows how much room they have.
+ *
+ * `allocatedAmount` is a directly-mutable scalar — no separate allocations
+ * table. The user adjusts it via +/- buttons on the goal row. We trade audit
+ * detail for simplicity; a future v1.3 can add an `allocations[]` event log
+ * keyed on goal_id if "show me when I allocated each chunk" becomes valuable.
+ *
+ * Currency is captured at creation (defaults to baseCurrency) and stays
+ * with the goal. Cross-currency goals work — the available-cash computation
+ * converts every cash/savings asset into the goal's currency via fxRates
+ * before checking headroom.
+ *
+ * Auto-completion: when `allocatedAmount >= targetAmount`, the store stamps
+ * `completedAt`. The goal stays in the list (completed goals fall to the
+ * bottom and render in a muted style). Manual un-complete is possible by
+ * reducing allocation below target — the auto-stamp re-clears if needed.
+ */
+export interface SavingsGoal {
+  id: string;
+  title: string;
+  targetAmount: number;
+  currency: string;             // defaults to baseCurrency at creation
+  allocatedAmount: number;      // user-managed, never negative
+  deadline?: string;            // YYYY-MM-DD, optional
+  notes?: string;
+  completedAt?: string;         // ISO timestamp when allocated first reached target
+  deletedAt?: string;           // soft-delete tombstone for sync
+  syncStatus: SyncStatus;
+  createdAt: string;
+  updatedAt: string;
+  /**
+   * v1.2 follow-up — BUG-5. Pinned singleton goal representing the user's
+   * emergency cash buffer. Exactly one goal per user carries this flag
+   * (enforced by `ensureBufferGoal()` in the store). Special UI treatment:
+   *   - Always sorts to the top of the list
+   *   - Non-deletable (delete button hidden / store refuses)
+   *   - `targetAmount` is the user's chosen runway target (optional — 0 is fine)
+   *   - `allocatedAmount` is what's actually reserved; both Net Worth's
+   *     "Savings Buffer" card AND `computeAvailableCash` read from this
+   *     value, so the previously-duplicated buffer concept now has one
+   *     source of truth.
+   * Migrated from `useSettingsStore.savingsBufferAmount` on first load.
+   */
+  isBuffer?: boolean;
 }
 
 export interface ApiCacheEntry {

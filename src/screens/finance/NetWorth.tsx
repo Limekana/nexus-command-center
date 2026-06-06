@@ -2,8 +2,15 @@
 //
 // Portfolio side reuses everything the Portfolio screen computes (totals,
 // FX conversion). Manual assets/liabilities are a flat list the user
-// maintains here. The Savings Buffer card on top derives a runway estimate
-// from cash-type assets ÷ recent monthly expense average.
+// maintains here.
+//
+// v1.2 follow-up — BUG-5. The Savings Buffer card on top no longer derives
+// runway from TOTAL liquid cash divided by monthly expenses. Instead, it
+// reads the user's pinned Emergency Buffer goal from the SavingsGoals store
+// — runway = bufferGoal.allocatedAmount / monthlyExpensesAvg. This way the
+// number reflects what's actually reserved as buffer rather than treating
+// every cash dollar as if it's earmarked for the emergency fund. Adjust the
+// reserve on the Savings screen; this card mirrors it.
 
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +21,10 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 import { convertSync } from '../../api/fxRates';
 import type { ManualAsset, ManualAssetType } from '../../types/finance';
 import { LIABILITY_TYPES } from '../../types/finance';
+// v1.2 follow-up — CTO Account refactor. Account balances derive from the
+// transactions slice; the helper handles FX + transfer-in/out + sign
+// conventions for liability accounts.
+import { computeAccountBalance } from '../../lib/accountBalance';
 
 const CURRENCY_SYMBOL: Record<string, string> = {
   EUR: '€', USD: '$', GBP: '£', SEK: 'kr', NOK: 'kr', DKK: 'kr', CHF: 'Fr', JPY: '¥',
@@ -27,19 +38,29 @@ function fmt(amount: number, currency: string): string {
   return isSuffix ? `${num} ${sym}` : sym ? `${sym}${num}` : `${num} ${currency}`;
 }
 
+// v1.2 follow-up — CTO Account refactor. Map covers the full AccountType
+// union now (checking + investment + custom added; legacy 'credit' renamed
+// to 'credit_card'). Net Worth keeps using this for the inline asset
+// editor — the full Account-aware UI lands in the dedicated AccountDetail
+// refactor pass.
 const ASSET_META: Record<ManualAssetType, { icon: string; label: string }> = {
+  checking: { icon: '🏦', label: 'Checking' },
+  savings: { icon: '💰', label: 'Savings' },
   cash: { icon: '💵', label: 'Cash' },
-  savings: { icon: '🏦', label: 'Savings' },
+  credit_card: { icon: '💳', label: 'Credit Card' },
+  investment: { icon: '📈', label: 'Investment' },
   property: { icon: '🏠', label: 'Property' },
   vehicle: { icon: '🚗', label: 'Vehicle' },
-  other: { icon: '📦', label: 'Other' },
   loan: { icon: '🧾', label: 'Loan' },
-  credit: { icon: '💳', label: 'Credit Card' },
+  other: { icon: '📦', label: 'Other' },
+  custom: { icon: '🏷️', label: 'Custom' },
 };
 
-// Cash-ish asset types that count toward the savings-runway buffer. Property
-// and vehicles aren't liquid; loans are subtracted from buffer separately.
-const LIQUID_TYPES: ManualAssetType[] = ['cash', 'savings'];
+// Cash-ish account types that count toward the "Liquid" breakdown cell.
+// `checking` joins cash + savings now that the Account model has it. The
+// runway-card math uses `savings` only (per CTO spec — savings account
+// balance is the buffer source of truth).
+const LIQUID_TYPES: ManualAssetType[] = ['cash', 'savings', 'checking'];
 
 export default function NetWorth() {
   const navigate = useNavigate();
@@ -64,28 +85,44 @@ export default function NetWorth() {
   const [currency, setCurrency] = useState('EUR');
   const [notes, setNotes] = useState('');
 
-  // Convert each manual asset's value to base currency. Liabilities are
-  // negated so net worth math is a simple sum across this list + portfolio.
+  // v1.2 follow-up — CTO Account refactor. Each ManualAsset row is now an
+  // Account; the displayed balance is DERIVED via
+  // `computeAccountBalance(account, transactions, fxRates, baseCurrency)`
+  // instead of the historical "static balance the user edits manually".
+  // Below we annotate each row with its derived balance in two forms:
+  //   - `balanceNative`: in the account's own currency (rendered on the row)
+  //   - `base`: signed contribution to net worth (negative for liability
+  //     accounts because their balance is already negative-by-convention)
+  // The legacy LIABILITY_TYPES.includes(...) gating is gone — liability
+  // accounts contribute via their natural negative balance, not via a
+  // separate "totalLiabilities" subtraction.
   const inBase = useMemo(() => {
     return manualAssets.map((a) => {
-      const conv = convertSync(a.value, a.currency, baseCurrency, fxRates);
-      const signed = LIABILITY_TYPES.includes(a.assetType) ? -(conv ?? 0) : conv ?? 0;
-      return { ...a, base: conv == null ? null : signed };
+      const result = computeAccountBalance(a, transactions, fxRates, baseCurrency);
+      const balanceNative = result.balance;
+      const base = a.currency === baseCurrency
+        ? balanceNative
+        : convertSync(balanceNative, a.currency, baseCurrency, fxRates);
+      return { ...a, balanceNative, base: base ?? null };
     });
-  }, [manualAssets, fxRates, baseCurrency]);
+  }, [manualAssets, transactions, fxRates, baseCurrency]);
 
+  // Assets + Liabilities split for the headline pills (cosmetic — total
+  // net worth = sum of all base balances and is the source of truth).
   const totalAssets = useMemo(
     () =>
       inBase
-        .filter((a) => !LIABILITY_TYPES.includes(a.assetType))
+        .filter((a) => !LIABILITY_TYPES.includes(a.accountType))
         .reduce((acc, a) => acc + (a.base ?? 0), 0),
     [inBase],
   );
   const totalLiabilities = useMemo(
     () =>
+      // Liability accounts carry a negative balance — flip the sign here so
+      // the "Liabilities" pill reads as a positive amount owed.
       inBase
-        .filter((a) => LIABILITY_TYPES.includes(a.assetType))
-        .reduce((acc, a) => acc - (a.base ?? 0), 0), // re-positive
+        .filter((a) => LIABILITY_TYPES.includes(a.accountType))
+        .reduce((acc, a) => acc - (a.base ?? 0), 0),
     [inBase],
   );
 
@@ -106,14 +143,28 @@ export default function NetWorth() {
     return sum / 3;
   }, [transactions]);
 
-  const liquidBase = useMemo(
+  // v1.2 follow-up — CTO Account refactor (BUG-5 partial revert). Per CTO
+  // spec: "savings account balance replaces the duplicate savings input on
+  // net worth page." Runway is now derived from the sum of Savings-type
+  // account balances (FX-converted to base) rather than the legacy buffer
+  // goal's allocatedAmount. The Buffer goal still exists for users who
+  // want to explicitly earmark a portion of their savings on the Savings
+  // Goals screen — it just no longer feeds this card.
+  const savingsAccountsBase = useMemo(
     () =>
       inBase
-        .filter((a) => LIQUID_TYPES.includes(a.assetType))
+        .filter((a) => a.accountType === 'savings' && !a.archivedAt)
         .reduce((acc, a) => acc + (a.base ?? 0), 0),
     [inBase],
   );
-  const runwayMonths = monthlyExpensesAvg > 0 ? liquidBase / monthlyExpensesAvg : 0;
+  const liquidBase = useMemo(
+    () =>
+      inBase
+        .filter((a) => LIQUID_TYPES.includes(a.accountType) && !a.archivedAt)
+        .reduce((acc, a) => acc + (a.base ?? 0), 0),
+    [inBase],
+  );
+  const runwayMonths = monthlyExpensesAvg > 0 ? savingsAccountsBase / monthlyExpensesAvg : 0;
   // Industry rule of thumb: 3-6 months emergency fund.
   const runwayStatus: 'low' | 'ok' | 'good' =
     runwayMonths < 3 ? 'low' : runwayMonths < 6 ? 'ok' : 'good';
@@ -128,12 +179,19 @@ export default function NetWorth() {
     setNotes('');
   };
 
-  const startEdit = (a: ManualAsset) => {
+  const startEdit = (a: ManualAsset & { balanceNative?: number }) => {
     setEditing(a);
     setAdding(false);
     setName(a.name);
-    setAssetType(a.assetType);
-    setValue(String(a.value));
+    setAssetType(a.accountType);
+    // v1.2 follow-up — Account refactor UX fix. The form field shows the
+    // CURRENT derived balance (700 in the user's "savings 500 + income 200"
+    // example), not the opening figure (500). The user's mental model is
+    // "this number should match what I see on the row." On save we back-
+    // solve the new startingBalance so the displayed balance ends up
+    // equal to what the user typed. Fallback to `a.value` when
+    // `balanceNative` is absent (defensive — every inBase row populates it).
+    setValue(String(a.balanceNative ?? a.value));
     setCurrency(a.currency);
     setNotes(a.notes ?? '');
   };
@@ -147,16 +205,35 @@ export default function NetWorth() {
     const n = parseFloat(value);
     if (!name.trim() || isNaN(n)) return;
     if (editing) {
+      // v1.2 follow-up — Account refactor UX fix. `n` is the desired CURRENT
+      // balance (what the user sees in the form). To make
+      // computeAccountBalance() resolve to that number, back-solve:
+      //   newStartingBalance = desiredCurrent − txnDelta(account)
+      // where txnDelta is the sum of every transaction that already touched
+      // the account. This way the user's input matches the row display
+      // afterwards; the opening figure quietly absorbs the difference.
+      const balanceResult = computeAccountBalance(
+        editing,
+        transactions,
+        fxRates,
+        baseCurrency,
+      );
+      const newStartingBalance = n - balanceResult.txnDelta;
       await updateAsset(editing.id, {
         name: name.trim(),
+        accountType: assetType,
+        startingBalance: newStartingBalance,
         assetType,
-        value: n,
+        value: newStartingBalance,
         currency,
         notes: notes.trim() || undefined,
       });
     } else {
+      // Add mode — no transactions yet, so the input IS the starting balance.
       await addAsset({
         name: name.trim(),
+        accountType: assetType,
+        startingBalance: n,
         assetType,
         value: n,
         currency,
@@ -167,13 +244,21 @@ export default function NetWorth() {
   };
 
   const editingNow = adding || editing != null;
+  // v1.2 follow-up — CTO Account refactor. Group from `inBase` so each item
+  // carries its derived `balanceNative` field. The row renderer below
+  // shows the LIVE balance (startingBalance + transaction deltas) rather
+  // than the stored opening figure, so users see numbers that match the
+  // transaction history. Archived accounts are filtered here so they don't
+  // appear in the primary list.
   const assetGroups = useMemo(() => {
-    const byType: Record<ManualAssetType, ManualAsset[]> = {} as Record<ManualAssetType, ManualAsset[]>;
-    for (const a of manualAssets) {
-      (byType[a.assetType] ??= []).push(a);
+    type Row = ManualAsset & { balanceNative: number; base: number | null };
+    const byType: Record<ManualAssetType, Row[]> = {} as Record<ManualAssetType, Row[]>;
+    for (const a of inBase) {
+      if (a.archivedAt) continue;
+      (byType[a.accountType] ??= []).push(a);
     }
     return byType;
-  }, [manualAssets]);
+  }, [inBase]);
 
   return (
     <>
@@ -217,18 +302,34 @@ export default function NetWorth() {
           </div>
         </div>
 
-        {/* Savings buffer */}
-        <div className="card">
+        {/* v1.2 follow-up — CTO Account refactor (BUG-5 partial revert).
+            Savings Buffer card reads the SUM of all Savings-type account
+            balances per CTO spec ("savings account balance replaces the
+            duplicate savings input on net worth page"). The Buffer goal
+            in Savings Goals is preserved for users who want explicit
+            earmarking within their savings — but THIS card now reflects
+            the actual cash sitting in savings accounts, not a separate
+            buffer figure. Tap → /finance/savings to manage goals + see
+            the Emergency Buffer goal if pinned. */}
+        <button
+          type="button"
+          onClick={() => navigate('/finance/savings')}
+          className="card w-full text-left press-spring"
+        >
           <div className="flex items-center justify-between mb-2">
-            <span className="font-heading font-semibold text-sm">Savings Buffer</span>
+            <span className="font-heading font-semibold text-sm">Savings Runway</span>
             <span className={`text-[9px] uppercase tracking-wider border rounded-sm px-1.5 py-0.5 ${
-              runwayStatus === 'good'
-                ? 'border-success/40 bg-success/5 text-success'
-                : runwayStatus === 'ok'
-                  ? 'border-warning/40 bg-warning/5 text-warning'
-                  : 'border-danger/40 bg-danger/5 text-danger'
+              savingsAccountsBase <= 0
+                ? 'border-text-muted/40 bg-surface2 text-text-muted'
+                : runwayStatus === 'good'
+                  ? 'border-success/40 bg-success/5 text-success'
+                  : runwayStatus === 'ok'
+                    ? 'border-warning/40 bg-warning/5 text-warning'
+                    : 'border-danger/40 bg-danger/5 text-danger'
             }`}>
-              {runwayStatus === 'good' ? 'Strong' : runwayStatus === 'ok' ? 'OK' : 'Low'}
+              {savingsAccountsBase <= 0
+                ? 'No savings yet'
+                : runwayStatus === 'good' ? 'Strong' : runwayStatus === 'ok' ? 'OK' : 'Low'}
             </span>
           </div>
           <div className="flex items-baseline justify-between mb-1">
@@ -242,16 +343,19 @@ export default function NetWorth() {
             </span>
           </div>
           <div className="text-[10px] text-text-muted">
-            Liquid {fmt(liquidBase, baseCurrency)} ÷ avg {fmt(monthlyExpensesAvg, baseCurrency)}/mo (last 90d).
-            Target: 3-6 months.
+            {savingsAccountsBase > 0 ? (
+              <>Savings {fmt(savingsAccountsBase, baseCurrency)} ÷ avg {fmt(monthlyExpensesAvg, baseCurrency)}/mo (last 90d). Target: 3-6 months.</>
+            ) : (
+              <>Add a Savings account above to start building runway. Liquid cash: {fmt(liquidBase, baseCurrency)}.</>
+            )}
           </div>
-        </div>
+        </button>
 
         {/* Add/edit form */}
         {editingNow && (
           <div className="card space-y-2">
             <div className="font-heading font-semibold text-sm">
-              {editing ? 'Edit Asset' : 'New Asset'}
+              {editing ? 'Edit Account' : 'New Account'}
             </div>
             <div className="grid grid-cols-4 gap-2">
               {(Object.keys(ASSET_META) as ManualAssetType[]).map((t) => (
@@ -272,23 +376,41 @@ export default function NetWorth() {
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
-            <div className="flex gap-2">
-              <input
-                className="input flex-1"
-                placeholder="Value"
-                inputMode="decimal"
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-              />
-              <select
-                className="input max-w-[88px]"
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
-              >
-                {CURRENCIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
+            {/* v1.2 follow-up — Account refactor UX fix. The label flips
+                between "Current balance" (editing — what the user sees on
+                the row) and "Starting balance" (add — opening figure for a
+                fresh account). For edit mode we ALSO show the opening
+                figure read-only so the user can see how the number
+                will resolve. */}
+            <div>
+              <div className="sec mb-1">
+                {editing ? 'Current balance' : 'Starting balance'}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  className="input flex-1"
+                  placeholder={editing ? 'Current balance' : 'Starting balance'}
+                  inputMode="decimal"
+                  value={value}
+                  onChange={(e) => setValue(e.target.value)}
+                />
+                <select
+                  className="input max-w-[88px]"
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                >
+                  {CURRENCIES.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+              {editing && (
+                <div className="text-[10px] text-text-muted mt-1">
+                  Opening was {fmt(editing.startingBalance, editing.currency)} ·
+                  saving here adjusts the opening figure so the displayed
+                  balance matches what you typed.
+                </div>
+              )}
             </div>
             <input
               className="input"
@@ -306,21 +428,26 @@ export default function NetWorth() {
             </div>
             <div className="text-[10px] text-text-muted">
               {LIABILITY_TYPES.includes(assetType)
-                ? 'Liabilities are subtracted from net worth automatically.'
-                : 'Cash + Savings count toward your savings buffer.'}
+                ? 'Liabilities (credit cards / loans) carry a negative balance — enter what you OWE as a negative number for new accounts.'
+                : 'Account balance updates automatically when you log transactions against this account.'}
             </div>
           </div>
         )}
 
-        {/* Asset list by type */}
+        {/* Account list by type. v1.2 follow-up — CTO Account refactor.
+            Per-row balance is now DERIVED (`a.balanceNative` from
+            `computeAccountBalance`) rather than the stored opening figure
+            `a.value`. Row body is tappable → `/finance/account/:id` for
+            the AccountDetail running-balance + transaction-history screen. */}
         {(Object.keys(ASSET_META) as ManualAssetType[]).map((type) => {
           const items = assetGroups[type] ?? [];
           if (items.length === 0) return null;
           const meta = ASSET_META[type];
           const isLiability = LIABILITY_TYPES.includes(type);
-          const groupTotal = inBase
-            .filter((a) => a.assetType === type)
-            .reduce((acc, a) => acc + Math.abs(a.base ?? 0), 0);
+          const groupTotal = items.reduce(
+            (acc, a) => acc + Math.abs(a.base ?? 0),
+            0,
+          );
           return (
             <div key={type} className="card">
               <div className="flex items-center justify-between mb-2">
@@ -333,12 +460,17 @@ export default function NetWorth() {
               </div>
               {items.map((a) => (
                 <div key={a.id} className="flex items-center gap-2 py-2 border-b border-border/40 last:border-0">
-                  <div className="flex-1 min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/finance/account/${a.id}`)}
+                    className="flex-1 min-w-0 text-left press-spring"
+                  >
                     <div className="text-sm font-medium truncate">{a.name}</div>
                     <div className="text-[10px] text-text-muted truncate">
-                      {fmt(a.value, a.currency)}{a.notes && ` · ${a.notes}`}
+                      {fmt(a.balanceNative, a.currency)} · opened {fmt(a.startingBalance, a.currency)}
+                      {a.notes && ` · ${a.notes}`}
                     </div>
-                  </div>
+                  </button>
                   <RowActions
                     onEdit={() => startEdit(a)}
                     onDelete={() => deleteAsset(a.id)}

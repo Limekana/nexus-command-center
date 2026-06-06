@@ -30,6 +30,18 @@ const NOTIF_MACRO_KEYS_KEY = 'settings.notif.macroKeywords';
 // decline notifications). Without this gate the modal would re-fire on
 // every cold launch.
 const NOTIF_INTRO_SEEN_KEY = 'settings.notif.introSeen';
+// v1.2 — Savings buffer. Amount of cash+savings to reserve as emergency
+// runway; excluded from "available to allocate" math in the Savings Goals
+// module. Stored as a stringified number in baseCurrency. Defaults to 0 so
+// existing users see the new feature with all their cash labeled as
+// allocatable until they explicitly set a reserve.
+const SAVINGS_BUFFER_KEY = 'settings.savings.bufferAmount';
+// v1.2 — Insights two-tab toggle. Persisted choice between Technical and
+// Fundamental tabs so the user's view + row pills follow them across
+// cold starts. Defaults to 'technical' (the v1.0 behaviour) so existing
+// users see the same rating they were already looking at.
+const INSIGHTS_TAB_KEY = 'settings.insights.tab';
+export type InsightsTab = 'technical' | 'fundamental';
 
 interface SettingsStore {
   baseCurrency: BaseCurrency;
@@ -41,6 +53,14 @@ interface SettingsStore {
   notifNewsEnabled: boolean;
   notifMacroKeywordsEnabled: boolean;
   notifIntroSeen: boolean;
+  /** v1.2 — emergency buffer reserved from cash+savings ManualAssets, in
+   *  baseCurrency. Excluded from Savings Goals' available-to-allocate
+   *  computation. */
+  savingsBufferAmount: number;
+  /** v1.2 — which Insights tab the user has active. Drives both the
+   *  Insights screen content and which composite the RatingPill on
+   *  portfolio + watchlist rows displays. */
+  insightsTab: InsightsTab;
   loaded: boolean;
   load: () => Promise<void>;
   setBaseCurrency: (c: BaseCurrency) => Promise<void>;
@@ -52,6 +72,8 @@ interface SettingsStore {
   setNotifNewsEnabled: (on: boolean) => Promise<void>;
   setNotifMacroKeywordsEnabled: (on: boolean) => Promise<void>;
   setNotifIntroSeen: (seen: boolean) => Promise<void>;
+  setSavingsBufferAmount: (amount: number) => Promise<void>;
+  setInsightsTab: (tab: InsightsTab) => Promise<void>;
 }
 
 async function readPref(key: string): Promise<string | null> {
@@ -94,6 +116,8 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   notifNewsEnabled: false,
   notifMacroKeywordsEnabled: false,
   notifIntroSeen: false,
+  savingsBufferAmount: 0,
+  insightsTab: 'technical',
   loaded: false,
 
   async load() {
@@ -107,6 +131,8 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
       notifNews,
       notifMacroKeywords,
       notifIntroSeen,
+      savingsBuffer,
+      insightsTab,
     ] = await Promise.all([
       readPref(CURRENCY_KEY),
       readPref(REMINDER_KEY),
@@ -117,6 +143,8 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
       readBoolPref(NOTIF_NEWS_KEY),
       readBoolPref(NOTIF_MACRO_KEYS_KEY),
       readBoolPref(NOTIF_INTRO_SEEN_KEY),
+      readPref(SAVINGS_BUFFER_KEY),
+      readPref(INSIGHTS_TAB_KEY),
     ]);
     set({
       baseCurrency:
@@ -131,6 +159,8 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
       notifNewsEnabled: notifNews,
       notifMacroKeywordsEnabled: notifMacroKeywords,
       notifIntroSeen,
+      savingsBufferAmount: savingsBuffer ? Math.max(0, parseFloat(savingsBuffer) || 0) : 0,
+      insightsTab: insightsTab === 'fundamental' ? 'fundamental' : 'technical',
       loaded: true,
     });
   },
@@ -178,5 +208,16 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   async setNotifIntroSeen(seen) {
     await writePref(NOTIF_INTRO_SEEN_KEY, seen ? '1' : '0');
     set({ notifIntroSeen: seen });
+  },
+
+  async setSavingsBufferAmount(amount) {
+    const clamped = Math.max(0, isFinite(amount) ? amount : 0);
+    await writePref(SAVINGS_BUFFER_KEY, String(clamped));
+    set({ savingsBufferAmount: clamped });
+  },
+
+  async setInsightsTab(tab) {
+    await writePref(INSIGHTS_TAB_KEY, tab);
+    set({ insightsTab: tab });
   },
 }));

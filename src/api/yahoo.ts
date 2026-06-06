@@ -68,7 +68,12 @@ interface YahooChartResponse {
       // For range=5d/7d/1mo + interval=1d|1h.
       timestamp?: number[];
       indicators?: {
-        quote?: Array<{ close?: (number | null)[] }>;
+        quote?: Array<{
+          close?: (number | null)[];
+          // v1.2 — volume series for Insights' volume-pressure signal. Yahoo
+          // emits null gaps for missing bars; the consumer filters them out.
+          volume?: (number | null)[];
+        }>;
       };
     }>;
     error?: unknown;
@@ -296,6 +301,92 @@ export async function getYahooSparkline(
     console.warn('[yahoo spark]', ticker, (e as Error).message);
     return null;
   }
+}
+
+// ─── v1.2 — extended history for Insights signal engine ────────────────────
+//
+// 6 months at 1d interval gives us enough runway for every signal we compute:
+//   - RSI(14) needs 15 closes minimum, comfortable with ~30
+//   - 50-day SMA needs 50, comfortable with 60+
+//   - 14d + 30d momentum need 30
+//   - 20-session volume pressure needs 20
+// 6mo / 1d = ~126 bars on US schedules, ample. We cache for 4h since these
+// signals are slower-moving than intraday quotes — bursting through Yahoo's
+// implicit rate limit on every Insights tab open would be wasteful.
+
+export interface YahooHistoryBar {
+  /** Unix seconds (Yahoo's native bar timestamp). */
+  t: number;
+  close: number;
+  volume: number | null;
+}
+
+// v1.2 — promoted to Daily tier under the Insights cache architecture
+// (`lib/insightsCache.ts`). 24h cache means the technical-signal recompute
+// hits the Yahoo chart endpoint at most once per ticker per calendar day,
+// regardless of how often the user opens the app.
+const HISTORY_TTL_MS = 24 * 60 * 60 * 1000;
+const HISTORY_DEXIE_KEY = (ticker: string) => `yh_history_${ticker.toUpperCase()}`;
+
+/**
+ * Fetch 6mo of daily history for one ticker — closes + volumes — for the
+ * Insights signal engine. Returns null on transport / parse failure or when
+ * Yahoo gives us too little data to compute signals (<15 bars).
+ *
+ * Cache: 4h TTL via Dexie's apiCache table. Subsequent calls within the
+ * window return the cached series without a network round-trip.
+ */
+export async function getYahooHistory(
+  ticker: string,
+  opts: { force?: boolean } = {},
+): Promise<YahooHistoryBar[] | null> {
+  const dexieKey = HISTORY_DEXIE_KEY(ticker);
+  const { db } = await import('../db/database');
+  const cached = await db.apiCache.get(dexieKey);
+  if (cached && !opts.force) {
+    const age = Date.now() - new Date(cached.fetchedAt).getTime();
+    if (age < HISTORY_TTL_MS) {
+      try { return JSON.parse(cached.data) as YahooHistoryBar[]; } catch { /* fall through */ }
+    }
+  }
+  const gate = shouldFetch('yahoo-history', 'yahoo', { force: opts.force, maxPerMinute: 60, subKey: ticker });
+  if (!gate.allow) return cached ? safeParseHistory(cached.data) : null;
+  try {
+    recordCall('yahoo-history', 'yahoo', ticker);
+    const data = await fetchYahoo(ticker, { range: '6mo', interval: '1d' });
+    const result = data?.chart?.result?.[0];
+    const timestamps = result?.timestamp;
+    const quote = result?.indicators?.quote?.[0];
+    const closes = quote?.close;
+    const volumes = quote?.volume;
+    if (!timestamps || !closes || timestamps.length !== closes.length) return null;
+    const bars: YahooHistoryBar[] = [];
+    for (let i = 0; i < timestamps.length; i++) {
+      const c = closes[i];
+      if (typeof c !== 'number') continue;
+      bars.push({
+        t: timestamps[i],
+        close: c,
+        volume: typeof volumes?.[i] === 'number' ? (volumes![i] as number) : null,
+      });
+    }
+    if (bars.length < 15) return null;
+    const now = new Date();
+    await db.apiCache.put({
+      cacheKey: dexieKey,
+      data: JSON.stringify(bars),
+      fetchedAt: now.toISOString(),
+      expiresAt: new Date(now.getTime() + HISTORY_TTL_MS).toISOString(),
+    });
+    return bars;
+  } catch (e) {
+    console.warn('[yahoo history]', ticker, (e as Error).message);
+    return cached ? safeParseHistory(cached.data) : null;
+  }
+}
+
+function safeParseHistory(raw: string): YahooHistoryBar[] | null {
+  try { return JSON.parse(raw) as YahooHistoryBar[]; } catch { return null; }
 }
 
 // Detect tickers that won't work on Finnhub's free tier (anything with a non-US suffix).

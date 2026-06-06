@@ -1,0 +1,256 @@
+// ─── v1.2 Habit Tracker store ────────────────────────────────────────────
+//
+// Cloud-synced via Supabase `habits` + `habit_completions` tables. Local
+// Dexie holds the authoritative working set; mutations enqueue the cloud
+// shape and the realtime channel echoes other devices' writes back.
+//
+// Selectors live alongside the store to keep streak math cheap and free of
+// the React hooks-rules trap (callers pull a slice + run the helper).
+// streakFor(habitId) does the per-habit compute on demand from the
+// completions slice — typical habit count is < 30 so a recompute per render
+// is essentially free.
+//
+// Reminder side-effects:
+//   - addHabit / updateHabit reschedule via scheduleHabitReminder (idempotent
+//     by ID). If reminderTime cleared → cancelHabitReminder.
+//   - deleteHabit / archiveHabit always cancels.
+//   - load() sweeps all active habits and re-arms reminders. The native
+//     plugin fires single-shot, so cold-start re-arm is necessary to keep
+//     the daily cadence rolling. This is the same pattern Weekly Review uses.
+
+import { create } from 'zustand';
+import { db } from '../db/database';
+import { generateId } from '../utils/uuid';
+import { enqueue } from '../db/syncQueue';
+import type { Habit, HabitCompletion } from '../types/habits';
+import { computeStreak, dateKey, type StreakResult } from '../lib/habitStreaks';
+import { scheduleHabitReminder, cancelHabitReminder } from '../lib/habitReminders';
+
+interface HabitsStore {
+  habits: Habit[];
+  /** All completions, across all habits — small enough to keep in memory.
+   *  At 5 habits × 365 days × 1 year that's 1,825 rows. We aggregate via
+   *  Map in the streak helper, so linear scans are fine. */
+  completions: HabitCompletion[];
+  loaded: boolean;
+
+  load: () => Promise<void>;
+  addHabit: (
+    h: Omit<Habit, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus' | 'archivedAt'>,
+  ) => Promise<Habit>;
+  updateHabit: (
+    id: string,
+    patch: Partial<Omit<Habit, 'id' | 'createdAt' | 'syncStatus'>>,
+  ) => Promise<void>;
+  archiveHabit: (id: string) => Promise<void>;
+  restoreHabit: (id: string) => Promise<void>;
+  deleteHabit: (id: string) => Promise<void>;
+
+  /** Binary toggle for today (or any date). If a completion exists, deletes
+   *  it; otherwise creates one with amount=1. Idempotent on rapid double-tap
+   *  via the UNIQUE (habitId, date) — the redundant create no-ops at DB level
+   *  and we re-read the truth from local state. */
+  toggleCompletion: (habitId: string, date?: string) => Promise<void>;
+
+  /** Set the completion amount for a date (quantified habits). amount=0
+   *  deletes the completion row; amount>0 upserts. */
+  setCompletionAmount: (habitId: string, amount: number, date?: string) => Promise<void>;
+
+  /** Add to the completion amount for a date — common quantified flow
+   *  ("logged 15 more minutes"). delta can be positive or negative; the
+   *  result is clamped at 0 (which deletes the row). */
+  addToCompletion: (habitId: string, delta: number, date?: string) => Promise<void>;
+
+  // ─── Selectors (no React hooks; pure derivations from current slice) ───
+  streakFor: (habitId: string) => StreakResult;
+  completionsFor: (habitId: string) => HabitCompletion[];
+  completionForDate: (habitId: string, date: string) => HabitCompletion | undefined;
+}
+
+function sortHabits(habits: Habit[]): Habit[] {
+  // Visible order: active first (sorted by createdAt asc — oldest at top
+  // matches the "anchor habits" mental model), archived at the bottom.
+  return [...habits].sort((a, b) => {
+    if (!!a.archivedAt !== !!b.archivedAt) return a.archivedAt ? 1 : -1;
+    return a.createdAt.localeCompare(b.createdAt);
+  });
+}
+
+export const useHabitsStore = create<HabitsStore>((set, get) => ({
+  habits: [],
+  completions: [],
+  loaded: false,
+
+  async load() {
+    const [habits, completions] = await Promise.all([
+      db.habits.toArray(),
+      db.habitCompletions.toArray(),
+    ]);
+    set({ habits: sortHabits(habits), completions, loaded: true });
+
+    // Re-arm reminders on cold start. Fire-and-forget — the native plugin
+    // tolerates batch scheduling, and any failure logs itself.
+    for (const h of habits) {
+      if (h.reminderTime && !h.archivedAt) {
+        void scheduleHabitReminder(h);
+      }
+    }
+  },
+
+  async addHabit(input) {
+    const now = new Date().toISOString();
+    const habit: Habit = {
+      id: generateId(),
+      title: input.title,
+      type: input.type,
+      targetAmount: input.targetAmount,
+      unit: input.unit,
+      frequencyKind: input.frequencyKind,
+      daysOfWeek: input.daysOfWeek,
+      reminderTime: input.reminderTime,
+      color: input.color,
+      syncStatus: 'pending',
+      createdAt: now,
+      updatedAt: now,
+    };
+    await db.habits.add(habit);
+    await enqueue('habit', habit.id, 'insert', habit);
+    set({ habits: sortHabits([...get().habits, habit]) });
+    if (habit.reminderTime) void scheduleHabitReminder(habit);
+    return habit;
+  },
+
+  async updateHabit(id, patch) {
+    const existing = await db.habits.get(id);
+    if (!existing) return;
+    const merged: Habit = {
+      ...existing,
+      ...patch,
+      id,
+      updatedAt: new Date().toISOString(),
+      syncStatus: 'pending',
+    };
+    await db.habits.put(merged);
+    await enqueue('habit', id, 'update', merged);
+    set({ habits: sortHabits(get().habits.map((h) => (h.id === id ? merged : h))) });
+    // Reminder bookkeeping — schedule when the row has a time and isn't
+    // archived; cancel in every other case.
+    if (merged.reminderTime && !merged.archivedAt) {
+      void scheduleHabitReminder(merged);
+    } else {
+      void cancelHabitReminder({ id });
+    }
+  },
+
+  async archiveHabit(id) {
+    await get().updateHabit(id, { archivedAt: new Date().toISOString() });
+  },
+
+  async restoreHabit(id) {
+    await get().updateHabit(id, { archivedAt: undefined });
+  },
+
+  async deleteHabit(id) {
+    // Cancel any standing reminder, then cascade-delete completions locally
+    // (the cloud FK has ON DELETE CASCADE so the remote side cleans up too).
+    void cancelHabitReminder({ id });
+    const childCompletions = get().completions.filter((c) => c.habitId === id);
+    for (const c of childCompletions) {
+      await db.habitCompletions.delete(c.id);
+      await enqueue('habit_completion', c.id, 'delete', { id: c.id });
+    }
+    await db.habits.delete(id);
+    await enqueue('habit', id, 'delete', { id });
+    set({
+      habits: get().habits.filter((h) => h.id !== id),
+      completions: get().completions.filter((c) => c.habitId !== id),
+    });
+  },
+
+  async toggleCompletion(habitId, date) {
+    const day = date ?? dateKey(new Date());
+    const existing = get().completions.find(
+      (c) => c.habitId === habitId && c.date === day,
+    );
+    if (existing) {
+      await db.habitCompletions.delete(existing.id);
+      await enqueue('habit_completion', existing.id, 'delete', { id: existing.id });
+      set({ completions: get().completions.filter((c) => c.id !== existing.id) });
+      return;
+    }
+    const now = new Date().toISOString();
+    const row: HabitCompletion = {
+      id: generateId(),
+      habitId,
+      date: day,
+      amount: 1,
+      syncStatus: 'pending',
+      createdAt: now,
+    };
+    await db.habitCompletions.add(row);
+    await enqueue('habit_completion', row.id, 'insert', row);
+    set({ completions: [...get().completions, row] });
+  },
+
+  async setCompletionAmount(habitId, amount, date) {
+    const day = date ?? dateKey(new Date());
+    const clamped = Math.max(0, isFinite(amount) ? amount : 0);
+    const existing = get().completions.find(
+      (c) => c.habitId === habitId && c.date === day,
+    );
+    if (clamped === 0) {
+      if (!existing) return;
+      await db.habitCompletions.delete(existing.id);
+      await enqueue('habit_completion', existing.id, 'delete', { id: existing.id });
+      set({ completions: get().completions.filter((c) => c.id !== existing.id) });
+      return;
+    }
+    if (existing) {
+      const updated: HabitCompletion = { ...existing, amount: clamped, syncStatus: 'pending' };
+      await db.habitCompletions.put(updated);
+      await enqueue('habit_completion', existing.id, 'update', updated);
+      set({
+        completions: get().completions.map((c) => (c.id === existing.id ? updated : c)),
+      });
+      return;
+    }
+    const now = new Date().toISOString();
+    const row: HabitCompletion = {
+      id: generateId(),
+      habitId,
+      date: day,
+      amount: clamped,
+      syncStatus: 'pending',
+      createdAt: now,
+    };
+    await db.habitCompletions.add(row);
+    await enqueue('habit_completion', row.id, 'insert', row);
+    set({ completions: [...get().completions, row] });
+  },
+
+  async addToCompletion(habitId, delta, date) {
+    const day = date ?? dateKey(new Date());
+    const existing = get().completions.find(
+      (c) => c.habitId === habitId && c.date === day,
+    );
+    const next = (existing?.amount ?? 0) + delta;
+    await get().setCompletionAmount(habitId, next, day);
+  },
+
+  streakFor(habitId) {
+    const habit = get().habits.find((h) => h.id === habitId);
+    if (!habit) {
+      return { current: 0, longest: 0, todayHit: false, todayEligible: false };
+    }
+    const rows = get().completions.filter((c) => c.habitId === habitId);
+    return computeStreak(habit, rows);
+  },
+
+  completionsFor(habitId) {
+    return get().completions.filter((c) => c.habitId === habitId);
+  },
+
+  completionForDate(habitId, date) {
+    return get().completions.find((c) => c.habitId === habitId && c.date === date);
+  },
+}));

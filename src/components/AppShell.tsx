@@ -6,6 +6,7 @@ import BottomTabBar from './BottomTabBar';
 import OfflineBanner from './OfflineBanner';
 import QuickLogFAB from './QuickLogFAB';
 import QuickLogBottomSheet from './QuickLogBottomSheet';
+import PageTransition from './ui/PageTransition';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { useStudiesStore } from '../store/useStudiesStore';
 import { useFitnessStore } from '../store/useFitnessStore';
@@ -15,6 +16,9 @@ import { useSyncStore } from '../store/useSyncStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useTemplatesStore } from '../store/useTemplatesStore';
+import { useInsightsStore } from '../store/useInsightsStore';
+import { useSavingsGoalsStore } from '../store/useSavingsGoalsStore';
+import { useHabitsStore } from '../store/useHabitsStore';
 import { checkBudgetThresholds } from '../lib/budgetAlerts';
 import { reconcileTaskReminders } from '../lib/taskReminders';
 import { runPortfolioEodTick } from '../lib/portfolioEod';
@@ -35,12 +39,30 @@ export default function AppShell() {
   const loadFitness = useFitnessStore((s) => s.load);
   const loadTasks = useTaskStore((s) => s.load);
   const loadGoals = useGoalsStore((s) => s.load);
+  const loadSavingsGoals = useSavingsGoalsStore((s) => s.load);
+  // v1.2 follow-up — BUG-5. Run once after savings + settings have loaded
+  // to migrate the legacy `useSettingsStore.savingsBufferAmount` into the
+  // new pinned Emergency Buffer goal. Idempotent — short-circuits if the
+  // buffer goal already exists.
+  const ensureBufferGoal = useSavingsGoalsStore((s) => s.ensureBufferGoal);
+  const loadHabits = useHabitsStore((s) => s.load);
   const loadSettings = useSettingsStore((s) => s.load);
   const refreshPending = useSyncStore((s) => s.refreshPending);
   const refreshTemplates = useTemplatesStore((s) => s.refresh);
   const refreshPortfolio = useFinanceStore((s) => s.refreshPortfolio);
   const holdingsCount = useFinanceStore((s) => s.holdings.length);
   const watchlistCount = useFinanceStore((s) => s.watchlist.length);
+  const recomputeInsights = useInsightsStore((s) => s.recomputeAll);
+  // v1.2 — Fundamental sweep runs on a weekly cadence; we kick it from the
+  // same cold-start path the technical sweep uses. The store's own tier
+  // guard short-circuits when the weekly window hasn't elapsed.
+  const recomputeFundamentals = useInsightsStore((s) => s.recomputeFundamentalsAll);
+  // v1.2 follow-up — BUG-9. Hydrate persisted Insights ratings from disk
+  // BEFORE the cold-start refresh effect kicks the recompute pipelines.
+  // Without this, the tier-sweep guard correctly short-circuits "still
+  // fresh, skip" but the in-memory ratings map is empty → blank pills
+  // until the daily/weekly window opens or the user manually refreshes.
+  const hydrateInsights = useInsightsStore((s) => s.hydrate);
   const bumpActivity = useAuthStore((s) => s.bumpActivity);
   const lock = useAuthStore((s) => s.lock);
   const autoLockMin = useAuthStore((s) => s.autoLockMinutes);
@@ -61,8 +83,30 @@ export default function AppShell() {
         loadFitness(),
         loadTasks(),
         loadGoals(),
+        // v1.2 — pre-load savings goals so the Finance overview entry chip
+        // can show counts (or future "you have N goals on track" widget)
+        // without waiting for the user to visit the Savings screen.
+        loadSavingsGoals(),
+        // v1.2 — pre-load habits so the Dashboard's completion-rings strip
+        // renders synchronously on first paint. load() also re-arms all
+        // active habits' reminders on cold start.
+        loadHabits(),
+        // v1.2 follow-up — BUG-9. Hydrate persisted Insights ratings before
+        // the cold-start refresh effect runs. By the time the second
+        // useEffect (gated on holdingsCount becoming non-zero from
+        // loadFinance) fires, the maps will already carry the last
+        // successful per-ticker scores so RatingPill renders immediately
+        // even when the sweep guard short-circuits as "still fresh".
+        hydrateInsights(),
         refreshPending(),
       ]);
+      // v1.2 follow-up — BUG-5. Migrate the legacy savingsBufferAmount into
+      // the unified Emergency Buffer goal. Reads the setting after settings +
+      // savings goals both loaded. Idempotent across cold starts — the
+      // store's ensureBufferGoal() short-circuits when a buffer already
+      // exists, so we only ever migrate the legacy value once.
+      const { savingsBufferAmount, baseCurrency } = useSettingsStore.getState();
+      void ensureBufferGoal({ migrateAmount: savingsBufferAmount, currency: baseCurrency });
       void refreshTemplates();
       // App-start budget check — surfaces any threshold that crossed while
       // the app was closed (e.g. user added a transaction on another device,
@@ -107,8 +151,17 @@ export default function AppShell() {
     if (didColdStartRefreshRef.current) return;
     if (holdingsCount === 0 && watchlistCount === 0) return;
     didColdStartRefreshRef.current = true;
-    void refreshPortfolio({ force: false });
-  }, [holdingsCount, watchlistCount, refreshPortfolio]);
+    void refreshPortfolio({ force: false }).then(() => {
+      // v1.2 — kick BOTH Insights tiers after the portfolio refresh. The
+      // technical pass is gated daily by lib/insightsCache.ts; the
+      // fundamental pass is gated weekly. Inputs are read from Dexie caches
+      // (24h technicals, 7d fundamentals) so neither hits the network on a
+      // warm-cache cold start. Both run sequentially per ticker and
+      // fire-and-forget so navigation isn't blocked.
+      void recomputeInsights();
+      void recomputeFundamentals();
+    });
+  }, [holdingsCount, watchlistCount, refreshPortfolio, recomputeInsights, recomputeFundamentals]);
 
   // ─── Portfolio auto-refresh on resume after long background ──────────
   //
@@ -131,7 +184,15 @@ export default function AppShell() {
           lastBackgroundedAt > 0 &&
           Date.now() - lastBackgroundedAt > RESUME_REFRESH_THRESHOLD_MS
         ) {
-          void refreshPortfolio({ force: false });
+          void refreshPortfolio({ force: false }).then(() => {
+            // v1.2 — re-tick Insights on the same long-resume path. The
+            // technical-tier guard means this only actually iterates once
+            // per calendar day; the fundamental-tier guard once per week.
+            // Both calls are still cheap on subsequent resumes because the
+            // sweep timestamps short-circuit before any signal math runs.
+            void recomputeInsights();
+            void recomputeFundamentals();
+          });
         }
         // Reset so we don't re-fire on a subsequent quick resume.
         lastBackgroundedAt = 0;
@@ -145,7 +206,7 @@ export default function AppShell() {
       // safe even if the component is unmounted in between.
       subPromise.then((s) => s.remove()).catch(() => {});
     };
-  }, [refreshPortfolio]);
+  }, [refreshPortfolio, recomputeInsights, recomputeFundamentals]);
 
   // Auto-lock timer
   useEffect(() => {
@@ -180,9 +241,21 @@ export default function AppShell() {
       <OfflineBanner />
       {/* pb-32 (128px) gives clear space below the last card so it isn't clipped
         * by the fixed BottomTabBar (which is ~80px + its own safe-bottom inset). */}
-      <main className="flex-1 overflow-y-auto pb-32 safe-top">
+      {/* v1.2 follow-up — pb-32 → pb-44. The floating glass tab bar sits
+          ~80px above the safe-area inset; pb-32 (128px) left only ~16px of
+          clearance, so the last row of any screen got clipped or hidden
+          behind the bar. pb-44 (176px) gives generous breathing room so
+          the last item, FAB sheets, and bottom-pinned controls sit clear. */}
+      <main className="flex-1 overflow-y-auto pb-44 safe-top">
         <div className="max-w-md mx-auto w-full px-4 pt-3">
-          <Outlet />
+          {/* v1.2 — PageTransition keyed on route's first segment cross-fades
+              + lifts page content on inter-section navigation. Deep nav
+              within a section (Finance overview → Add Transaction) doesn't
+              re-trigger; only Finance → Studies-style jumps animate. Keeps
+              motion meaningful per the v1.2 design brief. */}
+          <PageTransition>
+            <Outlet />
+          </PageTransition>
         </div>
       </main>
       {showFAB && <QuickLogFAB onClick={() => setQuickLogOpen(true)} />}

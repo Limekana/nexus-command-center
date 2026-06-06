@@ -38,7 +38,10 @@ export type NotificationCategory =
   | 'tasks'
   | 'budgets'
   | 'portfolio-eod'
-  | 'news';
+  | 'news'
+  | 'library'
+  | 'insights'
+  | 'habits';
 
 export interface NotificationResult {
   ok: boolean;
@@ -90,6 +93,35 @@ const CHANNEL_SPECS: Record<NotificationCategory, ChannelSpec> = {
     description: 'Stories about tickers you own plus major market moves',
     importance: 2,
   },
+  // v1.2 — return-to-library reminders. Importance DEFAULT so it surfaces in
+  // the tray but doesn't peek/heads-up — the user borrowed it last week, this
+  // is a soft reminder not an urgent ping. v1.2.2 description copy corrected
+  // ("lent-out" → "borrowed") to match the inverted shelf semantic.
+  library: {
+    id: 'library',
+    name: 'Library Reminders',
+    description: 'Soft reminders when a borrowed book is due back at the library',
+    importance: 3,
+  },
+  // v1.2 — Insights tier-change alerts. DEFAULT importance so the user notices
+  // when a holding flips from Buy → Sell territory. 48h-per-ticker cooldown
+  // prevents alert fatigue on volatile names.
+  insights: {
+    id: 'insights',
+    name: 'Insights Tier Changes',
+    description: 'Notifies when a holding crosses a Buy/Sell threshold',
+    importance: 3,
+  },
+  // v1.2 — daily habit reminders. DEFAULT importance — surfaces in the tray
+  // but doesn't peek, because we may schedule many of these per day and
+  // peeking would be obnoxious. The user explicitly opts in per-habit by
+  // setting a reminderTime; the absence of one means no notification.
+  habits: {
+    id: 'habits',
+    name: 'Habit Reminders',
+    description: 'Daily reminders for habits with a set time',
+    importance: 3,
+  },
 };
 
 // ID range bases — see "ID allocation map" comment above.
@@ -99,6 +131,12 @@ export const ID_RANGES: Record<NotificationCategory, { base: number; size: numbe
   budgets: { base: 3000, size: 100 },
   'portfolio-eod': { base: 4000, size: 100 },
   news: { base: 5000, size: 1000 },
+  // v1.2 — one ID per lent book. UUID-derived (see libraryReminders.ts).
+  library: { base: 6000, size: 1000 },
+  // v1.2 — one ID per ticker. Hash-derived (see ratingHistory.ts).
+  insights: { base: 7000, size: 1000 },
+  // v1.2 — one ID per habit. Hash-derived (see habitReminders.ts).
+  habits: { base: 8000, size: 1000 },
 };
 
 // ─── Platform / availability ────────────────────────────────────────────

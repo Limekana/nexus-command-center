@@ -4,31 +4,35 @@
 // refresh because they drive standalone cards on the Portfolio screen.
 //
 // All cache TTLs are conservative since these data sources don't tick in
-// real time:
-//   /stock/metric          — 24h (P/E etc. moves slowly)
-//   /stock/recommendation  — 24h (monthly trend data)
-//   /company-news          — 6h (newsroom rhythm)
-//   /calendar/earnings     — 12h (events scheduled days/weeks ahead)
-//   /stock/dividend        — 7d (events scheduled months ahead)
+// real time. v1.2 — re-tiered against `lib/insightsCache.ts` for the
+// Insights three-tier architecture:
+//   /stock/metric          — 7d  (Fundamental tier — quarterly cadence)
+//   /stock/recommendation  — 7d  (Fundamental tier — monthly trend data)
+//   /stock/earnings        — 7d  (Fundamental tier — quarterly actuals)
+//   /company-news          — 6h  (Technical/sentiment tier — newsroom rhythm)
+//   /calendar/earnings     — 12h (Upcoming events — not Insights input)
+//   /stock/dividend        — 7d  (events scheduled months ahead)
 //
 // Free-tier behavior for non-US tickers: most of these return empty arrays
 // or empty objects. We treat that as "no data" and surface a friendly
 // fallback in the UI rather than an error.
 
-import axios from 'axios';
 import { db } from '../db/database';
 import { getApiKey } from './keys';
 import { shouldFetch, recordCall } from './cache';
 import { lastProviderErrors, isInternationalTicker, readChartMeta } from './yahoo';
+import { finnhubGet } from './finnhub';
 import { buildRelevanceCheck, isNewsRelevant } from '../lib/newsRelevance';
 import {
   getYahooMetric,
   getYahooEarnings,
   getYahooDividendApproximation,
   getYahooNews,
+  getYahooRecommendations,
+  getYahooEarningsHistory,
 } from './yahooFundamentals';
 
-const BASE_URL = 'https://finnhub.io/api/v1';
+// v1.2.1 — BASE_URL no longer needed; finnhubGet owns URL + native/web routing.
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -44,6 +48,13 @@ export interface StockMetric {
   dividendYield?: number;    // 'dividendYieldIndicatedAnnual' — percent
   epsAnnual?: number;        // 'epsBasicExclExtraItemsAnnual'
   roe?: number;              // 'roeRfy' — percent
+  // v1.2 — additional fields surfaced for the Fundamental signal engine.
+  // All optional because Finnhub's free tier returns 'NA' / missing for
+  // some symbols; the engine treats undefined as "skip this signal".
+  psRatio?: number;          // metric: 'psAnnual' — price-to-sales
+  pegRatio?: number;         // metric: 'pegRatio' / 'pegRatioBasicExclExtraTTM'
+  debtToEquity?: number;     // metric: 'totalDebt/totalEquityAnnual'
+  revenueGrowthYoy?: number; // metric: 'revenueGrowthTTMYoy' — percent
 }
 
 export interface Recommendation {
@@ -111,7 +122,8 @@ async function writeCache(key: string, data: unknown, ttlMs: number): Promise<vo
 
 // ── /stock/metric ─────────────────────────────────────────────────────────
 
-const METRIC_TTL_MS = 24 * 60 * 60 * 1000;
+// v1.2 — promoted to weekly under the Fundamental tier.
+const METRIC_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 export async function getStockMetric(ticker: string): Promise<StockMetric | null> {
   const key = `metric_${ticker.toUpperCase()}`;
@@ -126,12 +138,14 @@ export async function getStockMetric(ticker: string): Promise<StockMetric | null
   if (!gate.allow) return getYahooMetric(ticker);
   try {
     recordCall('finnhub-metric', 'finnhub', ticker);
-    const { data } = await axios.get(`${BASE_URL}/stock/metric`, {
-      params: { symbol: ticker.toUpperCase(), metric: 'all' },
-      headers: { 'X-Finnhub-Token': apiKey },
-      timeout: 10000,
-    });
-    const m = data?.metric ?? {};
+    // v1.2.1 — finnhubGet for native CapacitorHttp routing.
+    const data = await finnhubGet<{ metric?: Record<string, unknown> }>(
+      '/stock/metric',
+      { symbol: ticker.toUpperCase(), metric: 'all' },
+      apiKey,
+      { timeout: 10000 },
+    );
+    const m = (data?.metric ?? {}) as Record<string, unknown>;
     // Finnhub returns 'NA' as the string for missing fields on some plans.
     const num = (v: unknown): number | undefined =>
       typeof v === 'number' && isFinite(v) ? v : undefined;
@@ -146,10 +160,24 @@ export async function getStockMetric(ticker: string): Promise<StockMetric | null
       dividendYield: num(m.dividendYieldIndicatedAnnual),
       epsAnnual: num(m.epsBasicExclExtraItemsAnnual),
       roe: num(m.roeRfy),
+      // v1.2 — Fundamental signal inputs. Finnhub's metric blob carries
+      // these on most US tickers; we ride the existing 24h cache (will
+      // get re-tiered to weekly by the cache architecture pass).
+      psRatio: num(m.psAnnual),
+      // PEG: Finnhub publishes both `pegRatioBasicExclExtraTTM` and the
+      // legacy `pegRatio`. Prefer the explicit TTM, fall back to legacy.
+      pegRatio: num(m['pegRatioBasicExclExtraTTM']) ?? num(m.pegRatio),
+      debtToEquity: num(m['totalDebt/totalEquityAnnual']),
+      revenueGrowthYoy: num(m.revenueGrowthTTMYoy),
     };
     // Free-tier Finnhub returns an empty `metric` object for some symbols;
-    // detect that and fall through to Yahoo.
-    if (Object.values(result).every((v, i) => i === 0 || v == null)) {
+    // detect that and fall through to Yahoo. v1.2 — guard now ignores
+    // `ticker` by name instead of by iteration index, so the detection
+    // doesn't silently break when more fields are added to StockMetric.
+    const numericValues = Object.entries(result)
+      .filter(([k]) => k !== 'ticker')
+      .map(([, v]) => v);
+    if (numericValues.every((v) => v == null)) {
       return getYahooMetric(ticker);
     }
     await writeCache(key, result, METRIC_TTL_MS);
@@ -162,32 +190,44 @@ export async function getStockMetric(ticker: string): Promise<StockMetric | null
 
 // ── /stock/recommendation ─────────────────────────────────────────────────
 
-const REC_TTL_MS = 24 * 60 * 60 * 1000;
+// v1.2 — promoted to weekly under the Fundamental tier.
+const REC_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 export async function getRecommendations(ticker: string): Promise<Recommendation[]> {
   const key = `rec_${ticker.toUpperCase()}`;
   const cached = await readCacheWithTTL<Recommendation[]>(key, REC_TTL_MS);
   if (cached) return cached;
-  if (isInternationalTicker(ticker)) return [];
+  // v1.2 follow-up — BUG-8. International tickers fall through to Yahoo's
+  // recommendationTrend module (Finnhub free tier is US-only). Previously
+  // this just returned [], permanently disabling the analystConsensus signal
+  // for 12 of 16 holdings in the user's portfolio.
+  if (isInternationalTicker(ticker)) return getYahooRecommendations(ticker);
   const apiKey = await getApiKey('finnhub');
-  if (!apiKey) return [];
+  if (!apiKey) return getYahooRecommendations(ticker);
   const gate = shouldFetch('finnhub-rec', 'finnhub', { force: false, maxPerMinute: 60, subKey: ticker });
-  if (!gate.allow) return [];
+  if (!gate.allow) return getYahooRecommendations(ticker);
   try {
     recordCall('finnhub-rec', 'finnhub', ticker);
-    const { data } = await axios.get<Recommendation[]>(`${BASE_URL}/stock/recommendation`, {
-      params: { symbol: ticker.toUpperCase() },
-      headers: { 'X-Finnhub-Token': apiKey },
-      timeout: 10000,
-    });
+    // v1.2.1 — finnhubGet for native CapacitorHttp routing.
+    const data = await finnhubGet<Recommendation[]>(
+      '/stock/recommendation',
+      { symbol: ticker.toUpperCase() },
+      apiKey,
+      { timeout: 10000 },
+    );
     const arr = Array.isArray(data) ? data : [];
     // Newest first (Finnhub returns reverse-chronological already, but be safe).
     arr.sort((a, b) => b.period.localeCompare(a.period));
+    // BUG-8 — if Finnhub returns empty (free-tier coverage gap on a
+    // technically-US-listed ADR or low-coverage stock), fall through to
+    // Yahoo just like the metric path does. Cache only on success so a
+    // transient miss doesn't lock us out for a week.
+    if (arr.length === 0) return getYahooRecommendations(ticker);
     await writeCache(key, arr, REC_TTL_MS);
     return arr;
   } catch (e) {
     lastProviderErrors.push({ provider: 'finnhub', ticker, message: `rec: ${(e as Error).message}` });
-    return [];
+    return getYahooRecommendations(ticker);
   }
 }
 
@@ -213,15 +253,17 @@ export async function getCompanyNews(ticker: string): Promise<NewsItem[]> {
   const fmt = (d: Date) => d.toISOString().slice(0, 10);
   try {
     recordCall('finnhub-news', 'finnhub', ticker);
-    const { data } = await axios.get<NewsItem[]>(`${BASE_URL}/company-news`, {
-      params: {
+    // v1.2.1 — finnhubGet for native CapacitorHttp routing.
+    const data = await finnhubGet<NewsItem[]>(
+      '/company-news',
+      {
         symbol: ticker.toUpperCase(),
         from: fmt(from),
         to: fmt(to),
       },
-      headers: { 'X-Finnhub-Token': apiKey },
-      timeout: 10000,
-    });
+      apiKey,
+      { timeout: 10000 },
+    );
     const arr = Array.isArray(data) ? data : [];
     // BUG-3 defense in depth: Finnhub's /company-news is usually reliable, but
     // edge cases have surfaced unrelated stories (the reported Trump/sanctuary-
@@ -304,11 +346,13 @@ export async function getEarningsCalendar(tickers: string[]): Promise<EarningsEv
       }
       try {
         recordCall('finnhub-earnings', 'finnhub', ticker);
-        const { data } = await axios.get<EarningsCalendarResponse>(`${BASE_URL}/calendar/earnings`, {
-          params: { from: fmt(from), to: fmt(to), symbol: ticker.toUpperCase() },
-          headers: { 'X-Finnhub-Token': apiKey },
-          timeout: 10000,
-        });
+        // v1.2.1 — finnhubGet for native CapacitorHttp routing.
+        const data = await finnhubGet<EarningsCalendarResponse>(
+          '/calendar/earnings',
+          { from: fmt(from), to: fmt(to), symbol: ticker.toUpperCase() },
+          apiKey,
+          { timeout: 10000 },
+        );
         const events = data?.earningsCalendar ?? [];
         if (events.length === 0) {
           // Free-tier Finnhub silently drops symbols outside its coverage.
@@ -342,6 +386,73 @@ export async function getEarningsCalendar(tickers: string[]): Promise<EarningsEv
   allEvents.sort((a, b) => a.date.localeCompare(b.date));
   await writeCache(cacheKey, allEvents, EARNINGS_TTL_MS);
   return allEvents;
+}
+
+// ── /stock/earnings (historical actuals + estimates, ~4 quarters back) ──
+//
+// v1.2 Fundamental signal — surprise history needs >=2 quarters of past
+// actuals vs estimates. /calendar/earnings only returns the -7d/+60d
+// window so it's insufficient. /stock/earnings carries the last few
+// quarters with `actual`, `estimate`, `surprise`, `surprisePercent`.
+// Cached 24h (will rise to weekly under the three-tier pass).
+
+interface FinnhubEarningsSurprise {
+  symbol: string;
+  period: string;     // YYYY-MM-DD (quarter end)
+  actual?: number;
+  estimate?: number;
+  surprise?: number;
+  surprisePercent?: number;
+  quarter?: number;
+  year?: number;
+}
+
+// v1.2 — Fundamental tier. Earnings actuals only land once per quarter so
+// a weekly TTL is comfortably fresh.
+const EARNINGS_HIST_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+export async function getEarningsHistory(ticker: string): Promise<EarningsEvent[]> {
+  const key = `earnings_hist_${ticker.toUpperCase()}`;
+  const cached = await readCacheWithTTL<EarningsEvent[]>(key, EARNINGS_HIST_TTL_MS);
+  if (cached) return cached;
+  // v1.2 follow-up — BUG-8. International tickers fall through to Yahoo's
+  // earningsHistory module (Finnhub free tier is US-only). Previously this
+  // returned [], permanently disabling the earningsSurprise signal for
+  // non-US holdings.
+  if (isInternationalTicker(ticker)) return getYahooEarningsHistory(ticker);
+  const apiKey = await getApiKey('finnhub');
+  if (!apiKey) return getYahooEarningsHistory(ticker);
+  const gate = shouldFetch('finnhub-earnings-hist', 'finnhub', { force: false, maxPerMinute: 60, subKey: ticker });
+  if (!gate.allow) return getYahooEarningsHistory(ticker);
+  try {
+    recordCall('finnhub-earnings-hist', 'finnhub', ticker);
+    const data = await finnhubGet<FinnhubEarningsSurprise[]>(
+      '/stock/earnings',
+      { symbol: ticker.toUpperCase() },
+      apiKey,
+      { timeout: 10000 },
+    );
+    const arr = Array.isArray(data) ? data : [];
+    // Newest-first; cap at 8 quarters so the cache row stays small.
+    arr.sort((a, b) => b.period.localeCompare(a.period));
+    const mapped: EarningsEvent[] = arr.slice(0, 8).map((e) => ({
+      symbol: e.symbol,
+      date: e.period,
+      epsActual: e.actual,
+      epsEstimate: e.estimate,
+      quarter: e.quarter,
+      year: e.year,
+    }));
+    // BUG-8 — same fall-through-on-empty as getRecommendations. Free-tier
+    // Finnhub silently drops coverage for many symbols; rather than emit a
+    // permanent "earnings unavailable" we let Yahoo try.
+    if (mapped.length === 0) return getYahooEarningsHistory(ticker);
+    await writeCache(key, mapped, EARNINGS_HIST_TTL_MS);
+    return mapped;
+  } catch (e) {
+    lastProviderErrors.push({ provider: 'finnhub', ticker, message: `earnings hist: ${(e as Error).message}` });
+    return getYahooEarningsHistory(ticker);
+  }
 }
 
 // ── /stock/dividend ──────────────────────────────────────────────────────
@@ -379,15 +490,17 @@ export async function getDividends(ticker: string): Promise<DividendEvent[]> {
   const fmt = (d: Date) => d.toISOString().slice(0, 10);
   try {
     recordCall('finnhub-div', 'finnhub', ticker);
-    const { data } = await axios.get<FinnhubDividend[]>(`${BASE_URL}/stock/dividend`, {
-      params: {
+    // v1.2.1 — finnhubGet for native CapacitorHttp routing.
+    const data = await finnhubGet<FinnhubDividend[]>(
+      '/stock/dividend',
+      {
         symbol: ticker.toUpperCase(),
         from: fmt(from),
         to: fmt(to),
       },
-      headers: { 'X-Finnhub-Token': apiKey },
-      timeout: 10000,
-    });
+      apiKey,
+      { timeout: 10000 },
+    );
     const arr = Array.isArray(data) ? data : [];
     const events: DividendEvent[] = arr.map((d) => ({
       symbol: d.symbol,

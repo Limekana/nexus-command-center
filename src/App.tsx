@@ -10,7 +10,7 @@ import { seedIfEmpty } from './db/seed';
 import { clearAllLocalData } from './db/database';
 import { supabase } from './lib/supabase';
 import { startRealtime, stopRealtime } from './lib/realtime';
-import { hydrateStudiesFromCloud } from './lib/cloudSync';
+import { hydrateStudiesFromCloud, hydrateHabitsFromCloud } from './lib/cloudSync';
 import { useStudiesStore } from './store/useStudiesStore';
 import { isGuestMode } from './lib/guestMode';
 import AdoptionPrompt from './components/AdoptionPrompt';
@@ -27,9 +27,12 @@ import ManageBudgets from './screens/finance/ManageBudgets';
 import ManageHoldings from './screens/finance/ManageHoldings';
 import ManageLots from './screens/finance/ManageLots';
 import NetWorth from './screens/finance/NetWorth';
+import AccountDetail from './screens/finance/AccountDetail';
 import WhatIf from './screens/finance/WhatIf';
 import Watchlist from './screens/finance/Watchlist';
 import News from './screens/finance/News';
+import Insights from './screens/finance/Insights';
+import SavingsGoals from './screens/finance/SavingsGoals';
 import StudiesOverview from './screens/studies/StudiesOverview';
 import StudySessions from './screens/studies/StudySessions';
 import Library from './screens/studies/Library';
@@ -38,14 +41,19 @@ import FitnessOverview from './screens/fitness/FitnessOverview';
 import LogWorkout from './screens/fitness/LogWorkout';
 import TasksOverview from './screens/tasks/TasksOverview';
 import AddTask from './screens/tasks/AddTask';
+import HabitsOverview from './screens/habits/HabitsOverview';
+import AddHabit from './screens/habits/AddHabit';
+import Life from './screens/Life';
 import WeeklyReview from './screens/WeeklyReview';
 import YearReview from './screens/YearReview';
 import Goals from './screens/Goals';
 import Settings from './screens/Settings';
 import { onNotificationTap, scheduleWeeklyReview } from './lib/weeklyNotification';
 import { onNotificationAction } from './lib/notifications';
+import { installRatingHistory } from './lib/ratingHistory';
 import { useTaskStore } from './store/useTaskStore';
 import { useSettingsStore } from './store/useSettingsStore';
+import { useHabitsStore } from './store/useHabitsStore';
 
 export default function App() {
   const unlocked = useAuthStore((s) => s.unlocked);
@@ -84,6 +92,11 @@ export default function App() {
       await seedIfEmpty();
       await initAuth();
       initSync();
+      // v1.2 — install the Insights rating-history observer. Runs once;
+      // subsequent installs replace the same singleton observer. Must be
+      // installed BEFORE any recomputeAll call so the very first batch
+      // populates the history table + fires tier-change pushes correctly.
+      installRatingHistory();
     })();
   }, []);
 
@@ -135,6 +148,22 @@ export default function App() {
         await useStudiesStore.getState().load();
       } catch (e) {
         console.warn('[app-init] studies hydration threw:', e);
+      }
+      // v1.2 — habits hydration runs as a sibling of studies. Same shape:
+      // pull all rows for the user into Dexie, refresh the store, then let
+      // the realtime channel handle subsequent deltas. Fire-and-forget; a
+      // failure here doesn't block the rest of app-init.
+      try {
+        const habitsResult = await hydrateHabitsFromCloud(userId);
+        console.log(
+          `[app-init] habits hydrated: habits=${habitsResult.habits}, completions=${habitsResult.completions}, errors=${habitsResult.errors.length}`,
+        );
+        if (habitsResult.errors.length > 0) {
+          console.warn('[app-init] habits hydration errors:', habitsResult.errors);
+        }
+        await useHabitsStore.getState().load();
+      } catch (e) {
+        console.warn('[app-init] habits hydration threw:', e);
       }
       // Now open the realtime channel for future deltas.
       startRealtime();
@@ -227,7 +256,12 @@ export default function App() {
           <Route path="/finance/portfolio/lots/:id" element={<ManageLots />} />
           <Route path="/finance/portfolio/watchlist" element={<Watchlist />} />
           <Route path="/finance/news" element={<News />} />
+          <Route path="/finance/insights" element={<Insights />} />
+          <Route path="/finance/savings" element={<SavingsGoals />} />
           <Route path="/finance/networth" element={<NetWorth />} />
+          {/* v1.2 follow-up — CTO Account refactor. Per-account statement
+              view: derived running balance + transaction history. */}
+          <Route path="/finance/account/:id" element={<AccountDetail />} />
           <Route path="/finance/whatif" element={<WhatIf />} />
           <Route path="/finance/budgets" element={<ManageBudgets />} />
           <Route path="/studies" element={<StudiesOverview />} />
@@ -238,6 +272,9 @@ export default function App() {
           <Route path="/fitness/log" element={<LogWorkout />} />
           <Route path="/tasks" element={<TasksOverview />} />
           <Route path="/tasks/add" element={<AddTask />} />
+          <Route path="/habits" element={<HabitsOverview />} />
+          <Route path="/habits/add" element={<AddHabit />} />
+          <Route path="/life" element={<Life />} />
           <Route path="/review" element={<WeeklyReview />} />
           <Route path="/review/year" element={<YearReview />} />
           <Route path="/goals" element={<Goals />} />

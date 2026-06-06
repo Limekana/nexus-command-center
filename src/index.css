@@ -19,6 +19,38 @@
     user-select: none;
   }
 
+  /* v1.2 ambient mesh — fixed-position pseudo behind everything. Three
+     radial gradients give the suite a deep-space "cockpit window" feel:
+     a cyan dome top-right, a teal undertow bottom-left, and a small cyan
+     hot-spot mid-right to keep the center alive. All under 12% alpha so
+     it reads as ambient light, not pattern. Sits at z-index 0; the root
+     #root creates its own stacking context at z-index 1 so every screen
+     paints over the mesh without needing to opt in.
+
+     S24 / Snapdragon 8 Gen 3: three radial gradients on a fixed pseudo are
+     essentially free — they're rasterized once and reused on scroll. The
+     backdrop-filter calls in glass panes do the heavy GPU lifting. */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(60% 50% at 100% 0%,  rgba(0, 212, 255, 0.10), transparent 65%),
+      radial-gradient(80% 60% at 0% 100%,  rgba(0, 92, 130, 0.14),  transparent 70%),
+      radial-gradient(40% 30% at 70% 80%,  rgba(0, 212, 255, 0.06), transparent 70%);
+  }
+
+  /* #root MUST establish its own stacking context above the body::before
+     mesh — otherwise the first positioned descendant decides paint order
+     and the mesh ends up over content. Also keeps fixed children (modals,
+     bottom nav) painting over the mesh as expected. */
+  #root {
+    position: relative;
+    z-index: 1;
+  }
+
   /* Form controls keep normal selection so the user can highlight/copy text. */
   input, textarea, [contenteditable="true"] {
     -webkit-user-select: text;
@@ -60,6 +92,7 @@
 }
 
 @layer components {
+  /* ─── v1.0 base components (preserved verbatim) ─────────────────────── */
   .card {
     @apply bg-surface border border-border rounded-md p-3;
   }
@@ -102,18 +135,127 @@
   .alert {
     @apply flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-xs;
   }
-  .alert-warn {
-    @apply border-warning/40 bg-warning/5 text-warning;
+  .alert-warn   { @apply border-warning/40 bg-warning/5 text-warning; }
+  .alert-ok     { @apply border-success/40 bg-success/5 text-success; }
+  .alert-danger { @apply border-danger/40 bg-danger/5 text-danger; }
+
+  /* ─── v1.2 Glass surface system ─────────────────────────────────────── */
+  /*
+   * Three tiers, each layering blur + translucent fill + hairline border +
+   * inset-top white highlight (the "lit edge" of glass) + outer drop shadow.
+   *
+   * Use as a class on the outermost element of a surface. Pair with rounded-*
+   * to control the radius — most v1.2 surfaces use rounded-xl (20px) for
+   * panels, rounded-pill for chips, rounded-t-2xl for sheets.
+   *
+   * Coverage note: backdrop-filter works in Capacitor Android's WebView on
+   * Chromium >=76 (all Capacitor 7 targets). Older Android falls back to a
+   * flat translucent fill — readable but loses the depth. We don't care
+   * because Cap 7 minSdk is 23 and Chromium 76+ is universal at that level.
+   */
+  .glass {
+    background: theme('colors.glass.DEFAULT');
+    @apply backdrop-blur-glass border border-glass-border shadow-glass;
   }
-  .alert-ok {
-    @apply border-success/40 bg-success/5 text-success;
+  .glass-strong {
+    background: theme('colors.glass.strong');
+    @apply backdrop-blur-sheet border border-glass-border-strong shadow-glass-lg;
   }
-  .alert-danger {
-    @apply border-danger/40 bg-danger/5 text-danger;
+  .glass-soft {
+    background: theme('colors.glass.soft');
+    @apply backdrop-blur-nav border border-glass-border;
+  }
+  /* Accent-lit variant — for selected/active/signal-hot glass elements.
+     Replaces the white inset highlight with cyan, and the outer drop with
+     a cyan halo. Read as "this glass is energized." */
+  .glass-glow {
+    background: theme('colors.glass.DEFAULT');
+    @apply backdrop-blur-glass shadow-glass-glow;
+    border: 1px solid transparent;
+  }
+
+  /* ─── v1.2 Pill chips ───────────────────────────────────────────────── */
+  /*
+   * .pill is a touch-friendly chip primitive — used for filter chips,
+   * sort selectors, segmented controls, and signal/rating displays in
+   * Insights. Always rounded-pill, always glass-bg, always >= 32px high so
+   * thumb taps land. The active state uses cyan accent matching .chip-on
+   * but keeps the glass blur so it stays in the v1.2 visual vocabulary.
+   *
+   * Variants:
+   *   .pill          base — text-muted, transparent-ish glass
+   *   .pill-on       active — cyan border + cyan tint background
+   *   .pill-strong   higher-contrast text (used outside cards over mesh)
+   *   .pill-danger / -success / -warning  — status colors for ratings/etc.
+   *   .pill-lg       larger touch target for primary segmented controls
+   */
+  .pill {
+    @apply inline-flex items-center gap-1.5 px-3 h-8 rounded-pill text-xs font-medium
+           border border-glass-border text-text-muted
+           transition-all duration-200 ease-spring-soft active:scale-[0.96];
+    background: theme('colors.glass.DEFAULT');
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  .pill-on {
+    @apply text-primary;
+    background: rgba(0, 212, 255, 0.12);
+    border-color: rgba(0, 212, 255, 0.55);
+    box-shadow: 0 0 0 1px rgba(0, 212, 255, 0.18), 0 0 18px -6px rgba(0, 212, 255, 0.35);
+  }
+  .pill-strong   { @apply text-text; }
+  .pill-lg       { @apply h-10 px-4 text-sm; }
+  .pill-danger {
+    @apply text-danger;
+    background: rgba(248, 81, 73, 0.12);
+    border-color: rgba(248, 81, 73, 0.45);
+  }
+  .pill-success {
+    @apply text-success;
+    background: rgba(63, 185, 80, 0.12);
+    border-color: rgba(63, 185, 80, 0.45);
+  }
+  .pill-warning {
+    @apply text-warning;
+    background: rgba(210, 153, 34, 0.12);
+    border-color: rgba(210, 153, 34, 0.45);
+  }
+
+  /* ─── v1.2 Motion utilities ─────────────────────────────────────────── */
+  /*
+   * Stagger reveal — for list entries on first paint. Add `.stagger-children`
+   * to a list container and every direct child fades + lifts in with a
+   * 50ms cascade. Capped at 8 explicit nth-child rules to keep the CSS
+   * compact; everything past child 8 lands together at 360ms. That trade is
+   * intentional — the user perceives the first 4–5 items as orchestrated,
+   * the rest as a coherent finale, and no list past 12 items needs more.
+   *
+   * Spec says lists also stagger on filter/sort changes. We don't re-trigger
+   * on those because reflow + animation per keystroke gets distracting. Mount
+   * only.
+   */
+  .stagger-children > * {
+    opacity: 0;
+    animation: fade-in-up 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .stagger-children > *:nth-child(1) { animation-delay: 30ms; }
+  .stagger-children > *:nth-child(2) { animation-delay: 80ms; }
+  .stagger-children > *:nth-child(3) { animation-delay: 130ms; }
+  .stagger-children > *:nth-child(4) { animation-delay: 180ms; }
+  .stagger-children > *:nth-child(5) { animation-delay: 230ms; }
+  .stagger-children > *:nth-child(6) { animation-delay: 280ms; }
+  .stagger-children > *:nth-child(7) { animation-delay: 320ms; }
+  .stagger-children > *:nth-child(n+8) { animation-delay: 360ms; }
+
+  /* Press-spring — slap on any button/tappable to get a 0.96 scale-down
+     with an overshoot bounce on release. Pairs better with glass surfaces
+     than the existing active:scale-[0.98] because the spring overshoot
+     reads as the surface itself flexing rather than a flat squish. */
+  .press-spring {
+    @apply transition-transform duration-200 ease-spring active:scale-[0.96];
   }
 
   /* Hide scrollbars in the phone shell while keeping scroll */
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 }
-

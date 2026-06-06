@@ -4,6 +4,8 @@ import AppHeader from '../components/AppHeader';
 import SyncStatusChip from '../components/SyncStatusChip';
 import StatCard from '../components/StatCard';
 import ModuleSummaryCard from '../components/ModuleSummaryCard';
+import HabitsDashboardStrip from '../components/HabitsDashboardStrip';
+import CrossDomainCard from '../components/CrossDomainCard';
 import ListRow from '../components/ListRow';
 import ProgressBar from '../components/ProgressBar';
 import { useFinanceStore } from '../store/useFinanceStore';
@@ -96,6 +98,15 @@ export default function Dashboard() {
       />
       <div className="space-y-3">
         <SyncStatusChip />
+
+        {/* v1.2 — daily habits surface above the stat grid. The strip itself
+            handles all empty/eligible/all-rest-day states; we render it
+            unconditionally so the layout doesn't shift based on data. */}
+        <HabitsDashboardStrip />
+
+        {/* v1.2 — Cross-domain life-patterns rotator. Surfaces beneath the
+            habits strip; handles its own baseline/quiet/insight states. */}
+        <CrossDomainCard />
 
         <div>
           <div className="sec mb-2">Overview</div>

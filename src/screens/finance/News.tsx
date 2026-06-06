@@ -76,24 +76,24 @@ export default function News() {
 
   return (
     <>
+      {/* v1.2 follow-up — BUG-4. News was the odd-one-out: back chip was
+          inline on the right inside the action slot (small bordered button)
+          while Insights / Savings / Portfolio all use AppHeader's
+          `back`/`backLabel` props which render a glass-soft pill on the
+          LEFT before the title. Aligned News to the shared pattern;
+          refresh button stays alone in the action slot. */}
       <AppHeader
         title="News"
+        back="/finance"
+        backLabel="Finance"
         action={
-          <>
-            <button
-              onClick={() => navigate('/finance')}
-              className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary"
-            >
-              ← Finance
-            </button>
-            <button
-              onClick={() => refreshPortfolio()}
-              disabled={refreshing}
-              className="text-xs px-2 py-1 rounded-sm border border-primary text-primary active:bg-primary/10 disabled:opacity-50"
-            >
-              {refreshing ? '…' : '↻'}
-            </button>
-          </>
+          <button
+            onClick={() => refreshPortfolio()}
+            disabled={refreshing}
+            className="text-xs px-2 py-1 rounded-sm border border-primary text-primary active:bg-primary/10 disabled:opacity-50"
+          >
+            {refreshing ? '…' : '↻'}
+          </button>
         }
       />
       <div className="space-y-3">

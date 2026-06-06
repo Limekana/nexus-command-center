@@ -12,6 +12,7 @@ export default function StudiesOverview() {
   const navigate = useNavigate();
   const currentImport = useStudiesStore((s) => s.currentImport);
   const courses = useStudiesStore((s) => s.courses);
+  const archivedCourses = useStudiesStore((s) => s.archivedCourses);
   const grades = useStudiesStore((s) => s.grades);
   const previousGpa = useStudiesStore((s) => s.previousGpa);
   const gradeMode = useStudiesStore((s) => s.gradeMode);
@@ -19,11 +20,30 @@ export default function StudiesOverview() {
   const addCourse = useStudiesStore((s) => s.addCourse);
   const updateCourse = useStudiesStore((s) => s.updateCourse);
   const deleteCourse = useStudiesStore((s) => s.deleteCourse);
+  const restoreCourse = useStudiesStore((s) => s.restoreCourse);
   const addGrade = useStudiesStore((s) => s.addGrade);
   const updateGrade = useStudiesStore((s) => s.updateGrade);
   const deleteGrade = useStudiesStore((s) => s.deleteGrade);
   const studySessions = useStudiesStore((s) => s.studySessions);
   const readings = useStudiesStore((s) => s.readings);
+
+  // v1.2 — Show archived toggle. Archived semesters disappear from the main
+  // course list + GPA. The toggle reveals a grouped read-mostly view below
+  // the active courses with a Restore action per row. Default closed.
+  const [showArchived, setShowArchived] = useState(false);
+
+  // Group archived courses by semester for the collapsible section. Courses
+  // without a semester land under "Other archived".
+  const archivedBySemester = useMemo(() => {
+    const groups: Record<string, Course[]> = {};
+    for (const c of archivedCourses) {
+      const key = c.semester ?? 'Other archived';
+      (groups[key] ??= []).push(c);
+    }
+    return Object.entries(groups)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([sem, list]) => ({ semester: sem, courses: list }));
+  }, [archivedCourses]);
 
   // Per-subject grade index — single computation reused for the GPA badge,
   // the per-course display value, and the inline grade list.
@@ -468,6 +488,88 @@ export default function StudiesOverview() {
             </div>
           )}
         </div>
+
+        {/* v1.2 — Archived semesters section. StudyDesk owns the archived_at
+            column on subjects; archived courses come in via realtime sync and
+            land in archivedCourses (separate slice from courses). Toggle is
+            closed by default to keep the screen quiet for users who don't
+            archive. */}
+        {archivedCourses.length > 0 && (
+          <div className="glass rounded-xl p-3">
+            <button
+              type="button"
+              onClick={() => setShowArchived((v) => !v)}
+              className="w-full flex items-center justify-between press-spring"
+              aria-expanded={showArchived}
+            >
+              <span className="font-heading font-semibold text-sm flex items-center gap-2">
+                <span aria-hidden>📦</span> Archived semesters
+                <span className="text-[10px] text-text-muted">
+                  ({archivedCourses.length})
+                </span>
+              </span>
+              <span
+                aria-hidden
+                className={`text-text-muted text-xs transition-transform duration-200 ease-spring-soft ${
+                  showArchived ? 'rotate-180' : ''
+                }`}
+              >
+                ▼
+              </span>
+            </button>
+            {showArchived && (
+              <div className="space-y-3 mt-3 stagger-children">
+                {archivedBySemester.map((g) => (
+                  <div key={g.semester} className="space-y-1.5">
+                    <div className="sec">{g.semester}</div>
+                    {g.courses.map((c) => {
+                      const subjectGrades = gradesBySubject.get(c.id) ?? [];
+                      const score = subjectScore(subjectGrades);
+                      const dotStyle = c.color ? { backgroundColor: c.color } : undefined;
+                      return (
+                        <div
+                          key={c.id}
+                          className="flex items-center gap-2 py-1.5 opacity-75"
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${c.color ? '' : 'bg-text-muted/60'}`}
+                            style={dotStyle}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm truncate text-text">{c.name}</div>
+                            {c.archivedAt && (
+                              <div className="text-[10px] text-text-muted">
+                                Archived {c.archivedAt.slice(0, 10)}
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-xs text-text-muted whitespace-nowrap">
+                            {score == null
+                              ? '—'
+                              : gradeMode === 'ib'
+                                ? `${score.toFixed(1)}/7`
+                                : `${gradeToLetter(score)}`}{' '}
+                            ({c.credits} cr)
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => restoreCourse(c.id)}
+                            className="pill pill-on press-spring"
+                          >
+                            Restore
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+                <div className="text-[10px] text-text-muted">
+                  Archived courses don't count toward GPA. Restore syncs back to StudyDesk.
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {(courses.length > 0 || studySessions.length > 0 || readings.length > 0) && (
           <div className="card">

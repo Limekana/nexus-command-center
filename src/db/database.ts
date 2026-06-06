@@ -1,9 +1,51 @@
 import Dexie, { Table } from 'dexie';
-import { Transaction, BudgetCategory, PortfolioHolding, PortfolioLot, ApiCacheEntry, PortfolioSnapshot, ManualAsset, WatchlistItem } from '../types/finance';
+import { Transaction, BudgetCategory, PortfolioHolding, PortfolioLot, ApiCacheEntry, PortfolioSnapshot, ManualAsset, WatchlistItem, SavingsGoal } from '../types/finance';
 import { Course, Grade, GradeImport, StudySession, Reading } from '../types/studies';
 import { WorkoutSession, WorkoutSet } from '../types/fitness';
 import { Task } from '../types/tasks';
 import { Goal } from '../types/goals';
+import { Habit, HabitCompletion } from '../types/habits';
+
+// v1.2 — Insights rating-history row. One per recompute per ticker. Used to
+// detect tier changes between consecutive recomputes (gating the push
+// notification) and to power any future "rating drift" chart.
+export interface RatingHistoryEntry {
+  /** Composite key: `${ticker}:${computedAt}` — keeps the table chronological
+   *  and prevents accidental dupes when two recomputes land in the same ms. */
+  id: string;
+  ticker: string;
+  /** ISO timestamp. */
+  computedAt: string;
+  score: number;
+  tier: string;
+  /** JSON-serialized breakdown for the rating-over-time chart in a future
+   *  release. We don't query into this column; storing as a string keeps
+   *  Dexie's index footprint tiny. */
+  breakdownJson: string;
+}
+
+// v1.2 follow-up — BUG-9. Latest composite Insights score per (ticker, kind).
+// Distinct from `ratingHistory` above — that's a chronological log used for
+// tier-change detection / notification cooldown. THIS table holds exactly
+// one row per (ticker, kind), upserted on every successful recompute, so the
+// in-memory ratings/fundamentals maps in `useInsightsStore` can re-hydrate
+// on cold start BEFORE the sweep-tier guards run. Without this hydration,
+// the daily/weekly sweep guards short-circuit (still within window), the
+// maps stay empty, and the UI shows blank pills until the user manually
+// hits Refresh — which was the BUG-9 symptom.
+export interface InsightScoreRow {
+  /** Synthesised `${kind}:${ticker}` so put() upserts cleanly. */
+  id: string;
+  ticker: string;
+  kind: 'technical' | 'fundamental';
+  score: number;
+  tier: string;
+  partial: boolean;
+  /** JSON-serialised CompositeBreakdown | FundamentalBreakdown — we don't
+   *  query into it, just rehydrate the full rating shape. */
+  breakdownJson: string;
+  computedAt: string;
+}
 
 export interface SyncQueueItem {
   id: string;
@@ -22,7 +64,9 @@ export interface SyncQueueItem {
     | 'portfolio_lot'
     | 'manual_asset'
     | 'watchlist_item'
-    | 'goal';
+    | 'goal'
+    | 'habit'
+    | 'habit_completion';
   entityId: string;
   operation: 'insert' | 'update' | 'delete';
   payload: string;
@@ -67,6 +111,32 @@ class NexusDB extends Dexie {
 
   // v3-Phase5 — goals (cross-module targets derived from existing data)
   goals!: Table<Goal, string>;
+
+  // v8 — Insights rating history (v1.2). One row per recompute per ticker
+  // that produced a usable result. Used for tier-change detection (compare
+  // latest vs previous tier per ticker) + the future "rating over time"
+  // chart. Local-only, no cloud sync.
+  ratingHistory!: Table<RatingHistoryEntry, string>;
+
+  // v9 — Savings Goals (v1.2). Named goals with a target amount that the
+  // user allocates toward from their cash+savings ManualAssets. Local-only
+  // for v1.2 (sync queue entry shape doesn't include 'savings_goal' yet —
+  // future v1.3 work).
+  savingsGoals!: Table<SavingsGoal, string>;
+
+  // v11 — Habit Tracker (v1.2). Habits live in Supabase + Dexie with full
+  // realtime sync (entity types 'habit' + 'habit_completion'). Completions
+  // are one-per-habit-per-date (UNIQUE constraint at the DB), keyed locally
+  // by their UUID id with a (habitId, date) compound index for the
+  // by-date toggle/lookup.
+  habits!: Table<Habit, string>;
+  habitCompletions!: Table<HabitCompletion, string>;
+
+  // v13 — BUG-9 Insights persistence. One row per (ticker, kind), upserted
+  // on every successful Insights recompute. Hydrated on cold start before
+  // the sweep-tier guards run, so the UI shows scores immediately even when
+  // the daily/weekly recompute window hasn't elapsed.
+  insightsScores!: Table<InsightScoreRow, string>;
 
   syncQueue!: Table<SyncQueueItem, string>;
 
@@ -241,6 +311,306 @@ class NexusDB extends Dexie {
       }
       if (synthesized.length) await gradesTable.bulkAdd(synthesized);
     });
+    // v9 — adds `savingsGoals` for v1.2 Savings Goals. Additive (no upgrade
+    // hook); existing tables untouched. Versions must be declared in
+    // ascending order, so this lives AFTER the v8 block below.
+    //
+    // (Declared first in source because the constructor reads top-down; the
+    // ACTUAL declaration happens after v8 with `.stores({...})` — see below.)
+
+    // v8 — adds `ratingHistory` for v1.2 Insights tier-change detection.
+    // Additive (no upgrade hook needed); existing tables untouched. Comes
+    // AFTER v7 because Dexie requires version declarations in ascending order.
+    this.version(8).stores({
+      transactions: 'id, date, type, syncStatus',
+      budgetCategories: 'id, name',
+      portfolioHoldings: 'id, ticker, assetType',
+      apiCache: 'cacheKey, expiresAt',
+      gradeImports: 'id, importedAt',
+      courses: 'id, importId, name',
+      workoutSessions: 'id, date, sessionType, syncStatus',
+      workoutSets: 'id, sessionId, exercise',
+      tasks: 'id, dueDate, completed, priority, syncStatus',
+      studySessions: 'id, startedAt, subjectId, syncStatus',
+      readings: 'id, status, subjectId, updatedAt',
+      portfolioSnapshots: 'date',
+      portfolioLots: 'id, holdingId, purchaseDate, syncStatus',
+      manualAssets: 'id, assetType, syncStatus',
+      watchlistItems: 'id, ticker, assetType, syncStatus',
+      goals: 'id, goalType, completed, targetDate, syncStatus',
+      grades: 'id, subjectId, date, syncStatus',
+      // [ticker+computedAt] compound index lets us efficiently fetch the
+      // most-recent entry per ticker without scanning the whole table.
+      ratingHistory: 'id, ticker, computedAt, [ticker+computedAt]',
+      syncQueue: 'id, entityType, syncedAt',
+    });
+    // v9 — adds `savingsGoals` for v1.2. Additive — no upgrade hook needed.
+    this.version(9).stores({
+      transactions: 'id, date, type, syncStatus',
+      budgetCategories: 'id, name',
+      portfolioHoldings: 'id, ticker, assetType',
+      apiCache: 'cacheKey, expiresAt',
+      gradeImports: 'id, importedAt',
+      courses: 'id, importId, name',
+      workoutSessions: 'id, date, sessionType, syncStatus',
+      workoutSets: 'id, sessionId, exercise',
+      tasks: 'id, dueDate, completed, priority, syncStatus',
+      studySessions: 'id, startedAt, subjectId, syncStatus',
+      readings: 'id, status, subjectId, updatedAt',
+      portfolioSnapshots: 'date',
+      portfolioLots: 'id, holdingId, purchaseDate, syncStatus',
+      manualAssets: 'id, assetType, syncStatus',
+      watchlistItems: 'id, ticker, assetType, syncStatus',
+      goals: 'id, goalType, completed, targetDate, syncStatus',
+      grades: 'id, subjectId, date, syncStatus',
+      ratingHistory: 'id, ticker, computedAt, [ticker+computedAt]',
+      // Indexes: id (PK), completedAt (sort/filter), createdAt (audit trail).
+      // No need to index targetAmount/allocatedAmount — full table scan over
+      // a typical handful of goals is essentially free.
+      savingsGoals: 'id, completedAt, createdAt, syncStatus',
+      syncQueue: 'id, entityType, syncedAt',
+    });
+
+    // v10 — v1.2.2 Library refactor (Lent → Borrowed-from-library). Same
+    // schema (no field is indexed among the changed ones), but the shelf
+    // literal flipped from 'lent' → 'borrowed' and the metadata fields
+    // renamed (lentTo → borrowedFrom, lentAt → borrowedAt). The upgrade
+    // hook rewrites existing readings rows so the UI doesn't have to
+    // handle both shapes. expectedReturnAt is unchanged (same name + same
+    // semantic — a due date).
+    this.version(10).stores({
+      transactions: 'id, date, type, syncStatus',
+      budgetCategories: 'id, name',
+      portfolioHoldings: 'id, ticker, assetType',
+      apiCache: 'cacheKey, expiresAt',
+      gradeImports: 'id, importedAt',
+      courses: 'id, importId, name',
+      workoutSessions: 'id, date, sessionType, syncStatus',
+      workoutSets: 'id, sessionId, exercise',
+      tasks: 'id, dueDate, completed, priority, syncStatus',
+      studySessions: 'id, startedAt, subjectId, syncStatus',
+      readings: 'id, status, subjectId, updatedAt',
+      portfolioSnapshots: 'date',
+      portfolioLots: 'id, holdingId, purchaseDate, syncStatus',
+      manualAssets: 'id, assetType, syncStatus',
+      watchlistItems: 'id, ticker, assetType, syncStatus',
+      goals: 'id, goalType, completed, targetDate, syncStatus',
+      grades: 'id, subjectId, date, syncStatus',
+      ratingHistory: 'id, ticker, computedAt, [ticker+computedAt]',
+      savingsGoals: 'id, completedAt, createdAt, syncStatus',
+      syncQueue: 'id, entityType, syncedAt',
+    }).upgrade(async (tx) => {
+      // Map old → new on every existing readings row. `toCollection().modify`
+      // is the canonical Dexie pattern for in-place row rewrites. Touch only
+      // the fields that actually need changing — others stay untouched so
+      // the user's notes/ratings/progress remain intact.
+      await tx.table('readings').toCollection().modify((r) => {
+        if (r.shelf === 'lent') r.shelf = 'borrowed';
+        if (r.lentTo !== undefined) {
+          r.borrowedFrom = r.lentTo;
+          delete r.lentTo;
+        }
+        if (r.lentAt !== undefined) {
+          r.borrowedAt = r.lentAt;
+          delete r.lentAt;
+        }
+      });
+    });
+
+    // v11 — Habit Tracker (v1.2). Two additive tables. The (habitId+date)
+    // compound index serves the toggle-for-day lookup; the standalone date
+    // index covers cross-domain weekly aggregation (Cross-Domain Insights).
+    this.version(11).stores({
+      transactions: 'id, date, type, syncStatus',
+      budgetCategories: 'id, name',
+      portfolioHoldings: 'id, ticker, assetType',
+      apiCache: 'cacheKey, expiresAt',
+      gradeImports: 'id, importedAt',
+      courses: 'id, importId, name',
+      workoutSessions: 'id, date, sessionType, syncStatus',
+      workoutSets: 'id, sessionId, exercise',
+      tasks: 'id, dueDate, completed, priority, syncStatus',
+      studySessions: 'id, startedAt, subjectId, syncStatus',
+      readings: 'id, status, subjectId, updatedAt',
+      portfolioSnapshots: 'date',
+      portfolioLots: 'id, holdingId, purchaseDate, syncStatus',
+      manualAssets: 'id, assetType, syncStatus',
+      watchlistItems: 'id, ticker, assetType, syncStatus',
+      goals: 'id, goalType, completed, targetDate, syncStatus',
+      grades: 'id, subjectId, date, syncStatus',
+      ratingHistory: 'id, ticker, computedAt, [ticker+computedAt]',
+      savingsGoals: 'id, completedAt, createdAt, syncStatus',
+      habits: 'id, archivedAt, syncStatus, createdAt',
+      habitCompletions: 'id, habitId, date, syncStatus, [habitId+date]',
+      syncQueue: 'id, entityType, syncedAt',
+    });
+
+    // ─── v12 — CTO Account-based finance refactor ─────────────────────────
+    //
+    // Two-pronged upgrade. Schema-wise it adds an `accountId` index on
+    // transactions (the AccountDetail screen needs to query "all
+    // transactions hitting account X" cheaply) and an `archivedAt` index
+    // on manualAssets (Net Worth filters archived rows out of its primary
+    // list). Everything else is data-only.
+    //
+    // Upgrade hook does the heavy lifting:
+    //   1. Back-fill manualAssets rows with `accountType` (mapped from
+    //      legacy `assetType` via legacyAssetTypeToAccountType) and
+    //      `startingBalance` (copied from `value`). The legacy `assetType` +
+    //      `value` fields stay on the row — see the type comment in
+    //      `types/finance.ts` for the dual-field rationale.
+    //   2. Back-fill transactions rows with `accountId` via a best-guess
+    //      heuristic:
+    //        a. If the transaction's category carries `linkedManualAssetId`
+    //           (from my BUG-6 patch), use it.
+    //        b. Else first cash-type account by createdAt.
+    //        c. Else first checking-type account by createdAt.
+    //        d. Else first account by createdAt.
+    //        e. Else undefined (very fresh install with no accounts yet —
+    //           the user reconciles via AddTransaction's account picker on
+    //           the next edit).
+    //   3. Leave the BudgetCategory rows alone — `linkedManualAssetId`
+    //      semantics shift (auto-debit → pre-select-on-add) but the on-disk
+    //      shape is identical.
+    this.version(12).stores({
+      // Transactions gain an `accountId` index for the AccountDetail screen.
+      transactions: 'id, date, type, syncStatus, accountId',
+      budgetCategories: 'id, name',
+      portfolioHoldings: 'id, ticker, assetType',
+      apiCache: 'cacheKey, expiresAt',
+      gradeImports: 'id, importedAt',
+      courses: 'id, importId, name',
+      workoutSessions: 'id, date, sessionType, syncStatus',
+      workoutSets: 'id, sessionId, exercise',
+      tasks: 'id, dueDate, completed, priority, syncStatus',
+      studySessions: 'id, startedAt, subjectId, syncStatus',
+      readings: 'id, status, subjectId, updatedAt',
+      portfolioSnapshots: 'date',
+      portfolioLots: 'id, holdingId, purchaseDate, syncStatus',
+      // ManualAssets table keeps its old name (data migration is enough; a
+      // hard rename would force every consumer to update at the same
+      // moment, which we want to avoid). archivedAt index added for the
+      // soft-archive flow.
+      manualAssets: 'id, assetType, syncStatus, archivedAt',
+      watchlistItems: 'id, ticker, assetType, syncStatus',
+      goals: 'id, goalType, completed, targetDate, syncStatus',
+      grades: 'id, subjectId, date, syncStatus',
+      ratingHistory: 'id, ticker, computedAt, [ticker+computedAt]',
+      savingsGoals: 'id, completedAt, createdAt, syncStatus',
+      habits: 'id, archivedAt, syncStatus, createdAt',
+      habitCompletions: 'id, habitId, date, syncStatus, [habitId+date]',
+      syncQueue: 'id, entityType, syncedAt',
+    }).upgrade(async (tx) => {
+      const { legacyAssetTypeToAccountType } = await import('../types/finance');
+      const accountsTable = tx.table('manualAssets');
+      const categoriesTable = tx.table('budgetCategories');
+      const transactionsTable = tx.table('transactions');
+
+      // Step 1 — back-fill the new field names on every existing
+      // manualAssets row. Both old and new fields end up populated; new
+      // code reads `accountType` / `startingBalance`, legacy code keeps
+      // reading `assetType` / `value` until the cleanup sweep.
+      await accountsTable.toCollection().modify((row) => {
+        if (row.accountType == null) {
+          row.accountType = legacyAssetTypeToAccountType(row.assetType);
+        }
+        if (row.startingBalance == null) {
+          row.startingBalance = typeof row.value === 'number' ? row.value : 0;
+        }
+      });
+
+      // Step 2 — best-guess back-fill for `accountId` on every existing
+      // transaction. Fetch categories + accounts once; iterate transactions.
+      const categories = (await categoriesTable.toArray()) as Array<{
+        id: string;
+        linkedManualAssetId?: string;
+      }>;
+      const accounts = (await accountsTable.toArray()) as Array<{
+        id: string;
+        accountType?: string;
+        assetType?: string;
+        createdAt: string;
+      }>;
+      accounts.sort((a, b) =>
+        (a.createdAt ?? '').localeCompare(b.createdAt ?? ''),
+      );
+      const firstByType = (...types: string[]): string | undefined => {
+        for (const t of types) {
+          const hit = accounts.find(
+            (a) => a.accountType === t || a.assetType === t,
+          );
+          if (hit) return hit.id;
+        }
+        return undefined;
+      };
+      const defaultAccountId =
+        firstByType('cash') ??
+        firstByType('checking') ??
+        accounts[0]?.id;
+
+      await transactionsTable.toCollection().modify((t) => {
+        if (t.accountId) return; // already migrated
+        const cat = t.categoryId
+          ? categories.find((c) => c.id === t.categoryId)
+          : null;
+        // (a) Category's BUG-6 link gets first crack — it's the closest
+        // thing to an existing "intended account" signal we have.
+        if (cat?.linkedManualAssetId) {
+          t.accountId = cat.linkedManualAssetId;
+          return;
+        }
+        // (b-d) Fall through to the global default.
+        if (defaultAccountId) {
+          t.accountId = defaultAccountId;
+        }
+        // (e) No accounts at all → leave undefined; AddTransaction will
+        // require an account on the next edit.
+      });
+    });
+
+    // ─── v13 — BUG-9 Insights score persistence ──────────────────────────
+    //
+    // Additive — one new `insightsScores` table. No upgrade hook needed;
+    // existing users come up with an empty table and the first successful
+    // recompute pass populates it. Until that first pass lands, the UI
+    // behaves exactly as it did pre-fix (blank pills until recompute).
+    //
+    // Why a separate table from `ratingHistory`:
+    //   - `ratingHistory` is a chronological append-only log used by the
+    //     tier-change notification path (cooldown + drift chart). It
+    //     accumulates indefinitely (one row per recompute per ticker).
+    //   - `insightsScores` is a flat snapshot — exactly one row per
+    //     (ticker, kind). put() upserts in place; the table size scales
+    //     with the universe, not with time.
+    //
+    // PK = `${kind}:${ticker}` so each kind has its own slot per ticker.
+    // Indexes: ticker (per-ticker queries), kind (filter by tab), computedAt
+    // (future "last computed N hours ago" header strip).
+    this.version(13).stores({
+      transactions: 'id, date, type, syncStatus, accountId',
+      budgetCategories: 'id, name',
+      portfolioHoldings: 'id, ticker, assetType',
+      apiCache: 'cacheKey, expiresAt',
+      gradeImports: 'id, importedAt',
+      courses: 'id, importId, name',
+      workoutSessions: 'id, date, sessionType, syncStatus',
+      workoutSets: 'id, sessionId, exercise',
+      tasks: 'id, dueDate, completed, priority, syncStatus',
+      studySessions: 'id, startedAt, subjectId, syncStatus',
+      readings: 'id, status, subjectId, updatedAt',
+      portfolioSnapshots: 'date',
+      portfolioLots: 'id, holdingId, purchaseDate, syncStatus',
+      manualAssets: 'id, assetType, syncStatus, archivedAt',
+      watchlistItems: 'id, ticker, assetType, syncStatus',
+      goals: 'id, goalType, completed, targetDate, syncStatus',
+      grades: 'id, subjectId, date, syncStatus',
+      ratingHistory: 'id, ticker, computedAt, [ticker+computedAt]',
+      savingsGoals: 'id, completedAt, createdAt, syncStatus',
+      habits: 'id, archivedAt, syncStatus, createdAt',
+      habitCompletions: 'id, habitId, date, syncStatus, [habitId+date]',
+      insightsScores: 'id, ticker, kind, computedAt',
+      syncQueue: 'id, entityType, syncedAt',
+    });
   }
 }
 
@@ -267,6 +637,11 @@ export async function clearAllLocalData(): Promise<void> {
       db.manualAssets,
       db.watchlistItems,
       db.goals,
+      db.ratingHistory,
+      db.savingsGoals,
+      db.habits,
+      db.habitCompletions,
+      db.insightsScores,
       db.syncQueue,
     ],
     async () => {
@@ -288,6 +663,11 @@ export async function clearAllLocalData(): Promise<void> {
         db.manualAssets.clear(),
         db.watchlistItems.clear(),
         db.goals.clear(),
+        db.ratingHistory.clear(),
+        db.savingsGoals.clear(),
+        db.habits.clear(),
+        db.habitCompletions.clear(),
+        db.insightsScores.clear(),
         db.syncQueue.clear(),
       ]);
     }

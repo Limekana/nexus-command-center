@@ -26,7 +26,7 @@ import { db } from '../db/database';
 import { shouldFetch, recordCall } from './cache';
 import { lastProviderErrors, readChartMeta } from './yahoo';
 import { buildRelevanceCheck, isNewsRelevant } from '../lib/newsRelevance';
-import type { StockMetric, EarningsEvent, DividendEvent, NewsItem } from './stockDetail';
+import type { StockMetric, EarningsEvent, DividendEvent, NewsItem, Recommendation } from './stockDetail';
 
 // Native: direct (CapacitorHttp bypasses CORS). Web dev preview: proxied
 // through Vite. quoteSummary + crumb live on query2; search lives on query1.
@@ -245,9 +245,49 @@ interface QuoteSummaryRaw {
         priceToBook?: { raw?: number };
         forwardEps?: { raw?: number };
         trailingEps?: { raw?: number };
+        // v1.2 follow-up — BUG-8. Yahoo publishes pegRatio as a free field
+        // on defaultKeyStatistics. Maps to Finnhub `pegRatioBasicExclExtraTTM`.
+        pegRatio?: { raw?: number };
       };
       financialData?: {
         returnOnEquity?: { raw?: number };
+        // v1.2 follow-up — BUG-8. Yahoo's debtToEquity field is the actual
+        // ratio (e.g. 1.24 = 124% leverage), matching Finnhub's
+        // `totalDebt/totalEquityAnnual` shape. NOT a fraction — no ×100
+        // needed. Some symbols return values like 124 (already percent);
+        // we normalize: anything > 10 is treated as percent and /100'd.
+        debtToEquity?: { raw?: number };
+        // YoY revenue growth, fractional (0.12 = 12%). Finnhub publishes the
+        // same as percent on `revenueGrowthTTMYoy`. We multiply ×100 to
+        // normalize.
+        revenueGrowth?: { raw?: number };
+      };
+      // v1.2 follow-up — BUG-8. Analyst recommendation trend for non-US.
+      // Yahoo's `recommendationTrend.trend` is monthly: '0m' = current month,
+      // '-1m', '-2m', '-3m' = trailing. We synthesize a YYYY-MM-DD period for
+      // each by walking backwards from today so the shape matches Finnhub's
+      // /stock/recommendation.
+      recommendationTrend?: {
+        trend?: Array<{
+          period: string; // '0m' | '-1m' | '-2m' | '-3m'
+          strongBuy: number;
+          buy: number;
+          hold: number;
+          sell: number;
+          strongSell: number;
+        }>;
+      };
+      // v1.2 follow-up — BUG-8. Historical earnings actuals + estimates for
+      // the surprise signal. Yahoo's `earningsHistory.history` carries up to
+      // 4 quarters with `epsActual` / `epsEstimate` / `period` (e.g. '-1q')
+      // / `quarter.fmt` (YYYY-MM-DD quarter-end).
+      earningsHistory?: {
+        history?: Array<{
+          epsActual?: { raw?: number };
+          epsEstimate?: { raw?: number };
+          period?: string;        // '-1q', '-2q', etc.
+          quarter?: { fmt?: string; raw?: number };
+        }>;
       };
       calendarEvents?: {
         earnings?: {
@@ -300,6 +340,14 @@ export async function getYahooMetric(ticker: string): Promise<StockMetric | null
     // Finnhub's marketCapitalization is in millions of USD. Normalize to
     // millions so the renderer doesn't need to special-case the source.
     const mcMillions = sd.marketCap?.raw != null ? sd.marketCap.raw / 1_000_000 : undefined;
+    // v1.2 follow-up — BUG-8. Yahoo publishes debtToEquity in two different
+    // shapes depending on ticker: usually as the actual ratio (1.24 = 124%
+    // leverage, matches Finnhub's `totalDebt/totalEquityAnnual`), but some
+    // international symbols return values already in percent (124 instead of
+    // 1.24). Heuristic: anything > 10 is unrealistic as a true ratio for a
+    // public equity (>1000% leverage), so treat it as percent and /100.
+    const rawDe = fd.debtToEquity?.raw;
+    const debtToEquity = rawDe == null ? undefined : (rawDe > 10 ? rawDe / 100 : rawDe);
     const result: StockMetric = {
       ticker: ticker.toUpperCase(),
       peNormalized: sd.trailingPE?.raw,
@@ -313,6 +361,16 @@ export async function getYahooMetric(ticker: string): Promise<StockMetric | null
       dividendYield: sd.dividendYield?.raw != null ? sd.dividendYield.raw * 100 : undefined,
       epsAnnual: ks.trailingEps?.raw,
       roe: fd.returnOnEquity?.raw != null ? fd.returnOnEquity.raw * 100 : undefined,
+      // v1.2 follow-up — BUG-8. Four signal inputs needed by the Fundamental
+      // engine that the v1.2 implementation didn't populate. With these
+      // wired up, non-US tickers gain P/S vs sector, PEG, D/E vs sector,
+      // and revenue-growth signals — going from 2 of 8 available signals
+      // up to 6 of 8 (recs + earnings still need separate Yahoo calls).
+      psRatio: sd.priceToSalesTrailing12Months?.raw,
+      pegRatio: ks.pegRatio?.raw,
+      debtToEquity,
+      // revenueGrowth fractional → percent (×100) to match Finnhub shape.
+      revenueGrowthYoy: fd.revenueGrowth?.raw != null ? fd.revenueGrowth.raw * 100 : undefined,
     };
     await writeCacheTTL(cacheKey, result, TTL_MS);
     return result;
@@ -323,6 +381,124 @@ export async function getYahooMetric(ticker: string): Promise<StockMetric | null
     // cache populated by getYahooQuote usually has at least 52w range — give
     // the user *something* instead of an empty "unavailable" panel.
     return metricFromChartMeta(ticker);
+  }
+}
+
+// ── Analyst recommendations (recommendationTrend) ───────────────────────
+//
+// v1.2 follow-up — BUG-8. Finnhub's /stock/recommendation is US-only on the
+// free tier; international tickers got an empty array which made the
+// analystConsensus signal (top-weight 20% in the composite) permanently
+// unavailable. Yahoo's `recommendationTrend.trend` covers global tickers
+// when analysts are following the name.
+//
+// Shape conversion: Yahoo returns 4 rows keyed by relative period
+// ('0m','-1m','-2m','-3m'). The signal engine only cares about the most
+// recent 3 months and counts the buy/hold/sell mix — period dates are
+// purely for sort stability. We synthesize YYYY-MM-DD dates by walking
+// backwards from today (first of month) so newest-first sort still works.
+
+// Mirror of the weekly Fundamental cache tier used by stockDetail.ts.
+const REC_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+export async function getYahooRecommendations(ticker: string): Promise<Recommendation[]> {
+  const cacheKey = `yh_rec_${ticker.toUpperCase()}`;
+  const cached = await readCacheTTL<Recommendation[]>(cacheKey, REC_TTL_MS);
+  if (cached) return cached;
+  const gate = shouldFetch('yahoo-summary', 'yahoo', { force: false, maxPerMinute: 30, subKey: ticker });
+  if (!gate.allow) return [];
+  try {
+    recordCall('yahoo-summary', 'yahoo', ticker);
+    const data = (await fetchJson(
+      `${SUMMARY_URL}/${encodeURIComponent(ticker)}`,
+      { modules: 'recommendationTrend' },
+      { withCrumb: true },
+    )) as QuoteSummaryRaw;
+    const trend = data?.quoteSummary?.result?.[0]?.recommendationTrend?.trend ?? [];
+    if (trend.length === 0) {
+      await writeCacheTTL(cacheKey, [], REC_TTL_MS);
+      return [];
+    }
+    // Synthesize ISO dates by walking back from the first of this month.
+    // '0m' → first of current month; '-1m' → first of previous month; etc.
+    const now = new Date();
+    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const recommendations: Recommendation[] = trend
+      .filter((t) => t.period && /^-?\d+m$/.test(t.period))
+      .map((t) => {
+        const monthsBack = parseInt(t.period.replace(/[^\d-]/g, ''), 10) || 0; // '0m'→0, '-1m'→-1
+        const period = new Date(firstOfMonth);
+        period.setMonth(period.getMonth() + monthsBack); // monthsBack is ≤0
+        return {
+          period: period.toISOString().slice(0, 10),
+          strongBuy: t.strongBuy || 0,
+          buy: t.buy || 0,
+          hold: t.hold || 0,
+          sell: t.sell || 0,
+          strongSell: t.strongSell || 0,
+        };
+      })
+      // Filter empty rows (some Yahoo responses have zero counts across the
+      // board for symbols with no analyst coverage — would emit a misleading
+      // "0 buy / 0 sell" signal).
+      .filter((r) => r.strongBuy + r.buy + r.hold + r.sell + r.strongSell > 0)
+      .sort((a, b) => b.period.localeCompare(a.period));
+    await writeCacheTTL(cacheKey, recommendations, REC_TTL_MS);
+    return recommendations;
+  } catch (e) {
+    lastProviderErrors.push({ provider: 'yahoo', ticker, message: `rec: ${(e as Error).message}` });
+    console.warn('[yahoo rec]', ticker, (e as Error).message);
+    return [];
+  }
+}
+
+// ── Earnings history (earningsHistory module) ────────────────────────────
+//
+// v1.2 follow-up — BUG-8. Finnhub's /stock/earnings (the historical actuals
+// + estimates feed that powers the earnings-surprise signal) is US-only on
+// free tier. Yahoo's earningsHistory covers ~4 trailing quarters globally.
+// 2 quarters is the signal-engine minimum; 4 is comfortable.
+
+const EARN_HIST_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+export async function getYahooEarningsHistory(ticker: string): Promise<EarningsEvent[]> {
+  const cacheKey = `yh_earn_hist_${ticker.toUpperCase()}`;
+  const cached = await readCacheTTL<EarningsEvent[]>(cacheKey, EARN_HIST_TTL_MS);
+  if (cached) return cached;
+  const gate = shouldFetch('yahoo-summary', 'yahoo', { force: false, maxPerMinute: 30, subKey: ticker });
+  if (!gate.allow) return [];
+  try {
+    recordCall('yahoo-summary', 'yahoo', ticker);
+    const data = (await fetchJson(
+      `${SUMMARY_URL}/${encodeURIComponent(ticker)}`,
+      { modules: 'earningsHistory' },
+      { withCrumb: true },
+    )) as QuoteSummaryRaw;
+    const history = data?.quoteSummary?.result?.[0]?.earningsHistory?.history ?? [];
+    if (history.length === 0) {
+      await writeCacheTTL(cacheKey, [], EARN_HIST_TTL_MS);
+      return [];
+    }
+    const events: EarningsEvent[] = history
+      .filter((h) => h.epsActual?.raw != null || h.epsEstimate?.raw != null)
+      .map((h) => ({
+        symbol: ticker.toUpperCase(),
+        // Prefer the explicit quarter-end fmt date; fall back to synthesizing
+        // from the unix `raw` if Yahoo only gave us the seconds timestamp.
+        date: h.quarter?.fmt
+          ?? (h.quarter?.raw ? new Date(h.quarter.raw * 1000).toISOString().slice(0, 10) : ''),
+        epsActual: h.epsActual?.raw,
+        epsEstimate: h.epsEstimate?.raw,
+      }))
+      .filter((e) => e.date)
+      // Newest first to match Finnhub's getEarningsHistory ordering.
+      .sort((a, b) => b.date.localeCompare(a.date));
+    await writeCacheTTL(cacheKey, events, EARN_HIST_TTL_MS);
+    return events;
+  } catch (e) {
+    lastProviderErrors.push({ provider: 'yahoo', ticker, message: `earn hist: ${(e as Error).message}` });
+    console.warn('[yahoo earn hist]', ticker, (e as Error).message);
+    return [];
   }
 }
 

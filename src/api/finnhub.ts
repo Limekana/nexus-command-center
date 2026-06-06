@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, CapacitorHttp } from '@capacitor/core';
 import { readCache, writeCache, shouldFetch, recordCall } from './cache';
 import { getApiKey } from './keys';
 import { getYahooQuote, isInternationalTicker, lastProviderErrors } from './yahoo';
@@ -10,6 +10,86 @@ import { getYahooQuote, isInternationalTicker, lastProviderErrors } from './yaho
 const BASE_URL = Capacitor.isNativePlatform()
   ? 'https://finnhub.io/api/v1'
   : '/fh/api/v1';
+
+// ─── v1.2.1 — shared Finnhub fetch helper (native CapacitorHttp + web axios) ───
+//
+// Original symptom (BUG report 2026-06): "Network Error" on portfolio refresh
+// for some holdings; on retry only NVDA + AKER BP still failed. NVDA is a
+// US large-cap that Finnhub free tier fully supports — there's no business
+// reason for it to fail. Diagnosis:
+//
+//   - On native Android, the previous code path went axios → WebView XHR →
+//     CORS preflight (because `X-Finnhub-Token` is a custom header). The
+//     WebView's preflight handling for parallel cross-origin requests with
+//     custom headers is flaky — when Promise.all fires 5+ quotes in
+//     parallel on a cold cache, several requests race the same preflight
+//     and fail with the generic "Network Error" (the request never completes
+//     so axios reports no status code).
+//   - On retry the preflight is cached at the WebView layer, so most succeed.
+//     The remaining ones (NVDA, etc.) get unlucky on the second race too.
+//   - AKER BP is a separate problem — needs to be stored as `AKRBP.OL` so
+//     the international-ticker check skips Finnhub entirely.
+//
+// Fix: mirror what Yahoo already does (yahoo.ts:fetchYahoo). On native,
+// `CapacitorHttp.request()` goes through Android's native HTTP stack and
+// bypasses the WebView's CORS check entirely. No preflight, no race.
+// Per-request native HTTP is the same model Capacitor uses for fetch()
+// when the `CapacitorHttp` plugin is enabled, and it removes the entire
+// class of WebView CORS bugs from Finnhub at the cost of one helper.
+//
+// Used by every Finnhub endpoint in the api/ tree (quote here, plus
+// stockDetail.ts metric/recommendation/news/earnings/dividend and
+// companyProfile.ts profile2 and marketNews.ts general news).
+
+export async function finnhubGet<T>(
+  path: string,
+  params: Record<string, string | number | undefined>,
+  apiKey: string,
+  opts: { timeout?: number } = {},
+): Promise<T> {
+  const timeout = opts.timeout ?? 8000;
+  // Strip undefined params — CapacitorHttp serializes them as the literal
+  // string "undefined" which confuses the upstream API.
+  const cleanParams: Record<string, string> = {};
+  for (const [k, v] of Object.entries(params)) {
+    if (v != null) cleanParams[k] = String(v);
+  }
+
+  if (Capacitor.isNativePlatform()) {
+    const url = `https://finnhub.io/api/v1${path}`;
+    const res = await CapacitorHttp.request({
+      method: 'GET',
+      url,
+      params: cleanParams,
+      headers: { 'X-Finnhub-Token': apiKey },
+      connectTimeout: timeout,
+      readTimeout: timeout,
+    });
+    if (res.status >= 400) {
+      throw new Error(`Finnhub HTTP ${res.status}`);
+    }
+    const body = res.data;
+    // CapacitorHttp auto-parses JSON when Content-Type indicates so; some
+    // edges still hand back a string. Handle both.
+    if (typeof body === 'string') {
+      try {
+        return JSON.parse(body) as T;
+      } catch {
+        throw new Error('Finnhub returned non-JSON body');
+      }
+    }
+    return body as T;
+  }
+
+  // Web dev preview: through Vite's /fh proxy so CORS is handled at the
+  // dev-server layer and the browser sees a same-origin request.
+  const { data } = await axios.get<T>(`/fh/api/v1${path}`, {
+    params: cleanParams,
+    headers: { 'X-Finnhub-Token': apiKey },
+    timeout,
+  });
+  return data;
+}
 
 export interface FinnhubQuote {
   c: number;  // current price
@@ -64,15 +144,17 @@ async function finnhubFetch(
 
   try {
     recordCall('finnhub', 'finnhub', ticker);
-    // Authenticate via `X-Finnhub-Token` header instead of the legacy
-    // `?token=` query string. Query-string secrets get logged by every proxy,
-    // load balancer, browser history, and TLS-terminating MITM cert in the
-    // path; headers don't end up in access logs by default.
-    const { data } = await axios.get<FinnhubQuote>(`${BASE_URL}/quote`, {
-      params: { symbol: ticker.toUpperCase() },
-      headers: { 'X-Finnhub-Token': apiKey },
-      timeout: 8000,
-    });
+    // v1.2.1 — routed through finnhubGet so native uses CapacitorHttp and
+    // bypasses the WebView CORS preflight. The `X-Finnhub-Token` header is
+    // sent natively which avoids the preflight entirely on native and stays
+    // proxy-friendly on web. Auth via header (vs legacy `?token=`) keeps the
+    // secret out of access logs / browser history / TLS-MITM-cert paths.
+    const data = await finnhubGet<FinnhubQuote>(
+      '/quote',
+      { symbol: ticker.toUpperCase() },
+      apiKey,
+      { timeout: 8000 },
+    );
     // Finnhub free tier returns c=0 for unsupported exchanges. Bail so the caller
     // can fall through to Yahoo.
     if (!data || typeof data.c !== 'number' || data.c === 0) {

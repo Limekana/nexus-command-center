@@ -98,25 +98,19 @@ export default function FinanceOverview() {
       <AppHeader
         title="Finance"
         action={
+          // v1.2 follow-up — chips compacted to icon-only so the "Finance"
+          // title no longer truncates to "F...". Five nav entries (News /
+          // Insights / Savings / Portfolio / Add) were stacking with full
+          // text+emoji, claiming the title's flex space. Each is now a
+          // 32×32 square with the emoji centered; aria-label carries the
+          // semantic name. "+ Add" stays distinct with the cyan accent
+          // border since it's the only primary action in this row.
           <>
-            <button
-              onClick={() => navigate('/finance/news')}
-              className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary"
-            >
-              📰 News
-            </button>
-            <button
-              onClick={() => navigate('/finance/portfolio')}
-              className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary"
-            >
-              📈 Portfolio
-            </button>
-            <button
-              onClick={() => navigate('/finance/add')}
-              className="text-xs px-2 py-1 rounded-sm border border-primary text-primary active:bg-primary/10"
-            >
-              + Add
-            </button>
+            <IconChip emoji="📰" label="News" onClick={() => navigate('/finance/news')} />
+            <IconChip emoji="📊" label="Insights" onClick={() => navigate('/finance/insights')} />
+            <IconChip emoji="🎯" label="Savings" onClick={() => navigate('/finance/savings')} />
+            <IconChip emoji="📈" label="Portfolio" onClick={() => navigate('/finance/portfolio')} />
+            <IconChip emoji="+" label="Add transaction" accent onClick={() => navigate('/finance/add')} />
           </>
         }
       />
@@ -246,5 +240,33 @@ export default function FinanceOverview() {
         <NewsCard />
       </div>
     </>
+  );
+}
+
+/**
+ * v1.2 follow-up — compact icon-only header chip. 32×32 square, glass-soft
+ * background by default, accent variant for the primary "+ Add" action.
+ * Emoji is centered (not text) so we stay flexible to whatever the user's
+ * font fallback renders. aria-label carries the semantic name for screen
+ * readers and long-press accessibility tooltips.
+ */
+function IconChip({ emoji, label, onClick, accent }: {
+  emoji: string; label: string; onClick: () => void; accent?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className={`w-8 h-8 rounded-pill flex items-center justify-center text-sm press-spring ${
+        accent
+          ? 'border border-primary/55 text-primary'
+          : 'glass-soft text-text-muted active:text-primary'
+      }`}
+      style={accent ? { background: 'rgba(0, 212, 255, 0.10)' } : undefined}
+    >
+      <span aria-hidden>{emoji}</span>
+    </button>
   );
 }

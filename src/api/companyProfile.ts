@@ -12,13 +12,15 @@
 // data via Yahoo is enough work that we'd punt to a v3 pass. Holdings
 // without a profile fall into an "Other" bucket on the allocation donut.
 
-import axios from 'axios';
 import { db } from '../db/database';
 import { getApiKey } from './keys';
 import { shouldFetch, recordCall } from './cache';
 import { lastProviderErrors, isInternationalTicker } from './yahoo';
+import { finnhubGet } from './finnhub';
 
-const BASE_URL = 'https://finnhub.io/api/v1';
+// v1.2.1 — BASE_URL is no longer used here; the shared finnhubGet helper
+// owns URL construction + native/web routing. Removed to keep dead code
+// from accumulating.
 const PROFILE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 export interface CompanyProfile {
@@ -78,11 +80,13 @@ export async function getCompanyProfile(
 
   try {
     recordCall('finnhub-profile', 'finnhub', ticker);
-    const { data } = await axios.get<RawProfile>(`${BASE_URL}/stock/profile2`, {
-      params: { symbol: key },
-      headers: { 'X-Finnhub-Token': apiKey },
-      timeout: 8000,
-    });
+    // v1.2.1 — routed through finnhubGet so native bypasses WebView CORS.
+    const data = await finnhubGet<RawProfile>(
+      '/stock/profile2',
+      { symbol: key },
+      apiKey,
+      { timeout: 8000 },
+    );
     if (!data || !data.name) {
       // Free tier returns an empty object {} for unsupported tickers — no
       // error worth surfacing, just nothing to render.
