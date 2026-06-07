@@ -17,6 +17,7 @@ import RatingPill from '../../components/RatingPill';
 import { useFinanceStore } from '../../store/useFinanceStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { convertSync, normalizeCurrency } from '../../api/fxRates';
+import { validateTicker } from '../../lib/tickerValidation';
 import type { WatchlistItem, PortfolioHolding } from '../../types/finance';
 
 const CURRENCY_SYMBOL: Record<string, string> = {
@@ -46,6 +47,10 @@ export default function Watchlist() {
   const [editing, setEditing] = useState<WatchlistItem | null>(null);
   const [ticker, setTicker] = useState('');
   const [name, setName] = useState('');
+  // v1.2.1 — security audit finding M: ticker entry-point allowlist.
+  // Surfaces validation errors inline so the user understands why the
+  // save button looks armed but does nothing.
+  const [tickerError, setTickerError] = useState<string | null>(null);
   const [assetType, setAssetType] = useState<WatchlistItem['assetType']>('stock');
   const [targetAbove, setTargetAbove] = useState('');
   const [targetBelow, setTargetBelow] = useState('');
@@ -77,12 +82,22 @@ export default function Watchlist() {
   };
 
   const save = async () => {
-    if (!ticker.trim() || !name.trim()) return;
+    if (!name.trim()) return;
+    // v1.2.1 — security audit finding M. Validate before any store write
+    // so a hostile / typo'd identifier never makes it into Dexie, the
+    // outbox, or any URL we build downstream. encodeURIComponent at the
+    // URL site is still the structural guarantee; this is defense in depth.
+    const v = validateTicker(ticker);
+    if (!v.ok) {
+      setTickerError(v.error);
+      return;
+    }
+    setTickerError(null);
     const above = targetAbove.trim() ? parseFloat(targetAbove) : undefined;
     const below = targetBelow.trim() ? parseFloat(targetBelow) : undefined;
     if (editing) {
       await updateItem(editing.id, {
-        ticker: ticker.trim(),
+        ticker: v.normalised,
         name: name.trim(),
         assetType,
         targetAbove: above,
@@ -90,7 +105,7 @@ export default function Watchlist() {
       });
     } else {
       await addItem({
-        ticker: ticker.trim(),
+        ticker: v.normalised,
         name: name.trim(),
         assetType,
         targetAbove: above,
@@ -193,11 +208,17 @@ export default function Watchlist() {
                 assetType === 'crypto' ? 'CoinGecko id (e.g. bitcoin)' : 'Ticker (e.g. NVDA, CNDX.L)'
               }
               value={ticker}
-              onChange={(e) => setTicker(e.target.value)}
+              onChange={(e) => {
+                setTicker(e.target.value);
+                if (tickerError) setTickerError(null);
+              }}
               autoFocus
               autoCapitalize="off"
               autoCorrect="off"
             />
+            {tickerError && (
+              <div className="text-[11px] text-warning">{tickerError}</div>
+            )}
             <input
               className="input"
               placeholder="Display name"

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
 import RowActions from '../../components/RowActions';
 import { useFinanceStore } from '../../store/useFinanceStore';
+import { validateTicker } from '../../lib/tickerValidation';
 import type { PortfolioHolding, AssetType } from '../../types/finance';
 
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'SEK', 'NOK', 'DKK', 'CHF', 'JPY'];
@@ -25,6 +26,10 @@ export default function ManageHoldings() {
   const [adding, setAdding] = useState(false);
   const [ticker, setTicker] = useState('');
   const [name, setName] = useState('');
+  // v1.2.1 — security audit finding M: ticker entry-point allowlist.
+  // Surfaces validation errors inline so the user understands why save
+  // looks armed but does nothing.
+  const [tickerError, setTickerError] = useState<string | null>(null);
   const [assetType, setAssetType] = useState<AssetType>('stock');
   const [sectorOverride, setSectorOverride] = useState('');
 
@@ -64,10 +69,19 @@ export default function ManageHoldings() {
   };
 
   const save = async () => {
-    if (!ticker.trim() || !name.trim()) return;
+    if (!name.trim()) return;
+    // v1.2.1 — security audit finding M. Validate before any store write
+    // so a hostile / typo'd identifier never makes it into Dexie, the
+    // outbox, or any URL we build downstream.
+    const v = validateTicker(ticker);
+    if (!v.ok) {
+      setTickerError(v.error);
+      return;
+    }
+    setTickerError(null);
     const normalisedTicker = assetType === 'crypto'
-      ? ticker.trim().toLowerCase()
-      : ticker.trim().toUpperCase();
+      ? v.normalised.toLowerCase()
+      : v.normalised.toUpperCase();
     if (editing) {
       // Edit flow — basic details only. Quantity + cost are derived from lots
       // and aren't editable here.
@@ -163,9 +177,15 @@ export default function ManageHoldings() {
                     : 'Ticker (e.g. AAPL)'
               }
               value={ticker}
-              onChange={(e) => setTicker(e.target.value)}
+              onChange={(e) => {
+                setTicker(e.target.value);
+                if (tickerError) setTickerError(null);
+              }}
               autoFocus
             />
+            {tickerError && (
+              <div className="text-[11px] text-warning">{tickerError}</div>
+            )}
             <input
               className="input"
               placeholder="Display name"

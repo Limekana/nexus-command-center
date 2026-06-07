@@ -166,7 +166,9 @@ export default function App() {
         console.warn('[app-init] habits hydration threw:', e);
       }
       // Now open the realtime channel for future deltas.
-      startRealtime();
+      // v1.2.1 — AUDIT-FSG-5: pass userId so per-table subscriptions can
+      // scope to `user_id=eq.<uid>` on tables without a sharing surface.
+      startRealtime(userId);
       // Fire-and-forget the full sync for everything else (push pending
       // queue + pull transactions/portfolio/tasks/etc.).
       void syncNow();

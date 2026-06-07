@@ -19,6 +19,33 @@ import { supabase } from '../lib/supabase';
 // will see the prompt ONE more time on upgrade (the old local flag is
 // no longer consulted). After they dismiss in 1.1.1, the Supabase row
 // lands and they're never asked again — across any number of reinstalls.
+//
+// v1.2.1 — AUDIT-FSG-2b fix: shared-device user-change re-fire. The cloud
+// flag is per-user, so a returning B who previously dismissed under their
+// own auth.uid() never sees the prompt — and User A's Dexie data sits
+// invisibly on the device. The FSG-2 fix closes the cloud REPLAY path
+// (syncQueue drains on sign-out so A's writes can't push under B), but
+// the local data is still rendered through B's views once they sign in.
+// Tracking `nexus.lastSignedInUserId` in localStorage gives us a second
+// gate: when the current user_id differs from the previous one AND there
+// IS local data present, force-show the prompt regardless of the cloud
+// dismiss flag. Once B picks Keep&Sync or Discard, the marker advances
+// so the same B-session doesn't re-prompt on subsequent mounts.
+const LAST_USER_KEY = 'nexus.lastSignedInUserId';
+function readLastUserId(): string | null {
+  try {
+    return localStorage.getItem(LAST_USER_KEY);
+  } catch {
+    return null;
+  }
+}
+function writeLastUserId(userId: string): void {
+  try {
+    localStorage.setItem(LAST_USER_KEY, userId);
+  } catch {
+    /* quota / private-mode — best-effort */
+  }
+}
 
 async function getDismissedFromCloud(userId: string): Promise<boolean> {
   try {
@@ -74,18 +101,36 @@ export default function AdoptionPrompt() {
         if (!cancelled) setShow(false);
         return;
       }
+      // v1.2.1 — AUDIT-FSG-2b: force-show on user transition (shared device).
+      // If a different signed-in user was previously seen on this install
+      // AND there is local data present, prompt regardless of the cloud
+      // dismiss flag. This is the only path that catches the "User B signs
+      // in after User A signed out on the same device" case, since B's
+      // cloud-stored dismiss flag is keyed to B's auth.uid() and doesn't
+      // know A ever existed here.
+      const previousUserId = readLastUserId();
+      const hasData = await hasLocalData();
+      const isUserChange =
+        previousUserId !== null && previousUserId !== user.id && hasData;
+      if (isUserChange) {
+        if (!cancelled) setShow(true);
+        return;
+      }
       const dismissed = await getDismissedFromCloud(user.id);
       if (dismissed) {
+        // Already dismissed by THIS user previously — advance the marker
+        // so we don't re-evaluate the user-change branch next mount.
+        writeLastUserId(user.id);
         if (!cancelled) setShow(false);
         return;
       }
-      const hasData = await hasLocalData();
       if (!hasData) {
         // No local data → silently mark dismissed in the cloud so we
         // don't re-check on every launch. Fire-and-forget; if the write
         // fails the next launch will re-evaluate hasLocalData() which
         // will still be false, so we'll write again. Idempotent.
         void setDismissedInCloud(user.id);
+        writeLastUserId(user.id);
         if (!cancelled) setShow(false);
         return;
       }
@@ -107,6 +152,9 @@ export default function AdoptionPrompt() {
       // sync round-trip doesn't re-prompt. Fire-and-forget upsert —
       // failure is logged, not surfaced (don't block UX on a pref write).
       void setDismissedInCloud(user.id);
+      // v1.2.1 — AUDIT-FSG-2b: advance the user-change marker so the next
+      // mount in this session doesn't trip the user-transition branch.
+      writeLastUserId(user.id);
       setShow(false);
     } finally {
       setBusy(false);
@@ -124,6 +172,11 @@ export default function AdoptionPrompt() {
       // completed by then we'd re-prompt, but hasLocalData() will return
       // false (we just wiped) and the inner branch sets the flag again.
       void setDismissedInCloud(user.id);
+      // v1.2.1 — AUDIT-FSG-2b: advance the user-change marker. Both
+      // adoption outcomes (Keep + Discard) count as "user has acted",
+      // so subsequent mounts under the same user_id should follow the
+      // cloud-dismiss branch only.
+      writeLastUserId(user.id);
       setShow(false);
       // Force a reload so all stores re-init with the empty DB.
       window.location.reload();

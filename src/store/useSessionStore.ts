@@ -9,6 +9,7 @@ import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { publishSession, clearPublishedSession } from '../lib/ssoPublisher';
 import { setGuestMode } from '../lib/guestMode';
+import { db } from '../db/database';
 
 interface SessionState {
   session: Session | null;
@@ -77,6 +78,36 @@ export const useSessionStore = create<SessionState>((set) => ({
     // invalidated. onAuthStateChange's null fire will also clear, but
     // this closes the race window cleanly.
     await clearPublishedSession();
+    // v1.2.1 — security audit finding FSG-2/FSG-6.
+    //
+    // Drain the unsynced syncQueue BEFORE clearing the session.
+    //
+    // Threat: A signs in, edits offline (queued in Dexie). A signs out
+    // without first reconnecting. B signs in on the same device. App.tsx's
+    // user-change useEffect kicks `syncNow()`, which calls
+    // `pushQueue(B.userId)` — and every push handler stamps
+    // `user_id: ctx.userId` from the LIVE session. A's queued edits would
+    // land in B's cloud account under B's user_id. RLS doesn't help here
+    // because B is genuinely the inserting user; the violation is one
+    // semantic level above the database.
+    //
+    // Fix: delete every unsynced queue entry on sign-out. Synced entries
+    // (rows with syncedAt set) are kept as harmless audit trail. The
+    // user accepts that signing out abandons any unsynced offline edits —
+    // a sharper trade-off than silently rewriting them to another account.
+    //
+    // Already-synced rows in Dexie (transactions, holdings, etc.) are
+    // NOT cleared here. The AdoptionPrompt path (BUG-2) is the right UX
+    // surface for "I see local data — adopt or discard?" on next sign-in.
+    // The Medium follow-up (FSG-2b) is to re-fire that prompt when the
+    // signed-in user_id changes across sessions, since the cloud
+    // dismissed-flag is per-user and currently lets a returning B skip
+    // adoption while A's data sits there.
+    try {
+      await db.syncQueue.filter((q) => !q.syncedAt).delete();
+    } catch (e) {
+      console.warn('[auth] signOut: syncQueue drain failed:', (e as Error).message);
+    }
     await supabase.auth.signOut();
     // v1.1 auth UX — clear the guest-mode flag so the next render lands
     // on the Login screen rather than back into a half-authenticated guest
