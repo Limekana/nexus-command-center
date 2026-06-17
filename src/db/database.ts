@@ -1,7 +1,7 @@
 import Dexie, { Table } from 'dexie';
-import { Transaction, BudgetCategory, PortfolioHolding, PortfolioLot, ApiCacheEntry, PortfolioSnapshot, ManualAsset, WatchlistItem, SavingsGoal } from '../types/finance';
+import { Transaction, BudgetCategory, PortfolioHolding, PortfolioLot, ApiCacheEntry, PortfolioSnapshot, ManualAsset, WatchlistItem, SavingsGoal, StockSale } from '../types/finance';
 import { Course, Grade, GradeImport, StudySession, Reading } from '../types/studies';
-import { WorkoutSession, WorkoutSet } from '../types/fitness';
+import { WorkoutSession, WorkoutSet, BodyMetric } from '../types/fitness';
 import { Task } from '../types/tasks';
 import { Goal } from '../types/goals';
 import { Habit, HabitCompletion } from '../types/habits';
@@ -66,7 +66,8 @@ export interface SyncQueueItem {
     | 'watchlist_item'
     | 'goal'
     | 'habit'
-    | 'habit_completion';
+    | 'habit_completion'
+    | 'stock_sale';
   entityId: string;
   operation: 'insert' | 'update' | 'delete';
   payload: string;
@@ -137,6 +138,19 @@ class NexusDB extends Dexie {
   // the sweep-tier guards run, so the UI shows scores immediately even when
   // the daily/weekly recompute window hasn't elapsed.
   insightsScores!: Table<InsightScoreRow, string>;
+
+  // v14 — LimeLog body metrics, READ-ONLY in NCC (v1.3). One row per
+  // (user, date) pulled from the LimeLog-owned `body_metrics` Supabase table.
+  // NCC displays the weight trend + measurements on the Fitness screen; it
+  // never writes here (no syncQueue entityType). Realtime already wired the
+  // body_metrics subscription in v1.2.1 (AUDIT-FSG-5); this table is where
+  // that pull lands (the AUDIT-FSG-5b residual — pullAll had nowhere to put
+  // body metrics until this table existed).
+  bodyMetrics!: Table<BodyMetric, string>;
+
+  // v15 — BUG-23 Stock Sales Tracking (v1.3.1). One row per realized sale.
+  // FIFO cost basis computed at sale time; realized P&L is Σ realizedGainLoss.
+  stockSales!: Table<StockSale, string>;
 
   syncQueue!: Table<SyncQueueItem, string>;
 
@@ -611,6 +625,82 @@ class NexusDB extends Dexie {
       insightsScores: 'id, ticker, kind, computedAt',
       syncQueue: 'id, entityType, syncedAt',
     });
+
+    // ─── v14 — LimeLog body metrics (v1.3, read-only consumption) ─────────
+    //
+    // Additive — one new `bodyMetrics` table. No upgrade hook; existing users
+    // come up empty and the body_metrics pull / realtime path populates it.
+    // PK is the row's UUID (LimeLog-generated, stable across sync). `date`
+    // index drives the chronological weight-trend query; `syncStatus` kept for
+    // index-shape parity with the other synced tables (always 'synced' here).
+    this.version(14).stores({
+      transactions: 'id, date, type, syncStatus, accountId',
+      budgetCategories: 'id, name',
+      portfolioHoldings: 'id, ticker, assetType',
+      apiCache: 'cacheKey, expiresAt',
+      gradeImports: 'id, importedAt',
+      courses: 'id, importId, name',
+      workoutSessions: 'id, date, sessionType, syncStatus',
+      workoutSets: 'id, sessionId, exercise',
+      tasks: 'id, dueDate, completed, priority, syncStatus',
+      studySessions: 'id, startedAt, subjectId, syncStatus',
+      readings: 'id, status, subjectId, updatedAt',
+      portfolioSnapshots: 'date',
+      portfolioLots: 'id, holdingId, purchaseDate, syncStatus',
+      manualAssets: 'id, assetType, syncStatus, archivedAt',
+      watchlistItems: 'id, ticker, assetType, syncStatus',
+      goals: 'id, goalType, completed, targetDate, syncStatus',
+      grades: 'id, subjectId, date, syncStatus',
+      ratingHistory: 'id, ticker, computedAt, [ticker+computedAt]',
+      savingsGoals: 'id, completedAt, createdAt, syncStatus',
+      habits: 'id, archivedAt, syncStatus, createdAt',
+      habitCompletions: 'id, habitId, date, syncStatus, [habitId+date]',
+      insightsScores: 'id, ticker, kind, computedAt',
+      bodyMetrics: 'id, date, syncStatus',
+      syncQueue: 'id, entityType, syncedAt',
+    });
+
+    // ─── v15 — BUG-23 Stock Sales Tracking (v1.3.1) ───────────────────────
+    //
+    // Adds the `stockSales` table (one row per realized sale) and a
+    // non-indexed `soldShares` field on portfolioLots (FIFO consumption per
+    // lot). soldShares isn't indexed, so the portfolioLots index string is
+    // unchanged; the upgrade hook back-fills `soldShares = 0` on every
+    // existing lot so `quantity - soldShares` is correct for legacy rows.
+    this.version(15).stores({
+      transactions: 'id, date, type, syncStatus, accountId',
+      budgetCategories: 'id, name',
+      portfolioHoldings: 'id, ticker, assetType',
+      apiCache: 'cacheKey, expiresAt',
+      gradeImports: 'id, importedAt',
+      courses: 'id, importId, name',
+      workoutSessions: 'id, date, sessionType, syncStatus',
+      workoutSets: 'id, sessionId, exercise',
+      tasks: 'id, dueDate, completed, priority, syncStatus',
+      studySessions: 'id, startedAt, subjectId, syncStatus',
+      readings: 'id, status, subjectId, updatedAt',
+      portfolioSnapshots: 'date',
+      portfolioLots: 'id, holdingId, purchaseDate, syncStatus',
+      manualAssets: 'id, assetType, syncStatus, archivedAt',
+      watchlistItems: 'id, ticker, assetType, syncStatus',
+      goals: 'id, goalType, completed, targetDate, syncStatus',
+      grades: 'id, subjectId, date, syncStatus',
+      ratingHistory: 'id, ticker, computedAt, [ticker+computedAt]',
+      savingsGoals: 'id, completedAt, createdAt, syncStatus',
+      habits: 'id, archivedAt, syncStatus, createdAt',
+      habitCompletions: 'id, habitId, date, syncStatus, [habitId+date]',
+      insightsScores: 'id, ticker, kind, computedAt',
+      bodyMetrics: 'id, date, syncStatus',
+      stockSales: 'id, ticker, soldAt, syncStatus',
+      syncQueue: 'id, entityType, syncedAt',
+    }).upgrade(async (tx) => {
+      // Back-fill soldShares = 0 on every existing lot (pre-sales-tracking
+      // rows). New lots default via the store; this covers legacy data so
+      // `quantity - (soldShares ?? 0)` is correct from first launch.
+      await tx.table('portfolioLots').toCollection().modify((l) => {
+        if (l.soldShares == null) l.soldShares = 0;
+      });
+    });
   }
 }
 
@@ -642,6 +732,8 @@ export async function clearAllLocalData(): Promise<void> {
       db.habits,
       db.habitCompletions,
       db.insightsScores,
+      db.bodyMetrics,
+      db.stockSales,
       db.syncQueue,
     ],
     async () => {
@@ -668,6 +760,8 @@ export async function clearAllLocalData(): Promise<void> {
         db.habits.clear(),
         db.habitCompletions.clear(),
         db.insightsScores.clear(),
+        db.bodyMetrics.clear(),
+        db.stockSales.clear(),
         db.syncQueue.clear(),
       ]);
     }

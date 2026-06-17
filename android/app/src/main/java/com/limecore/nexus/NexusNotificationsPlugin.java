@@ -346,35 +346,70 @@ public class NexusNotificationsPlugin extends Plugin {
     private static String pendingActionExtraJson = null;
 
     public static void deliverTap(NexusNotificationsPlugin instance, String route) {
+        // v1.3.1 BUG-14 — always buffer. notifyListeners is best-effort because
+        // on cold start the plugin is loaded (sInstance != null) BEFORE the JS
+        // useEffect that registers the listener runs, so the event would fire
+        // into a void. JS calls consumePendingTap() right after addListener
+        // succeeds to drain whatever the cold-start path left behind.
+        pendingTapRoute = route;
         if (instance != null) {
             JSObject ev = new JSObject();
             ev.put("route", route == null ? "" : route);
             instance.notifyListeners("notificationTap", ev);
-        } else {
-            pendingTapRoute = route;
         }
     }
 
     /** Mirror of deliverTap for action-button taps. Forwards the action id
      *  plus optional route + extra payload to the JS `notificationAction`
-     *  event listener. Buffered if the plugin isn't loaded yet. */
+     *  event listener. Always buffered (see deliverTap for why); notifyListeners
+     *  is best-effort. JS drains via consumePendingAction on mount. */
     public static void deliverAction(
         NexusNotificationsPlugin instance,
         String actionId,
         String route,
         String extraJson
     ) {
+        pendingActionId = actionId;
+        pendingActionRoute = route;
+        pendingActionExtraJson = extraJson;
         if (instance != null) {
             JSObject ev = new JSObject();
             ev.put("actionId", actionId == null ? "" : actionId);
             ev.put("route", route == null ? "" : route);
             ev.put("extraJson", extraJson == null ? "" : extraJson);
             instance.notifyListeners("notificationAction", ev);
-        } else {
-            pendingActionId = actionId;
-            pendingActionRoute = route;
-            pendingActionExtraJson = extraJson;
         }
+    }
+
+    // ─── Cold-start drain — JS pulls the buffered tap / action ──────────
+    //
+    // v1.3.1 BUG-14 — On a cold-start launched from a notification tap,
+    // notifyListeners fires before the JS useEffect registers its handler,
+    // so the event is dropped. JS calls these methods AFTER addListener
+    // resolves to harvest the buffer and complete the navigation. Warm-start
+    // taps still arrive via notifyListeners (the bridge already has a
+    // subscribed listener), AND also write the buffer — the buffer is then
+    // immediately drained by the same call, so the duplicate is a no-op
+    // (react-router navigate to the same route is idempotent).
+
+    @PluginMethod
+    public void consumePendingTap(PluginCall call) {
+        JSObject result = new JSObject();
+        result.put("route", pendingTapRoute == null ? "" : pendingTapRoute);
+        pendingTapRoute = null;
+        call.resolve(result);
+    }
+
+    @PluginMethod
+    public void consumePendingAction(PluginCall call) {
+        JSObject result = new JSObject();
+        result.put("actionId", pendingActionId == null ? "" : pendingActionId);
+        result.put("route", pendingActionRoute == null ? "" : pendingActionRoute);
+        result.put("extraJson", pendingActionExtraJson == null ? "" : pendingActionExtraJson);
+        pendingActionId = null;
+        pendingActionRoute = null;
+        pendingActionExtraJson = null;
+        call.resolve(result);
     }
 
     @Override

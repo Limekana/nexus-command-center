@@ -75,7 +75,7 @@ export async function scheduleBorrowReturnReminder(reading: Reading): Promise<vo
     title: 'Return to library',
     body: `${reading.title}${titleSuffix}`,
     at: when,
-    extra: { route: '/studies/library', readingId: reading.id },
+    extra: { route: '/', readingId: reading.id },
   });
 }
 

@@ -234,7 +234,7 @@ export default function AppShell() {
   }, []);
 
   const showFAB = location.pathname === '/' || location.pathname === '/tasks' ||
-    location.pathname === '/finance' || location.pathname === '/fitness' || location.pathname === '/studies';
+    location.pathname === '/finance';
 
   return (
     <div className="min-h-full flex flex-col bg-bg text-text">

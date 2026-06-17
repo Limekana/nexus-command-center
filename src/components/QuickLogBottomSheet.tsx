@@ -62,7 +62,16 @@ function QuickExpense({ onDone }: { onDone: () => void }) {
   const [amount, setAmount] = useState('');
   const [desc, setDesc] = useState('');
   const [categoryId, setCategoryId] = useState<string>('');
+  // v1.3.1 BUG-13 — Quick Log is now Account-aware. The v1.2 Account refactor
+  // requires every expense/income transaction to carry an accountId so the
+  // derived balance computation in lib/accountBalance.ts has a source.
+  // Quick Log was missed in that refactor and was silently writing accountId
+  // undefined, so QuickLog transactions never appeared in any account's
+  // running balance. Picker is required (disabled submit until set) to match
+  // the AddTransaction posture — no silent defaulting.
+  const [accountId, setAccountId] = useState<string>('');
   const categories = useFinanceStore((s) => s.budgetCategories);
+  const accounts = useFinanceStore((s) => s.manualAssets);
   const addTransaction = useFinanceStore((s) => s.addTransaction);
   // Only expense-type templates show on this tab (the tab is hard-coded
   // expense). Filtering here is cheaper than maintaining a separate cache.
@@ -70,13 +79,25 @@ function QuickExpense({ onDone }: { onDone: () => void }) {
     s.transactions.filter((t) => t.type === 'expense'),
   );
 
+  // When the user picks a category that has a pre-selected account (the
+  // BudgetCategory.linkedManualAssetId hint — actually defaultAccountId
+  // per the v1.2 follow-up rename comment), pre-fill the Account picker
+  // unless the user has already chosen one explicitly. Same UX contract
+  // as the full AddTransaction screen.
+  useEffect(() => {
+    if (accountId) return;
+    const cat = categories.find((c) => c.id === categoryId);
+    if (cat?.linkedManualAssetId) setAccountId(cat.linkedManualAssetId);
+  }, [categoryId, categories, accountId]);
+
   const submit = async () => {
     const n = parseFloat(amount);
-    if (!n || !desc.trim()) return;
+    if (!n || !desc.trim() || !accountId) return;
     await addTransaction({
       amount: n,
       description: desc.trim(),
       categoryId: categoryId || undefined,
+      accountId,
       date: new Date().toISOString().slice(0, 10),
       type: 'expense',
     });
@@ -92,6 +113,10 @@ function QuickExpense({ onDone }: { onDone: () => void }) {
             setAmount(String(t.amount));
             setDesc(t.description);
             if (t.categoryId) setCategoryId(t.categoryId);
+            // TransactionTemplate doesn't carry accountId (detection groups
+            // across whichever account each occurrence used) — the user
+            // still picks the account explicitly. The category's
+            // linkedManualAssetId may still pre-fill via the effect below.
           }}
           label={(t) => (
             <>
@@ -129,7 +154,23 @@ function QuickExpense({ onDone }: { onDone: () => void }) {
           </option>
         ))}
       </select>
-      <button className="btn w-full" onClick={submit}>
+      <select
+        className="input"
+        value={accountId}
+        onChange={(e) => setAccountId(e.target.value)}
+      >
+        <option value="">Account…</option>
+        {accounts.map((a) => (
+          <option key={a.id} value={a.id}>
+            {a.name}
+          </option>
+        ))}
+      </select>
+      <button
+        className="btn w-full"
+        onClick={submit}
+        disabled={!amount || !desc.trim() || !accountId}
+      >
         Save Expense
       </button>
     </div>

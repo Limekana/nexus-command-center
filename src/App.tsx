@@ -10,7 +10,7 @@ import { seedIfEmpty } from './db/seed';
 import { clearAllLocalData } from './db/database';
 import { supabase } from './lib/supabase';
 import { startRealtime, stopRealtime } from './lib/realtime';
-import { hydrateStudiesFromCloud, hydrateHabitsFromCloud } from './lib/cloudSync';
+import { hydrateStudiesFromCloud, hydrateHabitsFromCloud, hydrateBodyMetricsFromCloud } from './lib/cloudSync';
 import { useStudiesStore } from './store/useStudiesStore';
 import { isGuestMode } from './lib/guestMode';
 import AdoptionPrompt from './components/AdoptionPrompt';
@@ -30,15 +30,8 @@ import NetWorth from './screens/finance/NetWorth';
 import AccountDetail from './screens/finance/AccountDetail';
 import WhatIf from './screens/finance/WhatIf';
 import Watchlist from './screens/finance/Watchlist';
-import News from './screens/finance/News';
 import Insights from './screens/finance/Insights';
 import SavingsGoals from './screens/finance/SavingsGoals';
-import StudiesOverview from './screens/studies/StudiesOverview';
-import StudySessions from './screens/studies/StudySessions';
-import Library from './screens/studies/Library';
-import AddReading from './screens/studies/AddReading';
-import FitnessOverview from './screens/fitness/FitnessOverview';
-import LogWorkout from './screens/fitness/LogWorkout';
 import TasksOverview from './screens/tasks/TasksOverview';
 import AddTask from './screens/tasks/AddTask';
 import HabitsOverview from './screens/habits/HabitsOverview';
@@ -54,6 +47,7 @@ import { installRatingHistory } from './lib/ratingHistory';
 import { useTaskStore } from './store/useTaskStore';
 import { useSettingsStore } from './store/useSettingsStore';
 import { useHabitsStore } from './store/useHabitsStore';
+import { useBodyMetricsStore } from './store/useBodyMetricsStore';
 
 export default function App() {
   const unlocked = useAuthStore((s) => s.unlocked);
@@ -165,6 +159,25 @@ export default function App() {
       } catch (e) {
         console.warn('[app-init] habits hydration threw:', e);
       }
+      // v1.3 — body metrics hydration. Read-only consumption of LimeLog's
+      // body_metrics table. The dedicated Fitness screen was removed in the
+      // v1.3 scope reduction (BUG-15); this stays as the Dexie landing zone
+      // for the body_metrics realtime subscription + a future life-signal
+      // input, so the table + store are kept warm even without a UI surface.
+      // Same sibling-of-habits shape; fire-and-forget so a failure doesn't
+      // block app-init.
+      try {
+        const bodyResult = await hydrateBodyMetricsFromCloud(userId);
+        console.log(
+          `[app-init] body metrics hydrated: rows=${bodyResult.bodyMetrics}, errors=${bodyResult.errors.length}`,
+        );
+        if (bodyResult.errors.length > 0) {
+          console.warn('[app-init] body metrics hydration errors:', bodyResult.errors);
+        }
+        await useBodyMetricsStore.getState().load();
+      } catch (e) {
+        console.warn('[app-init] body metrics hydration threw:', e);
+      }
       // Now open the realtime channel for future deltas.
       // v1.2.1 — AUDIT-FSG-5: pass userId so per-table subscriptions can
       // scope to `user_id=eq.<uid>` on tables without a sharing surface.
@@ -257,7 +270,6 @@ export default function App() {
           <Route path="/finance/portfolio/manage" element={<ManageHoldings />} />
           <Route path="/finance/portfolio/lots/:id" element={<ManageLots />} />
           <Route path="/finance/portfolio/watchlist" element={<Watchlist />} />
-          <Route path="/finance/news" element={<News />} />
           <Route path="/finance/insights" element={<Insights />} />
           <Route path="/finance/savings" element={<SavingsGoals />} />
           <Route path="/finance/networth" element={<NetWorth />} />
@@ -266,12 +278,6 @@ export default function App() {
           <Route path="/finance/account/:id" element={<AccountDetail />} />
           <Route path="/finance/whatif" element={<WhatIf />} />
           <Route path="/finance/budgets" element={<ManageBudgets />} />
-          <Route path="/studies" element={<StudiesOverview />} />
-          <Route path="/studies/sessions" element={<StudySessions />} />
-          <Route path="/studies/library" element={<Library />} />
-          <Route path="/studies/library/add" element={<AddReading />} />
-          <Route path="/fitness" element={<FitnessOverview />} />
-          <Route path="/fitness/log" element={<LogWorkout />} />
           <Route path="/tasks" element={<TasksOverview />} />
           <Route path="/tasks/add" element={<AddTask />} />
           <Route path="/habits" element={<HabitsOverview />} />

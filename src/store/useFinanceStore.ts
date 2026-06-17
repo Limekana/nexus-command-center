@@ -1,9 +1,10 @@
 import { create } from 'zustand';
 import { db } from '../db/database';
-import { Transaction, BudgetCategory, PortfolioHolding, PortfolioLot, PortfolioSnapshot, ManualAsset, WatchlistItem } from '../types/finance';
+import { Transaction, BudgetCategory, PortfolioHolding, PortfolioLot, PortfolioSnapshot, ManualAsset, WatchlistItem, StockSale } from '../types/finance';
 import { generateId } from '../utils/uuid';
 import { localDateKey } from '../utils/formatters';
 import { enqueue } from '../db/syncQueue';
+import { computeSale, applySoldShares } from '../lib/stockSaleFifo';
 import { getQuotes, QuoteResult } from '../api/finnhub';
 import { getCryptoPrices, CryptoResult } from '../api/coingecko';
 import { ensureFxRates, convertSync } from '../api/fxRates';
@@ -43,6 +44,9 @@ interface FinanceStore {
   // store an intermediate map because consumers usually need either
   // "lots for one holding" (filter) or "totals" (reduce), both cheap.
   portfolioLots: PortfolioLot[];
+  // v1.3.1 (BUG-23) — realized stock sales. Drives the Realized P&L card +
+  // closed-positions section; each lot's soldShares is derived from these.
+  stockSales: StockSale[];
   stockQuotes: QuoteResult[];
   cryptoPrices: CryptoResult | null;
   fxRates: Record<string, number> | null; // USD-anchored rates
@@ -102,6 +106,19 @@ interface FinanceStore {
   updateLot: (id: string, patch: Partial<Omit<PortfolioLot, 'id' | 'createdAt'>>) => Promise<void>;
   deleteLot: (id: string) => Promise<void>;
 
+  // v1.3.1 (BUG-23) — record a FIFO stock sale. Computes cost basis over the
+  // holding's current lots, persists the sale, re-derives soldShares, and
+  // recomputes the holding's cached position. Throws on oversell.
+  addStockSale: (input: {
+    holdingId: string;
+    ticker: string;
+    sharesSold: number;
+    salePricePerShare: number;
+    currency: string;
+    soldAt: string;
+  }) => Promise<void>;
+  deleteStockSale: (id: string) => Promise<void>;
+
   addManualAsset: (a: Omit<ManualAsset, 'id' | 'createdAt' | 'syncStatus'>) => Promise<void>;
   updateManualAsset: (id: string, patch: Partial<Omit<ManualAsset, 'id' | 'createdAt'>>) => Promise<void>;
   deleteManualAsset: (id: string) => Promise<void>;
@@ -133,6 +150,7 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
   budgetCategories: [],
   holdings: [],
   portfolioLots: [],
+  stockSales: [],
   stockQuotes: [],
   cryptoPrices: null,
   fxRates: null,
@@ -155,7 +173,7 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
 
   async load() {
     set({ loading: true });
-    const [transactions, budgetCategories, holdings, portfolioLots, portfolioSnapshots, manualAssets, watchlist] = await Promise.all([
+    const [transactions, budgetCategories, holdings, portfolioLots, portfolioSnapshots, manualAssets, watchlist, stockSales] = await Promise.all([
       db.transactions.orderBy('date').reverse().toArray(),
       db.budgetCategories.toArray(),
       db.portfolioHoldings.toArray(),
@@ -163,6 +181,7 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
       db.portfolioSnapshots.orderBy('date').toArray(),
       db.manualAssets.toArray(),
       db.watchlistItems.toArray(),
+      db.stockSales.toArray(),
     ]);
     // Legacy migration: for any holding with avg_cost_native + quantity set
     // but no lots, synthesize one lot so the new lots-driven aggregation
@@ -199,7 +218,12 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
       if (synthesized.length) portfolioLots.push(...synthesized);
       localStorage.setItem(migrationKey, '1');
     }
-    set({ transactions, budgetCategories, holdings, portfolioLots, portfolioSnapshots, manualAssets, watchlist, loading: false });
+    // v1.3.1 (BUG-23) — soldShares is DERIVED from stock_sales.lotAllocations
+    // (single source of truth), not a separately-synced lot field. Re-derive
+    // on every load so a post-pull lot set (which arrives without soldShares —
+    // the cloud portfolio_lots table doesn't carry it) is corrected.
+    const lotsWithSold = applySoldShares(portfolioLots, stockSales);
+    set({ transactions, budgetCategories, holdings, portfolioLots: lotsWithSold, portfolioSnapshots, manualAssets, watchlist, stockSales, loading: false });
   },
 
   async addTransaction(t) {
@@ -376,6 +400,58 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
     const nextLots = get().portfolioLots.filter((l) => l.id !== id);
     set({ portfolioLots: nextLots });
     await recomputeHoldingAggregates(existing.holdingId, nextLots, set, get);
+  },
+
+  async addStockSale({ holdingId, ticker, sharesSold, salePricePerShare, currency, soldAt }) {
+    const holdingLots = get().portfolioLots.filter((l) => l.holdingId === holdingId);
+    // Throws on oversell — the form validates first; this is the backstop.
+    const { costBasisPerShare, lotAllocations } = computeSale(ticker, sharesSold, holdingLots);
+    const realizedGainLoss = (salePricePerShare - costBasisPerShare) * sharesSold;
+    const sale: StockSale = {
+      id: generateId(),
+      ticker,
+      holdingId,
+      sharesSold,
+      salePricePerShare,
+      costBasisPerShare,
+      realizedGainLoss,
+      currency,
+      soldAt,
+      lotAllocations,
+      syncStatus: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+    await db.stockSales.add(sale);
+    await enqueue('stock_sale', sale.id, 'insert', sale);
+    const nextSales = [...get().stockSales, sale];
+    // Re-derive soldShares across all lots from the full sales set, then
+    // persist the touched lots so the Dexie cache matches in-memory state.
+    const nextLots = applySoldShares(get().portfolioLots, nextSales);
+    for (const a of lotAllocations) {
+      const l = nextLots.find((x) => x.id === a.lotId);
+      if (l) await db.portfolioLots.put(l);
+    }
+    set({ stockSales: nextSales, portfolioLots: nextLots });
+    await recomputeHoldingAggregates(holdingId, nextLots, set, get);
+  },
+
+  async deleteStockSale(id) {
+    const existing = get().stockSales.find((s) => s.id === id);
+    if (!existing) return;
+    await db.stockSales.delete(id);
+    await enqueue('stock_sale', id, 'delete', { id });
+    const nextSales = get().stockSales.filter((s) => s.id !== id);
+    // Removing a sale returns its shares to the position — re-derive soldShares
+    // and re-persist the lots it had touched.
+    const nextLots = applySoldShares(get().portfolioLots, nextSales);
+    for (const a of existing.lotAllocations ?? []) {
+      const l = nextLots.find((x) => x.id === a.lotId);
+      if (l) await db.portfolioLots.put(l);
+    }
+    set({ stockSales: nextSales, portfolioLots: nextLots });
+    if (existing.holdingId) {
+      await recomputeHoldingAggregates(existing.holdingId, nextLots, set, get);
+    }
   },
 
   async addManualAsset(a) {
@@ -802,21 +878,17 @@ async function recomputeHoldingAggregates(
   let totalQty = 0;
   let totalCost = 0;
   for (const l of holdingLots) {
-    totalQty += l.quantity;
-    // For cross-currency lots, weighted avg is tricky. Practical heuristic:
-    // treat each lot's cost in *its own* currency, then sum naively. The
-    // resulting avgCostNative is only used as a display approximation; the
-    // *real* P/L math in Portfolio.tsx walks each lot individually. So a
-    // mixed-currency holding will show "Avg cost ~X EUR" using whatever
-    // currency we declare dominant, but the totals card aggregates across
-    // lots correctly via per-lot convertSync calls.
-    if (l.costCurrency === dominantCurrency) {
-      totalCost += l.quantity * l.costPerUnit;
-    } else {
-      // Skip cross-currency lots in the cached average. The render layer
-      // still totals them correctly via per-lot conversion.
-      totalCost += l.quantity * l.costPerUnit;
-    }
+    // v1.3.1 (BUG-23) — position size + cost basis net out FIFO-sold shares.
+    // A fully-sold lot (remaining 0) contributes nothing; a partially-sold
+    // lot contributes only its un-consumed remainder. This is what makes
+    // h.quantity (the cached aggregate every consumer reads) the *current*
+    // held position, and avgCostNative the cost basis of what's still held.
+    const remaining = Math.max(0, l.quantity - (l.soldShares ?? 0));
+    totalQty += remaining;
+    // Mixed-currency lots: the cached avg is a display approximation only —
+    // the real P/L math in Portfolio.tsx walks each lot via per-lot
+    // convertSync. We sum naively in the dominant currency regardless.
+    totalCost += remaining * l.costPerUnit;
   }
   const avgCost = totalQty > 0 ? totalCost / totalQty : undefined;
   const updated: PortfolioHolding = {

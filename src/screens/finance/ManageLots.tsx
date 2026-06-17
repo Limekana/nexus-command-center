@@ -9,6 +9,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
 import RowActions from '../../components/RowActions';
 import { useFinanceStore } from '../../store/useFinanceStore';
+import { computeSale, totalRemainingShares } from '../../lib/stockSaleFifo';
 import type { PortfolioLot } from '../../types/finance';
 
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'SEK', 'NOK', 'DKK', 'CHF', 'JPY'];
@@ -25,6 +26,7 @@ export default function ManageLots() {
   const addLot = useFinanceStore((s) => s.addLot);
   const updateLot = useFinanceStore((s) => s.updateLot);
   const deleteLot = useFinanceStore((s) => s.deleteLot);
+  const addStockSale = useFinanceStore((s) => s.addStockSale);
   const refreshPortfolio = useFinanceStore((s) => s.refreshPortfolio);
 
   const lots = useMemo(
@@ -44,6 +46,13 @@ export default function ManageLots() {
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [notes, setNotes] = useState('');
 
+  // v1.3.1 (BUG-23) — Record Sale form state.
+  const [selling, setSelling] = useState(false);
+  const [sellShares, setSellShares] = useState('');
+  const [sellPrice, setSellPrice] = useState('');
+  const [sellCurrency, setSellCurrency] = useState('EUR');
+  const [sellDate, setSellDate] = useState(() => new Date().toISOString().slice(0, 10));
+
   if (!holding) {
     return (
       <>
@@ -56,6 +65,7 @@ export default function ManageLots() {
   }
 
   const startAdd = () => {
+    setSelling(false);
     setEditingId(null);
     setAdding(true);
     setQty('');
@@ -67,6 +77,7 @@ export default function ManageLots() {
   };
 
   const startEdit = (lot: PortfolioLot) => {
+    setSelling(false);
     setAdding(false);
     setEditingId(lot.id);
     setQty(String(lot.quantity));
@@ -79,6 +90,7 @@ export default function ManageLots() {
   const cancel = () => {
     setEditingId(null);
     setAdding(false);
+    setSelling(false);
   };
 
   const save = async () => {
@@ -112,6 +124,37 @@ export default function ManageLots() {
     await refreshPortfolio();
   };
 
+  const startSell = () => {
+    setAdding(false);
+    setEditingId(null);
+    setSelling(true);
+    setSellShares('');
+    setSellPrice('');
+    setSellCurrency(lots[0]?.costCurrency ?? 'EUR');
+    setSellDate(new Date().toISOString().slice(0, 10));
+  };
+
+  const submitSale = async () => {
+    const shares = parseFloat(sellShares);
+    const price = parseFloat(sellPrice);
+    if (!shares || shares <= 0 || isNaN(price) || price < 0) return;
+    try {
+      await addStockSale({
+        holdingId: holding.id,
+        ticker: holding.ticker,
+        sharesSold: shares,
+        salePricePerShare: price,
+        currency: sellCurrency,
+        soldAt: sellDate,
+      });
+      await refreshPortfolio();
+      cancel();
+    } catch (e) {
+      // Oversell or other backstop failure — surface the message inline.
+      alert((e as Error).message);
+    }
+  };
+
   // Per-currency totals for the summary card. If the user buys in mixed
   // currencies (e.g. some EUR, some USD), we surface each separately so the
   // math is legible instead of fudging an FX conversion here. The Portfolio
@@ -134,6 +177,23 @@ export default function ManageLots() {
 
   const editingNow = adding || editingId != null;
 
+  // v1.3.1 (BUG-23) — live FIFO preview for the sale form. Plain compute (not
+  // a hook) so it sits naturally after the early return; computeSale is cheap.
+  const remainingShares = totalRemainingShares(lots);
+  const sellSharesNum = parseFloat(sellShares);
+  let salePreview: { costBasisPerShare: number; realizedGainLoss: number } | null = null;
+  let saleError: string | null = null;
+  if (selling && sellSharesNum > 0) {
+    try {
+      const c = computeSale(holding.ticker, sellSharesNum, lots);
+      const priceNum = parseFloat(sellPrice);
+      const rgl = (isNaN(priceNum) ? 0 : priceNum - c.costBasisPerShare) * sellSharesNum;
+      salePreview = { costBasisPerShare: c.costBasisPerShare, realizedGainLoss: rgl };
+    } catch (e) {
+      saleError = (e as Error).message;
+    }
+  }
+
   return (
     <>
       <AppHeader
@@ -142,13 +202,23 @@ export default function ManageLots() {
         backLabel="Holdings"
         showAvatar={false}
         action={
-          !editingNow && (
-            <button
-              onClick={startAdd}
-              className="text-xs px-2 py-1 rounded-sm border border-primary text-primary active:bg-primary/10"
-            >
-              + Purchase
-            </button>
+          !editingNow && !selling && (
+            <>
+              {holding.quantity > 0 && (
+                <button
+                  onClick={startSell}
+                  className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary"
+                >
+                  − Sell
+                </button>
+              )}
+              <button
+                onClick={startAdd}
+                className="text-xs px-2 py-1 rounded-sm border border-primary text-primary active:bg-primary/10"
+              >
+                + Purchase
+              </button>
+            </>
           )
         }
       />
@@ -243,6 +313,74 @@ export default function ManageLots() {
             <div className="text-[10px] text-text-muted">
               Cost is stored in the currency you paid in. The Portfolio screen
               converts everything to your base currency at quote time.
+            </div>
+          </div>
+        )}
+
+        {/* Record Sale form (v1.3.1 BUG-23) — FIFO cost basis over oldest lots */}
+        {selling && (
+          <div className="card space-y-2">
+            <div className="font-heading font-semibold text-sm">Record Sale</div>
+            <div className="text-[10px] text-text-muted">
+              {formatNumber(remainingShares)} units available · cost basis is FIFO (oldest lots first)
+            </div>
+            <div className="flex gap-2">
+              <input
+                className="input flex-1"
+                placeholder="Shares to sell"
+                inputMode="decimal"
+                value={sellShares}
+                onChange={(e) => setSellShares(e.target.value)}
+                autoFocus
+              />
+              <input
+                className="input flex-1"
+                placeholder="Sale price / unit"
+                inputMode="decimal"
+                value={sellPrice}
+                onChange={(e) => setSellPrice(e.target.value)}
+              />
+              <select
+                className="input max-w-[88px]"
+                value={sellCurrency}
+                onChange={(e) => setSellCurrency(e.target.value)}
+              >
+                {CURRENCIES.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+            <input
+              className="input"
+              type="date"
+              value={sellDate}
+              onChange={(e) => setSellDate(e.target.value)}
+            />
+            {saleError && <div className="text-[11px] text-danger">{saleError}</div>}
+            {salePreview && (
+              <div className="text-xs rounded-sm border border-border/60 bg-surface2/30 px-2.5 py-2 space-y-0.5">
+                <div className="flex justify-between">
+                  <span className="text-text-muted">Cost basis (FIFO)</span>
+                  <span className="font-medium">
+                    {formatNumber(salePreview.costBasisPerShare)} {sellCurrency}/unit
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-text-muted">
+                    Realized {salePreview.realizedGainLoss >= 0 ? 'gain' : 'loss'}
+                  </span>
+                  <span className={`font-semibold ${salePreview.realizedGainLoss >= 0 ? 'text-success' : 'text-danger'}`}>
+                    {salePreview.realizedGainLoss >= 0 ? '+' : '−'}
+                    {formatNumber(Math.abs(salePreview.realizedGainLoss), 2)} {sellCurrency}
+                  </span>
+                </div>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <button className="btn flex-1" onClick={submitSale} disabled={!salePreview}>
+                Record Sale
+              </button>
+              <button className="btn-ghost flex-1" onClick={cancel}>Cancel</button>
             </div>
           </div>
         )}

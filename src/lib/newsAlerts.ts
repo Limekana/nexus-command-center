@@ -154,7 +154,7 @@ export async function runNewsAlertsTick(): Promise<void> {
         category: 'news',
         title: `${ticker} · ${item.source}`,
         body: item.headline.slice(0, 200),
-        extra: { route: '/finance/news', url: item.url },
+        extra: { route: '/finance?tab=portfolio', url: item.url },
       });
       if (result.ok) {
         seen.add(key);
@@ -186,7 +186,7 @@ export async function runNewsAlertsTick(): Promise<void> {
           category: 'news',
           title: `Market · ${item.source}`,
           body: item.headline.slice(0, 200),
-          extra: { route: '/finance/news', url: item.url },
+          extra: { route: '/finance?tab=portfolio', url: item.url },
         });
         if (result.ok) {
           seen.add(key);
@@ -219,7 +219,7 @@ export async function runNewsAlertsTick(): Promise<void> {
           category: 'news',
           title: 'Market move',
           body: `${top.ticker}: ${sign}${Math.abs(top.dp).toFixed(2)}% today`,
-          extra: { route: '/finance/news' },
+          extra: { route: '/finance?tab=portfolio' },
         });
         if (result.ok) {
           localStorage.setItem(BIG_MOVE_LAST_KEY, today);

@@ -100,9 +100,43 @@ export interface PortfolioLot {
   // can be stamped without inventing a date the user didn't provide.
   purchaseDate?: string;
   notes?: string;
+  /**
+   * v1.3.1 (BUG-23) — shares from this lot consumed by FIFO stock sales.
+   * A lot's remaining (still-held) shares = `quantity - (soldShares ?? 0)`.
+   * Position size everywhere nets this out. Defaults to 0; the Dexie v15
+   * upgrade hook back-fills existing rows.
+   */
+  soldShares?: number;
   syncStatus: SyncStatus;
   createdAt: string;
   updatedAt?: string;
+}
+
+// v1.3.1 (BUG-23) — FIFO audit-trail entry: which lot supplied how many of
+// the shares sold, captured at sale time.
+export interface LotAllocation {
+  lotId: string;
+  sharesTaken: number;
+}
+
+// v1.3.1 (BUG-23) — a realized stock sale. Cost basis is computed at sale
+// time via FIFO across the holding's lots (oldest first); `lotAllocations`
+// is the audit trail of which lots supplied the sold shares. Sales are
+// append-only records — the active position is derived from lots (each lot's
+// `soldShares` grows), and realized P&L is the Σ of `realizedGainLoss`.
+export interface StockSale {
+  id: string;
+  ticker: string;
+  holdingId?: string;
+  sharesSold: number;
+  salePricePerShare: number;
+  costBasisPerShare: number;   // FIFO weighted-average at sale time
+  realizedGainLoss: number;    // (salePrice − costBasis) × sharesSold, in `currency`
+  currency: string;
+  soldAt: string;              // ISO date (YYYY-MM-DD)
+  lotAllocations: LotAllocation[];
+  syncStatus: SyncStatus;
+  createdAt: string;
 }
 
 // v1.2 follow-up — CTO Account-based finance refactor. Replaces the

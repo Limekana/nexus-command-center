@@ -12,7 +12,7 @@
 // overflow-x-auto container so it scrolls horizontally. A small "legend"
 // row below explains the colour scale and shows the visible total.
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { localDateKey } from '../utils/formatters';
 
 export type HeatmapTint = 'primary' | 'success' | 'warning' | 'danger';
@@ -136,9 +136,20 @@ export default function HeatmapCalendar({
   const GAP = 2;
   const colW = CELL + GAP;
 
+  // v1.3.1 BUG-11 — initialize scrolled to the rightmost (most-recent) end.
+  // The 53-week grid runs oldest→newest left-to-right; without this nudge
+  // every cold mount lands the user looking at last December instead of
+  // today. Browsers clamp scrollLeft to the max automatically so we don't
+  // need to compute the exact target.
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, [columns.length]);
+
   return (
     <div className="w-full">
-      <div className="overflow-x-auto -mx-1 px-1">
+      <div ref={scrollRef} className="overflow-x-auto -mx-1 px-1">
         <div style={{ width: columns.length * colW }}>
           {/* Month markers row */}
           <div className="relative h-3 mb-0.5" style={{ width: columns.length * colW }}>

@@ -33,8 +33,10 @@ interface Tab {
 const tabs: Tab[] = [
   { to: '/', label: 'Home', icon: '⊞', match: (p) => p === '/' },
   { to: '/finance', label: 'Finance', icon: '💰', match: (p) => p === '/finance' || p.startsWith('/finance/') },
-  { to: '/studies', label: 'Studies', icon: '📚', match: (p) => p === '/studies' || p.startsWith('/studies/') },
-  { to: '/fitness', label: 'Fitness', icon: '💪', match: (p) => p === '/fitness' || p.startsWith('/fitness/') },
+  // v1.3 scope reduction — Studies + Fitness tabs removed (their dedicated
+  // screens were retired). Life is promoted to a primary tab; it surfaces
+  // the cross-domain life score those domains now feed as signals.
+  { to: '/life', label: 'Life', icon: '◎', match: (p) => p === '/life' },
   { to: '/tasks', label: 'Tasks', icon: '✅', match: (p) => p === '/tasks' || p.startsWith('/tasks/') },
 ];
 
@@ -63,10 +65,10 @@ export default function BottomTabBar() {
               aria-hidden
               className="absolute top-1.5 bottom-1.5 left-1.5 rounded-pill pointer-events-none transition-transform duration-300 ease-spring-soft"
               style={{
-                // 5 tabs evenly fill the inner space (width minus left+right
-                // 1.5 padding on the .glass-strong). Each tab occupies 1/5 of
+                // 4 tabs evenly fill the inner space (width minus left+right
+                // 1.5 padding on the .glass-strong). Each tab occupies 1/4 of
                 // that, so translateX = activeIdx * 100%.
-                width: 'calc((100% - 0.75rem) / 5)',
+                width: 'calc((100% - 0.75rem) / 4)',
                 transform: `translateX(calc(${activeIdx} * 100%))`,
                 background: 'rgba(0, 212, 255, 0.14)',
                 boxShadow: '0 0 0 1px rgba(0, 212, 255, 0.55), 0 0 18px -6px rgba(0, 212, 255, 0.5)',

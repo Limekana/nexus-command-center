@@ -105,6 +105,20 @@ export interface NotificationActionEvent {
   extraJson: string;
 }
 
+/** Result of consumePendingTap — see plugin docstring. Empty route means
+ *  the buffer was clean. v1.3.1 BUG-14 cold-start drain. */
+export interface PendingTapResult {
+  route: string;
+}
+
+/** Result of consumePendingAction — see plugin docstring. Empty actionId
+ *  means the buffer was clean. v1.3.1 BUG-14 cold-start drain. */
+export interface PendingActionResult {
+  actionId: string;
+  route: string;
+  extraJson: string;
+}
+
 export interface NexusNotificationsPlugin {
   checkPermission(): Promise<PermissionResult>;
   requestPermission(): Promise<PermissionResult>;
@@ -112,6 +126,13 @@ export interface NexusNotificationsPlugin {
   schedule(spec: ScheduleSpec): Promise<ScheduleResult>;
   cancel(spec: CancelSpec): Promise<void>;
   getPending(): Promise<PendingResult>;
+  /** Drain the cold-start tap buffer. Called by onNotificationTap after
+   *  addListener resolves to recover a tap that landed before JS subscribed
+   *  (cold start from a notification tap). v1.3.1 BUG-14. */
+  consumePendingTap(): Promise<PendingTapResult>;
+  /** Drain the cold-start action buffer. Same rationale as consumePendingTap.
+   *  v1.3.1 BUG-14. */
+  consumePendingAction(): Promise<PendingActionResult>;
   addListener(
     eventName: 'notificationTap',
     listener: (event: NotificationTapEvent) => void,

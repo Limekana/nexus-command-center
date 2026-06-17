@@ -10,6 +10,7 @@ import DividendTracker from '../../components/DividendTracker';
 import MacroStrip from '../../components/MacroStrip';
 import InsightsCard from '../../components/InsightsCard';
 import RatingPill from '../../components/RatingPill';
+import RealizedPnLSection from '../../components/RealizedPnLSection';
 import { useFinanceStore } from '../../store/useFinanceStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { formatCacheAge } from '../../utils/formatters';
@@ -80,7 +81,11 @@ function costBasisFromLots(
   if (holdingLots.length > 0) {
     let total = 0;
     for (const lot of holdingLots) {
-      const native = lot.quantity * lot.costPerUnit;
+      // v1.3.1 (BUG-23) — cost basis tracks CURRENTLY HELD shares, so it nets
+      // out FIFO-sold shares to stay consistent with the net position value
+      // (which reads h.quantity, also net). A fully-sold lot contributes 0.
+      const remaining = Math.max(0, lot.quantity - (lot.soldShares ?? 0));
+      const native = remaining * lot.costPerUnit;
       const conv = convertSync(native, lot.costCurrency, baseCurrency, rates);
       if (conv == null) return null;
       total += conv;
@@ -567,6 +572,10 @@ export default function Portfolio() {
             />
           ))}
         </div>
+
+        {/* v1.3.1 (BUG-23) — realized P/L + closed positions. Renders nothing
+            until the first sale is recorded. */}
+        <RealizedPnLSection />
       </div>
       <HoldingDetailSheet holding={detailHolding} onClose={() => setDetailHolding(null)} />
     </>

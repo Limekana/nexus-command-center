@@ -8,6 +8,7 @@ import { useStudiesStore } from './useStudiesStore';
 import { useFitnessStore } from './useFitnessStore';
 import { useTaskStore } from './useTaskStore';
 import { useGoalsStore } from './useGoalsStore';
+import { useBodyMetricsStore } from './useBodyMetricsStore';
 
 // Reload every cloud-synced data store from Dexie. Called after each pull so
 // that rows newly merged into Dexie (from other devices, Realtime triggers,
@@ -25,6 +26,12 @@ async function reloadDataStores(): Promise<void> {
       useFitnessStore.getState().load(),
       useTaskStore.getState().load(),
       useGoalsStore.getState().load(),
+      // v1.3 — body metrics surface on the Fitness screen; refresh after a
+      // realtime-triggered pull so a cross-device LimeLog body-metric edit
+      // shows up without a navigation. (AUDIT-FSG-5b: this is the in-memory
+      // half of the fix — the Dexie half is hydrateBodyMetricsFromCloud in
+      // pullAll.)
+      useBodyMetricsStore.getState().load(),
     ]);
   } catch (e) {
     // Reload failures shouldn't surface as sync errors — the data IS in Dexie,

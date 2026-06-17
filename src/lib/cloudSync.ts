@@ -25,10 +25,10 @@ import { supabase } from './supabase';
 import { db, SyncQueueItem } from '../db/database';
 import { listPending } from '../db/syncQueue';
 import { generateId, legacyIdToUuid } from '../utils/uuid';
-import type { Transaction, BudgetCategory, PortfolioHolding, PortfolioLot, ManualAsset, WatchlistItem } from '../types/finance';
+import type { Transaction, BudgetCategory, PortfolioHolding, PortfolioLot, ManualAsset, WatchlistItem, StockSale } from '../types/finance';
 import { legacyAssetTypeToAccountType } from '../types/finance';
 import type { Course, Grade, StudySession, Reading } from '../types/studies';
-import type { WorkoutSession, WorkoutSet } from '../types/fitness';
+import type { WorkoutSession, WorkoutSet, BodyMetric } from '../types/fitness';
 import type { Task, TaskPriority } from '../types/tasks';
 import type { Goal, GoalType } from '../types/goals';
 import type { Habit, HabitCompletion } from '../types/habits';
@@ -152,6 +152,38 @@ async function pushPortfolioLot(item: SyncQueueItem, ctx: PushContext): Promise<
     updated_at: updatedAt,
   };
   const { error } = await supabase.from('portfolio_lots').upsert(row);
+  if (error) throw error;
+}
+
+// v1.3.1 (BUG-23) — realized stock sale. Append-only on the cloud (hard delete
+// on removal — there's no deleted_at column, matching the plan's schema). The
+// per-lot soldShares is NOT pushed (the cloud portfolio_lots table has no such
+// column); it's derived on every device from these sales' lot_allocations.
+async function pushStockSale(item: SyncQueueItem, ctx: PushContext): Promise<void> {
+  if (item.operation === 'delete') {
+    const { error } = await supabase
+      .from('stock_sales')
+      .delete()
+      .eq('id', legacyIdToUuid(item.entityId));
+    if (error) throw error;
+    return;
+  }
+  const local: StockSale = JSON.parse(item.payload);
+  const row = {
+    id: legacyIdToUuid(local.id),
+    user_id: ctx.userId,
+    ticker: local.ticker,
+    holding_id: local.holdingId ? legacyIdToUuid(local.holdingId) : null,
+    shares_sold: local.sharesSold,
+    sale_price_per_share: local.salePricePerShare,
+    cost_basis_per_share: local.costBasisPerShare,
+    realized_gain_loss: local.realizedGainLoss,
+    currency: local.currency,
+    sold_at: local.soldAt,
+    lot_allocations: local.lotAllocations,
+    created_at: local.createdAt,
+  };
+  const { error } = await supabase.from('stock_sales').upsert(row);
   if (error) throw error;
 }
 
@@ -480,6 +512,7 @@ const pushHandlers: Record<SyncQueueItem['entityType'], (item: SyncQueueItem, ct
   budget_category: pushBudgetCategory,
   portfolio_holding: pushPortfolioHolding,
   portfolio_lot: pushPortfolioLot,
+  stock_sale: pushStockSale,
   manual_asset: pushManualAsset,
   watchlist_item: pushWatchlistItem,
   goal: pushGoal,
@@ -527,6 +560,7 @@ const ENTITY_PRIORITY: Record<SyncQueueItem['entityType'], number> = {
   study_session: 2, // FK → subjects (nullable)
   reading: 2, // FK → subjects (nullable)
   portfolio_lot: 2, // FK → portfolio_holdings
+  stock_sale: 2, // logically follows holdings (holding_id is a plain ref, no hard FK)
   manual_asset: 1, // no FK dependencies
   watchlist_item: 1, // no FK dependencies
   goal: 1, // no FK dependencies
@@ -585,6 +619,10 @@ export interface PullResult {
   studySessions: number;
   readings: number;
   goals: number;
+  habits: number;
+  habitCompletions: number;
+  bodyMetrics: number;
+  stockSales: number;
   errors: string[];
 }
 
@@ -840,6 +878,102 @@ export async function hydrateHabitsFromCloud(
   return { habits: habitCount, completions: completionCount, errors };
 }
 
+// v1.3 — body metrics hydration. LimeLog owns the `body_metrics` table; NCC
+// reads it (push-only flow, same as workout_sessions). Same pattern as
+// habits: pull all rows for the user into Dexie so the Fitness screen's body
+// section has data from the first paint, then the realtime channel (already
+// subscribed to body_metrics since v1.2.1) handles deltas. Closes the
+// AUDIT-FSG-5b residual — pullAll previously had nowhere to land these rows.
+export interface BodyMetricsHydrationResult {
+  bodyMetrics: number;
+  errors: string[];
+}
+
+export async function hydrateBodyMetricsFromCloud(
+  userId: string,
+): Promise<BodyMetricsHydrationResult> {
+  const errors: string[] = [];
+  let count = 0;
+
+  try {
+    const { data, error } = await supabase
+      .from('body_metrics')
+      .select('*')
+      .eq('user_id', userId);
+    if (error) throw error;
+    if (data) {
+      const rows: BodyMetric[] = (data as any[]).map((r) => ({
+        id: r.id,
+        date: r.date,
+        weightKg: r.weight_kg != null ? Number(r.weight_kg) : undefined,
+        chestCm: r.chest_cm != null ? Number(r.chest_cm) : undefined,
+        waistCm: r.waist_cm != null ? Number(r.waist_cm) : undefined,
+        hipsCm: r.hips_cm != null ? Number(r.hips_cm) : undefined,
+        armsCm: r.arms_cm != null ? Number(r.arms_cm) : undefined,
+        legsCm: r.legs_cm != null ? Number(r.legs_cm) : undefined,
+        notes: r.notes ?? undefined,
+        syncStatus: 'synced' as const,
+        createdAt: r.created_at,
+        updatedAt: r.updated_at,
+      }));
+      await db.bodyMetrics.bulkPut(rows);
+      count = rows.length;
+    }
+  } catch (e) {
+    const msg = (e as Error).message;
+    errors.push(`body_metrics: ${msg}`);
+    console.warn('[body-metrics-hydrate] failed:', msg);
+  }
+
+  return { bodyMetrics: count, errors };
+}
+
+export interface StockSalesHydrationResult {
+  stockSales: number;
+  errors: string[];
+}
+
+// v1.3.1 (BUG-23) — pull the user's realized stock sales into Dexie. Same
+// authenticated-client + RLS posture as the other hydrators; bad/garbage rows
+// degrade gracefully (lot_allocations falls back to []). No deleted_at filter
+// — stock_sales is hard-delete (the table has no such column).
+export async function hydrateStockSalesFromCloud(
+  userId: string,
+): Promise<StockSalesHydrationResult> {
+  const errors: string[] = [];
+  let count = 0;
+  try {
+    const { data, error } = await supabase
+      .from('stock_sales')
+      .select('*')
+      .eq('user_id', userId);
+    if (error) throw error;
+    if (data) {
+      const rows: StockSale[] = (data as any[]).map((r) => ({
+        id: r.id,
+        ticker: r.ticker,
+        holdingId: r.holding_id ?? undefined,
+        sharesSold: Number(r.shares_sold),
+        salePricePerShare: Number(r.sale_price_per_share),
+        costBasisPerShare: Number(r.cost_basis_per_share),
+        realizedGainLoss: Number(r.realized_gain_loss),
+        currency: r.currency,
+        soldAt: r.sold_at,
+        lotAllocations: Array.isArray(r.lot_allocations) ? r.lot_allocations : [],
+        syncStatus: 'synced' as const,
+        createdAt: r.created_at,
+      }));
+      await db.stockSales.bulkPut(rows);
+      count = rows.length;
+    }
+  } catch (e) {
+    const msg = (e as Error).message;
+    errors.push(`stock_sales: ${msg}`);
+    console.warn('[stock-sales-hydrate] failed:', msg);
+  }
+  return { stockSales: count, errors };
+}
+
 export async function pullAll(_userId: string): Promise<PullResult> {
   const errors: string[] = [];
   const result: PullResult = {
@@ -857,6 +991,10 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     studySessions: 0,
     readings: 0,
     goals: 0,
+    habits: 0,
+    habitCompletions: 0,
+    bodyMetrics: 0,
+    stockSales: 0,
     errors,
   };
 
@@ -1102,6 +1240,37 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     }
   );
 
+  // v1.3 AUDIT-FSG-5b — extend pullAll coverage so cross-device habit edits
+  // re-render after the realtime channel's schedulePull → useSyncStore.syncNow
+  // → pullAll path actually pulls these tables. v1.2.1 AUDIT-FSG-5 added the
+  // realtime subscription but pullAll never iterated habits/habit_completions,
+  // so notifications fired but the local Dexie was only rehydrated on cold
+  // start via the dedicated hydrateHabitsFromCloud cold-start hook. Now both
+  // paths re-use the same hydration helper. (v1.3 — body_metrics joins them
+  // below now that NCC has a Dexie table + Fitness UI surface for them.)
+  const habitsHydration = await hydrateHabitsFromCloud(_userId);
+  result.habits = habitsHydration.habits;
+  result.habitCompletions = habitsHydration.completions;
+  for (const e of habitsHydration.errors) errors.push(e);
+
+  // v1.3 — body metrics now have a Dexie home (table added in db v14), so the
+  // realtime-triggered pull actually lands them. Closes the v1.2.1
+  // AUDIT-FSG-5b residual: the body_metrics realtime subscription fired
+  // schedulePull → syncNow → pullAll, but pullAll had no body_metrics step
+  // and no local table, so cross-device body-metric edits only surfaced on
+  // cold start. Now both paths converge on hydrateBodyMetricsFromCloud.
+  const bodyMetricsHydration = await hydrateBodyMetricsFromCloud(_userId);
+  result.bodyMetrics = bodyMetricsHydration.bodyMetrics;
+  for (const e of bodyMetricsHydration.errors) errors.push(e);
+
+  // v1.3.1 (BUG-23) — realized stock sales. Hydrate-in-pullAll so a sale made
+  // on another device surfaces on the next sync (cold start + 30s flusher +
+  // realtime-triggered pull all route through here). soldShares is re-derived
+  // from these in useFinanceStore.load() after the reload.
+  const stockSalesHydration = await hydrateStockSalesFromCloud(_userId);
+  result.stockSales = stockSalesHydration.stockSales;
+  for (const e of stockSalesHydration.errors) errors.push(e);
+
   result.readings = await pullTable<any, Reading>(
     'readings',
     [{ column: 'deleted_at', op: 'is', value: null }],
@@ -1153,7 +1322,7 @@ export async function adoptLocalData(userId: string): Promise<number> {
     }
   };
 
-  const [txs, budgets, holdings, lots, manualAssets, watchlistItems, sessions, sets, tasks, courses, grades, studySessions, readings, goals] =
+  const [txs, budgets, holdings, lots, manualAssets, watchlistItems, sessions, sets, tasks, courses, grades, studySessions, readings, goals, stockSales] =
     await Promise.all([
       db.transactions.toArray(),
       db.budgetCategories.toArray(),
@@ -1169,6 +1338,7 @@ export async function adoptLocalData(userId: string): Promise<number> {
       db.studySessions.toArray(),
       db.readings.toArray(),
       db.goals.toArray(),
+      db.stockSales.toArray(),
     ]);
 
   await enqueueAll('transaction', txs);
@@ -1185,6 +1355,7 @@ export async function adoptLocalData(userId: string): Promise<number> {
   await enqueueAll('study_session', studySessions);
   await enqueueAll('reading', readings);
   await enqueueAll('goal', goals);
+  await enqueueAll('stock_sale', stockSales);
 
   // Stamp user_id for later use isn't needed since the push handler reads
   // userId from the current session.

@@ -187,16 +187,11 @@ export default function WeeklyReview() {
           )}
         </button>
 
-        {/* Studies */}
-        <button
-          onClick={() => navigate('/studies')}
-          className="card text-left w-full active:bg-surface2/40"
-        >
+        {/* Studies — read-only summary (the dedicated screen was removed in
+            the v1.3 scope reduction; this stays as a signal recap). */}
+        <div className="card">
           <div className="flex items-center justify-between mb-2">
             <span className="font-heading font-semibold text-sm">📚 Studies</span>
-            <span className="text-[9px] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-1.5 py-0.5">
-              Open
-            </span>
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div>
@@ -226,18 +221,13 @@ export default function WeeklyReview() {
               {data.studies.readingsStarted > 0 && `${data.studies.readingsStarted} started`}
             </div>
           )}
-        </button>
+        </div>
 
-        {/* Fitness */}
-        <button
-          onClick={() => navigate('/fitness')}
-          className="card text-left w-full active:bg-surface2/40"
-        >
+        {/* Fitness — read-only summary (the dedicated screen was removed in
+            the v1.3 scope reduction; this stays as a signal recap). */}
+        <div className="card">
           <div className="flex items-center justify-between mb-2">
             <span className="font-heading font-semibold text-sm">🏋️ Fitness</span>
-            <span className="text-[9px] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-1.5 py-0.5">
-              Open
-            </span>
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div>
@@ -263,7 +253,7 @@ export default function WeeklyReview() {
               Most-trained: {data.fitness.topExercise} · {data.fitness.topExerciseSets} sets
             </div>
           )}
-        </button>
+        </div>
 
         {/* Tasks */}
         <button

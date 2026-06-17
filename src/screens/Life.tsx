@@ -12,7 +12,7 @@
 // header + "Building your baseline" copy + a calendar tally of how many
 // weeks of data exist so far.
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import AppHeader from '../components/AppHeader';
 import LifeScoreRing from '../components/LifeScoreRing';
 import { useFinanceStore } from '../store/useFinanceStore';
@@ -59,6 +59,15 @@ export default function Life() {
       buildCrossDomainReport(workouts, studies, txns, budgets, habits, completions),
     [workouts, studies, txns, budgets, habits, completions],
   );
+
+  // v1.3.1 BUG-11 — history strip renders oldest-left so the rightmost cell
+  // is the current week. Scroll the strip to the right end on mount so the
+  // user lands looking at the most recent score, not 8 weeks ago.
+  const historyScrollRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = historyScrollRef.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, [report.weeks.lifeScores.length]);
 
   const thisWeek = report.weeks.lifeScores[0];
 
@@ -148,7 +157,7 @@ export default function Life() {
             <h2 className="font-heading font-semibold text-xs uppercase tracking-wider text-text-muted px-1">
               History
             </h2>
-            <div className="flex gap-2 overflow-x-auto no-scrollbar px-1 stagger-children">
+            <div ref={historyScrollRef} className="flex gap-2 overflow-x-auto no-scrollbar px-1 stagger-children">
               {/* Oldest left — reverse the array (it's most-recent first). */}
               {[...report.weeks.lifeScores].reverse().map((w) => (
                 <div

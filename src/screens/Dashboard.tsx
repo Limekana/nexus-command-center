@@ -22,11 +22,9 @@ export default function Dashboard() {
 
   const studies = useStudiesStore((s) => s.currentImport);
   const studyCourses = useStudiesStore((s) => s.courses);
-  const studyGrades = useStudiesStore((s) => s.grades);
   const previousGpa = useStudiesStore((s) => s.previousGpa);
   const gradeMode = useStudiesStore((s) => s.gradeMode);
 
-  const fitness = useFitnessStore((s) => s.todaySession);
   const sessions = useFitnessStore((s) => s.sessions);
 
   const tasks = useTaskStore((s) => s.tasks);
@@ -70,10 +68,6 @@ export default function Dashboard() {
 
   const gpaSuffix = gradeMode === 'ib' ? '/7' : '';
   const gpaDisplay = studies ? studies.calculatedGpa.toFixed(2) + gpaSuffix : '—';
-
-  const fitnessSets = fitness && fitness.sets.length > 0
-    ? fitness.sets
-    : sessions[0]?.sets ?? [];
 
   return (
     <>
@@ -159,55 +153,6 @@ export default function Dashboard() {
             ) : (
               <Empty msg="No portfolio holdings" />
             )}
-          </ModuleSummaryCard>
-
-          <ModuleSummaryCard title="Studies" icon="📚" tag={studies ? 'TRACKING' : 'IDLE'} to="/studies">
-            {studyCourses.length > 0 ? (
-              studyCourses.slice(0, 2).map((c) => {
-                // Weighted-average across the subject's grades. We compute
-                // inline (vs. memo) because the dashboard renders 2 subjects
-                // at most — not worth the bookkeeping.
-                const subjGrades = studyGrades.filter((g) => g.subjectId === c.id);
-                const totW = subjGrades.reduce((s, g) => s + (g.weight || 0), 0);
-                const score = subjGrades.length === 0
-                  ? null
-                  : totW === 0
-                    ? subjGrades.reduce((s, g) => s + g.grade, 0) / subjGrades.length
-                    : subjGrades.reduce((s, g) => s + g.grade * (g.weight || 0), 0) / totW;
-                const label = score == null
-                  ? '—'
-                  : gradeMode === 'ib'
-                    ? `${score.toFixed(1)}/7`
-                    : `${score.toFixed(1)}%`;
-                return (
-                  <ListRow key={c.id} label={c.name} value={label} />
-                );
-              })
-            ) : (
-              <>
-                <Empty msg="No courses yet" />
-                <Empty msg="Add or import to track GPA" />
-              </>
-            )}
-            {studyCourses.length === 1 && <Empty msg=" " />}
-          </ModuleSummaryCard>
-
-          <ModuleSummaryCard title="Fitness" icon="💪" tag={fitness ? 'TODAY' : 'IDLE'} to="/fitness">
-            {fitnessSets.length > 0 ? (
-              fitnessSets.slice(0, 2).map((s) => (
-                <ListRow
-                  key={s.id}
-                  label={s.exercise}
-                  value={`${s.weightKg ?? 'BW'}${s.weightKg ? 'kg' : ''} × ${s.reps}`}
-                />
-              ))
-            ) : (
-              <>
-                <Empty msg="No workouts logged" />
-                <Empty msg="Tap to log your first set" />
-              </>
-            )}
-            {fitnessSets.length === 1 && <Empty msg=" " />}
           </ModuleSummaryCard>
 
           <ModuleSummaryCard title="Tasks" icon="✅" tag={tasksOverdue > 0 ? 'OVERDUE' : tasksOpen.length > 0 ? 'OPEN' : 'CLEAR'} to="/tasks">

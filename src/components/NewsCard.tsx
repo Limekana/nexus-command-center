@@ -1,8 +1,9 @@
 // Compact market-news feed. Reads from useFinanceStore.marketNews which is
 // populated on every portfolio refresh (6h cache). Renders top 5; each
 // tap routes through openExternalUrl which uses Chrome Custom Tabs on
-// native + window.open on web. The bigger /finance/news screen is the
-// next step beyond this card.
+// native + window.open on web. As of v1.3 this card is the sole in-app
+// news surface — the standalone /finance/news screen was retired in the
+// scope reduction (BUG-17); the card lives under Finance → Portfolio.
 
 import { useFinanceStore } from '../store/useFinanceStore';
 import { openExternalUrl } from '../lib/openExternal';

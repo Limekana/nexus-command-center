@@ -332,6 +332,17 @@ export async function onNotificationTap(
     const handle = await NexusNotifications.addListener('notificationTap', (event) => {
       if (event.route) onOpen(event.route);
     });
+    // v1.3.1 BUG-14 — drain the cold-start buffer. If the app was launched
+    // from a notification tap, the native event already fired (before this
+    // listener was registered) and the route was buffered. Pull it now so
+    // the navigation lands. Warm-start taps arrive via the listener above;
+    // the buffer is then empty so this is a cheap no-op.
+    try {
+      const pending = await NexusNotifications.consumePendingTap();
+      if (pending.route) onOpen(pending.route);
+    } catch (e) {
+      console.warn('[notifications] consumePendingTap failed:', (e as Error).message);
+    }
     return () => {
       handle.remove();
     };
@@ -371,6 +382,26 @@ export async function onNotificationAction(
       }
       handler({ actionId: event.actionId, route: event.route, extra });
     });
+    // v1.3.1 BUG-14 — drain the cold-start action buffer (same rationale as
+    // onNotificationTap's drain). Cold-start from a "Mark done" tap would
+    // otherwise leave the task untoggled because the JS handler missed the
+    // event window.
+    try {
+      const pending = await NexusNotifications.consumePendingAction();
+      if (pending.actionId) {
+        let extra: Record<string, unknown> | null = null;
+        if (pending.extraJson) {
+          try {
+            extra = JSON.parse(pending.extraJson);
+          } catch {
+            // Malformed JSON shouldn't break the drain — handler gets null.
+          }
+        }
+        handler({ actionId: pending.actionId, route: pending.route, extra });
+      }
+    } catch (e) {
+      console.warn('[notifications] consumePendingAction failed:', (e as Error).message);
+    }
     return () => {
       sub.remove();
     };
