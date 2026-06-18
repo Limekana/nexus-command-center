@@ -7,10 +7,12 @@ import PortfolioValueChart from '../../components/PortfolioValueChart';
 import HoldingDetailSheet from '../../components/HoldingDetailSheet';
 import EarningsStrip from '../../components/EarningsStrip';
 import DividendTracker from '../../components/DividendTracker';
+import { isHoldingClosed } from '../../lib/positionStatus';
 import MacroStrip from '../../components/MacroStrip';
 import InsightsCard from '../../components/InsightsCard';
 import RatingPill from '../../components/RatingPill';
 import RealizedPnLSection from '../../components/RealizedPnLSection';
+import PortfolioCashCard from '../../components/PortfolioCashCard';
 import { useFinanceStore } from '../../store/useFinanceStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { formatCacheAge } from '../../utils/formatters';
@@ -316,6 +318,15 @@ export default function Portfolio() {
         ? sources[0].toUpperCase()
         : 'FINNHUB + YAHOO';
 
+  // Fully-exited positions (bought then entirely sold) archive into the
+  // Closed-positions collapsible inside RealizedPnLSection — they drop out of
+  // the live lists, dividend projection, and Manage Holdings here. Shared
+  // definition in lib/positionStatus so every surface agrees.
+  const openHoldings = useMemo(
+    () => holdings.filter((h) => !isHoldingClosed(h, portfolioLots)),
+    [holdings, portfolioLots],
+  );
+
   // Sort holdings by value desc for display so the "important" ones surface.
   // Stocks and ETFs share a section since they share the same quote pipeline
   // (Finnhub + Yahoo); crypto stays separate (CoinGecko).
@@ -323,15 +334,17 @@ export default function Portfolio() {
     () =>
       positions
         .filter((p) => p.holding.assetType === 'stock' || p.holding.assetType === 'etf')
+        .filter((p) => !isHoldingClosed(p.holding, portfolioLots))
         .sort((a, b) => (b.valueBase ?? 0) - (a.valueBase ?? 0)),
-    [positions],
+    [positions, portfolioLots],
   );
   const sortedCryptos = useMemo(
     () =>
       positions
         .filter((p) => p.holding.assetType === 'crypto')
+        .filter((p) => !isHoldingClosed(p.holding, portfolioLots))
         .sort((a, b) => (b.valueBase ?? 0) - (a.valueBase ?? 0)),
-    [positions],
+    [positions, portfolioLots],
   );
 
   return (
@@ -515,7 +528,7 @@ export default function Portfolio() {
 
         {/* Dividends — projected annual income + per-position breakdown */}
         <DividendTracker
-          holdings={holdings}
+          holdings={openHoldings}
           dividends={dividends}
           fxRates={fxRates}
           baseCurrency={baseCurrency}
@@ -572,6 +585,10 @@ export default function Portfolio() {
             />
           ))}
         </div>
+
+        {/* v1.3.2 — portfolio cash (proceeds + deposits − buys − withdrawals),
+            with deposit/withdraw transfers to/from a liquid account. */}
+        <PortfolioCashCard />
 
         {/* v1.3.1 (BUG-23) — realized P/L + closed positions. Renders nothing
             until the first sale is recorded. */}

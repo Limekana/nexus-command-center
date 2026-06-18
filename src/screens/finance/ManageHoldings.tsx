@@ -4,6 +4,7 @@ import AppHeader from '../../components/AppHeader';
 import RowActions from '../../components/RowActions';
 import { useFinanceStore } from '../../store/useFinanceStore';
 import { validateTicker } from '../../lib/tickerValidation';
+import { isHoldingClosed } from '../../lib/positionStatus';
 import type { PortfolioHolding, AssetType } from '../../types/finance';
 
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'SEK', 'NOK', 'DKK', 'CHF', 'JPY'];
@@ -32,6 +33,7 @@ export default function ManageHoldings() {
   const [tickerError, setTickerError] = useState<string | null>(null);
   const [assetType, setAssetType] = useState<AssetType>('stock');
   const [sectorOverride, setSectorOverride] = useState('');
+  const [showClosed, setShowClosed] = useState(false);
 
   // First-purchase fields (Add flow only).
   const [firstQty, setFirstQty] = useState('');
@@ -40,6 +42,13 @@ export default function ManageHoldings() {
   const [firstDate, setFirstDate] = useState(() => new Date().toISOString().slice(0, 10));
 
   const lotsByHolding = (id: string) => portfolioLots.filter((l) => l.holdingId === id);
+
+  // Fully-sold positions (e.g. a stock you bought then entirely closed) move
+  // into a collapsed "Closed" section so the live list stays focused on what
+  // you still hold — but they remain reachable to view purchase history or
+  // remove. Same definition as Portfolio + the dividend projection.
+  const openH = holdings.filter((h) => !isHoldingClosed(h, portfolioLots));
+  const closedH = holdings.filter((h) => isHoldingClosed(h, portfolioLots));
 
   const startAdd = () => {
     setEditing(null);
@@ -129,6 +138,41 @@ export default function ManageHoldings() {
     stock: '📈 Stock',
     etf: '🧺 ETF',
     crypto: '₿ Crypto',
+  };
+
+  const renderHoldingRow = (h: PortfolioHolding, closed = false) => {
+    const lotCount = lotsByHolding(h.id).length;
+    return (
+      <div
+        key={h.id}
+        className={`flex items-center gap-2 py-2 border-b border-border/40 last:border-0 ${closed ? 'opacity-60' : ''}`}
+      >
+        <span className="text-[9px] uppercase text-text-muted w-10 flex-shrink-0">
+          {h.assetType === 'stock' ? 'STOCK' : h.assetType === 'etf' ? 'ETF' : 'CRYPTO'}
+        </span>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-heading font-semibold truncate">
+            {h.ticker.toUpperCase()}
+            {closed && <span className="ml-1.5 text-[8px] uppercase tracking-wider text-text-muted">closed</span>}
+          </div>
+          <div className="text-[10px] text-text-muted truncate">
+            {h.name} · {h.quantity}
+            {h.sectorOverride && <> · {h.sectorOverride}</>}
+          </div>
+        </div>
+        <button
+          onClick={() => navigate(`/finance/portfolio/lots/${h.id}`)}
+          className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded-sm border border-border text-text-muted active:border-primary active:text-primary flex-shrink-0"
+        >
+          📦 {lotCount}
+        </button>
+        <RowActions
+          onEdit={() => startEdit(h)}
+          onDelete={() => onDelete(h.id)}
+          confirmMsg={`Remove ${h.ticker.toUpperCase()} from portfolio? Purchase history will also be deleted.`}
+        />
+      </div>
+    );
   };
 
   return (
@@ -262,35 +306,32 @@ export default function ManageHoldings() {
               No holdings yet — tap + New to add one
             </div>
           )}
-          {holdings.map((h) => {
-            const lotCount = lotsByHolding(h.id).length;
-            return (
-              <div key={h.id} className="flex items-center gap-2 py-2 border-b border-border/40 last:border-0">
-                <span className="text-[9px] uppercase text-text-muted w-10 flex-shrink-0">
-                  {h.assetType === 'stock' ? 'STOCK' : h.assetType === 'etf' ? 'ETF' : 'CRYPTO'}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-heading font-semibold truncate">{h.ticker.toUpperCase()}</div>
-                  <div className="text-[10px] text-text-muted truncate">
-                    {h.name} · {h.quantity}
-                    {h.sectorOverride && <> · {h.sectorOverride}</>}
-                  </div>
-                </div>
-                <button
-                  onClick={() => navigate(`/finance/portfolio/lots/${h.id}`)}
-                  className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded-sm border border-border text-text-muted active:border-primary active:text-primary flex-shrink-0"
-                >
-                  📦 {lotCount}
-                </button>
-                <RowActions
-                  onEdit={() => startEdit(h)}
-                  onDelete={() => onDelete(h.id)}
-                  confirmMsg={`Remove ${h.ticker.toUpperCase()} from portfolio? Purchase history will also be deleted.`}
-                />
-              </div>
-            );
-          })}
+          {holdings.length > 0 && openH.length === 0 && (
+            <div className="text-xs text-text-muted text-center py-4">
+              No open positions — all holdings are closed
+            </div>
+          )}
+          {openH.map((h) => renderHoldingRow(h))}
         </div>
+
+        {closedH.length > 0 && (
+          <div className="card">
+            <button
+              onClick={() => setShowClosed((s) => !s)}
+              className="w-full flex items-center justify-between text-sm font-heading font-semibold"
+            >
+              <span className="text-text-muted">Closed positions</span>
+              <span className="text-[10px] uppercase tracking-wider text-text-muted">
+                {closedH.length} · {showClosed ? '▲' : '▼'}
+              </span>
+            </button>
+            {showClosed && (
+              <div className="mt-2">
+                {closedH.map((h) => renderHoldingRow(h, true))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </>
   );

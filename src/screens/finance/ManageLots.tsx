@@ -9,7 +9,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
 import RowActions from '../../components/RowActions';
 import { useFinanceStore } from '../../store/useFinanceStore';
-import { computeSale, totalRemainingShares } from '../../lib/stockSaleFifo';
+import { computeSale, totalRemainingShares, saleCostBasisInCurrency } from '../../lib/stockSaleFifo';
+import { convertSync } from '../../api/fxRates';
 import type { PortfolioLot } from '../../types/finance';
 
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'SEK', 'NOK', 'DKK', 'CHF', 'JPY'];
@@ -28,6 +29,7 @@ export default function ManageLots() {
   const deleteLot = useFinanceStore((s) => s.deleteLot);
   const addStockSale = useFinanceStore((s) => s.addStockSale);
   const refreshPortfolio = useFinanceStore((s) => s.refreshPortfolio);
+  const fxRates = useFinanceStore((s) => s.fxRates);
 
   const lots = useMemo(
     () =>
@@ -187,8 +189,17 @@ export default function ManageLots() {
     try {
       const c = computeSale(holding.ticker, sellSharesNum, lots);
       const priceNum = parseFloat(sellPrice);
-      const rgl = (isNaN(priceNum) ? 0 : priceNum - c.costBasisPerShare) * sellSharesNum;
-      salePreview = { costBasisPerShare: c.costBasisPerShare, realizedGainLoss: rgl };
+      // Cost basis converted into the sale currency so the realized figure
+      // isn't a cross-currency subtraction (matches the store's commit math).
+      const costTotal = saleCostBasisInCurrency(
+        lots,
+        c.lotAllocations,
+        sellCurrency,
+        (amt, from, to) => convertSync(amt, from, to, fxRates),
+      );
+      const costBasisPerShare = sellSharesNum > 0 ? costTotal / sellSharesNum : 0;
+      const rgl = isNaN(priceNum) ? 0 : priceNum * sellSharesNum - costTotal;
+      salePreview = { costBasisPerShare, realizedGainLoss: rgl };
     } catch (e) {
       saleError = (e as Error).message;
     }

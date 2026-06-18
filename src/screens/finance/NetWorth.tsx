@@ -25,6 +25,7 @@ import { LIABILITY_TYPES } from '../../types/finance';
 // transactions slice; the helper handles FX + transfer-in/out + sign
 // conventions for liability accounts.
 import { computeAccountBalance } from '../../lib/accountBalance';
+import { portfolioCashBalance } from '../../lib/portfolioCash';
 
 const CURRENCY_SYMBOL: Record<string, string> = {
   EUR: '€', USD: '$', GBP: '£', SEK: 'kr', NOK: 'kr', DKK: 'kr', CHF: 'Fr', JPY: '¥',
@@ -76,6 +77,14 @@ export default function NetWorth() {
   // visited. Cheaper than threading state. Falls back to 0 when quotes
   // haven't loaded yet.
   const portfolioValueBase = usePortfolioValueBase(baseCurrency);
+  // v1.3.2 — portfolio cash is part of the portfolio's net-worth contribution.
+  const cashEntries = useFinanceStore((s) => s.portfolioCashEntries);
+  const portfolioCashBase = useMemo(
+    () => portfolioCashBalance(cashEntries, baseCurrency, fxRates),
+    [cashEntries, baseCurrency, fxRates],
+  );
+  // Holdings market value + uninvested cash = the portfolio side of net worth.
+  const portfolioTotalBase = portfolioValueBase + portfolioCashBase;
 
   const [editing, setEditing] = useState<ManualAsset | null>(null);
   const [adding, setAdding] = useState(false);
@@ -126,7 +135,7 @@ export default function NetWorth() {
     [inBase],
   );
 
-  const netWorth = portfolioValueBase + totalAssets - totalLiabilities;
+  const netWorth = portfolioTotalBase + totalAssets - totalLiabilities;
 
   // Savings runway: months of expenses covered by liquid cash/savings.
   // Uses last 90d of expense transactions / 3 for monthly average.
@@ -296,7 +305,7 @@ export default function NetWorth() {
             {fmt(netWorth, baseCurrency)}
           </div>
           <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border/40">
-            <Cell label="Portfolio" value={fmt(portfolioValueBase, baseCurrency)} />
+            <Cell label="Portfolio" value={fmt(portfolioTotalBase, baseCurrency)} />
             <Cell label="Other assets" value={fmt(totalAssets, baseCurrency)} />
             <Cell label="Liabilities" value={`−${fmt(totalLiabilities, baseCurrency)}`} tone={totalLiabilities > 0 ? 'danger' : 'default'} />
           </div>

@@ -1,5 +1,5 @@
 import Dexie, { Table } from 'dexie';
-import { Transaction, BudgetCategory, PortfolioHolding, PortfolioLot, ApiCacheEntry, PortfolioSnapshot, ManualAsset, WatchlistItem, SavingsGoal, StockSale } from '../types/finance';
+import { Transaction, BudgetCategory, PortfolioHolding, PortfolioLot, ApiCacheEntry, PortfolioSnapshot, ManualAsset, WatchlistItem, SavingsGoal, StockSale, PortfolioCashEntry } from '../types/finance';
 import { Course, Grade, GradeImport, StudySession, Reading } from '../types/studies';
 import { WorkoutSession, WorkoutSet, BodyMetric } from '../types/fitness';
 import { Task } from '../types/tasks';
@@ -67,7 +67,8 @@ export interface SyncQueueItem {
     | 'goal'
     | 'habit'
     | 'habit_completion'
-    | 'stock_sale';
+    | 'stock_sale'
+    | 'portfolio_cash_entry';
   entityId: string;
   operation: 'insert' | 'update' | 'delete';
   payload: string;
@@ -151,6 +152,11 @@ class NexusDB extends Dexie {
   // v15 — BUG-23 Stock Sales Tracking (v1.3.1). One row per realized sale.
   // FIFO cost basis computed at sale time; realized P&L is Σ realizedGainLoss.
   stockSales!: Table<StockSale, string>;
+
+  // v16 — Portfolio cash ledger (v1.3.2). Append-only signed cash movements
+  // (buy/sell/deposit/withdrawal). Balance = Σ(amount→base). See
+  // PortfolioCashEntry in types/finance.ts.
+  portfolioCashEntries!: Table<PortfolioCashEntry, string>;
 
   syncQueue!: Table<SyncQueueItem, string>;
 
@@ -701,6 +707,42 @@ class NexusDB extends Dexie {
         if (l.soldShares == null) l.soldShares = 0;
       });
     });
+
+    // ─── v16 — Portfolio cash ledger (v1.3.2) ─────────────────────────────
+    //
+    // Additive — one new append-only `portfolioCashEntries` table. No upgrade
+    // hook: existing users come up with an empty ledger (portfolio cash = 0),
+    // which is exactly the start-at-zero / going-forward contract — pre-feature
+    // holdings are treated as already funded; only new buys/sells/transfers
+    // move cash from here on.
+    this.version(16).stores({
+      transactions: 'id, date, type, syncStatus, accountId',
+      budgetCategories: 'id, name',
+      portfolioHoldings: 'id, ticker, assetType',
+      apiCache: 'cacheKey, expiresAt',
+      gradeImports: 'id, importedAt',
+      courses: 'id, importId, name',
+      workoutSessions: 'id, date, sessionType, syncStatus',
+      workoutSets: 'id, sessionId, exercise',
+      tasks: 'id, dueDate, completed, priority, syncStatus',
+      studySessions: 'id, startedAt, subjectId, syncStatus',
+      readings: 'id, status, subjectId, updatedAt',
+      portfolioSnapshots: 'date',
+      portfolioLots: 'id, holdingId, purchaseDate, syncStatus',
+      manualAssets: 'id, assetType, syncStatus, archivedAt',
+      watchlistItems: 'id, ticker, assetType, syncStatus',
+      goals: 'id, goalType, completed, targetDate, syncStatus',
+      grades: 'id, subjectId, date, syncStatus',
+      ratingHistory: 'id, ticker, computedAt, [ticker+computedAt]',
+      savingsGoals: 'id, completedAt, createdAt, syncStatus',
+      habits: 'id, archivedAt, syncStatus, createdAt',
+      habitCompletions: 'id, habitId, date, syncStatus, [habitId+date]',
+      insightsScores: 'id, ticker, kind, computedAt',
+      bodyMetrics: 'id, date, syncStatus',
+      stockSales: 'id, ticker, soldAt, syncStatus',
+      portfolioCashEntries: 'id, type, createdAt, relatedId, syncStatus',
+      syncQueue: 'id, entityType, syncedAt',
+    });
   }
 }
 
@@ -734,6 +776,7 @@ export async function clearAllLocalData(): Promise<void> {
       db.insightsScores,
       db.bodyMetrics,
       db.stockSales,
+      db.portfolioCashEntries,
       db.syncQueue,
     ],
     async () => {
@@ -762,6 +805,7 @@ export async function clearAllLocalData(): Promise<void> {
         db.insightsScores.clear(),
         db.bodyMetrics.clear(),
         db.stockSales.clear(),
+        db.portfolioCashEntries.clear(),
         db.syncQueue.clear(),
       ]);
     }

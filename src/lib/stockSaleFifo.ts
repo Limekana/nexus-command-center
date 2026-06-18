@@ -83,6 +83,41 @@ export function computeSale(
 }
 
 /**
+ * Total cost basis of an allocation set, expressed in `saleCurrency`.
+ *
+ * `computeSale` sums `sharesTaken * costPerUnit` naively across lots — fine
+ * when every lot shares the sale's currency, but WRONG when a lot was bought
+ * in a different currency than the sale is recorded in (the raw subtraction
+ * `salePrice − costPerUnit` then mixes currencies and produces a nonsense
+ * realized gain). This converts each consumed lot's native cost into the sale
+ * currency first, so the realized P/L is computed in one consistent unit.
+ *
+ * `convert` is injected (same shape as `convertSync`) to keep this module free
+ * of any FX/store coupling. A same-currency lot skips conversion entirely; a
+ * lot whose rate is unavailable falls back to its native amount (best-effort,
+ * matches the pre-fix behaviour for that rare case).
+ */
+export function saleCostBasisInCurrency(
+  lots: PortfolioLot[],
+  allocations: LotAllocation[],
+  saleCurrency: string,
+  convert: (amount: number, from: string, to: string) => number | null,
+): number {
+  let total = 0;
+  for (const a of allocations) {
+    const lot = lots.find((l) => l.id === a.lotId);
+    if (!lot) continue;
+    const native = a.sharesTaken * lot.costPerUnit;
+    const inSale =
+      lot.costCurrency === saleCurrency
+        ? native
+        : convert(native, lot.costCurrency, saleCurrency) ?? native;
+    total += inSale;
+  }
+  return total;
+}
+
+/**
  * Rebuild each lot's `soldShares` from the sales' lotAllocations. Returns a new
  * lot array (does not mutate). The single place soldShares is computed, so the
  * value can never drift from the sales that produced it.

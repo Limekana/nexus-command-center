@@ -25,7 +25,7 @@ import { supabase } from './supabase';
 import { db, SyncQueueItem } from '../db/database';
 import { listPending } from '../db/syncQueue';
 import { generateId, legacyIdToUuid } from '../utils/uuid';
-import type { Transaction, BudgetCategory, PortfolioHolding, PortfolioLot, ManualAsset, WatchlistItem, StockSale } from '../types/finance';
+import type { Transaction, BudgetCategory, PortfolioHolding, PortfolioLot, ManualAsset, WatchlistItem, StockSale, PortfolioCashEntry } from '../types/finance';
 import { legacyAssetTypeToAccountType } from '../types/finance';
 import type { Course, Grade, StudySession, Reading } from '../types/studies';
 import type { WorkoutSession, WorkoutSet, BodyMetric } from '../types/fitness';
@@ -72,6 +72,10 @@ async function pushTransaction(item: SyncQueueItem, ctx: PushContext): Promise<v
     currency: 'EUR',
     type,
     category_id: local.categoryId ? legacyIdToUuid(local.categoryId) : null,
+    // v1.3.3 — account assignment is now persisted to the cloud (was local-only),
+    // so it survives a "keep local data" sign-out and syncs across devices.
+    account_id: local.accountId ? legacyIdToUuid(local.accountId) : null,
+    destination_account_id: local.destinationAccountId ? legacyIdToUuid(local.destinationAccountId) : null,
     description,
     date: local.date,
     updated_at: item.createdAt,
@@ -184,6 +188,33 @@ async function pushStockSale(item: SyncQueueItem, ctx: PushContext): Promise<voi
     created_at: local.createdAt,
   };
   const { error } = await supabase.from('stock_sales').upsert(row);
+  if (error) throw error;
+}
+
+// v1.3.2 — portfolio cash ledger entry. Hard-delete (no deleted_at), same as
+// stock_sales — the table is a personal append-only ledger.
+async function pushPortfolioCashEntry(item: SyncQueueItem, ctx: PushContext): Promise<void> {
+  if (item.operation === 'delete') {
+    const { error } = await supabase
+      .from('portfolio_cash_entries')
+      .delete()
+      .eq('id', legacyIdToUuid(item.entityId));
+    if (error) throw error;
+    return;
+  }
+  const local: PortfolioCashEntry = JSON.parse(item.payload);
+  const row = {
+    id: legacyIdToUuid(local.id),
+    user_id: ctx.userId,
+    type: local.type,
+    amount: local.amount,
+    currency: local.currency,
+    account_id: local.accountId ? legacyIdToUuid(local.accountId) : null,
+    related_id: local.relatedId ? legacyIdToUuid(local.relatedId) : null,
+    note: local.note ?? null,
+    created_at: local.createdAt,
+  };
+  const { error } = await supabase.from('portfolio_cash_entries').upsert(row);
   if (error) throw error;
 }
 
@@ -513,6 +544,7 @@ const pushHandlers: Record<SyncQueueItem['entityType'], (item: SyncQueueItem, ct
   portfolio_holding: pushPortfolioHolding,
   portfolio_lot: pushPortfolioLot,
   stock_sale: pushStockSale,
+  portfolio_cash_entry: pushPortfolioCashEntry,
   manual_asset: pushManualAsset,
   watchlist_item: pushWatchlistItem,
   goal: pushGoal,
@@ -561,12 +593,23 @@ const ENTITY_PRIORITY: Record<SyncQueueItem['entityType'], number> = {
   reading: 2, // FK → subjects (nullable)
   portfolio_lot: 2, // FK → portfolio_holdings
   stock_sale: 2, // logically follows holdings (holding_id is a plain ref, no hard FK)
+  portfolio_cash_entry: 2, // related_id is a plain ref to a lot/sale, no hard FK
   manual_asset: 1, // no FK dependencies
   watchlist_item: 1, // no FK dependencies
   goal: 1, // no FK dependencies
   habit: 1, // parent — no FK dependencies
   habit_completion: 2, // FK → habits
 };
+
+// Postgres integrity-constraint violations whose cause is the payload itself, not
+// a transient network/auth condition. Retrying these can never succeed, so the
+// queue should drop them rather than retry forever. (23502 not-null, 23503 FK,
+// 23514 check, 22P02 invalid-text, 22003 numeric-out-of-range.)
+const PERMANENT_PG_CODES = new Set(['23502', '23503', '23514', '22P02', '22003']);
+function isPermanentSyncError(e: unknown): boolean {
+  const code = (e as { code?: string } | null)?.code;
+  return typeof code === 'string' && PERMANENT_PG_CODES.has(code);
+}
 
 export async function pushQueue(userId: string): Promise<PushResult> {
   const pending = await listPending();
@@ -593,8 +636,17 @@ export async function pushQueue(userId: string): Promise<PushResult> {
       result.succeeded++;
     } catch (e) {
       const msg = (e as Error).message ?? String(e);
-      await db.syncQueue.update(item.id, { lastError: msg });
-      result.errors.push({ entityType: item.entityType, entityId: item.entityId, message: msg });
+      if (isPermanentSyncError(e)) {
+        // Non-retryable: the payload itself is invalid (e.g. a lot pointing at a
+        // deleted holding → FK violation, or a malformed account → check/not-null
+        // violation). Retrying every drain just spams the error banner forever, so
+        // drop the item from the pending set (mark it synced) and surface it once.
+        await db.syncQueue.update(item.id, { syncedAt: now, lastError: `[dropped] ${msg}` });
+        result.errors.push({ entityType: item.entityType, entityId: item.entityId, message: `[dropped, won't retry] ${msg}` });
+      } else {
+        await db.syncQueue.update(item.id, { lastError: msg });
+        result.errors.push({ entityType: item.entityType, entityId: item.entityId, message: msg });
+      }
       result.failed++;
     }
   }
@@ -623,6 +675,7 @@ export interface PullResult {
   habitCompletions: number;
   bodyMetrics: number;
   stockSales: number;
+  portfolioCashEntries: number;
   errors: string[];
 }
 
@@ -974,6 +1027,47 @@ export async function hydrateStockSalesFromCloud(
   return { stockSales: count, errors };
 }
 
+export interface PortfolioCashHydrationResult {
+  portfolioCashEntries: number;
+  errors: string[];
+}
+
+// v1.3.2 — pull the user's portfolio cash ledger into Dexie. Same RLS posture
+// as the other hydrators. Hard-delete table (no deleted_at filter).
+export async function hydratePortfolioCashFromCloud(
+  userId: string,
+): Promise<PortfolioCashHydrationResult> {
+  const errors: string[] = [];
+  let count = 0;
+  try {
+    const { data, error } = await supabase
+      .from('portfolio_cash_entries')
+      .select('*')
+      .eq('user_id', userId);
+    if (error) throw error;
+    if (data) {
+      const rows: PortfolioCashEntry[] = (data as any[]).map((r) => ({
+        id: r.id,
+        type: r.type,
+        amount: Number(r.amount),
+        currency: r.currency,
+        accountId: r.account_id ?? undefined,
+        relatedId: r.related_id ?? undefined,
+        note: r.note ?? undefined,
+        createdAt: r.created_at,
+        syncStatus: 'synced' as const,
+      }));
+      await db.portfolioCashEntries.bulkPut(rows);
+      count = rows.length;
+    }
+  } catch (e) {
+    const msg = (e as Error).message;
+    errors.push(`portfolio_cash_entries: ${msg}`);
+    console.warn('[portfolio-cash-hydrate] failed:', msg);
+  }
+  return { portfolioCashEntries: count, errors };
+}
+
 export async function pullAll(_userId: string): Promise<PullResult> {
   const errors: string[] = [];
   const result: PullResult = {
@@ -995,6 +1089,7 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     habitCompletions: 0,
     bodyMetrics: 0,
     stockSales: 0,
+    portfolioCashEntries: 0,
     errors,
   };
 
@@ -1023,16 +1118,26 @@ export async function pullAll(_userId: string): Promise<PullResult> {
   result.transactions = await pullTable<any, Transaction>(
     'transactions',
     [{ column: 'deleted_at', op: 'is', value: null }],
-    (r) => ({
-      id: r.id,
-      amount: Number(r.amount),
-      description: r.description ?? '',
-      categoryId: r.category_id ?? undefined,
-      date: r.date,
-      type: r.type as Transaction['type'],
-      syncStatus: 'synced',
-      createdAt: r.created_at,
-    }),
+    (r) => {
+      // Transfers are stored cloud-side as `expense` + a `[transfer]` description
+      // prefix (the cloud `type` CHECK predates the transfer type). Reconstruct the
+      // local `transfer` type from a present destination account OR the legacy
+      // prefix, and strip the marker so the description renders clean.
+      const rawDesc: string = r.description ?? '';
+      const isTransfer = r.destination_account_id != null || rawDesc.startsWith('[transfer] ');
+      return {
+        id: r.id,
+        amount: Number(r.amount),
+        description: rawDesc.replace(/^\[transfer\]\s/, ''),
+        categoryId: r.category_id ?? undefined,
+        accountId: r.account_id ?? undefined,
+        destinationAccountId: r.destination_account_id ?? undefined,
+        date: r.date,
+        type: (isTransfer ? 'transfer' : r.type) as Transaction['type'],
+        syncStatus: 'synced',
+        createdAt: r.created_at,
+      };
+    },
     async (rows) => {
       await db.transactions.bulkPut(rows);
     }
@@ -1271,6 +1376,10 @@ export async function pullAll(_userId: string): Promise<PullResult> {
   result.stockSales = stockSalesHydration.stockSales;
   for (const e of stockSalesHydration.errors) errors.push(e);
 
+  const cashHydration = await hydratePortfolioCashFromCloud(_userId);
+  result.portfolioCashEntries = cashHydration.portfolioCashEntries;
+  for (const e of cashHydration.errors) errors.push(e);
+
   result.readings = await pullTable<any, Reading>(
     'readings',
     [{ column: 'deleted_at', op: 'is', value: null }],
@@ -1322,7 +1431,7 @@ export async function adoptLocalData(userId: string): Promise<number> {
     }
   };
 
-  const [txs, budgets, holdings, lots, manualAssets, watchlistItems, sessions, sets, tasks, courses, grades, studySessions, readings, goals, stockSales] =
+  const [txs, budgets, holdings, lots, manualAssets, watchlistItems, sessions, sets, tasks, courses, grades, studySessions, readings, goals, stockSales, cashEntries] =
     await Promise.all([
       db.transactions.toArray(),
       db.budgetCategories.toArray(),
@@ -1339,6 +1448,7 @@ export async function adoptLocalData(userId: string): Promise<number> {
       db.readings.toArray(),
       db.goals.toArray(),
       db.stockSales.toArray(),
+      db.portfolioCashEntries.toArray(),
     ]);
 
   await enqueueAll('transaction', txs);
@@ -1356,6 +1466,7 @@ export async function adoptLocalData(userId: string): Promise<number> {
   await enqueueAll('reading', readings);
   await enqueueAll('goal', goals);
   await enqueueAll('stock_sale', stockSales);
+  await enqueueAll('portfolio_cash_entry', cashEntries);
 
   // Stamp user_id for later use isn't needed since the push handler reads
   // userId from the current session.

@@ -1,10 +1,10 @@
 import { create } from 'zustand';
 import { db } from '../db/database';
-import { Transaction, BudgetCategory, PortfolioHolding, PortfolioLot, PortfolioSnapshot, ManualAsset, WatchlistItem, StockSale } from '../types/finance';
+import { Transaction, BudgetCategory, PortfolioHolding, PortfolioLot, PortfolioSnapshot, ManualAsset, WatchlistItem, StockSale, PortfolioCashEntry, PortfolioCashEntryType } from '../types/finance';
 import { generateId } from '../utils/uuid';
 import { localDateKey } from '../utils/formatters';
 import { enqueue } from '../db/syncQueue';
-import { computeSale, applySoldShares } from '../lib/stockSaleFifo';
+import { computeSale, applySoldShares, saleCostBasisInCurrency } from '../lib/stockSaleFifo';
 import { getQuotes, QuoteResult } from '../api/finnhub';
 import { getCryptoPrices, CryptoResult } from '../api/coingecko';
 import { ensureFxRates, convertSync } from '../api/fxRates';
@@ -47,6 +47,8 @@ interface FinanceStore {
   // v1.3.1 (BUG-23) — realized stock sales. Drives the Realized P&L card +
   // closed-positions section; each lot's soldShares is derived from these.
   stockSales: StockSale[];
+  // v1.3.2 — portfolio cash ledger (append-only signed movements).
+  portfolioCashEntries: PortfolioCashEntry[];
   stockQuotes: QuoteResult[];
   cryptoPrices: CryptoResult | null;
   fxRates: Record<string, number> | null; // USD-anchored rates
@@ -119,6 +121,12 @@ interface FinanceStore {
   }) => Promise<void>;
   deleteStockSale: (id: string) => Promise<void>;
 
+  // v1.3.2 — portfolio cash transfers. `amount` is in `currency` (the UI passes
+  // base currency). Deposit pulls from an account into portfolio cash;
+  // withdrawal pushes portfolio cash back out to an account.
+  depositToPortfolio: (input: { amount: number; currency: string; accountId: string; note?: string }) => Promise<void>;
+  withdrawFromPortfolio: (input: { amount: number; currency: string; accountId: string; note?: string }) => Promise<void>;
+
   addManualAsset: (a: Omit<ManualAsset, 'id' | 'createdAt' | 'syncStatus'>) => Promise<void>;
   updateManualAsset: (id: string, patch: Partial<Omit<ManualAsset, 'id' | 'createdAt'>>) => Promise<void>;
   deleteManualAsset: (id: string) => Promise<void>;
@@ -151,6 +159,7 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
   holdings: [],
   portfolioLots: [],
   stockSales: [],
+  portfolioCashEntries: [],
   stockQuotes: [],
   cryptoPrices: null,
   fxRates: null,
@@ -183,6 +192,7 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
       db.watchlistItems.toArray(),
       db.stockSales.toArray(),
     ]);
+    const portfolioCashEntries = await db.portfolioCashEntries.toArray();
     // Legacy migration: for any holding with avg_cost_native + quantity set
     // but no lots, synthesize one lot so the new lots-driven aggregation
     // keeps showing the same numbers. Runs once per device — we check the
@@ -223,7 +233,7 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
     // on every load so a post-pull lot set (which arrives without soldShares —
     // the cloud portfolio_lots table doesn't carry it) is corrected.
     const lotsWithSold = applySoldShares(portfolioLots, stockSales);
-    set({ transactions, budgetCategories, holdings, portfolioLots: lotsWithSold, portfolioSnapshots, manualAssets, watchlist, stockSales, loading: false });
+    set({ transactions, budgetCategories, holdings, portfolioLots: lotsWithSold, portfolioSnapshots, manualAssets, watchlist, stockSales, portfolioCashEntries, loading: false });
   },
 
   async addTransaction(t) {
@@ -372,6 +382,14 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
     await enqueue('portfolio_lot', row.id, 'insert', row);
     const nextLots = [...get().portfolioLots, row];
     set({ portfolioLots: nextLots });
+    // v1.3.2 — a buy draws down portfolio cash by the lot's cost (can go
+    // negative → the UI prompts to deposit to cover).
+    await addCashEntry(set, get, {
+      type: 'buy',
+      amount: -(row.quantity * row.costPerUnit),
+      currency: row.costCurrency,
+      relatedId: row.id,
+    });
     await recomputeHoldingAggregates(row.holdingId, nextLots, set, get);
   },
 
@@ -389,6 +407,18 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
     await enqueue('portfolio_lot', id, 'update', updated);
     const nextLots = get().portfolioLots.map((l) => (l.id === id ? updated : l));
     set({ portfolioLots: nextLots });
+    // v1.3.2 — keep the buy cash entry in lockstep with the edited lot cost.
+    // Only touches lots that already produced a buy entry (post-feature buys),
+    // so legacy/synthesized lots without an entry stay at zero cash impact.
+    if (get().portfolioCashEntries.some((e) => e.relatedId === id && e.type === 'buy')) {
+      await removeCashEntriesFor(set, get, id);
+      await addCashEntry(set, get, {
+        type: 'buy',
+        amount: -(updated.quantity * updated.costPerUnit),
+        currency: updated.costCurrency,
+        relatedId: id,
+      });
+    }
     await recomputeHoldingAggregates(updated.holdingId, nextLots, set, get);
   },
 
@@ -399,14 +429,27 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
     await enqueue('portfolio_lot', id, 'delete', { id });
     const nextLots = get().portfolioLots.filter((l) => l.id !== id);
     set({ portfolioLots: nextLots });
+    // v1.3.2 — deleting the lot reverses its cash draw-down.
+    await removeCashEntriesFor(set, get, id);
     await recomputeHoldingAggregates(existing.holdingId, nextLots, set, get);
   },
 
   async addStockSale({ holdingId, ticker, sharesSold, salePricePerShare, currency, soldAt }) {
     const holdingLots = get().portfolioLots.filter((l) => l.holdingId === holdingId);
     // Throws on oversell — the form validates first; this is the backstop.
-    const { costBasisPerShare, lotAllocations } = computeSale(ticker, sharesSold, holdingLots);
-    const realizedGainLoss = (salePricePerShare - costBasisPerShare) * sharesSold;
+    const { lotAllocations } = computeSale(ticker, sharesSold, holdingLots);
+    // Cost basis in the SALE currency (converts any lot bought in a different
+    // currency first) so realized P/L isn't a cross-currency subtraction. For
+    // a single-currency holding this is identical to the naive sum.
+    const fxRates = get().fxRates;
+    const costTotal = saleCostBasisInCurrency(
+      holdingLots,
+      lotAllocations,
+      currency,
+      (amt, from, to) => convertSync(amt, from, to, fxRates),
+    );
+    const costBasisPerShare = sharesSold > 0 ? costTotal / sharesSold : 0;
+    const realizedGainLoss = salePricePerShare * sharesSold - costTotal;
     const sale: StockSale = {
       id: generateId(),
       ticker,
@@ -432,6 +475,13 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
       if (l) await db.portfolioLots.put(l);
     }
     set({ stockSales: nextSales, portfolioLots: nextLots });
+    // v1.3.2 — sale proceeds top up portfolio cash.
+    await addCashEntry(set, get, {
+      type: 'sell',
+      amount: salePricePerShare * sharesSold,
+      currency,
+      relatedId: sale.id,
+    });
     await recomputeHoldingAggregates(holdingId, nextLots, set, get);
   },
 
@@ -449,9 +499,49 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
       if (l) await db.portfolioLots.put(l);
     }
     set({ stockSales: nextSales, portfolioLots: nextLots });
+    // v1.3.2 — removing the sale reverses its cash top-up.
+    await removeCashEntriesFor(set, get, id);
     if (existing.holdingId) {
       await recomputeHoldingAggregates(existing.holdingId, nextLots, set, get);
     }
+  },
+
+  async depositToPortfolio({ amount, currency, accountId, note }) {
+    if (!(amount > 0)) return;
+    const account = get().manualAssets.find((a) => a.id === accountId);
+    if (!account) throw new Error('Account not found.');
+    // Convert the (base-currency) amount into the account's currency to debit it.
+    const amtInAccount = account.currency === currency
+      ? amount
+      : convertSync(amount, currency, account.currency, get().fxRates);
+    if (amtInAccount == null) {
+      throw new Error(`Couldn't convert ${currency} → ${account.currency} (FX rate missing).`);
+    }
+    // Debit the source account by shifting its opening balance (mirrors the
+    // Savings "Invest" sheet — keeps the derived balance consistent).
+    const base = account.startingBalance ?? account.value ?? 0;
+    const newOpening = base - amtInAccount;
+    await get().updateManualAsset(accountId, { startingBalance: newOpening, value: newOpening });
+    // Credit portfolio cash (+) — stored in the amount's currency.
+    await addCashEntry(set, get, { type: 'deposit', amount, currency, accountId, note });
+  },
+
+  async withdrawFromPortfolio({ amount, currency, accountId, note }) {
+    if (!(amount > 0)) return;
+    const account = get().manualAssets.find((a) => a.id === accountId);
+    if (!account) throw new Error('Account not found.');
+    const amtInAccount = account.currency === currency
+      ? amount
+      : convertSync(amount, currency, account.currency, get().fxRates);
+    if (amtInAccount == null) {
+      throw new Error(`Couldn't convert ${currency} → ${account.currency} (FX rate missing).`);
+    }
+    // Credit the destination account.
+    const base = account.startingBalance ?? account.value ?? 0;
+    const newOpening = base + amtInAccount;
+    await get().updateManualAsset(accountId, { startingBalance: newOpening, value: newOpening });
+    // Debit portfolio cash (−).
+    await addCashEntry(set, get, { type: 'withdrawal', amount: -amount, currency, accountId, note });
   },
 
   async addManualAsset(a) {
@@ -838,6 +928,56 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
 // / reverse on delete — is no longer needed. Keeping it would double-count.
 
 // ─── helpers ──────────────────────────────────────────────────────────────
+
+// ─── v1.3.2 — portfolio cash ledger helpers ────────────────────────────────
+// Append a signed cash movement and persist + enqueue it. Used by buy/sell
+// (auto) and deposit/withdrawal (explicit). `amount` sign convention: positive
+// adds cash, negative removes it.
+async function addCashEntry(
+  setState: (partial: Partial<FinanceStore>) => void,
+  getState: () => FinanceStore,
+  input: {
+    type: PortfolioCashEntryType;
+    amount: number;
+    currency: string;
+    accountId?: string;
+    relatedId?: string;
+    note?: string;
+  },
+): Promise<void> {
+  const entry: PortfolioCashEntry = {
+    id: generateId(),
+    type: input.type,
+    amount: input.amount,
+    currency: input.currency,
+    accountId: input.accountId,
+    relatedId: input.relatedId,
+    note: input.note,
+    createdAt: new Date().toISOString(),
+    syncStatus: 'pending',
+  };
+  await db.portfolioCashEntries.add(entry);
+  await enqueue('portfolio_cash_entry', entry.id, 'insert', entry);
+  setState({ portfolioCashEntries: [...getState().portfolioCashEntries, entry] });
+}
+
+// Remove every cash entry linked to a lot/sale id (reverses its cash impact
+// when the originating lot or sale is deleted/edited).
+async function removeCashEntriesFor(
+  setState: (partial: Partial<FinanceStore>) => void,
+  getState: () => FinanceStore,
+  relatedId: string,
+): Promise<void> {
+  const toRemove = getState().portfolioCashEntries.filter((e) => e.relatedId === relatedId);
+  if (toRemove.length === 0) return;
+  for (const e of toRemove) {
+    await db.portfolioCashEntries.delete(e.id);
+    await enqueue('portfolio_cash_entry', e.id, 'delete', { id: e.id });
+  }
+  setState({
+    portfolioCashEntries: getState().portfolioCashEntries.filter((e) => e.relatedId !== relatedId),
+  });
+}
 
 // Recompute a holding's cached aggregates (quantity + avgCostNative + costCurrency)
 // from its lots, persist to Dexie, enqueue an update to the cloud, and patch

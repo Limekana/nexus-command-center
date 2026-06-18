@@ -139,6 +139,42 @@ export interface StockSale {
   createdAt: string;
 }
 
+// ─── v1.3.2 — Portfolio cash ledger ────────────────────────────────────────
+//
+// An append-only ledger of cash movements inside the portfolio. The portfolio
+// cash balance = Σ(amount converted to base) — `amount` is SIGNED (positive
+// adds cash, negative removes it). Append-only keeps multi-device sync a clean
+// union (no lost-update races on a mutable scalar) and lets the balance
+// re-derive when the base currency changes.
+//
+// Movements:
+//   - `sell`       +proceeds  (auto on a stock sale)
+//   - `buy`        −cost      (auto on a new lot; portfolio cash can go
+//                              negative → the UI prompts to deposit to cover)
+//   - `deposit`    +amount    (transfer in from a cash/savings account)
+//   - `withdrawal` −amount    (transfer out to a cash/savings account)
+//   - `adjust`     ±amount    (manual correction, reserved)
+//
+// Start-at-zero / going-forward: lots & sales that pre-date this feature do
+// NOT get entries (existing holdings are treated as already funded). Only new
+// buys/sells/transfers move cash.
+export type PortfolioCashEntryType = 'deposit' | 'withdrawal' | 'buy' | 'sell' | 'adjust';
+
+export interface PortfolioCashEntry {
+  id: string;
+  type: PortfolioCashEntryType;
+  /** Signed amount in `currency`: + increases portfolio cash, − decreases it. */
+  amount: number;
+  currency: string;
+  /** deposit/withdrawal: the counterpart account (ManualAsset) id. */
+  accountId?: string;
+  /** buy/sell: the originating lot / sale id, so deleting it removes this entry. */
+  relatedId?: string;
+  note?: string;
+  createdAt: string;
+  syncStatus: SyncStatus;
+}
+
 // v1.2 follow-up — CTO Account-based finance refactor. Replaces the
 // "manual balance entry" mental model with a first-class Account that
 // derives its balance from the transactions hitting it.

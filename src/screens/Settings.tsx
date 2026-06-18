@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import AppHeader from '../components/AppHeader';
 import ListRow from '../components/ListRow';
 import { useAuthStore } from '../store/useAuthStore';
@@ -673,9 +674,9 @@ export default function Settings() {
           </button>
         </Section>
       </div>
-      {signOutOpen && (
-        <div className="fixed inset-0 bg-bg/90 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
-          <div className="card-elevated max-w-sm w-full">
+      {signOutOpen && createPortal(
+        <div className="fixed inset-0 bg-bg/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="card-elevated max-w-sm w-full max-h-[90vh] overflow-y-auto">
             <h2 className="font-heading font-bold text-base mb-1">Sign out?</h2>
             <p className="text-xs text-text-muted mb-4">
               Choose what happens to data already saved on this device. Cloud data is untouched either way.
@@ -710,7 +711,8 @@ export default function Settings() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
