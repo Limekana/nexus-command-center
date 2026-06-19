@@ -11,7 +11,7 @@
 //   - Heatmaps + per-day series matter here; weekly review is just totals.
 
 import type { Transaction, BudgetCategory, ManualAsset, PortfolioHolding } from '../types/finance';
-import type { Course, StudySession, Reading } from '../types/studies';
+import type { Course, StudySession } from '../types/studies';
 import type { WorkoutSession, WorkoutSet } from '../types/fitness';
 import type { Task } from '../types/tasks';
 import { localDateKey } from '../utils/formatters';
@@ -48,7 +48,6 @@ export interface YearReviewData {
   studies: {
     totalStudyMinutes: number;
     sessionCount: number;
-    booksFinished: number;
     coursesAdded: number;
     studyMinutesByDay: Map<string, number>;
   };
@@ -81,7 +80,6 @@ export function buildYearReview(args: {
   budgetCategories: BudgetCategory[];
   courses: Course[];
   sessions: StudySession[];
-  readings: Reading[];
   workouts: Array<WorkoutSession & { sets: WorkoutSet[] }>;
   tasks: Task[];
   // Unused for now but plumbed so a future "net worth at start vs end"
@@ -134,10 +132,6 @@ export function buildYearReview(args: {
     const key = localDateKey(new Date(s.startedAt));
     studyMinutesByDay.set(key, (studyMinutesByDay.get(key) ?? 0) + s.durationMinutes);
   }
-  let booksFinished = 0;
-  for (const r of args.readings) {
-    if (r.finishedAt && inRange(r.finishedAt, rangeStart, rangeEnd)) booksFinished++;
-  }
   const coursesAdded = args.courses.filter((c) => inRange(c.createdAt, rangeStart, rangeEnd)).length;
 
   // Fitness ─────────────────────────────────────────────
@@ -178,14 +172,6 @@ export function buildYearReview(args: {
   // Highlights — short, declarative, no overstating. Threshold-driven so
   // a slow year doesn't produce hyperbole.
   const highlights: YearReviewData['highlights'] = [];
-  if (booksFinished >= 12) {
-    highlights.push({
-      text: `Finished ${booksFinished} books — a book a month or better.`,
-      tone: 'positive',
-    });
-  } else if (booksFinished > 0) {
-    highlights.push({ text: `Finished ${booksFinished} books.`, tone: 'neutral' });
-  }
   if (workoutCount >= 100) {
     highlights.push({
       text: `${workoutCount} workouts — averaging ~${(workoutCount / 52).toFixed(1)} per week.`,
@@ -237,7 +223,6 @@ export function buildYearReview(args: {
     studies: {
       totalStudyMinutes,
       sessionCount,
-      booksFinished,
       coursesAdded,
       studyMinutesByDay,
     },

@@ -44,7 +44,6 @@ const USER_SCOPED_TABLES = [
   'workout_sets',
   // v2-B
   'study_sessions',
-  'readings',
   // v2-D
   'portfolio_lots',
   // v3

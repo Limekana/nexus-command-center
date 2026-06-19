@@ -6,6 +6,8 @@ import ProgressBar from '../../components/ProgressBar';
 import RowActions from '../../components/RowActions';
 import NewsCard from '../../components/NewsCard';
 import HeatmapCalendar from '../../components/HeatmapCalendar';
+import CashFlowForecastCard from '../../components/CashFlowForecastCard';
+import MarketsSegment from '../../components/MarketsSegment';
 import { useFinanceStore } from '../../store/useFinanceStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { convertSync, normalizeCurrency } from '../../api/fxRates';
@@ -17,7 +19,11 @@ import { LIABILITY_TYPES } from '../../types/finance';
 // investing + market surface. The former flat hierarchy (five header chips
 // + everything stacked at one level) read as bloated; the segmented control
 // gives the page a clear two-view spine.
-type FinanceTab = 'balance' | 'portfolio';
+// v1.4 — a third "Markets" segment joins Balance + Portfolio: a macro snapshot
+// (indices, FX, rates, commodities, economic calendar). Read-only, fetched at
+// runtime — no persistence.
+type FinanceTab = 'balance' | 'portfolio' | 'markets';
+const FINANCE_TABS: readonly FinanceTab[] = ['balance', 'portfolio', 'markets'];
 
 export default function FinanceOverview() {
   const navigate = useNavigate();
@@ -36,12 +42,13 @@ export default function FinanceOverview() {
   // market-news notification, which routes to /finance?tab=portfolio now that
   // the standalone News screen is gone) lands on the right view. The effect
   // keeps it in sync if the param changes while the screen is already mounted.
-  const [tab, setTab] = useState<FinanceTab>(() =>
-    searchParams.get('tab') === 'portfolio' ? 'portfolio' : 'balance',
-  );
+  const [tab, setTab] = useState<FinanceTab>(() => {
+    const t = searchParams.get('tab');
+    return t === 'portfolio' || t === 'markets' ? t : 'balance';
+  });
   useEffect(() => {
     const t = searchParams.get('tab');
-    if (t === 'portfolio' || t === 'balance') setTab(t);
+    if (t === 'portfolio' || t === 'balance' || t === 'markets') setTab(t);
   }, [searchParams]);
 
   // Net worth summary — uses the same math as the Net Worth screen but
@@ -132,13 +139,13 @@ export default function FinanceOverview() {
             aria-hidden
             className="absolute top-1 bottom-1 left-1 rounded-pill transition-transform duration-300 ease-spring-soft"
             style={{
-              width: 'calc((100% - 0.5rem) / 2)',
-              transform: `translateX(${tab === 'portfolio' ? '100%' : '0%'})`,
+              width: 'calc((100% - 0.5rem) / 3)',
+              transform: `translateX(${FINANCE_TABS.indexOf(tab) * 100}%)`,
               background: 'rgba(0, 212, 255, 0.14)',
               boxShadow: '0 0 0 1px rgba(0, 212, 255, 0.45)',
             }}
           />
-          {(['balance', 'portfolio'] as const).map((t) => (
+          {FINANCE_TABS.map((t) => (
             <button
               key={t}
               type="button"
@@ -148,12 +155,12 @@ export default function FinanceOverview() {
                 tab === t ? 'text-primary' : 'text-text-muted'
               }`}
             >
-              {t === 'balance' ? 'Balance' : 'Portfolio'}
+              {t === 'balance' ? 'Balance' : t === 'portfolio' ? 'Portfolio' : 'Markets'}
             </button>
           ))}
         </div>
 
-        {tab === 'balance' ? (
+        {tab === 'balance' && (
           <>
             <div className="grid grid-cols-2 gap-2">
               <StatCard value={formatCurrency(income)} label="Income" highlight />
@@ -215,6 +222,11 @@ export default function FinanceOverview() {
               </div>
               <span className="text-primary text-lg" aria-hidden>→</span>
             </button>
+
+            {/* v1.4 — projected income vs expenses from detected recurring
+                patterns. Sits above Budget Breakdown: forward-looking forecast
+                first, then the current-month category breakdown. */}
+            <CashFlowForecastCard />
 
             <div className="card">
               <div className="flex items-center justify-between mb-3">
@@ -297,7 +309,9 @@ export default function FinanceOverview() {
               </div>
             </div>
           </>
-        ) : (
+        )}
+
+        {tab === 'portfolio' && (
           <>
             <EntryCard
               emoji="📈"
@@ -328,6 +342,8 @@ export default function FinanceOverview() {
             <NewsCard />
           </>
         )}
+
+        {tab === 'markets' && <MarketsSegment />}
       </div>
     </>
   );

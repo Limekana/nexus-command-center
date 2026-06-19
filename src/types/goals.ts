@@ -4,8 +4,10 @@
 //
 // Two flavours of goal:
 //   - Cumulative (count events since startDate): task_count, workout_count,
-//     reading_count, study_hours.
+//     study_hours.
 //   - Absolute (reach a snapshot value): net_worth, gpa, lift_pr.
+//
+// v1.4 — `reading_count` was removed when the Reading Log feature was retired.
 //
 // Why these only: they map 1:1 to existing tables. Weight-loss, meditation,
 // macro tracking etc. would require sustained logging the user doesn't do.
@@ -18,7 +20,6 @@ export type GoalType =
   | 'net_worth'      // reach a net worth value (base currency)
   | 'task_count'     // complete N tasks since start
   | 'workout_count'  // log N workouts since start
-  | 'reading_count'  // finish N readings since start
   | 'study_hours'    // accumulate N hours of study sessions since start
   | 'lift_pr'        // reach Xkg on a specific exercise (max weightKg ever set)
   | 'gpa';           // current GPA hits or exceeds a value
@@ -27,7 +28,6 @@ export const GOAL_TYPES: readonly GoalType[] = [
   'net_worth',
   'task_count',
   'workout_count',
-  'reading_count',
   'study_hours',
   'lift_pr',
   'gpa',
@@ -38,7 +38,6 @@ export const GOAL_TYPES: readonly GoalType[] = [
 export const CUMULATIVE_GOAL_TYPES: readonly GoalType[] = [
   'task_count',
   'workout_count',
-  'reading_count',
   'study_hours',
 ] as const;
 
@@ -70,7 +69,6 @@ export const GOAL_TYPE_LABELS: Record<GoalType, { label: string; unit: string; i
   net_worth: { label: 'Net Worth', unit: '€', icon: '💰' },
   task_count: { label: 'Tasks', unit: 'tasks', icon: '✓' },
   workout_count: { label: 'Workouts', unit: 'workouts', icon: '🏋️' },
-  reading_count: { label: 'Books', unit: 'books', icon: '📚' },
   study_hours: { label: 'Study Hours', unit: 'hours', icon: '⏱️' },
   lift_pr: { label: 'Lift PR', unit: 'kg', icon: '💪' },
   gpa: { label: 'GPA', unit: '', icon: '🎓' },

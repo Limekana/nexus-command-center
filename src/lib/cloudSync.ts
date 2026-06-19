@@ -27,7 +27,7 @@ import { listPending } from '../db/syncQueue';
 import { generateId, legacyIdToUuid } from '../utils/uuid';
 import type { Transaction, BudgetCategory, PortfolioHolding, PortfolioLot, ManualAsset, WatchlistItem, StockSale, PortfolioCashEntry } from '../types/finance';
 import { legacyAssetTypeToAccountType } from '../types/finance';
-import type { Course, Grade, StudySession, Reading } from '../types/studies';
+import type { Course, Grade, StudySession } from '../types/studies';
 import type { WorkoutSession, WorkoutSet, BodyMetric } from '../types/fitness';
 import type { Task, TaskPriority } from '../types/tasks';
 import type { Goal, GoalType } from '../types/goals';
@@ -396,36 +396,6 @@ async function pushStudySession(item: SyncQueueItem, ctx: PushContext): Promise<
   if (error) throw error;
 }
 
-async function pushReading(item: SyncQueueItem, ctx: PushContext): Promise<void> {
-  if (item.operation === 'delete') {
-    const { error } = await supabase
-      .from('readings')
-      .delete()
-      .eq('id', legacyIdToUuid(item.entityId));
-    if (error) throw error;
-    return;
-  }
-  const local: Reading = JSON.parse(item.payload);
-  const updatedAt = local.updatedAt || item.createdAt;
-  const row = {
-    id: legacyIdToUuid(local.id),
-    user_id: ctx.userId,
-    title: local.title,
-    author: local.author ?? null,
-    status: local.status,
-    total_pages: local.totalPages ?? null,
-    pages_read: local.pagesRead ?? null,
-    rating: local.rating ?? null,
-    subject_id: local.subjectId ? legacyIdToUuid(local.subjectId) : null,
-    started_at: local.startedAt ?? null,
-    finished_at: local.finishedAt ?? null,
-    notes: local.notes ?? null,
-    updated_at: updatedAt,
-  };
-  const { error } = await supabase.from('readings').upsert(row);
-  if (error) throw error;
-}
-
 async function pushCourse(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   // Local Course = subject only. Grades live in their own table now (since
   // v1.0.3), pushed via pushGrade below. On delete, cascade-soft-delete the
@@ -554,7 +524,6 @@ const pushHandlers: Record<SyncQueueItem['entityType'], (item: SyncQueueItem, ct
   course: pushCourse,
   grade: pushGrade,
   study_session: pushStudySession,
-  reading: pushReading,
   habit: pushHabit,
   habit_completion: pushHabitCompletion,
   // grade_import is a local-only snapshot concept — courses sync individually.
@@ -577,8 +546,8 @@ export interface PushResult {
 // budget_categories must exist before transactions reference them; workout_sessions
 // before workout_sets; subjects before grades (subjects+grades both come from
 // 'course' entity in our local model, handled together in pushCourse).
-// study_session.subject_id and reading.subject_id are nullable FKs to subjects,
-// so courses (which push subjects) need to land first.
+// study_session.subject_id is a nullable FK to subjects, so courses (which
+// push subjects) need to land first.
 const ENTITY_PRIORITY: Record<SyncQueueItem['entityType'], number> = {
   budget_category: 1,
   portfolio_holding: 1,
@@ -590,7 +559,6 @@ const ENTITY_PRIORITY: Record<SyncQueueItem['entityType'], number> = {
   workout_set: 2, // FK → workout_sessions
   transaction: 2, // FK → budget_categories (nullable, but order anyway)
   study_session: 2, // FK → subjects (nullable)
-  reading: 2, // FK → subjects (nullable)
   portfolio_lot: 2, // FK → portfolio_holdings
   stock_sale: 2, // logically follows holdings (holding_id is a plain ref, no hard FK)
   portfolio_cash_entry: 2, // related_id is a plain ref to a lot/sale, no hard FK
@@ -669,7 +637,6 @@ export interface PullResult {
   workoutSets: number;
   tasks: number;
   studySessions: number;
-  readings: number;
   goals: number;
   habits: number;
   habitCompletions: number;
@@ -1083,7 +1050,6 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     workoutSets: 0,
     tasks: 0,
     studySessions: 0,
-    readings: 0,
     goals: 0,
     habits: 0,
     habitCompletions: 0,
@@ -1380,30 +1346,6 @@ export async function pullAll(_userId: string): Promise<PullResult> {
   result.portfolioCashEntries = cashHydration.portfolioCashEntries;
   for (const e of cashHydration.errors) errors.push(e);
 
-  result.readings = await pullTable<any, Reading>(
-    'readings',
-    [{ column: 'deleted_at', op: 'is', value: null }],
-    (r) => ({
-      id: r.id,
-      title: r.title,
-      author: r.author ?? undefined,
-      status: r.status as Reading['status'],
-      totalPages: r.total_pages != null ? Number(r.total_pages) : undefined,
-      pagesRead: r.pages_read != null ? Number(r.pages_read) : undefined,
-      rating: r.rating != null ? Number(r.rating) : undefined,
-      subjectId: r.subject_id ?? undefined,
-      startedAt: r.started_at ?? undefined,
-      finishedAt: r.finished_at ?? undefined,
-      notes: r.notes ?? undefined,
-      syncStatus: 'synced',
-      createdAt: r.created_at,
-      updatedAt: r.updated_at,
-    }),
-    async (rows) => {
-      await db.readings.bulkPut(rows);
-    }
-  );
-
   return result;
 }
 
@@ -1431,7 +1373,7 @@ export async function adoptLocalData(userId: string): Promise<number> {
     }
   };
 
-  const [txs, budgets, holdings, lots, manualAssets, watchlistItems, sessions, sets, tasks, courses, grades, studySessions, readings, goals, stockSales, cashEntries] =
+  const [txs, budgets, holdings, lots, manualAssets, watchlistItems, sessions, sets, tasks, courses, grades, studySessions, goals, stockSales, cashEntries] =
     await Promise.all([
       db.transactions.toArray(),
       db.budgetCategories.toArray(),
@@ -1445,7 +1387,6 @@ export async function adoptLocalData(userId: string): Promise<number> {
       db.courses.toArray(),
       db.grades.toArray(),
       db.studySessions.toArray(),
-      db.readings.toArray(),
       db.goals.toArray(),
       db.stockSales.toArray(),
       db.portfolioCashEntries.toArray(),
@@ -1463,7 +1404,6 @@ export async function adoptLocalData(userId: string): Promise<number> {
   await enqueueAll('course', courses);
   await enqueueAll('grade', grades);
   await enqueueAll('study_session', studySessions);
-  await enqueueAll('reading', readings);
   await enqueueAll('goal', goals);
   await enqueueAll('stock_sale', stockSales);
   await enqueueAll('portfolio_cash_entry', cashEntries);
@@ -1496,7 +1436,6 @@ export async function hasLocalData(): Promise<boolean> {
     db.courses.count(),
     db.grades.count(),
     db.studySessions.count(),
-    db.readings.count(),
   ]);
   return counts.some((c) => c > 0);
 }

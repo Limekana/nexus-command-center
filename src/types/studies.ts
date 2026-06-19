@@ -62,58 +62,8 @@ export interface StudySession {
   updatedAt: string;
 }
 
-// v2-B: Reading Log ────────────────────────────────────────────────────────
-// Personal library — books read for any reason, school or otherwise. The
-// optional subjectId is for the case where a book IS tied to a course
-// (e.g. "Calculus Textbook" for Math 101).
-export type ReadingStatus = 'to_read' | 'reading' | 'finished' | 'abandoned';
-
-/**
- * v1.2 — shelf state. Orthogonal to `status` (which tracks reading progress).
- *   - `owned`    Physically (or digitally) on the user's shelf. Default.
- *   - `borrowed` Currently borrowed FROM a library (or any external source).
- *                Optional borrowedFrom + expectedReturnAt drive a return-to-
- *                library reminder. NOTE: v1.2.2 corrected this semantic — the
- *                v1.2 ship initially modeled this as "lent OUT to a friend"
- *                which was the inverse of the v1.2 status-file intent. The
- *                literal was renamed from 'lent' → 'borrowed' and the lent*
- *                fields renamed to borrowed*; Dexie v10 maps existing rows.
- *   - `wishlist` Want-to-own. Doesn't track progress; sits separately so the
- *                Owned shelf isn't cluttered with aspirational entries.
- *
- * Missing shelf field on legacy rows is treated as 'owned' by the UI.
- */
-export type ReadingShelf = 'owned' | 'borrowed' | 'wishlist';
-
-export interface Reading {
-  id: string;
-  title: string;
-  author?: string;
-  status: ReadingStatus;
-  /** v1.2 — Owned / Lent / Wishlist. Defaults to 'owned' when absent. */
-  shelf?: ReadingShelf;
-  totalPages?: number;
-  pagesRead?: number;
-  rating?: number;              // 1-5, optional
-  /** v1.2 — series grouping. Optional; "The Lord of the Rings" etc. The
-   *  Sort=Series view groups books by this field, ordered by seriesNumber
-   *  when present (else by title alpha within the group). */
-  series?: string;
-  /** v1.2 — book number within the series ("1" for The Fellowship of the Ring). */
-  seriesNumber?: number;
-  subjectId?: string;
-  startedAt?: string;           // ISO timestamp, set when status moves to 'reading'
-  finishedAt?: string;          // ISO timestamp, set when status moves to 'finished'
-  /** v1.2.2 — borrow metadata (set when shelf flips to 'borrowed'). Cleared
-   *  when shelf flips away. Drives a return-to-library reminder notification
-   *  on expectedReturnAt at 09:00 local. `borrowedFrom` is a free-text label
-   *  for the source library / lender (e.g. "Oslo Public Library").
-   *  Renamed from lentTo/lentAt in v1.2.2; Dexie v10 upgrade hook re-maps. */
-  borrowedFrom?: string;
-  borrowedAt?: string;
-  expectedReturnAt?: string;
-  notes?: string;
-  syncStatus: SyncStatus;
-  createdAt: string;
-  updatedAt: string;
-}
+// v1.4 — the Reading Log / personal-library feature was retired. It had no
+// entry UI since BUG-16 and its library reminders fired broken notifications.
+// The `Reading`/`ReadingStatus`/`ReadingShelf` types, the `readings` Dexie
+// table (dropped in Dexie v17), the cloud sync path, and the `reading_count`
+// goal type were all removed in v1.4.0.

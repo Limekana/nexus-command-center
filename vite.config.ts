@@ -53,6 +53,14 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/fx/, ''),
       },
+      // v1.4 — ECB Data Portal (deposit facility rate + Bund yield) for the
+      // Markets segment. Free, no auth. Native builds hit it directly via
+      // CapacitorHttp; this proxy is the web-dev convenience path.
+      '/ecb-api': {
+        target: 'https://data-api.ecb.europa.eu',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/ecb-api/, ''),
+      },
     },
   },
   build: {

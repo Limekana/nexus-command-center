@@ -12,7 +12,7 @@
 //     them as bullets — no markdown, no emoji-only output.
 
 import type { Transaction, PortfolioHolding } from '../types/finance';
-import type { Course, StudySession, Reading } from '../types/studies';
+import type { Course, StudySession } from '../types/studies';
 import type { WorkoutSession, WorkoutSet } from '../types/fitness';
 import type { Task } from '../types/tasks';
 
@@ -133,15 +133,12 @@ export interface StudiesWeekly {
   studyMinutes: number;
   sessionCount: number;
   gpa: number | null;
-  readingsFinished: number;
-  readingsStarted: number;
   minutesDelta: string;
 }
 
 export function aggregateStudies(
   courses: Course[],
   sessions: StudySession[],
-  readings: Reading[],
   weekStart: Date,
   currentGpa: number | null,
 ): StudiesWeekly {
@@ -161,19 +158,10 @@ export function aggregateStudies(
     }
   }
 
-  let readingsFinished = 0;
-  let readingsStarted = 0;
-  for (const r of readings) {
-    if (r.finishedAt && inRange(r.finishedAt, weekStart, weekEnd)) readingsFinished++;
-    if (r.startedAt && inRange(r.startedAt, weekStart, weekEnd)) readingsStarted++;
-  }
-
   return {
     studyMinutes,
     sessionCount,
     gpa: currentGpa,
-    readingsFinished,
-    readingsStarted,
     minutesDelta: deltaLabel(studyMinutes, priorMinutes, 'pct'),
   };
 }
@@ -300,7 +288,6 @@ export function buildWeeklyReview(args: {
   transactions: Transaction[];
   courses: Course[];
   sessions: StudySession[];
-  readings: Reading[];
   workouts: (WorkoutSession & { sets: WorkoutSet[] })[];
   tasks: Task[];
   currentGpa: number | null;
@@ -311,7 +298,7 @@ export function buildWeeklyReview(args: {
   void args.holdings; // reserved for portfolio P/L delta once snapshot history is queried here
 
   const finance = aggregateFinance(args.transactions, weekStart);
-  const studies = aggregateStudies(args.courses, args.sessions, args.readings, weekStart, args.currentGpa);
+  const studies = aggregateStudies(args.courses, args.sessions, weekStart, args.currentGpa);
   const fitness = aggregateFitness(args.workouts, weekStart);
   const tasks = aggregateTasks(args.tasks, weekStart);
 
@@ -360,13 +347,6 @@ export function buildWeeklyReview(args: {
     });
   }
 
-  // Reading completion — finishing a book is a moment worth noting.
-  if (studies.readingsFinished > 0) {
-    insights.push({
-      text: `Finished ${studies.readingsFinished} ${studies.readingsFinished === 1 ? 'book' : 'books'} this week.`,
-      tone: 'positive',
-    });
-  }
 
   // Empty-week fallback so the section never renders zero insights.
   if (insights.length === 0) {

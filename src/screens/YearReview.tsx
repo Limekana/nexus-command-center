@@ -37,7 +37,6 @@ export default function YearReview() {
   const manualAssets = useFinanceStore((s) => s.manualAssets);
   const courses = useStudiesStore((s) => s.courses);
   const sessions = useStudiesStore((s) => s.studySessions);
-  const readings = useStudiesStore((s) => s.readings);
   const workouts = useFitnessStore((s) => s.sessions);
   const tasks = useTaskStore((s) => s.tasks);
   const baseCurrency = useSettingsStore((s) => s.baseCurrency);
@@ -61,13 +60,12 @@ export default function YearReview() {
         budgetCategories,
         courses,
         sessions,
-        readings,
         workouts,
         tasks,
         holdings,
         manualAssets,
       }),
-    [anchor, transactions, budgetCategories, courses, sessions, readings, workouts, tasks, holdings, manualAssets],
+    [anchor, transactions, budgetCategories, courses, sessions, workouts, tasks, holdings, manualAssets],
   );
 
   const fmtMoney = (n: number) =>
@@ -169,7 +167,7 @@ export default function YearReview() {
               value={`${Math.round(data.studies.totalStudyMinutes / 60)}h`}
             />
             <Stat label="Sessions" value={String(data.studies.sessionCount)} />
-            <Stat label="Books done" value={String(data.studies.booksFinished)} />
+            <Stat label="Courses" value={String(data.studies.coursesAdded)} />
           </div>
           {data.studies.studyMinutesByDay.size > 0 && (
             <HeatmapCalendar

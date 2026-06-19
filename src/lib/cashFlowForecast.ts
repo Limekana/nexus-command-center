@@ -1,0 +1,182 @@
+// Cash Flow Forecast — v1.4.
+//
+// Pure, store-free derivation. Detects recurring income/expense patterns from
+// the last 90 days of transactions and projects them forward over a 30- or
+// 60-day window. No new logging, no persistence — progress is always derived
+// from the existing transaction set, so editing a transaction immediately
+// re-shapes the forecast.
+//
+// NOTE on currency: transactions in `useFinanceStore` are already stored in
+// the user's base currency (see the spend-heatmap path in FinanceOverview),
+// so this module needs no FX conversion — amounts are summed directly. The
+// base-currency code is carried through only for display labelling.
+
+import type { Transaction } from '../types/finance';
+
+const DAY_MS = 86_400_000;
+
+export interface RecurringItem {
+  /** Stable grouping key (`<type>:<categoryId | desc:...>`). */
+  key: string;
+  /** Display label — category name (with icon) or the transaction description. */
+  label: string;
+  type: 'income' | 'expense';
+  /** Median per-occurrence amount, base currency. */
+  estimatedAmount: number;
+  /** Detected cadence: 7 (weekly), 14 (biweekly), or 30 (monthly). */
+  intervalDays: 7 | 14 | 30;
+  /** ISO date of the next expected occurrence (last seen + intervalDays). */
+  nextExpected: string;
+  /** high = 3+ consistent occurrences, medium = exactly 2. */
+  confidence: 'high' | 'medium';
+  /** How many consistent occurrences were seen in the 90-day window. */
+  occurrences: number;
+}
+
+export interface CashFlowProjection {
+  projectedIncome: number;
+  projectedExpenses: number;
+  netCashFlow: number;
+  /** Base currency code, for display. */
+  currency: string;
+  recurringItems: RecurringItem[];
+  forecastDays: 30 | 60;
+  generatedAt: string;
+}
+
+function median(nums: number[]): number {
+  if (nums.length === 0) return 0;
+  const sorted = [...nums].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+}
+
+/**
+ * Detect recurring patterns from the last 90 days of transactions.
+ * Recurring = same group (expense category, or normalised description for
+ * income / uncategorised), similar amount (within 20% of the group median),
+ * appearing at a regular cadence (weekly ±3d, biweekly ±3d, or monthly ±7d).
+ *
+ * @param categoryNames id → display label (icon + name) for expense categories.
+ * @param now           injectable clock for deterministic tests.
+ */
+export function detectRecurring(
+  transactions: Transaction[],
+  baseCurrency: string,
+  categoryNames: Map<string, string>,
+  now: number = Date.now(),
+): RecurringItem[] {
+  void baseCurrency; // carried for symmetry; amounts are already base currency
+  const windowStart = now - 90 * DAY_MS;
+
+  interface Group {
+    type: 'income' | 'expense';
+    label: string;
+    points: Array<{ date: number; amount: number }>;
+  }
+  const groups = new Map<string, Group>();
+
+  for (const t of transactions) {
+    if (t.type === 'transfer') continue;
+    const dateMs = new Date(t.date).getTime();
+    if (!isFinite(dateMs) || dateMs < windowStart || dateMs > now) continue;
+    if (!(t.amount > 0)) continue;
+
+    const desc = (t.description ?? '').trim();
+    const groupId = t.categoryId
+      ? `${t.type}:cat:${t.categoryId}`
+      : `${t.type}:desc:${desc.toLowerCase()}`;
+    const label = t.categoryId
+      ? (categoryNames.get(t.categoryId) ?? desc) || 'Uncategorised'
+      : desc || (t.type === 'income' ? 'Income' : 'Expense');
+
+    const g = groups.get(groupId);
+    if (g) g.points.push({ date: dateMs, amount: t.amount });
+    else groups.set(groupId, { type: t.type, label, points: [{ date: dateMs, amount: t.amount }] });
+  }
+
+  const items: RecurringItem[] = [];
+  for (const [key, g] of groups) {
+    if (g.points.length < 2) continue;
+
+    const medAmount = median(g.points.map((p) => p.amount));
+    if (medAmount <= 0) continue;
+
+    // Keep only occurrences within 20% of the median amount — a category used
+    // for both a €5 coffee and a €500 flight isn't a single recurring item.
+    const consistent = g.points
+      .filter((p) => Math.abs(p.amount - medAmount) <= 0.2 * medAmount)
+      .sort((a, b) => a.date - b.date);
+    if (consistent.length < 2) continue;
+
+    const intervals: number[] = [];
+    for (let i = 1; i < consistent.length; i++) {
+      intervals.push((consistent[i].date - consistent[i - 1].date) / DAY_MS);
+    }
+    const medInterval = median(intervals);
+
+    let intervalDays: 7 | 14 | 30;
+    if (Math.abs(medInterval - 7) <= 3) intervalDays = 7;
+    else if (Math.abs(medInterval - 14) <= 3) intervalDays = 14;
+    else if (Math.abs(medInterval - 30) <= 7) intervalDays = 30;
+    else continue;
+
+    const lastDate = consistent[consistent.length - 1].date;
+    const nextExpected = lastDate + intervalDays * DAY_MS;
+
+    items.push({
+      key,
+      label: g.label,
+      type: g.type,
+      estimatedAmount: median(consistent.map((p) => p.amount)),
+      intervalDays,
+      nextExpected: new Date(nextExpected).toISOString(),
+      confidence: consistent.length >= 3 ? 'high' : 'medium',
+      occurrences: consistent.length,
+    });
+  }
+
+  // Largest items first — the forecast list leads with what moves the needle.
+  return items.sort((a, b) => b.estimatedAmount - a.estimatedAmount);
+}
+
+/**
+ * Project recurring items forward over the forecast window. Each item
+ * contributes one occurrence per intervalDays starting at `nextExpected`,
+ * up to and including `now + forecastDays`. Totals are in base currency.
+ */
+export function projectCashFlow(
+  recurring: RecurringItem[],
+  forecastDays: 30 | 60,
+  baseCurrency: string,
+  now: number = Date.now(),
+): CashFlowProjection {
+  const windowEnd = now + forecastDays * DAY_MS;
+  let projectedIncome = 0;
+  let projectedExpenses = 0;
+
+  for (const r of recurring) {
+    let occ = new Date(r.nextExpected).getTime();
+    if (!isFinite(occ)) continue;
+    let count = 0;
+    // Cap the loop defensively — forecastDays/intervalDays is tiny, but never
+    // trust derived dates to terminate a while-loop unguarded.
+    while (occ <= windowEnd && count < 64) {
+      count++;
+      occ += r.intervalDays * DAY_MS;
+    }
+    const total = r.estimatedAmount * count;
+    if (r.type === 'income') projectedIncome += total;
+    else projectedExpenses += total;
+  }
+
+  return {
+    projectedIncome,
+    projectedExpenses,
+    netCashFlow: projectedIncome - projectedExpenses,
+    currency: baseCurrency,
+    recurringItems: recurring,
+    forecastDays,
+    generatedAt: new Date(now).toISOString(),
+  };
+}

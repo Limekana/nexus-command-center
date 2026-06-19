@@ -1,11 +1,10 @@
 import { create } from 'zustand';
 import { Preferences } from '@capacitor/preferences';
 import { db } from '../db/database';
-import { Course, Grade, GradeImport, StudySession, Reading, ReadingStatus, ReadingShelf } from '../types/studies';
+import { Course, Grade, GradeImport, StudySession } from '../types/studies';
 import { calculateGPA, GradeMode } from '../utils/gpa';
 import { generateId } from '../utils/uuid';
 import { enqueue } from '../db/syncQueue';
-import { scheduleBorrowReturnReminder, cancelBorrowReturnReminder } from '../lib/libraryReminders';
 
 const GRADE_MODE_KEY = 'studies.gradeMode';
 
@@ -51,7 +50,6 @@ interface StudiesStore {
 
   // v2-B
   studySessions: StudySession[];
-  readings: Reading[];
 
   load: () => Promise<void>;
   setGradeMode: (mode: GradeMode) => Promise<void>;
@@ -75,27 +73,6 @@ interface StudiesStore {
   ) => Promise<void>;
   updateStudySession: (id: string, patch: Partial<StudySession>) => Promise<void>;
   deleteStudySession: (id: string) => Promise<void>;
-
-  // Reading Log
-  addReading: (
-    r: Omit<Reading, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'>,
-  ) => Promise<void>;
-  updateReading: (id: string, patch: Partial<Reading>) => Promise<void>;
-  setReadingStatus: (id: string, status: ReadingStatus) => Promise<void>;
-  /** v1.2 — flip a book between Owned / Lent / Wishlist shelves. When
-   *  moving to Lent and a lentMeta payload is supplied, also schedules the
-   *  return-to-library reminder. When moving OFF borrowed, clears borrow
-   *  metadata + cancels the reminder.
-   *
-   *  v1.2.2 — Renamed from lentMeta to borrowMeta. The v1.2 ship inverted
-   *  the semantic ("lent OUT to a friend" vs the intended "borrowed FROM a
-   *  library"). Field names + literal updated; Dexie v10 maps existing rows. */
-  setReadingShelf: (
-    id: string,
-    shelf: ReadingShelf,
-    borrowMeta?: { borrowedFrom?: string; expectedReturnAt?: string },
-  ) => Promise<void>;
-  deleteReading: (id: string) => Promise<void>;
 }
 
 async function ensureManualImport(): Promise<GradeImport> {
@@ -122,7 +99,6 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
   gradeMode: 'us',
   loading: false,
   studySessions: [],
-  readings: [],
 
   async load() {
     set({ loading: true });
@@ -133,12 +109,11 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
     // from StudyDesk arrive stamped 'cloud' and would otherwise be invisible
     // to the UI. There is now a single working set of courses + grades —
     // origin (cloud / manual / legacy CSV) no longer matters for display.
-    const [imports, allCoursesIncludingArchived, allGrades, studySessions, readings] = await Promise.all([
+    const [imports, allCoursesIncludingArchived, allGrades, studySessions] = await Promise.all([
       db.gradeImports.orderBy('importedAt').reverse().toArray(),
       db.courses.toArray(),
       db.grades.toArray(),
       db.studySessions.orderBy('startedAt').reverse().toArray(),
-      db.readings.orderBy('updatedAt').reverse().toArray(),
     ]);
     // v1.2 — exclude archived courses from the live working set. They land
     // in `archivedCourses` so the "Show archived" UI in StudiesOverview can
@@ -168,7 +143,6 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
       previousGpa: previous ? previous.calculatedGpa : null,
       gradeMode,
       studySessions,
-      readings,
       loading: false,
     });
   },
@@ -385,109 +359,6 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
     await db.studySessions.delete(id);
     await enqueue('study_session', id, 'delete', { id });
     set({ studySessions: get().studySessions.filter((s) => s.id !== id) });
-  },
-
-  // ── Reading Log ────────────────────────────────────────────────────────
-  async addReading(r) {
-    const now = new Date().toISOString();
-    const reading: Reading = {
-      ...r,
-      id: generateId(),
-      syncStatus: 'pending',
-      createdAt: now,
-      updatedAt: now,
-    };
-    await db.readings.add(reading);
-    await enqueue('reading', reading.id, 'insert', reading);
-    set({
-      readings: [reading, ...get().readings].sort((a, b) =>
-        b.updatedAt.localeCompare(a.updatedAt),
-      ),
-    });
-  },
-
-  async updateReading(id, patch) {
-    const existing = await db.readings.get(id);
-    if (!existing) return;
-    const updated: Reading = {
-      ...existing,
-      ...patch,
-      id,
-      updatedAt: new Date().toISOString(),
-      syncStatus: 'pending',
-    };
-    await db.readings.put(updated);
-    await enqueue('reading', id, 'update', updated);
-    set({
-      readings: get()
-        .readings.map((r) => (r.id === id ? updated : r))
-        .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
-    });
-  },
-
-  // Status-only update helper. Auto-stamps startedAt when transitioning to
-  // 'reading' (if not already set), and finishedAt when transitioning to
-  // 'finished'. Both are guarded so re-applying a status doesn't clobber an
-  // earlier timestamp the user may have manually edited.
-  async setReadingStatus(id, status) {
-    const existing = await db.readings.get(id);
-    if (!existing) return;
-    const now = new Date().toISOString();
-    const patch: Partial<Reading> = { status };
-    if (status === 'reading' && !existing.startedAt) patch.startedAt = now;
-    if (status === 'finished' && !existing.finishedAt) patch.finishedAt = now;
-    await get().updateReading(id, patch);
-  },
-
-  // v1.2 — shelf flip handler. Bundles borrow metadata + reminder scheduling
-  // so the UI doesn't have to remember to schedule/cancel reminders on every
-  // shelf change.
-  //
-  // Transitions:
-  //   anything → borrowed       : patch borrow fields, schedule reminder if date set
-  //   borrowed → owned/wishlist : clear borrow fields, cancel reminder
-  //   no-shelf-change           : leave borrow fields alone (shelf=borrowed stays
-  //                              borrowed with whatever metadata it has)
-  async setReadingShelf(id, shelf, borrowMeta) {
-    const existing = await db.readings.get(id);
-    if (!existing) return;
-    const now = new Date().toISOString();
-    const patch: Partial<Reading> = { shelf };
-
-    if (shelf === 'borrowed') {
-      if (borrowMeta?.borrowedFrom !== undefined) patch.borrowedFrom = borrowMeta.borrowedFrom;
-      if (borrowMeta?.expectedReturnAt !== undefined) patch.expectedReturnAt = borrowMeta.expectedReturnAt;
-      if (!existing.borrowedAt) patch.borrowedAt = now;
-    } else {
-      // Off-borrowed: clear borrow metadata + cancel any standing reminder.
-      // We clear by setting to undefined so the Dexie put() drops the keys.
-      patch.borrowedFrom = undefined;
-      patch.borrowedAt = undefined;
-      patch.expectedReturnAt = undefined;
-    }
-
-    await get().updateReading(id, patch);
-
-    // After the Dexie write, schedule or cancel the reminder. We compute the
-    // post-patch shape inline (instead of re-reading) because updateReading
-    // has already returned.
-    const after: Reading = { ...existing, ...patch, id, updatedAt: now };
-    if (shelf === 'borrowed') {
-      // Fire-and-forget — failures land in the notifications log. The shelf
-      // state itself is already persisted, so a missed reminder is not a
-      // data-integrity issue.
-      void scheduleBorrowReturnReminder(after);
-    } else {
-      void cancelBorrowReturnReminder({ id });
-    }
-  },
-
-  async deleteReading(id) {
-    // Cancel any standing return-to-library reminder before we lose the row.
-    void cancelBorrowReturnReminder({ id });
-    await db.readings.delete(id);
-    await enqueue('reading', id, 'delete', { id });
-    set({ readings: get().readings.filter((r) => r.id !== id) });
   },
 }));
 

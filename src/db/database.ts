@@ -1,10 +1,11 @@
 import Dexie, { Table } from 'dexie';
 import { Transaction, BudgetCategory, PortfolioHolding, PortfolioLot, ApiCacheEntry, PortfolioSnapshot, ManualAsset, WatchlistItem, SavingsGoal, StockSale, PortfolioCashEntry } from '../types/finance';
-import { Course, Grade, GradeImport, StudySession, Reading } from '../types/studies';
+import { Course, Grade, GradeImport, StudySession } from '../types/studies';
 import { WorkoutSession, WorkoutSet, BodyMetric } from '../types/fitness';
 import { Task } from '../types/tasks';
 import { Goal } from '../types/goals';
 import { Habit, HabitCompletion } from '../types/habits';
+import { generateId } from '../utils/uuid';
 
 // v1.2 — Insights rating-history row. One per recompute per ticker. Used to
 // detect tier changes between consecutive recomputes (gating the push
@@ -60,7 +61,6 @@ export interface SyncQueueItem {
     | 'workout_set'
     | 'task'
     | 'study_session'
-    | 'reading'
     | 'portfolio_lot'
     | 'manual_asset'
     | 'watchlist_item'
@@ -98,7 +98,8 @@ class NexusDB extends Dexie {
 
   // v2-B
   studySessions!: Table<StudySession, string>;
-  readings!: Table<Reading, string>;
+  // v1.4 — the `readings` table was dropped in Dexie v17 (Reading Log
+  // feature retired). No `readings` Table accessor remains.
 
   // v2-C — local-only series of total portfolio value sampled once per day
   // on refresh. Keyed by YYYY-MM-DD so a same-day refresh upserts cleanly.
@@ -743,6 +744,38 @@ class NexusDB extends Dexie {
       portfolioCashEntries: 'id, type, createdAt, relatedId, syncStatus',
       syncQueue: 'id, entityType, syncedAt',
     });
+
+    // ─── v17 — v1.4 Readings retirement ───────────────────────────────────
+    //
+    // The Reading Log / personal-library feature is retired. It had no entry
+    // UI since BUG-16, and its return-to-library reminders fired broken
+    // notifications. We drop the `readings` table outright (delta `null`),
+    // and the upgrade hook also deletes any orphaned `reading_count` goals —
+    // that GoalType was removed from the type system this version, so an
+    // un-deleted row would render a missing label on the Goals screen. The
+    // cloud delete is enqueued so the cleanup propagates to other devices and
+    // a later pullAll doesn't resurrect the goal.
+    this.version(17).stores({
+      readings: null,
+    }).upgrade(async (tx) => {
+      const goalsTable = tx.table('goals');
+      const queueTable = tx.table('syncQueue');
+      const orphaned = await goalsTable
+        .filter((g: { goalType?: string }) => g.goalType === 'reading_count')
+        .toArray();
+      const now = new Date().toISOString();
+      for (const g of orphaned) {
+        await goalsTable.delete(g.id);
+        await queueTable.add({
+          id: generateId(),
+          entityType: 'goal',
+          entityId: g.id,
+          operation: 'delete',
+          payload: JSON.stringify({ id: g.id }),
+          createdAt: now,
+        });
+      }
+    });
   }
 }
 
@@ -763,7 +796,6 @@ export async function clearAllLocalData(): Promise<void> {
       db.workoutSets,
       db.tasks,
       db.studySessions,
-      db.readings,
       db.portfolioSnapshots,
       db.portfolioLots,
       db.manualAssets,
@@ -792,7 +824,6 @@ export async function clearAllLocalData(): Promise<void> {
         db.workoutSets.clear(),
         db.tasks.clear(),
         db.studySessions.clear(),
-        db.readings.clear(),
         db.portfolioSnapshots.clear(),
         db.portfolioLots.clear(),
         db.manualAssets.clear(),

@@ -47,7 +47,6 @@ export default function Goals() {
   const transactions = useFinanceStore((s) => s.transactions);
   const tasks = useTaskStore((s) => s.tasks);
   const studySessions = useStudiesStore((s) => s.studySessions);
-  const readings = useStudiesStore((s) => s.readings);
   const currentImport = useStudiesStore((s) => s.currentImport);
   const workouts = useFitnessStore((s) => s.sessions);
   const baseCurrency = useSettingsStore((s) => s.baseCurrency);
@@ -63,7 +62,6 @@ export default function Goals() {
       baseCurrency,
       tasks,
       studySessions,
-      readings,
       workouts,
       currentGpa: currentImport?.calculatedGpa ?? null,
     }),
@@ -77,7 +75,6 @@ export default function Goals() {
       baseCurrency,
       tasks,
       studySessions,
-      readings,
       workouts,
       currentImport,
     ],
@@ -135,7 +132,7 @@ export default function Goals() {
             No goals yet. Tap + Goal to set one.
             <div className="text-[10px] mt-2">
               Goals are derived from data you already track — net worth,
-              tasks, workouts, books, study hours, lifts, GPA.
+              tasks, workouts, study hours, lifts, GPA.
             </div>
           </div>
         )}
@@ -198,7 +195,10 @@ function GoalRow({
   onDelete: () => void;
 }) {
   const progress = useMemo(() => computeGoalProgress(goal, data), [goal, data]);
-  const meta = GOAL_TYPE_LABELS[goal.goalType];
+  // Fallback guards against a stored goal whose type was retired (e.g. the
+  // v1.4 `reading_count` removal) — the v17 migration deletes such rows, but
+  // this keeps the row from crashing if one is mid-flight from a cloud pull.
+  const meta = GOAL_TYPE_LABELS[goal.goalType] ?? { label: goal.goalType, unit: '', icon: '🎯' };
   const pace = paceLabel(goal, progress);
   const pct = Math.min(100, Math.max(0, progress.percent));
 
@@ -327,7 +327,7 @@ function GoalForm({
 
       <input
         className="input"
-        placeholder="Goal title (e.g. Read 24 books in 2026)"
+        placeholder="Goal title (e.g. 30 workouts by summer)"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         autoFocus

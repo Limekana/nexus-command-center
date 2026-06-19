@@ -55,7 +55,6 @@ export default function WeeklyReview() {
   const holdings = useFinanceStore((s) => s.holdings);
   const courses = useStudiesStore((s) => s.courses);
   const studySessions = useStudiesStore((s) => s.studySessions);
-  const readings = useStudiesStore((s) => s.readings);
   const currentImport = useStudiesStore((s) => s.currentImport);
   const workouts = useFitnessStore((s) => s.sessions);
   const tasks = useTaskStore((s) => s.tasks);
@@ -78,7 +77,6 @@ export default function WeeklyReview() {
         transactions,
         courses,
         sessions: studySessions,
-        readings,
         workouts,
         tasks,
         currentGpa: currentImport?.calculatedGpa ?? null,
@@ -89,7 +87,6 @@ export default function WeeklyReview() {
       transactions,
       courses,
       studySessions,
-      readings,
       workouts,
       tasks,
       currentImport,
@@ -212,15 +209,6 @@ export default function WeeklyReview() {
               </div>
             </div>
           </div>
-          {(data.studies.readingsFinished > 0 || data.studies.readingsStarted > 0) && (
-            <div className="text-[10px] text-text-muted mt-2">
-              Library:{' '}
-              {data.studies.readingsFinished > 0 &&
-                `${data.studies.readingsFinished} finished`}
-              {data.studies.readingsFinished > 0 && data.studies.readingsStarted > 0 && ' · '}
-              {data.studies.readingsStarted > 0 && `${data.studies.readingsStarted} started`}
-            </div>
-          )}
         </div>
 
         {/* Fitness — read-only summary (the dedicated screen was removed in

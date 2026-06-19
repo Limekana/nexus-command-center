@@ -8,7 +8,7 @@ import type { Goal, GoalType } from '../types/goals';
 import { isCumulativeGoal } from '../types/goals';
 import type { Transaction, PortfolioHolding, ManualAsset } from '../types/finance';
 import { LIABILITY_TYPES } from '../types/finance';
-import type { StudySession, Reading } from '../types/studies';
+import type { StudySession } from '../types/studies';
 import type { WorkoutSession, WorkoutSet } from '../types/fitness';
 import type { Task } from '../types/tasks';
 import { convertSync, normalizeCurrency } from '../api/fxRates';
@@ -24,7 +24,6 @@ export interface DataSources {
   baseCurrency: string;
   tasks: Task[];
   studySessions: StudySession[];
-  readings: Reading[];
   workouts: Array<WorkoutSession & { sets: WorkoutSet[] }>;
   currentGpa: number | null;
 }
@@ -85,11 +84,6 @@ function currentValueFor(goal: Goal, d: DataSources): number {
 
     case 'workout_count':
       return d.workouts.filter((w) => new Date(w.date).getTime() >= start).length;
-
-    case 'reading_count':
-      return d.readings.filter(
-        (r) => r.status === 'finished' && r.finishedAt && new Date(r.finishedAt).getTime() >= start,
-      ).length;
 
     case 'study_hours': {
       const minutes = d.studySessions
@@ -191,8 +185,6 @@ export function defaultTargetValue(t: GoalType): number {
       return 50;
     case 'workout_count':
       return 30;
-    case 'reading_count':
-      return 12;
     case 'study_hours':
       return 100;
     case 'lift_pr':
