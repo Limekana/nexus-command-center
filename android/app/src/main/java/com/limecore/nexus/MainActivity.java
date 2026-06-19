@@ -16,6 +16,9 @@ public class MainActivity extends BridgeActivity {
         // v1.4 — Android Keystore plugin for PIN hash encryption + future
         // Dexie at-rest encryption. Same pre-super registration pattern.
         registerPlugin(LimecoreKeystorePlugin.class);
+        // v1.4 — on-device generative AI (ML Kit GenAI Prompt / Gemini Nano)
+        // powering the cross-domain Life narrative.
+        registerPlugin(LimecoreAIPlugin.class);
         super.onCreate(savedInstanceState);
         handleNotificationTap(getIntent());
     }
