@@ -15,6 +15,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import AppHeader from '../components/AppHeader';
 import LifeScoreRing from '../components/LifeScoreRing';
+import LifeNarrativeCard from '../components/LifeNarrativeCard';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { useFitnessStore } from '../store/useFitnessStore';
 import { useStudiesStore } from '../store/useStudiesStore';
@@ -117,6 +118,22 @@ export default function Life() {
             </div>
           )}
         </section>
+
+        {/* ─── AI NARRATIVE ─────────────────────────────────────────── */}
+        {/* v1.4 — short Gemini-written summary of the week. Renders only when
+            there's a baseline; degrades to nothing if AI is unavailable. */}
+        {report.ready && thisWeek && (
+          <LifeNarrativeCard
+            input={{
+              lifeScore: thisWeek.score,
+              workouts: thisWeek.workouts,
+              study: thisWeek.study,
+              habits: thisWeek.habits,
+              budget: thisWeek.budget,
+              insightHeadlines: report.insights.map((i) => i.headline),
+            }}
+          />
+        )}
 
         {/* ─── PATTERNS ─────────────────────────────────────────────── */}
         {report.ready && (

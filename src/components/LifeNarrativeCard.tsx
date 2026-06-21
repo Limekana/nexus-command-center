@@ -1,0 +1,123 @@
+// Life narrative card — v1.4. Sits on the Life tab between the score ring and
+// the Patterns list. Shows a short AI-written summary of the week, generated
+// by the `ai-generate` Edge Function (cloud Gemini). Cached in Dexie and
+// regenerated when the life score drifts ≥5 points, or on manual refresh.
+//
+// Degrades to nothing: if generation returns null (AI not configured, offline,
+// blocked) and there's no cached text, the card renders empty — no clutter.
+
+import { useEffect, useRef, useState } from 'react';
+import { db } from '../db/database';
+import { generateLifeNarrative, type NarrativeInput } from '../lib/aiNarrative';
+
+const DRIFT_THRESHOLD = 5;
+const NARRATIVE_ID = 1;
+
+export default function LifeNarrativeCard({ input }: { input: NarrativeInput }) {
+  const [text, setText] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
+  // Avoid duplicate generations for the same score within one mount.
+  const lastGeneratedScore = useRef<number | null>(null);
+
+  async function generate(force = false) {
+    if (loading) return;
+    setLoading(true);
+    setFailed(false);
+    const result = await generateLifeNarrative(input);
+    if (result) {
+      setText(result);
+      lastGeneratedScore.current = input.lifeScore;
+      void db.lifeNarrative.put({
+        id: NARRATIVE_ID,
+        text: result,
+        generatedAt: new Date().toISOString(),
+        lifeScore: input.lifeScore,
+      });
+    } else {
+      setFailed(true);
+      // Keep any prior text on failure unless this was a forced manual retry
+      // with nothing cached.
+      if (force && !text) setText(null);
+    }
+    setLoading(false);
+  }
+
+  // On mount / when the life score shifts: hydrate cache, then (re)generate if
+  // there's no cache or the score has drifted past the threshold.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const cached = await db.lifeNarrative.get(NARRATIVE_ID);
+      if (cancelled) return;
+      if (cached) {
+        setText(cached.text);
+        lastGeneratedScore.current = cached.lifeScore;
+      }
+      const drift = cached ? Math.abs(cached.lifeScore - input.lifeScore) : Infinity;
+      if (!cached || drift >= DRIFT_THRESHOLD) {
+        void generate();
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [input.lifeScore]);
+
+  // Nothing to show and nothing happening → render empty (graceful absence).
+  if (!text && !loading) return null;
+
+  return (
+    <div className="glass rounded-xl p-4 border-l-2 border-primary/40">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10px] uppercase tracking-wider text-text-muted flex items-center gap-1.5">
+          <span className="text-primary" aria-hidden>✦</span> This week, in a nutshell
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="text-[8px] uppercase tracking-[0.15em] text-primary border border-primary/40 rounded-sm px-1 py-0.5">
+            AI
+          </span>
+          {text && (
+            <button
+              type="button"
+              onClick={() => generate(true)}
+              disabled={loading}
+              aria-label="Regenerate summary"
+              className="text-[11px] text-text-muted active:text-primary disabled:opacity-40"
+            >
+              ↻
+            </button>
+          )}
+        </span>
+      </div>
+
+      {loading && !text ? (
+        <div className="space-y-1.5" aria-hidden>
+          <div className="h-3 rounded-sm bg-surface2 animate-pulse" />
+          <div className="h-3 rounded-sm bg-surface2 animate-pulse w-[92%]" />
+          <div className="h-3 rounded-sm bg-surface2 animate-pulse w-[70%]" />
+        </div>
+      ) : (
+        <p className="text-sm leading-relaxed text-text">
+          {text}
+          {loading && <span className="text-text-muted"> · refreshing…</span>}
+        </p>
+      )}
+
+      {failed && !text && (
+        <button
+          type="button"
+          onClick={() => generate(true)}
+          className="text-[11px] text-text-muted active:text-primary mt-1"
+        >
+          Couldn't generate a summary — tap to retry
+        </button>
+      )}
+
+      <div className="text-[9px] text-text-muted mt-2">
+        Generated from your scores via Gemini. Not medical or financial advice.
+      </div>
+    </div>
+  );
+}
