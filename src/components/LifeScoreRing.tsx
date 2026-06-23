@@ -107,31 +107,4 @@ export default function LifeScoreRing({
         role="img"
         aria-label="Life score breakdown"
       >
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke={TRACK_DEFAULT} strokeWidth={sw} />
-        {arcs.map((a) => (
-          <circle
-            key={a.key}
-            cx={cx}
-            cy={cy}
-            r={r}
-            fill="none"
-            stroke={a.color}
-            strokeWidth={sw}
-            strokeLinecap="round"
-            strokeDasharray={`${a.fill} ${circ - a.fill}`}
-            strokeDashoffset={-a.offset}
-            style={{
-              transition: 'stroke-dasharray 360ms cubic-bezier(0.16, 1, 0.3, 1)',
-              filter: `drop-shadow(0 0 3px ${a.color}55)`,
-            }}
-          />
-        ))}
-      </svg>
-      {children != null && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-}
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke={TRACK_DEFA

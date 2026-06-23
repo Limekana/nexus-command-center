@@ -53,31 +53,4 @@ function buildPrompt(input: NarrativeInput): string {
     ? order.filter((k) => input.profile!.domains[k] > 0).map((k) => LINES[k])
     : [LINES.fitness, LINES.studies, LINES.habits, LINES.finance];
 
-  return `You are a personal life-dashboard assistant. Write 2–3 short sentences summarising this person's current week across life domains. Be specific, plain-language, and honest without being harsh or preachy. Do NOT mention numbers, scores, or percentages — translate them into concrete, human observations. Don't give a numbered list; write flowing prose. Don't invent facts beyond the data.
-
-Domain standing this week (qualitative band in brackets):
-${domainLines.join('\n')}
-
-Patterns already detected:
-${patterns}
-
-Write the summary now:`;
-}
-
-/**
- * Generate the Life narrative via the server-side Gemini proxy. Returns the
- * trimmed text, or null on any failure (so the caller hides the card).
- */
-export async function generateLifeNarrative(input: NarrativeInput): Promise<string | null> {
-  try {
-    const { data, error } = await supabase.functions.invoke<{ text?: string; error?: string }>(
-      'ai-generate',
-      { body: { prompt: buildPrompt(input), maxTokens: 200, temperature: 0.6 } },
-    );
-    if (error) return null;
-    const text = data?.text?.trim();
-    return text && text.length > 0 ? text : null;
-  } catch {
-    return null;
-  }
-}
+  return `You are a personal life-dashboard assistant. Write 2–3 short sentences summarising this person's current week across life domains. Be specif

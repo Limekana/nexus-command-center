@@ -856,30 +856,4 @@ export async function clearAllLocalData(): Promise<void> {
         db.budgetCategories.clear(),
         db.portfolioHoldings.clear(),
         db.apiCache.clear(),
-        db.gradeImports.clear(),
-        db.courses.clear(),
-        db.grades.clear(),
-        db.workoutSessions.clear(),
-        db.workoutSets.clear(),
-        db.tasks.clear(),
-        db.studySessions.clear(),
-        db.portfolioSnapshots.clear(),
-        db.portfolioLots.clear(),
-        db.manualAssets.clear(),
-        db.watchlistItems.clear(),
-        db.goals.clear(),
-        db.ratingHistory.clear(),
-        db.savingsGoals.clear(),
-        db.habits.clear(),
-        db.habitCompletions.clear(),
-        db.insightsScores.clear(),
-        db.bodyMetrics.clear(),
-        db.stockSales.clear(),
-        db.portfolioCashEntries.clear(),
-        db.lifeNarrative.clear(),
-        db.workQualityLogs.clear(),
-        db.syncQueue.clear(),
-      ]);
-    }
-  );
-}
+        db.gradeImports.c
