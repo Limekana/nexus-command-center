@@ -360,6 +360,11 @@ export interface LifeScore {
   budget: number;
   /** v1.5 — Work domain (0..100). 0 when no self-assessment data. */
   work: number;
+  /** v1.5.1 — which domains actually had data this week. A domain with no
+   *  data is EXCLUDED from the weighted composite (not scored 0), so an
+   *  un-engaged domain doesn't drag the score down. Consumers also use this
+   *  to render "—" instead of a misleading 0. */
+  measured: Record<DomainKey, boolean>;
 }
 
 /** Maps a LifeProfile domain key to its computed sub-score field. */
@@ -385,20 +390,25 @@ const DOMAIN_TO_SUBSCORE: Record<DomainKey, keyof Pick<LifeScore, 'workouts' | '
  *   - Default (no profile): equal weight across the four legacy domains
  *     (workouts/study/habits/budget) — preserves pre-v1.5 behaviour, Work
  *     excluded.
- *   - With a profile: weighted across the profile's ENABLED domains. An
- *     enabled domain with no data scores 0 and counts toward the denominator
- *     (intentional — same as Studies reading 0 when StudyDesk has no data).
+ *   - With a profile: weighted across the profile's ENABLED domains that have
+ *     data this week. v1.5.1 — a domain with NO data this week (no workouts /
+ *     no study / no active habits / no work log / no budgets) is EXCLUDED from
+ *     the weighted denominator rather than scored 0. Rationale: a domain you
+ *     haven't engaged shouldn't drag your score down — the composite reflects
+ *     the areas you're actually tracking this week. (Previously these scored 0
+ *     and tanked the composite, which read as a bug for users who, e.g., only
+ *     track finances.)
  */
 export function lifeScoreForWeek(
   fit: WeeklyFitness,
   study: WeeklyStudy,
   fin: WeeklyFinance,
   habits: WeeklyHabits,
-  opts?: { workScore?: number; profile?: LifeProfile },
+  opts?: { workScore?: number; profile?: LifeProfile; workHasData?: boolean; everUsed?: Record<DomainKey, boolean> },
 ): LifeScore {
   const workouts = Math.min(100, (fit.sessionsCount / 3) * 100);
   const studyScore = Math.min(100, (study.totalMinutes / 240) * 100);
-  const habitsScore = habits.hitRatio != null ? habits.hitRatio * 100 : 50;
+  const habitsScore = habits.hitRatio != null ? habits.hitRatio * 100 : 0;
   let budget = 50; // default mid when no budgets set
   if (fin.budgetAdherence != null) {
     if (fin.budgetAdherence <= 1.0) budget = 100;
@@ -415,6 +425,20 @@ export function lifeScoreForWeek(
     work: Math.round(work),
   };
 
+  // Which domains count toward the composite. v1.5.2 — the rule is "count once
+  // you've EVER used it": a domain stays excluded until your first-ever log,
+  // then counts every week after (so skipping a week of something you DO track
+  // lowers the score — accountability). `everUsed` is supplied by the
+  // orchestrator from the full history. Falls back to this-week presence for
+  // any caller that doesn't pass it.
+  const measured: Record<DomainKey, boolean> = opts?.everUsed ?? {
+    finance: fin.budgetAdherence != null,
+    fitness: fit.sessionsCount > 0,
+    studies: study.sessionCount > 0,
+    habits: habits.eligibleCount > 0,
+    work: opts?.workHasData === true,
+  };
+
   let score: number;
   if (opts?.profile) {
     let total = 0;
@@ -422,6 +446,7 @@ export function lifeScoreForWeek(
     for (const key of Object.keys(opts.profile.domains) as DomainKey[]) {
       const w = opts.profile.domains[key];
       if (w <= 0) continue;
+      if (!measured[key]) continue; // skip domains with no data this week
       total += sub[DOMAIN_TO_SUBSCORE[key]] * w;
       weightSum += w;
     }
@@ -434,6 +459,7 @@ export function lifeScoreForWeek(
     weekStart: fit.weekStart,
     score,
     ...sub,
+    measured,
   };
 }
 
@@ -463,13 +489,24 @@ export function buildCrossDomainReport(
   completions: HabitCompletion[],
   weeksWindow: number = 8,
   today: Date = new Date(),
-  opts?: { profile?: LifeProfile; currentWorkScore?: number },
+  opts?: { profile?: LifeProfile; currentWorkScore?: number; workHasData?: boolean },
 ): CrossDomainReport {
   const weeks = lastNWeeks(weeksWindow, today);
   const fitness = bucketFitnessByWeek(workouts, weeks);
   const study = bucketStudyByWeek(studies, weeks, fitness);
   const finance = bucketFinanceByWeek(txns, budgets, weeks);
   const habitsW = bucketHabitsByWeek(habits, completions, weeks);
+  // v1.5.2 — "ever used" per domain, from the full history. A domain counts
+  // toward the score once it has any record at all; until then it's excluded
+  // (so a brand-new user with only finances set up isn't dragged down by
+  // domains they haven't touched).
+  const everUsed: Record<DomainKey, boolean> = {
+    finance: budgets.length > 0 || txns.some((t) => t.type === 'expense'),
+    fitness: workouts.length > 0,
+    studies: studies.length > 0,
+    habits: habits.some((h) => !h.archivedAt),
+    work: opts?.workHasData === true,
+  };
   // The Work self-assessment is a current snapshot — historical work data
   // doesn't exist yet — so only the current week (index 0) gets the real Work
   // score; earlier weeks read 0 (the domain was inactive then). The profile
@@ -478,6 +515,8 @@ export function buildCrossDomainReport(
     lifeScoreForWeek(fitness[i], study[i], finance[i], habitsW[i], {
       profile: opts?.profile,
       workScore: i === 0 ? opts?.currentWorkScore ?? 0 : 0,
+      workHasData: i === 0 ? opts?.workHasData === true : false,
+      everUsed,
     }),
   );
 

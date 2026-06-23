@@ -12,8 +12,8 @@
 // Edit/archive flow lives in a per-row BottomSheet — keeps the card surfaces
 // uncluttered.
 
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
 import BottomSheet from '../../components/BottomSheet';
 import HabitRing from '../../components/HabitRing';
@@ -27,6 +27,7 @@ export default function HabitsOverview() {
   const completions = useHabitsStore((s) => s.completions);
   const toggle = useHabitsStore((s) => s.toggleCompletion);
   const addToCompletion = useHabitsStore((s) => s.addToCompletion);
+  const setCompletionAmount = useHabitsStore((s) => s.setCompletionAmount);
   const archiveHabit = useHabitsStore((s) => s.archiveHabit);
   const restoreHabit = useHabitsStore((s) => s.restoreHabit);
   const deleteHabit = useHabitsStore((s) => s.deleteHabit);
@@ -34,6 +35,21 @@ export default function HabitsOverview() {
 
   const [showArchived, setShowArchived] = useState(false);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+
+  // v1.5.2 — morning catch-up / evening nudge notifications deep-link here with
+  // ?catchup=<habitId>; open that habit's menu (which holds the 7-day catch-up
+  // strip) so logging last night's habit is one tap from the notification.
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const cid = searchParams.get('catchup');
+    if (cid && habits.some((h) => h.id === cid)) {
+      setActiveMenu(cid);
+      // Clear the param so re-renders / back-nav don't re-trigger.
+      const next = new URLSearchParams(searchParams);
+      next.delete('catchup');
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, habits, setSearchParams]);
 
   const today = useMemo(() => new Date(), []);
   const todayKey = dateKey(today);
@@ -475,6 +491,54 @@ export default function HabitsOverview() {
                 );
               })()}
             </div>
+            {/* v1.5.2 — Catch up: log (or un-log) any of the last 7 days.
+                Solves "I did it but my phone wasn't with me" — e.g. reading in
+                bed at night, logged the next morning. Eligible days only. */}
+            {!menuHabit.archivedAt && (
+              <div className="glass-soft rounded-lg p-3">
+                <div className="sec mb-2">Catch up — tap a day</div>
+                <div className="flex justify-between gap-1">
+                  {Array.from({ length: 7 }).map((_, i) => {
+                    const d = new Date(today);
+                    d.setDate(d.getDate() - (6 - i));
+                    const dayK = dateKey(d);
+                    const eligible = isEligibleOn(menuHabit, d);
+                    const target = menuHabit.type === 'binary'
+                      ? 1
+                      : (menuHabit.targetAmount && menuHabit.targetAmount > 0 ? menuHabit.targetAmount : 1);
+                    const comp = completions.find((c) => c.habitId === menuHabit.id && c.date === dayK);
+                    const done = comp ? comp.amount >= target : false;
+                    const isToday = dayK === todayKey;
+                    return (
+                      <button
+                        key={dayK}
+                        type="button"
+                        disabled={!eligible}
+                        onClick={() => {
+                          if (menuHabit.type === 'binary') toggle(menuHabit.id, dayK);
+                          else setCompletionAmount(menuHabit.id, done ? 0 : target, dayK);
+                        }}
+                        className={`flex-1 flex flex-col items-center gap-1 py-1.5 rounded-lg border transition-colors ${
+                          done
+                            ? 'border-primary/60 bg-primary/12 text-primary'
+                            : eligible
+                              ? 'border-glass-border text-text-muted active:border-primary/40'
+                              : 'border-transparent text-text-muted/30'
+                        }`}
+                        aria-label={`${done ? 'Logged' : 'Not logged'} ${d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}`}
+                      >
+                        <span className="text-[9px] uppercase tracking-wider">
+                          {isToday ? 'TODAY' : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'][d.getDay()]}
+                        </span>
+                        <span className="text-sm font-heading font-semibold leading-none">
+                          {done ? '✓' : d.getDate()}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <button
               onClick={() => {
                 navigate(`/habits/add?id=${menuHabit.id}`);

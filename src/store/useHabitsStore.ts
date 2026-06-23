@@ -24,7 +24,8 @@ import { generateId } from '../utils/uuid';
 import { enqueue } from '../db/syncQueue';
 import type { Habit, HabitCompletion } from '../types/habits';
 import { computeStreak, dateKey, type StreakResult } from '../lib/habitStreaks';
-import { scheduleHabitReminder, cancelHabitReminder } from '../lib/habitReminders';
+import { scheduleHabitReminder, cancelHabitReminder, fireHabitMilestone } from '../lib/habitReminders';
+import { STREAK_MILESTONES } from '../lib/habitMessages';
 
 interface HabitsStore {
   habits: Habit[];
@@ -61,6 +62,9 @@ interface HabitsStore {
    *  result is clamped at 0 (which deletes the row). */
   addToCompletion: (habitId: string, delta: number, date?: string) => Promise<void>;
 
+  /** Internal — fire a milestone celebration if the streak just hit 7/30/100/365. */
+  _celebrateIfMilestone: (habitId: string) => void;
+
   // ─── Selectors (no React hooks; pure derivations from current slice) ───
   streakFor: (habitId: string) => StreakResult;
   completionsFor: (habitId: string) => HabitCompletion[];
@@ -88,12 +92,26 @@ export const useHabitsStore = create<HabitsStore>((set, get) => ({
     ]);
     set({ habits: sortHabits(habits), completions, loaded: true });
 
-    // Re-arm reminders on cold start. Fire-and-forget — the native plugin
+    // Re-arm reminders on cold start with the current streak so copy + the
+    // evening nudge are streak-aware. Fire-and-forget — the native plugin
     // tolerates batch scheduling, and any failure logs itself.
     for (const h of habits) {
       if (h.reminderTime && !h.archivedAt) {
-        void scheduleHabitReminder(h);
+        const st = computeStreak(h, completions.filter((c) => c.habitId === h.id));
+        void scheduleHabitReminder(h, st.current);
       }
+    }
+  },
+
+  // Fire a one-off celebration if the habit's streak just landed on a
+  // milestone (7/30/100/365). Called after a completion is recorded.
+  _celebrateIfMilestone(habitId: string) {
+    const habit = get().habits.find((h) => h.id === habitId);
+    if (!habit) return;
+    const rows = get().completions.filter((c) => c.habitId === habitId);
+    const st = computeStreak(habit, rows);
+    if ((STREAK_MILESTONES as readonly number[]).includes(st.current)) {
+      void fireHabitMilestone(habit, st.current);
     }
   },
 
@@ -190,6 +208,7 @@ export const useHabitsStore = create<HabitsStore>((set, get) => ({
     await db.habitCompletions.add(row);
     await enqueue('habit_completion', row.id, 'insert', row);
     set({ completions: [...get().completions, row] });
+    get()._celebrateIfMilestone(habitId);
   },
 
   async setCompletionAmount(habitId, amount, date) {
@@ -212,6 +231,7 @@ export const useHabitsStore = create<HabitsStore>((set, get) => ({
       set({
         completions: get().completions.map((c) => (c.id === existing.id ? updated : c)),
       });
+      get()._celebrateIfMilestone(habitId);
       return;
     }
     const now = new Date().toISOString();
@@ -226,6 +246,7 @@ export const useHabitsStore = create<HabitsStore>((set, get) => ({
     await db.habitCompletions.add(row);
     await enqueue('habit_completion', row.id, 'insert', row);
     set({ completions: [...get().completions, row] });
+    get()._celebrateIfMilestone(habitId);
   },
 
   async addToCompletion(habitId, delta, date) {

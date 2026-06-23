@@ -2,12 +2,15 @@ import { useEffect, useState } from 'react';
 import BottomSheet from './BottomSheet';
 import TemplateChips from './TemplateChips';
 import { useFinanceStore } from '../store/useFinanceStore';
-import { useStudiesStore } from '../store/useStudiesStore';
-import { useFitnessStore } from '../store/useFitnessStore';
 import { useTaskStore } from '../store/useTaskStore';
 import { useTemplatesStore } from '../store/useTemplatesStore';
+import { useWorkQualityStore, todayKey } from '../store/useWorkQualityStore';
 
-type QuickTab = 'expense' | 'grade' | 'session' | 'set' | 'task';
+// v1.5.2 — Quick Log is NCC-native only. Grade (StudyDesk), study Session
+// (StudyDesk) and workout Set (LimeLog) were removed: cramming stripped-down
+// versions of another app's logger here bloated the sheet and diverged from
+// those apps' real forms. Log grades/sessions/sets in StudyDesk / LimeLog.
+type QuickTab = 'expense' | 'work' | 'task';
 
 interface QuickLogBottomSheetProps {
   open: boolean;
@@ -16,9 +19,7 @@ interface QuickLogBottomSheetProps {
 
 const tabs: { key: QuickTab; label: string }[] = [
   { key: 'expense', label: '💸 Expense' },
-  { key: 'grade', label: '📚 Grade' },
-  { key: 'session', label: '⏱ Session' },
-  { key: 'set', label: '💪 Set' },
+  { key: 'work', label: '💼 Work' },
   { key: 'task', label: '✅ Task' },
 ];
 
@@ -47,9 +48,7 @@ export default function QuickLogBottomSheet({ open, onClose }: QuickLogBottomShe
         ))}
       </div>
       {tab === 'expense' && <QuickExpense onDone={onClose} />}
-      {tab === 'grade' && <QuickGrade onDone={onClose} />}
-      {tab === 'session' && <QuickSession onDone={onClose} />}
-      {tab === 'set' && <QuickSet onDone={onClose} />}
+      {tab === 'work' && <QuickWork onDone={onClose} />}
       {tab === 'task' && <QuickTask onDone={onClose} />}
       <div className="text-[10px] text-text-muted text-center mt-3">
         DIFS target &lt;15 sec · queued locally
@@ -177,249 +176,63 @@ function QuickExpense({ onDone }: { onDone: () => void }) {
   );
 }
 
-function QuickGrade({ onDone }: { onDone: () => void }) {
-  const courses = useStudiesStore((s) => s.courses);
-  const addCourse = useStudiesStore((s) => s.addCourse);
-  const addGrade = useStudiesStore((s) => s.addGrade);
+// v1.5 — daily Work self-assessment, also reachable here (the Home
+// WorkRatingCard only shows weekday afternoons). One rating per day; tapping
+// again before saving just changes the selection. Pre-fills today's rating
+// if already logged.
+function QuickWork({ onDone }: { onDone: () => void }) {
+  const logs = useWorkQualityStore((s) => s.logs);
+  const loaded = useWorkQualityStore((s) => s.loaded);
+  const load = useWorkQualityStore((s) => s.load);
+  const setRating = useWorkQualityStore((s) => s.setRating);
 
-  // Either select an existing course or type a new one. If new, we create
-  // the course with default credits=1 and let the user edit later in the
-  // Studies screen.
-  const [subjectId, setSubjectId] = useState<string>('');
-  const [newCourseName, setNewCourseName] = useState('');
-  const [credits, setCredits] = useState('');
-  const [grade, setGrade] = useState('');
-  const [weight, setWeight] = useState('1');
+  const today = logs.find((l) => l.date === todayKey());
+  const [rating, setRatingState] = useState<number>(today?.rating ?? 0);
+  const [note, setNote] = useState<string>(today?.note ?? '');
 
-  const submit = async () => {
-    const g = parseFloat(grade);
-    const w = parseFloat(weight);
-    if (isNaN(g) || isNaN(w)) return;
-
-    let targetSubjectId = subjectId;
-    if (!targetSubjectId) {
-      const name = newCourseName.trim();
-      if (!name) return;
-      const cr = parseFloat(credits) || 1;
-      // addCourse generates the id internally — we need it to attach the
-      // grade. The store mutator sets `courses` in state, so we read it back
-      // by name+createdAt match. Simpler: pre-generate the course shape, then
-      // call addCourse; the store will use its own generateId, so we instead
-      // call addCourse then look up the newest matching row.
-      await addCourse({ name, credits: cr });
-      // Re-read from the store via a microtask: addCourse synchronously sets
-      // `courses` in the closure-captured store state after awaiting.
-      const fresh = useStudiesStore.getState().courses;
-      const created = [...fresh].reverse().find((c) => c.name === name);
-      if (!created) return;
-      targetSubjectId = created.id;
-    }
-
-    await addGrade({
-      subjectId: targetSubjectId,
-      grade: g,
-      weight: w,
-      date: new Date().toISOString().slice(0, 10),
-    });
-    onDone();
-  };
-
-  return (
-    <div className="space-y-3">
-      {courses.length > 0 && (
-        <select
-          className="input"
-          value={subjectId}
-          onChange={(e) => setSubjectId(e.target.value)}
-        >
-          <option value="">— New course —</option>
-          {courses.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      )}
-      {subjectId === '' && (
-        <>
-          <input
-            className="input"
-            placeholder="Course name"
-            value={newCourseName}
-            onChange={(e) => setNewCourseName(e.target.value)}
-          />
-          <input
-            className="input"
-            inputMode="decimal"
-            placeholder="Credits (default 1)"
-            value={credits}
-            onChange={(e) => setCredits(e.target.value)}
-          />
-        </>
-      )}
-      <div className="flex gap-2">
-        <input
-          className="input"
-          inputMode="decimal"
-          placeholder="Grade (0–100)"
-          value={grade}
-          onChange={(e) => setGrade(e.target.value)}
-        />
-        <input
-          className="input"
-          inputMode="decimal"
-          placeholder="Weight"
-          value={weight}
-          onChange={(e) => setWeight(e.target.value)}
-        />
-      </div>
-      <button className="btn w-full" onClick={submit}>
-        Save Grade
-      </button>
-    </div>
-  );
-}
-
-function QuickSet({ onDone }: { onDone: () => void }) {
-  const [exercise, setExercise] = useState('');
-  const [weightKg, setWeightKg] = useState('');
-  const [reps, setReps] = useState('');
-  const [rpe, setRpe] = useState('');
-  const startOrGet = useFitnessStore((s) => s.startOrGetTodaySession);
-  const addSet = useFitnessStore((s) => s.addSet);
-  const templates = useTemplatesStore((s) => s.workouts);
+  useEffect(() => {
+    if (!loaded) void load();
+  }, [loaded, load]);
 
   const submit = async () => {
-    if (!exercise.trim() || !reps) return;
-    const sid = await startOrGet('push');
-    await addSet(sid, {
-      exercise: exercise.trim(),
-      weightKg: weightKg ? parseFloat(weightKg) : undefined,
-      reps: parseInt(reps),
-      rpe: rpe ? parseInt(rpe) : undefined,
-    });
-    onDone();
-  };
-
-  return (
-    <div className="space-y-3">
-      {templates.length > 0 && (
-        <TemplateChips
-          templates={templates}
-          onPick={(t) => {
-            setExercise(t.exercise);
-            setWeightKg(t.weightKg != null ? String(t.weightKg) : '');
-            setReps(t.reps != null ? String(t.reps) : '');
-          }}
-          label={(t) => (
-            <>
-              <span className="truncate max-w-[110px]">{t.exercise}</span>
-              <span className="opacity-60">·</span>
-              <span className="font-medium whitespace-nowrap">
-                {t.weightKg != null ? `${t.weightKg}kg×${t.reps}` : `BW×${t.reps}`}
-              </span>
-            </>
-          )}
-        />
-      )}
-      <input
-        className="input"
-        placeholder="Exercise (e.g. Bench Press)"
-        value={exercise}
-        onChange={(e) => setExercise(e.target.value)}
-      />
-      <div className="flex gap-2">
-        <input
-          className="input"
-          inputMode="decimal"
-          placeholder="Weight (kg)"
-          value={weightKg}
-          onChange={(e) => setWeightKg(e.target.value)}
-        />
-        <input
-          className="input"
-          inputMode="numeric"
-          placeholder="Reps"
-          value={reps}
-          onChange={(e) => setReps(e.target.value)}
-        />
-        <input
-          className="input"
-          inputMode="numeric"
-          placeholder="RPE"
-          value={rpe}
-          onChange={(e) => setRpe(e.target.value)}
-        />
-      </div>
-      <button className="btn w-full" onClick={submit}>
-        Log Set
-      </button>
-    </div>
-  );
-}
-
-// Sub-15s study-session logger. Duration presets cover ~90% of typical
-// sessions (Pomodoro, full hour, lecture chunks); the custom field is for
-// outliers. Subject defaults to "General study" to avoid forcing a choice.
-function QuickSession({ onDone }: { onDone: () => void }) {
-  const [duration, setDuration] = useState('');
-  const [subjectId, setSubjectId] = useState('');
-  const courses = useStudiesStore((s) => s.courses);
-  const addStudySession = useStudiesStore((s) => s.addStudySession);
-
-  const submit = async () => {
-    const n = parseInt(duration);
-    if (!n || n <= 0 || n > 1440) return;
-    await addStudySession({
-      startedAt: new Date().toISOString(),
-      durationMinutes: n,
-      subjectId: subjectId || undefined,
-    });
+    if (rating < 1) return;
+    await setRating(rating, note.trim() || null);
     onDone();
   };
 
   return (
     <div className="space-y-3">
       <div>
-        <div className="sec mb-2">Duration</div>
-        <div className="flex flex-wrap gap-2 mb-2">
-          {[25, 45, 60, 90].map((m) => (
-            <button
-              key={m}
-              onClick={() => setDuration(String(m))}
-              className={`chip ${parseInt(duration) === m ? 'chip-on' : ''}`}
-              type="button"
-            >
-              {m}m
-            </button>
-          ))}
+        <div className="sec mb-2">How was work today?</div>
+        <div className="flex gap-2.5">
+          {[1, 2, 3, 4, 5].map((n) => {
+            const on = rating === n;
+            return (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setRatingState(n)}
+                aria-pressed={on}
+                aria-label={`${n} out of 5`}
+                className={`press-spring flex-1 h-11 rounded-xl border text-lg font-heading font-semibold transition-colors ${
+                  on ? 'border-primary/60 bg-primary/12 text-primary shadow-glow' : 'border-glass-border text-text-muted'
+                }`}
+              >
+                {n}
+              </button>
+            );
+          })}
         </div>
-        <input
-          className="input"
-          inputMode="numeric"
-          placeholder="Custom minutes"
-          value={duration}
-          onChange={(e) => setDuration(e.target.value)}
-        />
       </div>
-      <select
-        className="input"
-        value={subjectId}
-        onChange={(e) => setSubjectId(e.target.value)}
-      >
-        <option value="">General study</option>
-        {courses.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name}
-          </option>
-        ))}
-      </select>
-      <button
-        className="btn w-full"
-        onClick={submit}
-        disabled={!duration || parseInt(duration) <= 0}
-      >
-        Log Session
+      <textarea
+        className="input resize-none h-16 text-sm"
+        placeholder="Add a note… (optional)"
+        maxLength={120}
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+      />
+      <button className="btn w-full" onClick={submit} disabled={rating < 1}>
+        {today ? 'Update Work Rating' : 'Save Work Rating'}
       </button>
     </div>
   );

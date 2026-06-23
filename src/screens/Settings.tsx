@@ -5,6 +5,7 @@ import AppHeader from '../components/AppHeader';
 import ListRow from '../components/ListRow';
 import { useLifeProfileStore } from '../store/useLifeProfileStore';
 import { enabledDomains, DOMAIN_LABELS } from '../lib/lifeProfile';
+import pkg from '../../package.json';
 import { useAuthStore } from '../store/useAuthStore';
 import { useSyncStore } from '../store/useSyncStore';
 import { useSessionStore, userDisplayName } from '../store/useSessionStore';
@@ -688,7 +689,7 @@ export default function Settings() {
         </Section>
 
         <Section title="About">
-          <ListRow label="Version" value="1.0.2" />
+          <ListRow label="Version" value={pkg.version} />
           <ListRow label="Studio" value="Limecore" />
           <ListRow label="Build" value="Capacitor · Web → Android" />
           <button

@@ -145,8 +145,9 @@ export default function Life() {
       buildCrossDomainReport(workouts, studies, txns, budgets, habits, completions, 8, new Date(), {
         profile,
         currentWorkScore: workScore,
+        workHasData: workLogs.length > 0,
       }),
-    [workouts, studies, txns, budgets, habits, completions, profile, workScore],
+    [workouts, studies, txns, budgets, habits, completions, profile, workScore, workLogs.length],
   );
 
   const historyScrollRef = useRef<HTMLDivElement | null>(null);
@@ -158,14 +159,18 @@ export default function Life() {
   const thisWeek = report.weeks.lifeScores[0];
   const domains = enabledDomains(profile);
 
+  // Ring shows only domains that were measured this week (have data) — matching
+  // the composite, which excludes un-engaged domains rather than scoring them 0.
   const ringSegments: RingSegment[] = useMemo(
     () =>
-      domains.map((k) => ({
-        key: k,
-        score: thisWeek ? thisWeek[DOMAIN_SUBSCORE[k]] : 0,
-        weight: profile.domains[k],
-        color: DOMAIN_COLOR[k],
-      })),
+      domains
+        .filter((k) => thisWeek?.measured[k])
+        .map((k) => ({
+          key: k,
+          score: thisWeek ? thisWeek[DOMAIN_SUBSCORE[k]] : 0,
+          weight: profile.domains[k],
+          color: DOMAIN_COLOR[k],
+        })),
     [domains, profile, thisWeek],
   );
 
@@ -197,20 +202,26 @@ export default function Life() {
                 </div>
               </LifeScoreRing>
               <div className="grid grid-cols-2 gap-2 w-full mt-4">
-                {domains.map((k) => (
-                  <DomainCard
-                    key={k}
-                    domain={k}
-                    score={thisWeek[DOMAIN_SUBSCORE[k]]}
-                    sub={
-                      k === 'work'
-                        ? workStats.daysLoggedThisWeek > 0
-                          ? `Avg ${workStats.weeklyRatingAvg.toFixed(1)}/5 · ${workStats.daysLoggedThisWeek} ${workStats.daysLoggedThisWeek === 1 ? 'day' : 'days'}`
-                          : 'No ratings yet'
-                        : undefined
-                    }
-                  />
-                ))}
+                {domains.map((k) => {
+                  const measured = thisWeek.measured[k];
+                  return (
+                    <DomainCard
+                      key={k}
+                      domain={k}
+                      score={thisWeek[DOMAIN_SUBSCORE[k]]}
+                      measured={measured}
+                      sub={
+                        !measured
+                          ? 'Not counted yet'
+                          : k === 'work'
+                            ? workStats.daysLoggedThisWeek > 0
+                              ? `Avg ${workStats.weeklyRatingAvg.toFixed(1)}/5 · ${workStats.daysLoggedThisWeek} ${workStats.daysLoggedThisWeek === 1 ? 'day' : 'days'}`
+                              : 'No ratings yet'
+                            : undefined
+                      }
+                    />
+                  );
+                })}
               </div>
             </div>
           )}
@@ -287,19 +298,23 @@ export default function Life() {
   );
 }
 
-function DomainCard({ domain, score, sub }: { domain: DomainKey; score: number; sub?: string }) {
+function DomainCard({ domain, score, sub, measured = true }: { domain: DomainKey; score: number; sub?: string; measured?: boolean }) {
   const isWork = domain === 'work';
   return (
     <div
       className={`rounded-xl p-3 border ${
-        isWork ? 'border-[#F778BA]/30 bg-[#F778BA]/[0.06]' : 'border-glass-border bg-white/[0.02]'
+        !measured
+          ? 'border-glass-border bg-white/[0.01] opacity-60'
+          : isWork
+            ? 'border-[#F778BA]/30 bg-[#F778BA]/[0.06]'
+            : 'border-glass-border bg-white/[0.02]'
       }`}
     >
       <div className="flex items-center gap-1.5">
-        <span aria-hidden className="w-2 h-2 rounded-full" style={{ background: DOMAIN_COLOR[domain] }} />
+        <span aria-hidden className="w-2 h-2 rounded-full" style={{ background: measured ? DOMAIN_COLOR[domain] : 'rgba(168,178,188,0.4)' }} />
         <div className="text-[10px] uppercase tracking-wider text-text-muted">{DOMAIN_LABELS[domain]}</div>
       </div>
-      <div className="font-heading text-xl font-bold mt-0.5">{score}</div>
+      <div className="font-heading text-xl font-bold mt-0.5">{measured ? score : '—'}</div>
       {sub && <div className="text-[10px] text-text-muted mt-0.5">{sub}</div>}
     </div>
   );
