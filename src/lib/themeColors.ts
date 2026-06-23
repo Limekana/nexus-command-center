@@ -28,6 +28,11 @@ export const WARNING = '#D29922';
  *  if it gets reused beyond these two surfaces, promote to a real token. */
 export const VIOLET = '#A78BFA';
 
+/** Work domain accent (v1.5 Life Profile) — a warm pink, chosen to stay
+ *  distinct from cyan/green/amber/violet on the Life-score ring so the Work
+ *  segment reads at a glance. Not a tailwind token; promote if reused. */
+export const WORK_PINK = '#F778BA';
+
 /** Muted slate-grey used as a track / disabled tint. Derived from
  *  text-muted ≈ #A8B2BC; alpha varies by surface (track vs rest-day track
  *  vs disabled). The constants below pre-bake the alpha so SVG strokes can

@@ -5,6 +5,7 @@ import SyncStatusChip from '../components/SyncStatusChip';
 import StatCard from '../components/StatCard';
 import ModuleSummaryCard from '../components/ModuleSummaryCard';
 import HabitsDashboardStrip from '../components/HabitsDashboardStrip';
+import WorkRatingCard from '../components/WorkRatingCard';
 import CrossDomainCard from '../components/CrossDomainCard';
 import ListRow from '../components/ListRow';
 import ProgressBar from '../components/ProgressBar';
@@ -97,6 +98,10 @@ export default function Dashboard() {
             handles all empty/eligible/all-rest-day states; we render it
             unconditionally so the layout doesn't shift based on data. */}
         <HabitsDashboardStrip />
+
+        {/* v1.5 — Work domain daily self-assessment. Self-gates: renders only
+            when the active Life Profile includes Work, on weekday afternoons. */}
+        <WorkRatingCard />
 
         {/* v1.2 — Cross-domain life-patterns rotator. Surfaces beneath the
             habits strip; handles its own baseline/quiet/insight states. */}

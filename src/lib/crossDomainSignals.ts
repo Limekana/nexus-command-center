@@ -27,6 +27,7 @@ import type { StudySession } from '../types/studies';
 import type { Transaction, BudgetCategory } from '../types/finance';
 import type { Habit, HabitCompletion } from '../types/habits';
 import { isEligibleOn, dateKey } from './habitStreaks';
+import { type LifeProfile, type DomainKey } from './lifeProfile';
 
 // ─── Week bucketing ─────────────────────────────────────────────────────
 
@@ -357,24 +358,43 @@ export interface LifeScore {
   study: number;
   habits: number;
   budget: number;
+  /** v1.5 — Work domain (0..100). 0 when no self-assessment data. */
+  work: number;
 }
 
+/** Maps a LifeProfile domain key to its computed sub-score field. */
+const DOMAIN_TO_SUBSCORE: Record<DomainKey, keyof Pick<LifeScore, 'workouts' | 'study' | 'habits' | 'budget' | 'work'>> = {
+  finance: 'budget',
+  fitness: 'workouts',
+  studies: 'study',
+  work: 'work',
+  habits: 'habits',
+};
+
 /**
- * Weighted composite. Each component normalizes to 0..100 against a target;
- * weights are equal (25 each). Returns null per-component when there's no
- * data to score against, which the caller renders as "—".
+ * Weighted composite. Each component normalizes to 0..100 against a target.
  *
  * Targets (chosen to feel attainable but not trivial):
  *   - workouts: 3 sessions/week → 100
  *   - study   : 240 minutes/week → 100
  *   - habits  : hit ratio 80% → 100
  *   - budget  : adherence ratio ≤ 1.0 → 100, 1.2 → 0 (linear between)
+ *   - work    : supplied by computeWorkScore (opts.workScore), 0 when absent
+ *
+ * Weighting:
+ *   - Default (no profile): equal weight across the four legacy domains
+ *     (workouts/study/habits/budget) — preserves pre-v1.5 behaviour, Work
+ *     excluded.
+ *   - With a profile: weighted across the profile's ENABLED domains. An
+ *     enabled domain with no data scores 0 and counts toward the denominator
+ *     (intentional — same as Studies reading 0 when StudyDesk has no data).
  */
 export function lifeScoreForWeek(
   fit: WeeklyFitness,
   study: WeeklyStudy,
   fin: WeeklyFinance,
   habits: WeeklyHabits,
+  opts?: { workScore?: number; profile?: LifeProfile },
 ): LifeScore {
   const workouts = Math.min(100, (fit.sessionsCount / 3) * 100);
   const studyScore = Math.min(100, (study.totalMinutes / 240) * 100);
@@ -385,16 +405,35 @@ export function lifeScoreForWeek(
     else if (fin.budgetAdherence >= 1.2) budget = 0;
     else budget = 100 * (1 - (fin.budgetAdherence - 1.0) / 0.2);
   }
-  const score = Math.round(
-    (workouts + studyScore + habitsScore + budget) / 4,
-  );
-  return {
-    weekStart: fit.weekStart,
-    score,
+  const work = Math.min(100, Math.max(0, opts?.workScore ?? 0));
+
+  const sub = {
     workouts: Math.round(workouts),
     study: Math.round(studyScore),
     habits: Math.round(habitsScore),
     budget: Math.round(budget),
+    work: Math.round(work),
+  };
+
+  let score: number;
+  if (opts?.profile) {
+    let total = 0;
+    let weightSum = 0;
+    for (const key of Object.keys(opts.profile.domains) as DomainKey[]) {
+      const w = opts.profile.domains[key];
+      if (w <= 0) continue;
+      total += sub[DOMAIN_TO_SUBSCORE[key]] * w;
+      weightSum += w;
+    }
+    score = weightSum > 0 ? Math.round(total / weightSum) : 0;
+  } else {
+    score = Math.round((workouts + studyScore + habitsScore + budget) / 4);
+  }
+
+  return {
+    weekStart: fit.weekStart,
+    score,
+    ...sub,
   };
 }
 
@@ -424,14 +463,22 @@ export function buildCrossDomainReport(
   completions: HabitCompletion[],
   weeksWindow: number = 8,
   today: Date = new Date(),
+  opts?: { profile?: LifeProfile; currentWorkScore?: number },
 ): CrossDomainReport {
   const weeks = lastNWeeks(weeksWindow, today);
   const fitness = bucketFitnessByWeek(workouts, weeks);
   const study = bucketStudyByWeek(studies, weeks, fitness);
   const finance = bucketFinanceByWeek(txns, budgets, weeks);
   const habitsW = bucketHabitsByWeek(habits, completions, weeks);
+  // The Work self-assessment is a current snapshot — historical work data
+  // doesn't exist yet — so only the current week (index 0) gets the real Work
+  // score; earlier weeks read 0 (the domain was inactive then). The profile
+  // weighting applies to every week for a consistent composite.
   const lifeScores = weeks.map((_, i) =>
-    lifeScoreForWeek(fitness[i], study[i], finance[i], habitsW[i]),
+    lifeScoreForWeek(fitness[i], study[i], finance[i], habitsW[i], {
+      profile: opts?.profile,
+      workScore: i === 0 ? opts?.currentWorkScore ?? 0 : 0,
+    }),
   );
 
   // Ready when we have at least 4 weeks of data across the buckets that

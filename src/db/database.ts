@@ -5,6 +5,7 @@ import { WorkoutSession, WorkoutSet, BodyMetric } from '../types/fitness';
 import { Task } from '../types/tasks';
 import { Goal } from '../types/goals';
 import { Habit, HabitCompletion } from '../types/habits';
+import { WorkQualityLog } from '../types/work';
 import { generateId } from '../utils/uuid';
 
 // v1.2 — Insights rating-history row. One per recompute per ticker. Used to
@@ -79,7 +80,8 @@ export interface SyncQueueItem {
     | 'habit'
     | 'habit_completion'
     | 'stock_sale'
-    | 'portfolio_cash_entry';
+    | 'portfolio_cash_entry'
+    | 'work_quality_log';
   entityId: string;
   operation: 'insert' | 'update' | 'delete';
   payload: string;
@@ -160,6 +162,7 @@ class NexusDB extends Dexie {
   // that pull lands (the AUDIT-FSG-5b residual — pullAll had nowhere to put
   // body metrics until this table existed).
   bodyMetrics!: Table<BodyMetric, string>;
+  workQualityLogs!: Table<WorkQualityLog, string>;
 
   // v15 — BUG-23 Stock Sales Tracking (v1.3.1). One row per realized sale.
   // FIFO cost basis computed at sale time; realized P&L is Σ realizedGainLoss.
@@ -799,6 +802,17 @@ class NexusDB extends Dexie {
     this.version(18).stores({
       lifeNarrative: 'id',
     });
+
+    // ─── v19 — Work domain (v1.5 Life Profile) ────────────────────────────
+    //
+    // Additive single table for the NCC-native Work domain: one daily
+    // self-assessment per calendar day. `date` is indexed for fast weekly
+    // lookups (the Work score reads the last 7 days). No upgrade hook — comes
+    // up empty; cold-start hydrate + pullAll fill it from the cloud for
+    // signed-in users on other devices.
+    this.version(19).stores({
+      workQualityLogs: 'id, date, syncStatus',
+    });
   }
 }
 
@@ -833,6 +847,7 @@ export async function clearAllLocalData(): Promise<void> {
       db.stockSales,
       db.portfolioCashEntries,
       db.lifeNarrative,
+      db.workQualityLogs,
       db.syncQueue,
     ],
     async () => {
@@ -862,6 +877,7 @@ export async function clearAllLocalData(): Promise<void> {
         db.stockSales.clear(),
         db.portfolioCashEntries.clear(),
         db.lifeNarrative.clear(),
+        db.workQualityLogs.clear(),
         db.syncQueue.clear(),
       ]);
     }

@@ -12,6 +12,7 @@
 // limit, blocked) returns null and the card simply doesn't render.
 
 import { supabase } from './supabase';
+import { type LifeProfile, type DomainKey } from './lifeProfile';
 
 export interface NarrativeInput {
   /** Composite life score, 0–100. */
@@ -21,6 +22,12 @@ export interface NarrativeInput {
   study: number;
   habits: number;
   budget: number;
+  /** v1.5 — Work domain sub-score, 0–100. Optional for back-compat. */
+  work?: number;
+  /** v1.5 — active Life Profile. When present, the prompt covers only the
+   *  profile's enabled domains (so Professional talks about Work not Studies,
+   *  Custom covers whatever's enabled). Absent → legacy 4-domain prompt. */
+  profile?: LifeProfile;
   /** Headlines of the cross-domain patterns already surfaced on the Life tab. */
   insightHeadlines: string[];
 }
@@ -32,13 +39,24 @@ function buildPrompt(input: NarrativeInput): string {
     ? input.insightHeadlines.map((h) => `- ${h}`).join('\n')
     : '- (no notable cross-domain patterns this week)';
 
+  // Build the domain lines from the active profile when present; otherwise
+  // fall back to the legacy fixed four (Fitness/Studies/Habits/Budget).
+  const LINES: Record<DomainKey, string> = {
+    finance: `- Budget: ${band(input.budget)}`,
+    fitness: `- Fitness: ${band(input.workouts)}`,
+    studies: `- Studies: ${band(input.study)}`,
+    work: `- Work: ${band(input.work ?? 0)}`,
+    habits: `- Habits: ${band(input.habits)}`,
+  };
+  const order: DomainKey[] = ['finance', 'fitness', 'studies', 'work', 'habits'];
+  const domainLines = input.profile
+    ? order.filter((k) => input.profile!.domains[k] > 0).map((k) => LINES[k])
+    : [LINES.fitness, LINES.studies, LINES.habits, LINES.finance];
+
   return `You are a personal life-dashboard assistant. Write 2–3 short sentences summarising this person's current week across life domains. Be specific, plain-language, and honest without being harsh or preachy. Do NOT mention numbers, scores, or percentages — translate them into concrete, human observations. Don't give a numbered list; write flowing prose. Don't invent facts beyond the data.
 
 Domain standing this week (qualitative band in brackets):
-- Fitness: ${band(input.workouts)}
-- Studies: ${band(input.study)}
-- Habits: ${band(input.habits)}
-- Budget: ${band(input.budget)}
+${domainLines.join('\n')}
 
 Patterns already detected:
 ${patterns}

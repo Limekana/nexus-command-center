@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import AppHeader from '../components/AppHeader';
 import ListRow from '../components/ListRow';
+import { useLifeProfileStore } from '../store/useLifeProfileStore';
+import { enabledDomains, DOMAIN_LABELS } from '../lib/lifeProfile';
 import { useAuthStore } from '../store/useAuthStore';
 import { useSyncStore } from '../store/useSyncStore';
 import { useSessionStore, userDisplayName } from '../store/useSessionStore';
@@ -30,6 +33,8 @@ import { setGuestMode } from '../lib/guestMode';
 const autoLockOptions = [1, 5, 15, 30, 60];
 
 export default function Settings() {
+  const navigate = useNavigate();
+  const lifeProfile = useLifeProfileStore((s) => s.profile);
   const biometricEnabled = useAuthStore((s) => s.biometricEnabled);
   const setBiometric = useAuthStore((s) => s.setBiometric);
   const autoLock = useAuthStore((s) => s.autoLockMinutes);
@@ -355,6 +360,26 @@ export default function Settings() {
                 </option>
               ))}
             </select>
+          </div>
+        </Section>
+
+        <Section title="Life Profile">
+          <button
+            className="w-full py-2 flex items-center justify-between gap-3 text-left active:opacity-80"
+            onClick={() => navigate('/settings/life-profile')}
+          >
+            <div className="min-w-0">
+              <div className="text-sm capitalize">{lifeProfile.preset}</div>
+              <div className="text-[10px] text-text-muted truncate">
+                {enabledDomains(lifeProfile)
+                  .map((k) => `${DOMAIN_LABELS[k]} ${lifeProfile.domains[k]}%`)
+                  .join(' · ')}
+              </div>
+            </div>
+            <span className="text-primary text-lg flex-shrink-0">›</span>
+          </button>
+          <div className="text-[10px] text-text-muted px-1 pb-1">
+            Which domains shape your Life Score and how they're weighted.
           </div>
         </Section>
 

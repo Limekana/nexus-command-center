@@ -32,6 +32,7 @@ import type { WorkoutSession, WorkoutSet, BodyMetric } from '../types/fitness';
 import type { Task, TaskPriority } from '../types/tasks';
 import type { Goal, GoalType } from '../types/goals';
 import type { Habit, HabitCompletion } from '../types/habits';
+import type { WorkQualityLog } from '../types/work';
 
 // ============================================================================
 // Push mappers — local entity → remote upsert payload
@@ -508,6 +509,33 @@ async function pushHabitCompletion(item: SyncQueueItem, ctx: PushContext): Promi
   if (error) throw error;
 }
 
+// v1.5 — Work domain self-assessment. NCC-native (no upstream app owns it).
+// One row per (user, day); the local store keeps a stable id per date so this
+// plain PK upsert collapses re-rates of the same day onto one row. The DB also
+// has UNIQUE (user_id, log_date) as a backstop. updated_at drives LWW.
+async function pushWorkQualityLog(item: SyncQueueItem, ctx: PushContext): Promise<void> {
+  if (item.operation === 'delete') {
+    const { error } = await supabase
+      .from('work_quality_logs')
+      .delete()
+      .eq('id', legacyIdToUuid(item.entityId));
+    if (error) throw error;
+    return;
+  }
+  const local: WorkQualityLog = JSON.parse(item.payload);
+  const updatedAt = local.updatedAt || item.createdAt;
+  const row = {
+    id: legacyIdToUuid(local.id),
+    user_id: ctx.userId,
+    log_date: local.date,
+    rating: local.rating,
+    note: local.note ?? null,
+    updated_at: updatedAt,
+  };
+  const { error } = await supabase.from('work_quality_logs').upsert(row);
+  if (error) throw error;
+}
+
 const pushHandlers: Record<SyncQueueItem['entityType'], (item: SyncQueueItem, ctx: PushContext) => Promise<void>> = {
   transaction: pushTransaction,
   budget_category: pushBudgetCategory,
@@ -526,6 +554,7 @@ const pushHandlers: Record<SyncQueueItem['entityType'], (item: SyncQueueItem, ct
   study_session: pushStudySession,
   habit: pushHabit,
   habit_completion: pushHabitCompletion,
+  work_quality_log: pushWorkQualityLog,
   // grade_import is a local-only snapshot concept — courses sync individually.
   grade_import: async () => {
     /* no-op */
@@ -567,6 +596,7 @@ const ENTITY_PRIORITY: Record<SyncQueueItem['entityType'], number> = {
   goal: 1, // no FK dependencies
   habit: 1, // parent — no FK dependencies
   habit_completion: 2, // FK → habits
+  work_quality_log: 1, // NCC-native, no FK dependencies
 };
 
 // Postgres integrity-constraint violations whose cause is the payload itself, not
@@ -643,6 +673,7 @@ export interface PullResult {
   bodyMetrics: number;
   stockSales: number;
   portfolioCashEntries: number;
+  workQualityLogs: number;
   errors: string[];
 }
 
@@ -948,6 +979,49 @@ export async function hydrateBodyMetricsFromCloud(
   return { bodyMetrics: count, errors };
 }
 
+// v1.5 — Work domain self-assessment hydration. NCC-native table; same
+// authenticated-client + RLS posture as the others. Bad/garbage rows degrade
+// gracefully (a missing rating is coerced to a safe number; the whole batch
+// isn't dropped on one bad row since map throwing would, so we guard fields).
+export interface WorkQualityHydrationResult {
+  workQualityLogs: number;
+  errors: string[];
+}
+
+export async function hydrateWorkQualityFromCloud(
+  userId: string,
+): Promise<WorkQualityHydrationResult> {
+  const errors: string[] = [];
+  let count = 0;
+
+  try {
+    const { data, error } = await supabase
+      .from('work_quality_logs')
+      .select('*')
+      .eq('user_id', userId);
+    if (error) throw error;
+    if (data) {
+      const rows: WorkQualityLog[] = (data as any[]).map((r) => ({
+        id: r.id,
+        date: r.log_date,
+        rating: Number(r.rating) || 0,
+        note: r.note ?? null,
+        syncStatus: 'synced' as const,
+        createdAt: r.created_at,
+        updatedAt: r.updated_at,
+      }));
+      await db.workQualityLogs.bulkPut(rows);
+      count = rows.length;
+    }
+  } catch (e) {
+    const msg = (e as Error).message;
+    errors.push(`work_quality_logs: ${msg}`);
+    console.warn('[work-quality-hydrate] failed:', msg);
+  }
+
+  return { workQualityLogs: count, errors };
+}
+
 export interface StockSalesHydrationResult {
   stockSales: number;
   errors: string[];
@@ -1056,6 +1130,7 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     bodyMetrics: 0,
     stockSales: 0,
     portfolioCashEntries: 0,
+    workQualityLogs: 0,
     errors,
   };
 
@@ -1346,6 +1421,13 @@ export async function pullAll(_userId: string): Promise<PullResult> {
   result.portfolioCashEntries = cashHydration.portfolioCashEntries;
   for (const e of cashHydration.errors) errors.push(e);
 
+  // v1.5 — Work domain self-assessment. NCC-native; hydrate-in-pullAll so a
+  // rating logged on another device surfaces on the next sync, mirroring the
+  // habits/body-metrics convergence above.
+  const workQualityHydration = await hydrateWorkQualityFromCloud(_userId);
+  result.workQualityLogs = workQualityHydration.workQualityLogs;
+  for (const e of workQualityHydration.errors) errors.push(e);
+
   return result;
 }
 
@@ -1373,7 +1455,7 @@ export async function adoptLocalData(userId: string): Promise<number> {
     }
   };
 
-  const [txs, budgets, holdings, lots, manualAssets, watchlistItems, sessions, sets, tasks, courses, grades, studySessions, goals, stockSales, cashEntries] =
+  const [txs, budgets, holdings, lots, manualAssets, watchlistItems, sessions, sets, tasks, courses, grades, studySessions, goals, stockSales, cashEntries, workQualityLogs] =
     await Promise.all([
       db.transactions.toArray(),
       db.budgetCategories.toArray(),
@@ -1390,6 +1472,7 @@ export async function adoptLocalData(userId: string): Promise<number> {
       db.goals.toArray(),
       db.stockSales.toArray(),
       db.portfolioCashEntries.toArray(),
+      db.workQualityLogs.toArray(),
     ]);
 
   await enqueueAll('transaction', txs);
@@ -1407,6 +1490,7 @@ export async function adoptLocalData(userId: string): Promise<number> {
   await enqueueAll('goal', goals);
   await enqueueAll('stock_sale', stockSales);
   await enqueueAll('portfolio_cash_entry', cashEntries);
+  await enqueueAll('work_quality_log', workQualityLogs);
 
   // Stamp user_id for later use isn't needed since the push handler reads
   // userId from the current session.

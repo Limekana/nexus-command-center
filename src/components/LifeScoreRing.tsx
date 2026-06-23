@@ -1,38 +1,49 @@
-// ─── v1.2 LifeScoreRing ─────────────────────────────────────────────────
+// ─── v1.2 LifeScoreRing (v1.5 profile-aware) ────────────────────────────
 //
-// Big composite ring for the /life screen and history chips. Four arcs
-// stacked at 90deg apart, one per sub-component (workouts, study, habits,
-// budget). Each arc fills its quadrant proportionally to that sub-score.
+// Composite ring for the /life screen + history chips.
 //
-// Center slot shows the composite score number — typeset large because
-// it's the page's hero metric.
+// Two modes:
+//   - Legacy (workouts/study/habits/budget props): four fixed quadrant arcs,
+//     90° apart, each filled proportionally to its sub-score. Used by the
+//     history chips and any pre-v1.5 caller.
+//   - Profile (segments prop): one arc PER enabled domain, sized to that
+//     domain's weight share of the circle and filled proportionally to its
+//     score. This is what the Life tab uses once a LifeProfile is active, so
+//     the ring's geometry mirrors the profile's weighting.
 //
-// Visual contract:
-//   - Workouts (top)    = primary cyan
-//   - Study (right)     = soft violet
-//   - Habits (bottom)   = success green
-//   - Budget (left)     = warning amber
-//   These colors are intentionally distinct so the breakdown reads at a
-//   glance — you can tell which quadrant is dragging the composite.
+// Center slot shows the composite score number — the page's hero metric.
 
 import { ReactNode } from 'react';
 import { PRIMARY, SUCCESS, WARNING, VIOLET, TRACK_DEFAULT } from '../lib/themeColors';
 
+export interface RingSegment {
+  key: string;
+  /** 0..100 — how full this domain's arc is. */
+  score: number;
+  /** Relative weight; the arc spans weight / Σweights of the circle. */
+  weight: number;
+  color: string;
+}
+
 export interface LifeScoreRingProps {
-  workouts: number;       // 0..100
-  study: number;          // 0..100
-  habits: number;         // 0..100
-  budget: number;         // 0..100
+  /** Legacy quadrant inputs (ignored when `segments` is provided). */
+  workouts?: number;
+  study?: number;
+  habits?: number;
+  budget?: number;
+  /** v1.5 — weighted per-domain arcs. Takes precedence over the legacy props. */
+  segments?: RingSegment[];
   size?: number;
   strokeWidth?: number;
-  children?: ReactNode;   // center slot — typically the composite score
+  children?: ReactNode;
 }
 
 export default function LifeScoreRing({
-  workouts,
-  study,
-  habits,
-  budget,
+  workouts = 0,
+  study = 0,
+  habits = 0,
+  budget = 0,
+  segments,
   size = 200,
   strokeWidth,
   children,
@@ -42,33 +53,45 @@ export default function LifeScoreRing({
   const cy = size / 2;
   const r = (size - sw) / 2;
   const circ = 2 * Math.PI * r;
-  const quadrant = circ / 4;
 
-  // Each quadrant draws ¼ of the full circle. The arc within that quadrant
-  // is scaled by the sub-score. We use stroke-dasharray with two values:
-  // [arcLen, gap], then offset the start by quadrant index.
-  function arc(score: number, idx: number, color: string) {
-    const clamped = Math.max(0, Math.min(100, score));
-    const arcLen = (quadrant * clamped) / 100;
-    return (
-      <circle
-        cx={cx}
-        cy={cy}
-        r={r}
-        fill="none"
-        stroke={color}
-        strokeWidth={sw}
-        strokeLinecap="round"
-        strokeDasharray={`${arcLen} ${circ - arcLen}`}
-        // Offset by quadrant index * quadrant length. Negative offset moves
-        // the dash start clockwise.
-        strokeDashoffset={-idx * quadrant}
-        style={{
-          transition: 'stroke-dasharray 360ms cubic-bezier(0.16, 1, 0.3, 1)',
-          filter: `drop-shadow(0 0 3px ${color}55)`,
-        }}
-      />
-    );
+  // Build the list of arcs to draw. Each arc reserves `span` of the circle
+  // (its slot) and fills `fill` of that slot. A 1px gap between slots keeps
+  // adjacent domains visually separable.
+  const GAP = segments && segments.length > 1 ? circ * 0.012 : 0;
+  const arcs: { fill: number; offset: number; color: string; key: string }[] = [];
+
+  if (segments && segments.length > 0) {
+    const totalWeight = segments.reduce((s, seg) => s + Math.max(0, seg.weight), 0) || 1;
+    let cursor = 0;
+    for (const seg of segments) {
+      const span = (circ * Math.max(0, seg.weight)) / totalWeight;
+      const usable = Math.max(0, span - GAP);
+      const clampedScore = Math.max(0, Math.min(100, seg.score));
+      arcs.push({
+        fill: (usable * clampedScore) / 100,
+        offset: cursor,
+        color: seg.color,
+        key: seg.key,
+      });
+      cursor += span;
+    }
+  } else {
+    const quadrant = circ / 4;
+    const legacy: [number, string, string][] = [
+      [workouts, PRIMARY, 'workouts'],
+      [study, VIOLET, 'study'],
+      [habits, SUCCESS, 'habits'],
+      [budget, WARNING, 'budget'],
+    ];
+    legacy.forEach(([score, color, key], idx) => {
+      const clamped = Math.max(0, Math.min(100, score));
+      arcs.push({
+        fill: (quadrant * clamped) / 100,
+        offset: idx * quadrant,
+        color,
+        key,
+      });
+    });
   }
 
   return (
@@ -84,22 +107,25 @@ export default function LifeScoreRing({
         role="img"
         aria-label="Life score breakdown"
       >
-        {/* Full-circle track behind everything */}
-        <circle
-          cx={cx}
-          cy={cy}
-          r={r}
-          fill="none"
-          stroke={TRACK_DEFAULT}
-          strokeWidth={sw}
-        />
-        {/* Four quadrant arcs — order matters for stacking (later ones
-            paint on top), but since each writes only its quadrant slice
-            they don't overlap. */}
-        {arc(workouts, 0, PRIMARY)}
-        {arc(study, 1, VIOLET)}
-        {arc(habits, 2, SUCCESS)}
-        {arc(budget, 3, WARNING)}
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke={TRACK_DEFAULT} strokeWidth={sw} />
+        {arcs.map((a) => (
+          <circle
+            key={a.key}
+            cx={cx}
+            cy={cy}
+            r={r}
+            fill="none"
+            stroke={a.color}
+            strokeWidth={sw}
+            strokeLinecap="round"
+            strokeDasharray={`${a.fill} ${circ - a.fill}`}
+            strokeDashoffset={-a.offset}
+            style={{
+              transition: 'stroke-dasharray 360ms cubic-bezier(0.16, 1, 0.3, 1)',
+              filter: `drop-shadow(0 0 3px ${a.color}55)`,
+            }}
+          />
+        ))}
       </svg>
       {children != null && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">

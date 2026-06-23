@@ -10,7 +10,7 @@ import { seedIfEmpty } from './db/seed';
 import { clearAllLocalData } from './db/database';
 import { supabase } from './lib/supabase';
 import { startRealtime, stopRealtime } from './lib/realtime';
-import { hydrateStudiesFromCloud, hydrateHabitsFromCloud, hydrateBodyMetricsFromCloud } from './lib/cloudSync';
+import { hydrateStudiesFromCloud, hydrateHabitsFromCloud, hydrateBodyMetricsFromCloud, hydrateWorkQualityFromCloud } from './lib/cloudSync';
 import { useStudiesStore } from './store/useStudiesStore';
 import { isGuestMode } from './lib/guestMode';
 import AdoptionPrompt from './components/AdoptionPrompt';
@@ -41,6 +41,7 @@ import WeeklyReview from './screens/WeeklyReview';
 import YearReview from './screens/YearReview';
 import Goals from './screens/Goals';
 import Settings from './screens/Settings';
+import LifeProfileSettings from './screens/LifeProfileSettings';
 import { onNotificationTap, scheduleWeeklyReview } from './lib/weeklyNotification';
 import { onNotificationAction } from './lib/notifications';
 import { installRatingHistory } from './lib/ratingHistory';
@@ -48,6 +49,8 @@ import { useTaskStore } from './store/useTaskStore';
 import { useSettingsStore } from './store/useSettingsStore';
 import { useHabitsStore } from './store/useHabitsStore';
 import { useBodyMetricsStore } from './store/useBodyMetricsStore';
+import { useWorkQualityStore } from './store/useWorkQualityStore';
+import { useLifeProfileStore } from './store/useLifeProfileStore';
 
 export default function App() {
   const unlocked = useAuthStore((s) => s.unlocked);
@@ -178,6 +181,30 @@ export default function App() {
       } catch (e) {
         console.warn('[app-init] body metrics hydration threw:', e);
       }
+      // v1.5 — Work domain self-assessment hydration. NCC-native; pull the
+      // user's logs from the cloud so the Home WorkRatingCard + Life Work
+      // score reflect ratings made on another device. Sibling-of-habits
+      // shape; fire-and-forget so a failure doesn't block app-init.
+      try {
+        const workResult = await hydrateWorkQualityFromCloud(userId);
+        console.log(
+          `[app-init] work quality hydrated: rows=${workResult.workQualityLogs}, errors=${workResult.errors.length}`,
+        );
+        if (workResult.errors.length > 0) {
+          console.warn('[app-init] work quality hydration errors:', workResult.errors);
+        }
+        await useWorkQualityStore.getState().load();
+      } catch (e) {
+        console.warn('[app-init] work quality hydration threw:', e);
+      }
+      // v1.5 — Life Profile. Reads the local cache instantly at store
+      // creation; load() pulls the cross-device value from
+      // user_preferences.life_profile now that we have a session.
+      try {
+        await useLifeProfileStore.getState().load();
+      } catch (e) {
+        console.warn('[app-init] life profile load threw:', e);
+      }
       // Now open the realtime channel for future deltas.
       // v1.2.1 — AUDIT-FSG-5: pass userId so per-table subscriptions can
       // scope to `user_id=eq.<uid>` on tables without a sharing surface.
@@ -287,6 +314,7 @@ export default function App() {
           <Route path="/review/year" element={<YearReview />} />
           <Route path="/goals" element={<Goals />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/settings/life-profile" element={<LifeProfileSettings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
