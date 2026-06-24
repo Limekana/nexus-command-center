@@ -502,4 +502,92 @@ export default function HabitsOverview() {
                     const d = new Date(today);
                     d.setDate(d.getDate() - (6 - i));
                     const dayK = dateKey(d);
-                  
+                    const eligible = isEligibleOn(menuHabit, d);
+                    const target = menuHabit.type === 'binary'
+                      ? 1
+                      : (menuHabit.targetAmount && menuHabit.targetAmount > 0 ? menuHabit.targetAmount : 1);
+                    const comp = completions.find((c) => c.habitId === menuHabit.id && c.date === dayK);
+                    const done = comp ? comp.amount >= target : false;
+                    const isToday = dayK === todayKey;
+                    return (
+                      <button
+                        key={dayK}
+                        type="button"
+                        disabled={!eligible}
+                        onClick={() => {
+                          if (menuHabit.type === 'binary') toggle(menuHabit.id, dayK);
+                          else setCompletionAmount(menuHabit.id, done ? 0 : target, dayK);
+                        }}
+                        className={`flex-1 flex flex-col items-center gap-1 py-1.5 rounded-lg border transition-colors ${
+                          done
+                            ? 'border-primary/60 bg-primary/12 text-primary'
+                            : eligible
+                              ? 'border-glass-border text-text-muted active:border-primary/40'
+                              : 'border-transparent text-text-muted/30'
+                        }`}
+                        aria-label={`${done ? 'Logged' : 'Not logged'} ${d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}`}
+                      >
+                        <span className="text-[9px] uppercase tracking-wider">
+                          {isToday ? 'TODAY' : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'][d.getDay()]}
+                        </span>
+                        <span className="text-sm font-heading font-semibold leading-none">
+                          {done ? '✓' : d.getDate()}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            <button
+              onClick={() => {
+                navigate(`/habits/add?id=${menuHabit.id}`);
+                setActiveMenu(null);
+              }}
+              className="w-full pill pill-lg press-spring"
+              type="button"
+            >
+              Edit
+            </button>
+            {menuHabit.archivedAt ? (
+              <button
+                onClick={() => {
+                  restoreHabit(menuHabit.id);
+                  setActiveMenu(null);
+                }}
+                className="w-full pill pill-lg press-spring"
+                type="button"
+              >
+                Restore
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  archiveHabit(menuHabit.id);
+                  setActiveMenu(null);
+                }}
+                className="w-full pill pill-lg press-spring"
+                type="button"
+              >
+                Archive
+              </button>
+            )}
+            <button
+              onClick={() => {
+                if (confirm(`Delete "${menuHabit.title}" and its history?`)) {
+                  deleteHabit(menuHabit.id);
+                  setActiveMenu(null);
+                }
+              }}
+              className="w-full pill pill-lg press-spring text-danger border-danger/40"
+              type="button"
+            >
+              Delete
+            </button>
+          </div>
+        )}
+      </BottomSheet>
+
+    </>
+  );
+}

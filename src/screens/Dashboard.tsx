@@ -176,4 +176,14 @@ export default function Dashboard() {
                 <Empty msg="Tap to add a task" />
               </>
             )}
-          
+            {tasksOpen.length === 1 && <Empty msg=" " />}
+          </ModuleSummaryCard>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function Empty({ msg }: { msg: string }) {
+  return <div className="text-[11px] text-text-muted/70 italic">{msg}</div>;
+}

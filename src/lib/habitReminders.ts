@@ -126,4 +126,46 @@ export async function scheduleHabitReminder(habit: Habit, streak = 0): Promise<v
     await scheduleNotification({
       id: ids.evening,
       category: 'habits',
-      title
+      title: m.title,
+      body: m.body,
+      at: nextDailyFire(eveningHour, parsed.minute),
+      every: 'day',
+      extra: { route: `/habits?catchup=${habit.id}`, habitId: habit.id },
+    });
+  } else {
+    await cancelNotifications([ids.evening]);
+  }
+
+  // ── 3. Morning catch-up at 08:00 — log last night's habit from bed-time.
+  const mm = habitMessage('morning', habit.title, streak);
+  await scheduleNotification({
+    id: ids.morning,
+    category: 'habits',
+    title: mm.title,
+    body: mm.body,
+    at: nextDailyFire(8, 0),
+    every: 'day',
+    extra: { route: `/habits?catchup=${habit.id}`, habitId: habit.id },
+  });
+}
+
+/** Cancel all of a habit's reminders. */
+export async function cancelHabitReminder(habit: Pick<Habit, 'id'>): Promise<void> {
+  const ids = habitIds(habit.id);
+  await cancelNotifications([ids.primary, ids.evening, ids.morning]);
+}
+
+/** Fire a one-off streak-milestone celebration immediately. Called from the
+ *  store when a completion pushes the streak onto a milestone. */
+export async function fireHabitMilestone(habit: Pick<Habit, 'id' | 'title'>, streak: number): Promise<void> {
+  const ids = habitIds(habit.id);
+  const m = habitMessage('milestone', habit.title, streak);
+  await scheduleNotification({
+    id: ids.milestone,
+    category: 'habits',
+    title: m.title,
+    body: m.body,
+    at: new Date(Date.now() + 1500), // ~immediate
+    extra: { route: '/habits', habitId: habit.id },
+  });
+}

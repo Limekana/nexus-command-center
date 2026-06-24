@@ -171,4 +171,12 @@ export const useSyncStore = create<SyncStore>((set, get) => ({
 }));
 
 // Utility for the diagnostics UI: load the current syncQueue with errors.
-export async fu
+export async function getSyncDiagnostics() {
+  const all = await db.syncQueue.toArray();
+  const pending = all.filter((q) => !q.syncedAt);
+  return {
+    totalQueueRows: all.length,
+    pending: pending.length,
+    withErrors: pending.filter((p) => p.lastError),
+  };
+}

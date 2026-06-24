@@ -1435,4 +1435,91 @@ export async function pullAll(_userId: string): Promise<PullResult> {
 // Adoption: enqueue every existing local row as an insert for the new user.
 // ============================================================================
 export async function adoptLocalData(userId: string): Promise<number> {
-  c
+  const now = new Date().toISOString();
+  let count = 0;
+
+  const enqueueAll = async (
+    entityType: SyncQueueItem['entityType'],
+    rows: { id: string }[]
+  ) => {
+    for (const row of rows) {
+      await db.syncQueue.add({
+        id: generateId(),
+        entityType,
+        entityId: row.id,
+        operation: 'insert',
+        payload: JSON.stringify(row),
+        createdAt: now,
+      });
+      count++;
+    }
+  };
+
+  const [txs, budgets, holdings, lots, manualAssets, watchlistItems, sessions, sets, tasks, courses, grades, studySessions, goals, stockSales, cashEntries, workQualityLogs] =
+    await Promise.all([
+      db.transactions.toArray(),
+      db.budgetCategories.toArray(),
+      db.portfolioHoldings.toArray(),
+      db.portfolioLots.toArray(),
+      db.manualAssets.toArray(),
+      db.watchlistItems.toArray(),
+      db.workoutSessions.toArray(),
+      db.workoutSets.toArray(),
+      db.tasks.toArray(),
+      db.courses.toArray(),
+      db.grades.toArray(),
+      db.studySessions.toArray(),
+      db.goals.toArray(),
+      db.stockSales.toArray(),
+      db.portfolioCashEntries.toArray(),
+      db.workQualityLogs.toArray(),
+    ]);
+
+  await enqueueAll('transaction', txs);
+  await enqueueAll('budget_category', budgets);
+  await enqueueAll('portfolio_holding', holdings);
+  await enqueueAll('portfolio_lot', lots);
+  await enqueueAll('manual_asset', manualAssets);
+  await enqueueAll('watchlist_item', watchlistItems);
+  await enqueueAll('workout_session', sessions);
+  await enqueueAll('workout_set', sets);
+  await enqueueAll('task', tasks);
+  await enqueueAll('course', courses);
+  await enqueueAll('grade', grades);
+  await enqueueAll('study_session', studySessions);
+  await enqueueAll('goal', goals);
+  await enqueueAll('stock_sale', stockSales);
+  await enqueueAll('portfolio_cash_entry', cashEntries);
+  await enqueueAll('work_quality_log', workQualityLogs);
+
+  // Stamp user_id for later use isn't needed since the push handler reads
+  // userId from the current session.
+  void userId;
+  return count;
+}
+
+// ============================================================================
+// Full sync: push then pull. Returns combined stats.
+// ============================================================================
+export async function fullSync(userId: string): Promise<{ push: PushResult; pull: PullResult }> {
+  const push = await pushQueue(userId);
+  const pull = await pullAll(userId);
+  return { push, pull };
+}
+
+// ============================================================================
+// Heuristic: does local data exist? Used to gate the adoption prompt.
+// ============================================================================
+export async function hasLocalData(): Promise<boolean> {
+  const counts = await Promise.all([
+    db.transactions.count(),
+    db.budgetCategories.count(),
+    db.portfolioHoldings.count(),
+    db.workoutSessions.count(),
+    db.tasks.count(),
+    db.courses.count(),
+    db.grades.count(),
+    db.studySessions.count(),
+  ]);
+  return counts.some((c) => c > 0);
+}

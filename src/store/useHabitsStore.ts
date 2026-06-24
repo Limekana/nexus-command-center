@@ -243,4 +243,35 @@ export const useHabitsStore = create<HabitsStore>((set, get) => ({
       syncStatus: 'pending',
       createdAt: now,
     };
-    await db.hab
+    await db.habitCompletions.add(row);
+    await enqueue('habit_completion', row.id, 'insert', row);
+    set({ completions: [...get().completions, row] });
+    get()._celebrateIfMilestone(habitId);
+  },
+
+  async addToCompletion(habitId, delta, date) {
+    const day = date ?? dateKey(new Date());
+    const existing = get().completions.find(
+      (c) => c.habitId === habitId && c.date === day,
+    );
+    const next = (existing?.amount ?? 0) + delta;
+    await get().setCompletionAmount(habitId, next, day);
+  },
+
+  streakFor(habitId) {
+    const habit = get().habits.find((h) => h.id === habitId);
+    if (!habit) {
+      return { current: 0, longest: 0, todayHit: false, todayEligible: false };
+    }
+    const rows = get().completions.filter((c) => c.habitId === habitId);
+    return computeStreak(habit, rows);
+  },
+
+  completionsFor(habitId) {
+    return get().completions.filter((c) => c.habitId === habitId);
+  },
+
+  completionForDate(habitId, date) {
+    return get().completions.find((c) => c.habitId === habitId && c.date === date);
+  },
+}));
