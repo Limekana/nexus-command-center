@@ -12,7 +12,8 @@ import { useFinanceStore } from '../../store/useFinanceStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { convertSync, normalizeCurrency } from '../../api/fxRates';
 import { formatCurrency, formatShortDate, localDateKey } from '../../utils/formatters';
-import { LIABILITY_TYPES } from '../../types/finance';
+import { computeAccountBalance } from '../../lib/accountBalance';
+import { portfolioCashBalance } from '../../lib/portfolioCash';
 
 // v1.3 BUG-18 — Finance is split into two segments. "Balance" carries the
 // cash-flow + net-worth + budgeting surface; "Portfolio" carries the
@@ -36,6 +37,7 @@ export default function FinanceOverview() {
   const cryptoPrices = useFinanceStore((s) => s.cryptoPrices);
   const fxRates = useFinanceStore((s) => s.fxRates);
   const manualAssets = useFinanceStore((s) => s.manualAssets);
+  const portfolioCashEntries = useFinanceStore((s) => s.portfolioCashEntries);
   const baseCurrency = useSettingsStore((s) => s.baseCurrency);
 
   // Active segment. Seeds from a `?tab=` query param so a deep link (e.g. a
@@ -51,8 +53,16 @@ export default function FinanceOverview() {
     if (t === 'portfolio' || t === 'balance' || t === 'markets') setTab(t);
   }, [searchParams]);
 
-  // Net worth summary — uses the same math as the Net Worth screen but
-  // condensed to a single number for the overview card.
+  // Net worth summary — MUST match the Net Worth detail screen exactly:
+  //   net worth = portfolio holdings value + portfolio cash
+  //               + Σ(derived account balances, liabilities already negative)
+  // Two things this previously got wrong and drifted from the detail screen:
+  //   1. portfolio cash was omitted (the detail screen folds it into the
+  //      portfolio side), and
+  //   2. account balances used the stored opening figure `a.value` instead of
+  //      the DERIVED balance (opening + transaction deltas) the Account
+  //      refactor introduced. We now use computeAccountBalance, same as the
+  //      detail screen, so the headline number and the drill-in agree.
   const netWorth = useMemo(() => {
     let portfolioBase = 0;
     for (const h of holdings) {
@@ -70,16 +80,22 @@ export default function FinanceOverview() {
         if (conv != null) portfolioBase += conv;
       }
     }
-    let assets = 0;
-    let liab = 0;
+    const cashBase = portfolioCashBalance(portfolioCashEntries, baseCurrency, fxRates);
+    // Signed sum of every account's derived balance — liability accounts carry
+    // a negative balance by convention, so this is assets − liabilities.
+    let accountsBase = 0;
     for (const a of manualAssets) {
-      const conv = convertSync(a.value, a.currency, baseCurrency, fxRates);
-      if (conv == null) continue;
-      if (LIABILITY_TYPES.includes(a.assetType)) liab += conv;
-      else assets += conv;
+      const native = computeAccountBalance(a, transactions, fxRates, baseCurrency).balance;
+      const conv = a.currency === baseCurrency
+        ? native
+        : convertSync(native, a.currency, baseCurrency, fxRates);
+      if (conv != null) accountsBase += conv;
     }
-    return { total: portfolioBase + assets - liab, hasData: holdings.length > 0 || manualAssets.length > 0 };
-  }, [holdings, stockQuotes, cryptoPrices, fxRates, manualAssets, baseCurrency]);
+    return {
+      total: portfolioBase + cashBase + accountsBase,
+      hasData: holdings.length > 0 || manualAssets.length > 0 || portfolioCashEntries.length > 0,
+    };
+  }, [holdings, stockQuotes, cryptoPrices, fxRates, manualAssets, transactions, portfolioCashEntries, baseCurrency]);
 
   const { income, expenses } = useMemo(() => {
     const now = new Date();
