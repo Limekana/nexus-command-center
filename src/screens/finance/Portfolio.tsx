@@ -8,6 +8,7 @@ import HoldingDetailSheet from '../../components/HoldingDetailSheet';
 import EarningsStrip from '../../components/EarningsStrip';
 import DividendTracker from '../../components/DividendTracker';
 import { isHoldingClosed } from '../../lib/positionStatus';
+import { portfolioCashBalance } from '../../lib/portfolioCash';
 import MacroStrip from '../../components/MacroStrip';
 import InsightsCard from '../../components/InsightsCard';
 import RatingPill from '../../components/RatingPill';
@@ -206,6 +207,7 @@ export default function Portfolio() {
   const navigate = useNavigate();
   const holdings = useFinanceStore((s) => s.holdings);
   const portfolioLots = useFinanceStore((s) => s.portfolioLots);
+  const cashEntries = useFinanceStore((s) => s.portfolioCashEntries);
   const stockQuotes = useFinanceStore((s) => s.stockQuotes);
   const cryptoPrices = useFinanceStore((s) => s.cryptoPrices);
   const fxRates = useFinanceStore((s) => s.fxRates);
@@ -257,15 +259,23 @@ export default function Portfolio() {
     [holdings, stockQuotes, cryptoPrices, fxRates, baseCurrency, companyProfiles, portfolioLots],
   );
 
+  // Uninvested portfolio cash (sale proceeds + deposits − buys − withdrawals),
+  // in base currency. Counts toward total portfolio value and the allocation
+  // donut — same figure Net Worth folds into the portfolio side.
+  const cash = useMemo(
+    () => portfolioCashBalance(cashEntries, baseCurrency, fxRates),
+    [cashEntries, baseCurrency, fxRates],
+  );
+
   const totals = useMemo(() => {
-    let total = 0;
+    let positionsValue = 0;
     let dayChange = 0;
     let cost = 0;
     let pl = 0;
     let missingFx = false;
     let hasCost = false;
     for (const p of positions) {
-      if (p.valueBase != null) total += p.valueBase; else missingFx = true;
+      if (p.valueBase != null) positionsValue += p.valueBase; else missingFx = true;
       if (p.dayChangeBase != null) dayChange += p.dayChangeBase;
       if (p.costBase != null) {
         cost += p.costBase;
@@ -273,10 +283,13 @@ export default function Portfolio() {
       }
       if (p.plBase != null) pl += p.plBase;
     }
-    const dayPct = total - dayChange > 0 ? (dayChange / (total - dayChange)) * 100 : 0;
+    // Headline value includes cash; day-change % stays scoped to invested
+    // positions (cash doesn't move day to day) so the percentage isn't diluted.
+    const total = positionsValue + cash;
+    const dayPct = positionsValue - dayChange > 0 ? (dayChange / (positionsValue - dayChange)) * 100 : 0;
     const plPct = cost > 0 ? (pl / cost) * 100 : null;
-    return { total, dayChange, dayPct, cost, pl, plPct, missingFx, hasCost };
-  }, [positions]);
+    return { total, positionsValue, cash, dayChange, dayPct, cost, pl, plPct, missingFx, hasCost };
+  }, [positions, cash]);
 
   // Allocation slices for the donut. Three views; same shape so the donut
   // component is reusable across the toggle. ETF is now a first-class
@@ -300,11 +313,19 @@ export default function Portfolio() {
       }
       buckets.set(key, (buckets.get(key) ?? 0) + p.valueBase);
     }
+    // Cash is part of the allocation. In class/sector views it's its own
+    // "Cash" slice; in the currency view it lives in its native bucket (the
+    // balance is already collapsed to base currency). Only add a positive
+    // balance — a negative (owed) cash position can't be drawn as a slice.
+    if (cash > 1e-9) {
+      const cashKey = allocationView === 'currency' ? baseCurrency.toUpperCase() : 'Cash';
+      buckets.set(cashKey, (buckets.get(cashKey) ?? 0) + cash);
+    }
     // Sort largest first so the legend reads top-down.
     return Array.from(buckets.entries())
       .sort((a, b) => b[1] - a[1])
       .map(([label, value]) => ({ label, value }));
-  }, [positions, allocationView]);
+  }, [positions, allocationView, cash, baseCurrency]);
 
   const sources = useMemo(() => {
     const set = new Set(stockQuotes.map((q) => q.source));
@@ -437,6 +458,11 @@ export default function Portfolio() {
               <span className="opacity-70">({Math.abs(totals.dayPct).toFixed(2)}% today)</span>
             </span>
           </div>
+          {Math.abs(totals.cash) > 1e-9 && (
+            <div className="text-[10px] text-text-muted mt-1">
+              Holdings {fmt(totals.positionsValue, baseCurrency)} · incl. cash {fmt(totals.cash, baseCurrency)}
+            </div>
+          )}
           {totals.hasCost && (
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/40 text-xs">
               <div>
