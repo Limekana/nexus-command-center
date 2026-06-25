@@ -13,6 +13,7 @@
     "close": "关闭",
     "back": "返回",
     "confirm": "确认",
+    "continue": "继续",
     "retry": "重试",
     "loading": "加载中…",
     "settings": "设置"
@@ -24,5 +25,38 @@
     "studies": "学业",
     "habits": "习惯",
     "work": "工作"
+  },
+  "nav": {
+    "home": "主页",
+    "finance": "财务",
+    "life": "生活",
+    "tasks": "任务"
+  },
+  "life": {
+    "notCountedYet": "尚未计入"
+  },
+  "onboarding": {
+    "welcomeTitle": "来设置你的生活操作系统",
+    "welcomeBody": "Nexus 把你的财务、健身、学业、工作和习惯汇成一个评分——让你一眼看清生活的走向。",
+    "getStarted": "开始",
+    "profileTitle": "选择一个起始档案",
+    "profileBody": "这将决定哪些领域构成你的生活评分。你可以随时在设置中微调权重。",
+    "preset_student": "学生",
+    "preset_professional": "职场人士",
+    "presetStudentDesc": "以学业为主，兼顾财务、健身与习惯",
+    "presetProfessionalDesc": "以工作和财务为主，兼顾健身与习惯",
+    "profileCustomHint": "想要自定义组合？稍后在“设置 → 生活档案”中设置。",
+    "domainsTitle": "你启用的领域",
+    "domainsBody": "这些领域将计入你的生活评分。灰色的在此档案中已关闭。",
+    "domainFinance": "NCC 预算与净资产",
+    "domainFitness": "LimeLog 训练",
+    "domainStudies": "StudyDesk 学习记录",
+    "domainWork": "每日工作自评",
+    "domainHabits": "NCC 习惯追踪",
+    "goalTitle": "设定你的第一个目标？",
+    "goalBody": "目标为你的生活评分提供参照——净资产目标、训练次数、绩点。可选；你可以随时添加。",
+    "setGoal": "设定目标",
+    "goalLater": "稍后在设置中配置",
+    "skip": "跳过"
   }
 }

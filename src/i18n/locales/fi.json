@@ -13,6 +13,7 @@
     "close": "Sulje",
     "back": "Takaisin",
     "confirm": "Vahvista",
+    "continue": "Jatka",
     "retry": "Yritä uudelleen",
     "loading": "Ladataan…",
     "settings": "Asetukset"
@@ -24,5 +25,38 @@
     "studies": "Opinnot",
     "habits": "Tavat",
     "work": "Työ"
+  },
+  "nav": {
+    "home": "Koti",
+    "finance": "Talous",
+    "life": "Elämä",
+    "tasks": "Tehtävät"
+  },
+  "life": {
+    "notCountedYet": "Ei vielä laskettu"
+  },
+  "onboarding": {
+    "welcomeTitle": "Otetaan elämäsi käyttöjärjestelmä käyttöön",
+    "welcomeBody": "Nexus kokoaa taloutesi, kuntosi, opintosi, työsi ja tapasi yhdeksi pisteluvuksi — näet yhdellä silmäyksellä, mihin suuntaan elämäsi kulkee.",
+    "getStarted": "Aloita",
+    "profileTitle": "Valitse aloitusprofiili",
+    "profileBody": "Tämä määrittää, mitkä osa-alueet muodostavat elämäpisteesi. Voit hienosäätää yhdistelmää milloin tahansa asetuksissa.",
+    "preset_student": "Opiskelija",
+    "preset_professional": "Työssäkäyvä",
+    "presetStudentDesc": "Opintopainotteinen, mukana talous, kunto ja tavat",
+    "presetProfessionalDesc": "Työ- ja talouspainotteinen, mukana kunto ja tavat",
+    "profileCustomHint": "Haluatko oman yhdistelmän? Aseta se myöhemmin: Asetukset → Elämänprofiili.",
+    "domainsTitle": "Aktiiviset osa-alueesi",
+    "domainsBody": "Nämä osa-alueet muodostavat elämäpisteesi. Harmaat ovat poissa käytöstä tässä profiilissa.",
+    "domainFinance": "NCC:n budjetit & nettovarallisuus",
+    "domainFitness": "LimeLog-treenit",
+    "domainStudies": "StudyDesk-istunnot",
+    "domainWork": "Päivittäinen työn itsearviointi",
+    "domainHabits": "NCC:n tapaseuranta",
+    "goalTitle": "Asetetaanko ensimmäinen tavoite?",
+    "goalBody": "Tavoitteet antavat elämäpisteillesi mittapuun — nettovarallisuustavoite, treenimäärä, keskiarvo. Vapaaehtoinen; voit lisätä ne milloin tahansa.",
+    "setGoal": "Aseta tavoite",
+    "goalLater": "Tee myöhemmin asetuksissa",
+    "skip": "Ohita"
   }
 }
