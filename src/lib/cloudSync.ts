@@ -1246,6 +1246,21 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     }),
     async (rows) => {
       await db.workoutSessions.bulkPut(rows);
+      // v1.5.7 — reconcile: pullTable upserts but never prunes, so workout
+      // sessions that LimeLog deleted upstream (or duplicate rows from an old
+      // push bug) linger locally and inflate the weekly workout count + goal
+      // progress. Drop any CLOUD-SOURCED ('synced') local session that is no
+      // longer in the active cloud set, and cascade-delete its sets. Local
+      // unsynced ('pending') sessions are preserved — they haven't pushed yet.
+      const cloudIds = new Set(rows.map((r) => r.id));
+      const localSessions = await db.workoutSessions.toArray();
+      const staleIds = localSessions
+        .filter((s) => s.syncStatus !== 'pending' && !cloudIds.has(s.id))
+        .map((s) => s.id);
+      if (staleIds.length > 0) {
+        await db.workoutSessions.bulkDelete(staleIds);
+        await db.workoutSets.where('sessionId').anyOf(staleIds).delete();
+      }
     }
   );
 
@@ -1263,6 +1278,17 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     }),
     async (rows) => {
       await db.workoutSets.bulkPut(rows);
+      // v1.5.7 — drop orphan sets whose parent session no longer exists locally
+      // (e.g. after a session was pruned above, or a set was deleted upstream).
+      // Sets carry no syncStatus, so we key off the parent: any set pointing at
+      // a session id that isn't in workoutSessions is dead weight.
+      const liveSessionIds = new Set((await db.workoutSessions.toArray()).map((s) => s.id));
+      const orphanSetIds = (await db.workoutSets.toArray())
+        .filter((st) => !liveSessionIds.has(st.sessionId))
+        .map((st) => st.id);
+      if (orphanSetIds.length > 0) {
+        await db.workoutSets.bulkDelete(orphanSetIds);
+      }
     }
   );
 
