@@ -1,0 +1,28 @@
+{
+  "app": {
+    "name": "Nexus Command Center",
+    "tagline": "Elämäsi käyttöjärjestelmä"
+  },
+  "common": {
+    "save": "Tallenna",
+    "cancel": "Peruuta",
+    "delete": "Poista",
+    "edit": "Muokkaa",
+    "add": "Lisää",
+    "done": "Valmis",
+    "close": "Sulje",
+    "back": "Takaisin",
+    "confirm": "Vahvista",
+    "retry": "Yritä uudelleen",
+    "loading": "Ladataan…",
+    "settings": "Asetukset"
+  },
+  "domains": {
+    "lifeScore": "Elämäpisteet",
+    "finance": "Talous",
+    "fitness": "Kunto",
+    "studies": "Opinnot",
+    "habits": "Tavat",
+    "work": "Työ"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "app": {
+    "name": "Nexus Command Center",
+    "tagline": "El sistema operativo de tu vida"
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "add": "Añadir",
+    "done": "Hecho",
+    "close": "Cerrar",
+    "back": "Atrás",
+    "confirm": "Confirmar",
+    "retry": "Reintentar",
+    "loading": "Cargando…",
+    "settings": "Ajustes"
+  },
+  "domains": {
+    "lifeScore": "Puntuación de vida",
+    "finance": "Finanzas",
+    "fitness": "Forma física",
+    "studies": "Estudios",
+    "habits": "Hábitos",
+    "work": "Trabajo"
+  }
+}

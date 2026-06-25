@@ -1,0 +1,28 @@
+{
+  "app": {
+    "name": "Nexus Command Center",
+    "tagline": "Your life OS"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "done": "Done",
+    "close": "Close",
+    "back": "Back",
+    "confirm": "Confirm",
+    "retry": "Retry",
+    "loading": "Loading…",
+    "settings": "Settings"
+  },
+  "domains": {
+    "lifeScore": "Life Score",
+    "finance": "Finance",
+    "fitness": "Fitness",
+    "studies": "Studies",
+    "habits": "Habits",
+    "work": "Work"
+  }
+}
