@@ -13,6 +13,7 @@
     "close": "Close",
     "back": "Back",
     "confirm": "Confirm",
+    "continue": "Continue",
     "retry": "Retry",
     "loading": "Loading…",
     "settings": "Settings"
@@ -24,5 +25,38 @@
     "studies": "Studies",
     "habits": "Habits",
     "work": "Work"
+  },
+  "nav": {
+    "home": "Home",
+    "finance": "Finance",
+    "life": "Life",
+    "tasks": "Tasks"
+  },
+  "life": {
+    "notCountedYet": "Not counted yet"
+  },
+  "onboarding": {
+    "welcomeTitle": "Let's set up your life OS",
+    "welcomeBody": "Nexus pulls your finances, fitness, studies, work and habits into one score — so you can see how your life is trending at a glance.",
+    "getStarted": "Get started",
+    "profileTitle": "Pick a starting profile",
+    "profileBody": "This sets which domains shape your Life Score. You can fine-tune the mix anytime in Settings.",
+    "preset_student": "Student",
+    "preset_professional": "Professional",
+    "presetStudentDesc": "Studies-weighted, with finance, fitness & habits",
+    "presetProfessionalDesc": "Work & finance-weighted, with fitness & habits",
+    "profileCustomHint": "Prefer a custom mix? Set it later in Settings → Life Profile.",
+    "domainsTitle": "Your active domains",
+    "domainsBody": "These domains will feed your Life Score. Greyed-out ones are off in this profile.",
+    "domainFinance": "NCC budgets & net worth",
+    "domainFitness": "LimeLog workouts",
+    "domainStudies": "StudyDesk sessions",
+    "domainWork": "Daily work self-assessment",
+    "domainHabits": "NCC habit tracker",
+    "goalTitle": "Set your first goal?",
+    "goalBody": "Goals give your Life Score something to track against — a net-worth target, a workout count, a GPA. Optional; you can add them anytime.",
+    "setGoal": "Set a goal",
+    "goalLater": "Set up later in Settings",
+    "skip": "Skip"
   }
 }

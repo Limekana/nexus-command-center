@@ -13,6 +13,7 @@
     "close": "Fermer",
     "back": "Retour",
     "confirm": "Confirmer",
+    "continue": "Continuer",
     "retry": "Réessayer",
     "loading": "Chargement…",
     "settings": "Paramètres"
@@ -24,5 +25,38 @@
     "studies": "Études",
     "habits": "Habitudes",
     "work": "Travail"
+  },
+  "nav": {
+    "home": "Accueil",
+    "finance": "Finances",
+    "life": "Vie",
+    "tasks": "Tâches"
+  },
+  "life": {
+    "notCountedYet": "Pas encore compté"
+  },
+  "onboarding": {
+    "welcomeTitle": "Configurons le système de votre vie",
+    "welcomeBody": "Nexus réunit vos finances, votre forme, vos études, votre travail et vos habitudes en un seul score — pour voir d’un coup d’œil la tendance de votre vie.",
+    "getStarted": "Commencer",
+    "profileTitle": "Choisissez un profil de départ",
+    "profileBody": "Cela définit les domaines qui façonnent votre score de vie. Vous pourrez ajuster le mélange à tout moment dans les paramètres.",
+    "preset_student": "Étudiant",
+    "preset_professional": "Professionnel",
+    "presetStudentDesc": "Axé études, avec finances, forme et habitudes",
+    "presetProfessionalDesc": "Axé travail et finances, avec forme et habitudes",
+    "profileCustomHint": "Vous préférez un mélange personnalisé ? Réglez-le dans Paramètres → Profil de vie.",
+    "domainsTitle": "Vos domaines actifs",
+    "domainsBody": "Ces domaines alimenteront votre score de vie. Les grisés sont désactivés dans ce profil.",
+    "domainFinance": "Budgets et patrimoine NCC",
+    "domainFitness": "Séances LimeLog",
+    "domainStudies": "Sessions StudyDesk",
+    "domainWork": "Auto-évaluation quotidienne du travail",
+    "domainHabits": "Suivi d’habitudes NCC",
+    "goalTitle": "Définir votre premier objectif ?",
+    "goalBody": "Les objectifs donnent un repère à votre score de vie — un patrimoine cible, un nombre de séances, une moyenne. Facultatif ; vous pouvez les ajouter à tout moment.",
+    "setGoal": "Définir un objectif",
+    "goalLater": "Configurer plus tard dans les paramètres",
+    "skip": "Passer"
   }
 }

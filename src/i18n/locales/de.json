@@ -13,6 +13,7 @@
     "close": "Schließen",
     "back": "Zurück",
     "confirm": "Bestätigen",
+    "continue": "Weiter",
     "retry": "Erneut versuchen",
     "loading": "Wird geladen…",
     "settings": "Einstellungen"
@@ -24,5 +25,38 @@
     "studies": "Studium",
     "habits": "Gewohnheiten",
     "work": "Arbeit"
+  },
+  "nav": {
+    "home": "Start",
+    "finance": "Finanzen",
+    "life": "Leben",
+    "tasks": "Aufgaben"
+  },
+  "life": {
+    "notCountedYet": "Noch nicht gezählt"
+  },
+  "onboarding": {
+    "welcomeTitle": "Richten wir dein Lebens-OS ein",
+    "welcomeBody": "Nexus bündelt Finanzen, Fitness, Studium, Arbeit und Gewohnheiten zu einem Wert — so siehst du auf einen Blick, wohin sich dein Leben entwickelt.",
+    "getStarted": "Loslegen",
+    "profileTitle": "Wähle ein Startprofil",
+    "profileBody": "Das legt fest, welche Bereiche deinen Lebenswert prägen. Du kannst die Gewichtung jederzeit in den Einstellungen anpassen.",
+    "preset_student": "Studium",
+    "preset_professional": "Berufstätig",
+    "presetStudentDesc": "Studiumsbetont, mit Finanzen, Fitness & Gewohnheiten",
+    "presetProfessionalDesc": "Arbeits- & finanzbetont, mit Fitness & Gewohnheiten",
+    "profileCustomHint": "Lieber eine eigene Mischung? Stelle sie später unter Einstellungen → Lebensprofil ein.",
+    "domainsTitle": "Deine aktiven Bereiche",
+    "domainsBody": "Diese Bereiche fließen in deinen Lebenswert ein. Ausgegraute sind in diesem Profil deaktiviert.",
+    "domainFinance": "NCC-Budgets & Nettovermögen",
+    "domainFitness": "LimeLog-Trainings",
+    "domainStudies": "StudyDesk-Sitzungen",
+    "domainWork": "Tägliche Arbeits-Selbsteinschätzung",
+    "domainHabits": "NCC-Gewohnheitstracker",
+    "goalTitle": "Erstes Ziel festlegen?",
+    "goalBody": "Ziele geben deinem Lebenswert einen Maßstab — ein Vermögensziel, eine Trainingszahl, einen Notenschnitt. Optional; du kannst sie jederzeit hinzufügen.",
+    "setGoal": "Ziel festlegen",
+    "goalLater": "Später in den Einstellungen einrichten",
+    "skip": "Überspringen"
   }
 }

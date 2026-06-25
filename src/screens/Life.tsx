@@ -15,6 +15,7 @@
 // surface its card.
 
 import { useEffect, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import AppHeader from '../components/AppHeader';
 import LifeScoreRing, { type RingSegment } from '../components/LifeScoreRing';
 import LifeNarrativeCard from '../components/LifeNarrativeCard';
@@ -36,7 +37,6 @@ import {
 import { computeWorkScore, weeklyRatingStats } from '../lib/workScore';
 import { computeGoalProgress, type DataSources } from '../lib/goals';
 import {
-  DOMAIN_LABELS,
   enabledDomains,
   type DomainKey,
 } from '../lib/lifeProfile';
@@ -81,6 +81,7 @@ const DOMAIN_SUBSCORE: Record<DomainKey, keyof Pick<LifeScore, 'workouts' | 'stu
 };
 
 export default function Life() {
+  const { t } = useTranslation();
   const txns = useFinanceStore((s) => s.transactions);
   const budgets = useFinanceStore((s) => s.budgetCategories);
   const workouts = useFitnessStore((s) => s.sessions);
@@ -198,7 +199,7 @@ export default function Life() {
               <LifeScoreRing segments={ringSegments} size={200}>
                 <div className="flex flex-col items-center leading-none">
                   <span className="font-heading text-5xl font-bold">{thisWeek.score}</span>
-                  <span className="text-[10px] uppercase tracking-wider text-text-muted mt-1">Life score</span>
+                  <span className="text-[10px] uppercase tracking-wider text-text-muted mt-1">{t('domains.lifeScore')}</span>
                 </div>
               </LifeScoreRing>
               <div className="grid grid-cols-2 gap-2 w-full mt-4">
@@ -212,7 +213,7 @@ export default function Life() {
                       measured={measured}
                       sub={
                         !measured
-                          ? 'Not counted yet'
+                          ? t('life.notCountedYet')
                           : k === 'work'
                             ? workStats.daysLoggedThisWeek > 0
                               ? `Avg ${workStats.weeklyRatingAvg.toFixed(1)}/5 · ${workStats.daysLoggedThisWeek} ${workStats.daysLoggedThisWeek === 1 ? 'day' : 'days'}`
@@ -299,6 +300,7 @@ export default function Life() {
 }
 
 function DomainCard({ domain, score, sub, measured = true }: { domain: DomainKey; score: number; sub?: string; measured?: boolean }) {
+  const { t } = useTranslation();
   const isWork = domain === 'work';
   return (
     <div
@@ -312,7 +314,7 @@ function DomainCard({ domain, score, sub, measured = true }: { domain: DomainKey
     >
       <div className="flex items-center gap-1.5">
         <span aria-hidden className="w-2 h-2 rounded-full" style={{ background: measured ? DOMAIN_COLOR[domain] : 'rgba(168,178,188,0.4)' }} />
-        <div className="text-[10px] uppercase tracking-wider text-text-muted">{DOMAIN_LABELS[domain]}</div>
+        <div className="text-[10px] uppercase tracking-wider text-text-muted">{t(`domains.${domain}`)}</div>
       </div>
       <div className="font-heading text-xl font-bold mt-0.5">{measured ? score : '—'}</div>
       {sub && <div className="text-[10px] text-text-muted mt-0.5">{sub}</div>}

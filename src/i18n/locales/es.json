@@ -13,6 +13,7 @@
     "close": "Cerrar",
     "back": "Atrás",
     "confirm": "Confirmar",
+    "continue": "Continuar",
     "retry": "Reintentar",
     "loading": "Cargando…",
     "settings": "Ajustes"
@@ -24,5 +25,38 @@
     "studies": "Estudios",
     "habits": "Hábitos",
     "work": "Trabajo"
+  },
+  "nav": {
+    "home": "Inicio",
+    "finance": "Finanzas",
+    "life": "Vida",
+    "tasks": "Tareas"
+  },
+  "life": {
+    "notCountedYet": "Aún no contado"
+  },
+  "onboarding": {
+    "welcomeTitle": "Configuremos el sistema de tu vida",
+    "welcomeBody": "Nexus reúne tus finanzas, tu forma física, tus estudios, tu trabajo y tus hábitos en una sola puntuación, para que veas de un vistazo hacia dónde va tu vida.",
+    "getStarted": "Empezar",
+    "profileTitle": "Elige un perfil inicial",
+    "profileBody": "Esto define qué áreas conforman tu puntuación de vida. Puedes ajustar la mezcla cuando quieras en Ajustes.",
+    "preset_student": "Estudiante",
+    "preset_professional": "Profesional",
+    "presetStudentDesc": "Enfocado en estudios, con finanzas, forma física y hábitos",
+    "presetProfessionalDesc": "Enfocado en trabajo y finanzas, con forma física y hábitos",
+    "profileCustomHint": "¿Prefieres una mezcla personalizada? Configúrala luego en Ajustes → Perfil de vida.",
+    "domainsTitle": "Tus áreas activas",
+    "domainsBody": "Estas áreas alimentarán tu puntuación de vida. Las atenuadas están desactivadas en este perfil.",
+    "domainFinance": "Presupuestos y patrimonio de NCC",
+    "domainFitness": "Entrenamientos de LimeLog",
+    "domainStudies": "Sesiones de StudyDesk",
+    "domainWork": "Autoevaluación diaria del trabajo",
+    "domainHabits": "Seguimiento de hábitos de NCC",
+    "goalTitle": "¿Establecer tu primer objetivo?",
+    "goalBody": "Los objetivos dan a tu puntuación de vida una referencia: un patrimonio meta, un número de entrenamientos, una nota media. Opcional; puedes añadirlos cuando quieras.",
+    "setGoal": "Establecer un objetivo",
+    "goalLater": "Configurar luego en Ajustes",
+    "skip": "Omitir"
   }
 }
