@@ -1,0 +1,28 @@
+{
+  "app": {
+    "name": "Nexus Command Center",
+    "tagline": "你的生活操作系统"
+  },
+  "common": {
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "add": "添加",
+    "done": "完成",
+    "close": "关闭",
+    "back": "返回",
+    "confirm": "确认",
+    "retry": "重试",
+    "loading": "加载中…",
+    "settings": "设置"
+  },
+  "domains": {
+    "lifeScore": "生活评分",
+    "finance": "财务",
+    "fitness": "健身",
+    "studies": "学业",
+    "habits": "习惯",
+    "work": "工作"
+  }
+}

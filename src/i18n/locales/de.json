@@ -1,0 +1,28 @@
+{
+  "app": {
+    "name": "Nexus Command Center",
+    "tagline": "Dein Lebens-Betriebssystem"
+  },
+  "common": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "add": "Hinzufügen",
+    "done": "Fertig",
+    "close": "Schließen",
+    "back": "Zurück",
+    "confirm": "Bestätigen",
+    "retry": "Erneut versuchen",
+    "loading": "Wird geladen…",
+    "settings": "Einstellungen"
+  },
+  "domains": {
+    "lifeScore": "Lebenswert",
+    "finance": "Finanzen",
+    "fitness": "Fitness",
+    "studies": "Studium",
+    "habits": "Gewohnheiten",
+    "work": "Arbeit"
+  }
+}
