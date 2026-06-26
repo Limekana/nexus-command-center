@@ -282,5 +282,25 @@
     "study_hours": "Lernstunden",
     "lift_pr": "Kraft-Rekord",
     "gpa": "Notenschnitt"
+  },
+  "lock": {
+    "secureAccess": "Sicherer Zugriff",
+    "deviceEncrypted": "Geräteverschlüsselt · TLS 1.3",
+    "bioAria": "Biometrisches Entsperren",
+    "bioDisabled": "Biometrie deaktiviert",
+    "tapOrPin": "Fingerabdruck tippen oder PIN eingeben",
+    "usePin": "PIN verwenden",
+    "enterPin": "Gib deine 6-stellige PIN ein",
+    "setPin": "Lege eine 6-stellige PIN fest",
+    "confirmPin": "Bestätige deine PIN",
+    "wrongPin": "Falsche PIN",
+    "pinsNoMatch": "PINs stimmen nicht überein — erneut versuchen",
+    "tooManyError": "Zu viele falsche PINs — gesperrt für {{secs}} s.",
+    "tooManyPrefix": "Zu viele falsche PINs — gesperrt für",
+    "bioDisabledErr": "Biometrie in den Einstellungen deaktiviert",
+    "bioUnavailable": "Biometrie auf diesem Gerät nicht verfügbar",
+    "setPinFirst": "Lege zuerst eine PIN fest — Biometrie entsperrt erst NACH der Ersteinrichtung",
+    "bio": "Bio",
+    "forgotPin": "PIN vergessen? Zurücksetzen unter Einstellungen → Alle Daten löschen"
   }
 }

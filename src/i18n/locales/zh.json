@@ -282,5 +282,25 @@
     "study_hours": "学习时长",
     "lift_pr": "举重纪录",
     "gpa": "绩点"
+  },
+  "lock": {
+    "secureAccess": "安全访问",
+    "deviceEncrypted": "设备加密 · TLS 1.3",
+    "bioAria": "生物识别解锁",
+    "bioDisabled": "生物识别已禁用",
+    "tapOrPin": "轻触指纹或输入 PIN",
+    "usePin": "使用 PIN",
+    "enterPin": "输入你的 6 位 PIN",
+    "setPin": "设置 6 位 PIN",
+    "confirmPin": "确认你的 PIN",
+    "wrongPin": "PIN 错误",
+    "pinsNoMatch": "PIN 不匹配 — 请重试",
+    "tooManyError": "错误 PIN 次数过多 — 锁定 {{secs}} 秒。",
+    "tooManyPrefix": "错误 PIN 次数过多 — 锁定",
+    "bioDisabledErr": "生物识别已在设置中禁用",
+    "bioUnavailable": "此设备不支持生物识别",
+    "setPinFirst": "请先设置 PIN — 生物识别仅在初次设置后可用",
+    "bio": "生物",
+    "forgotPin": "忘记 PIN？在 设置 → 清除所有数据 中重置"
   }
 }
