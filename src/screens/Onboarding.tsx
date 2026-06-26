@@ -68,11 +68,11 @@ export default function Onboarding({ onDone }: Props) {
   const enabled = enabledDomains(profile);
 
   return (
-    <div className="min-h-full bg-bg text-text flex flex-col items-center justify-center px-5 py-8">
-      <div className="w-full max-w-md space-y-6">
+    <div className="onb-screen min-h-full bg-bg text-text flex flex-col items-center justify-center px-5 py-8">
+      <div className="onb-rise relative z-10 w-full max-w-md space-y-5">
         {/* Brand */}
         <div className="text-center">
-          <div className="font-heading text-3xl font-bold tracking-tight text-primary uppercase">
+          <div className="onb-wordmark font-heading text-3xl font-bold tracking-tight text-primary uppercase">
             {t('app.name')}
           </div>
           <div className="text-[11px] uppercase tracking-[0.18em] text-text-muted mt-1">
@@ -80,8 +80,16 @@ export default function Onboarding({ onDone }: Props) {
           </div>
         </div>
 
+        {/* Progress rail — five steps */}
+        <div className="onb-rail">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <span key={i} className={`onb-seg${i < step ? ' on' : ''}${i === step ? ' cur' : ''}`}><i /></span>
+          ))}
+        </div>
+
         {/* Step card */}
-        <div className="glass rounded-2xl p-6 space-y-5">
+        <div className="onb-card p-6 space-y-5">
+          <div className="onb-body space-y-5" key={step}>
           {step === 0 && (
             <div className="space-y-4">
               <h1 className="font-heading text-xl font-bold">{t('onboarding.languageTitle')}</h1>
@@ -196,6 +204,7 @@ export default function Onboarding({ onDone }: Props) {
               </button>
             </div>
           )}
+          </div>
         </div>
 
         {/* Skip — available on every step except the final goal step (which has
