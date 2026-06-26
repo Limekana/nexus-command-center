@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
 import StatCard from '../../components/StatCard';
@@ -27,6 +28,7 @@ type FinanceTab = 'balance' | 'portfolio' | 'markets';
 const FINANCE_TABS: readonly FinanceTab[] = ['balance', 'portfolio', 'markets'];
 
 export default function FinanceOverview() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const transactions = useFinanceStore((s) => s.transactions);
@@ -139,12 +141,12 @@ export default function FinanceOverview() {
   return (
     <>
       <AppHeader
-        title="Finance"
+        title={t('fin.finance')}
         action={
           // v1.3 BUG-18 — the former News / Insights / Savings / Portfolio
           // chips moved into the segmented views as labelled entry cards,
           // leaving "+ Add" as the single primary action in the header.
-          <IconChip emoji="+" label="Add transaction" accent onClick={() => navigate('/finance/add')} />
+          <IconChip emoji="+" label={t('fin.ov.addTransaction')} accent onClick={() => navigate('/finance/add')} />
         }
       />
       <div className="space-y-3">
@@ -161,17 +163,17 @@ export default function FinanceOverview() {
               boxShadow: '0 0 0 1px rgba(0, 212, 255, 0.45)',
             }}
           />
-          {FINANCE_TABS.map((t) => (
+          {FINANCE_TABS.map((tb) => (
             <button
-              key={t}
+              key={tb}
               type="button"
-              onClick={() => setTab(t)}
-              aria-current={tab === t ? 'true' : undefined}
+              onClick={() => setTab(tb)}
+              aria-current={tab === tb ? 'true' : undefined}
               className={`relative z-10 flex-1 py-2 rounded-pill text-xs font-heading font-semibold uppercase tracking-wider transition-colors duration-200 active:scale-[0.97] ${
-                tab === t ? 'text-primary' : 'text-text-muted'
+                tab === tb ? 'text-primary' : 'text-text-muted'
               }`}
             >
-              {t === 'balance' ? 'Balance' : t === 'portfolio' ? 'Portfolio' : 'Markets'}
+              {tb === 'balance' ? t('fin.ov.balance') : tb === 'portfolio' ? t('fin.ov.portfolio') : t('fin.ov.markets')}
             </button>
           ))}
         </div>
@@ -179,11 +181,11 @@ export default function FinanceOverview() {
         {tab === 'balance' && (
           <>
             <div className="grid grid-cols-2 gap-2">
-              <StatCard value={formatCurrency(income)} label="Income" highlight />
+              <StatCard value={formatCurrency(income)} label={t('fin.ov.income')} highlight />
               <StatCard
                 value={formatCurrency(expenses)}
-                label="Expenses"
-                sub={income > 0 ? `${Math.round((expenses / income) * 100)}% of income` : undefined}
+                label={t('fin.ov.expenses')}
+                sub={income > 0 ? t('fin.ov.pctOfIncome', { pct: Math.round((expenses / income) * 100) }) : undefined}
                 tone={expenses > income ? 'danger' : 'default'}
               />
             </div>
@@ -196,7 +198,7 @@ export default function FinanceOverview() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-[10px] uppercase tracking-[0.15em] text-text-muted">
-                    Net Worth
+                    {t('fin.ov.netWorth')}
                   </div>
                   <div className={`font-heading font-bold text-xl ${netWorth.total >= 0 ? 'text-text' : 'text-danger'}`}>
                     {netWorth.hasData
@@ -209,20 +211,20 @@ export default function FinanceOverview() {
                   </div>
                 </div>
                 <span className="text-[10px] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5">
-                  Manage
+                  {t('fin.ov.manage')}
                 </span>
               </div>
               <div className="text-[10px] text-text-muted mt-1">
                 {netWorth.hasData
-                  ? 'Portfolio + cash + property − loans'
-                  : 'Tap to add cash, property, loans and more'}
+                  ? t('fin.ov.netWorthSub')
+                  : t('fin.ov.netWorthEmpty')}
               </div>
             </button>
 
             <EntryCard
               emoji="🎯"
-              title="Savings Buffer"
-              sub="Track your cash-cushion goal"
+              title={t('fin.ov.savingsBuffer')}
+              sub={t('fin.ov.savingsSub')}
               onClick={() => navigate('/finance/savings')}
             />
 
@@ -233,8 +235,8 @@ export default function FinanceOverview() {
               style={{ borderColor: 'rgba(0, 212, 255, 0.4)', background: 'rgba(0, 212, 255, 0.05)' }}
             >
               <div>
-                <div className="font-heading font-semibold text-sm text-primary">Run a scenario</div>
-                <div className="text-[11px] text-text-muted">Model a purchase, raise, or savings change</div>
+                <div className="font-heading font-semibold text-sm text-primary">{t('fin.ov.runScenario')}</div>
+                <div className="text-[11px] text-text-muted">{t('fin.ov.runScenarioSub')}</div>
               </div>
               <span className="text-primary text-lg" aria-hidden>→</span>
             </button>
@@ -246,18 +248,18 @@ export default function FinanceOverview() {
 
             <div className="card">
               <div className="flex items-center justify-between mb-3">
-                <span className="font-heading font-semibold text-sm">Budget Breakdown</span>
+                <span className="font-heading font-semibold text-sm">{t('fin.ov.budgetBreakdown')}</span>
                 <button
                   onClick={() => navigate('/finance/budgets')}
                   className="text-[10px] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5 active:bg-primary/10"
                 >
-                  Manage
+                  {t('fin.ov.manage')}
                 </button>
               </div>
               <div className="space-y-3">
                 {budgetCategories.length === 0 && (
                   <div className="text-xs text-text-muted text-center py-3">
-                    No categories — tap Manage to add some
+                    {t('fin.ov.budgetEmpty')}
                   </div>
                 )}
                 {budgetCategories.map((c) => (
@@ -275,15 +277,15 @@ export default function FinanceOverview() {
             {transactions.length > 0 && (
               <div className="card">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-heading font-semibold text-sm">Spend Pattern</span>
+                  <span className="font-heading font-semibold text-sm">{t('fin.ov.spendPattern')}</span>
                   <span className="text-[9px] uppercase tracking-wider text-text-muted">
-                    365 days · {baseCurrency}
+                    {t('fin.ov.spendDays', { cur: baseCurrency })}
                   </span>
                 </div>
                 <HeatmapCalendar data={spendByDay} tint="warning" unit={baseCurrency === 'EUR' ? '€' : baseCurrency} />
                 {spendByDay.size === 0 && (
                   <div className="text-[10px] text-text-muted mt-2 text-center">
-                    Log an expense to start filling this in.
+                    {t('fin.ov.spendEmpty')}
                   </div>
                 )}
               </div>
@@ -291,36 +293,36 @@ export default function FinanceOverview() {
 
             <div className="card">
               <div className="flex items-center justify-between mb-3">
-                <span className="font-heading font-semibold text-sm">Recent Transactions</span>
+                <span className="font-heading font-semibold text-sm">{t('fin.ov.recentTx')}</span>
                 <span className="text-[9px] uppercase tracking-wider text-text-muted">
-                  {transactions.length} total
+                  {t('fin.ov.txTotal', { count: transactions.length })}
                 </span>
               </div>
               <div className="space-y-1">
-                {transactions.slice(0, 12).map((t) => (
-                  <div key={t.id} className="flex items-center gap-2 py-1.5">
+                {transactions.slice(0, 12).map((tx) => (
+                  <div key={tx.id} className="flex items-center gap-2 py-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary/60 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm truncate">{t.description}</div>
-                      <div className="text-[10px] text-text-muted">{formatShortDate(t.date)}</div>
+                      <div className="text-sm truncate">{tx.description}</div>
+                      <div className="text-[10px] text-text-muted">{formatShortDate(tx.date)}</div>
                     </div>
                     <span
                       className={`text-sm whitespace-nowrap ${
-                        t.type === 'income' ? 'text-success' : 'text-text-muted'
+                        tx.type === 'income' ? 'text-success' : 'text-text-muted'
                       }`}
                     >
-                      {t.type === 'income' ? '+' : '–'}
-                      {formatCurrency(t.amount).replace(/[€$]/, '€')}
+                      {tx.type === 'income' ? '+' : '–'}
+                      {formatCurrency(tx.amount).replace(/[€$]/, '€')}
                     </span>
                     <RowActions
-                      onEdit={() => navigate(`/finance/add?id=${t.id}`)}
-                      onDelete={() => deleteTransaction(t.id)}
-                      confirmMsg={`Delete "${t.description}"?`}
+                      onEdit={() => navigate(`/finance/add?id=${tx.id}`)}
+                      onDelete={() => deleteTransaction(tx.id)}
+                      confirmMsg={t('fin.ov.deleteConfirm', { name: tx.description })}
                     />
                   </div>
                 ))}
                 {transactions.length === 0 && (
-                  <div className="text-xs text-text-muted text-center py-4">No transactions yet — tap + Add</div>
+                  <div className="text-xs text-text-muted text-center py-4">{t('fin.ov.noTx')}</div>
                 )}
               </div>
             </div>
@@ -331,24 +333,24 @@ export default function FinanceOverview() {
           <>
             <EntryCard
               emoji="📈"
-              title="Holdings"
+              title={t('fin.ov.holdings')}
               sub={
                 holdings.length > 0
-                  ? `${holdings.length} position${holdings.length === 1 ? '' : 's'} · tap to manage`
-                  : 'No holdings yet — tap to add'
+                  ? t('fin.ov.holdingsPositions', { count: holdings.length })
+                  : t('fin.ov.holdingsEmpty')
               }
               onClick={() => navigate('/finance/portfolio')}
             />
             <EntryCard
               emoji="👁"
-              title="Watchlist"
-              sub="Tickers you're tracking but don't own"
+              title={t('fin.ov.watchlist')}
+              sub={t('fin.ov.watchlistSub')}
               onClick={() => navigate('/finance/portfolio/watchlist')}
             />
             <EntryCard
               emoji="📊"
-              title="Insights"
-              sub="Technical + fundamental signals"
+              title={t('fin.ov.insights')}
+              sub={t('fin.ov.insightsSub')}
               onClick={() => navigate('/finance/insights')}
             />
 

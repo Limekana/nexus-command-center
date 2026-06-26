@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import AppHeader from '../../components/AppHeader';
 import RowActions from '../../components/RowActions';
 import ShareModal from '../../components/ShareModal';
@@ -14,6 +15,7 @@ import {
 const ICONS = ['🏠', '🍱', '🚆', '🎬', '📚', '💪', '🛒', '☕', '✈', '💡', '💊', '🎁'];
 
 export default function ManageBudgets() {
+  const { t } = useTranslation();
   const categories = useFinanceStore((s) => s.budgetCategories);
   const addCategory = useFinanceStore((s) => s.addBudgetCategory);
   const updateCategory = useFinanceStore((s) => s.updateBudgetCategory);
@@ -90,9 +92,9 @@ export default function ManageBudgets() {
   return (
     <>
       <AppHeader
-        title="Budget Categories"
+        title={t('fin.budg.title')}
         back="/finance"
-        backLabel="Finance"
+        backLabel={t('fin.finance')}
         showAvatar={false}
         action={
           !editingNow && (
@@ -100,7 +102,7 @@ export default function ManageBudgets() {
               onClick={startAdd}
               className="text-xs px-2 py-1 rounded-sm border border-primary text-primary active:bg-primary/10"
             >
-              + New
+              {t('fin.budg.new')}
             </button>
           )
         }
@@ -109,24 +111,24 @@ export default function ManageBudgets() {
         {editingNow && (
           <div className="card space-y-2">
             <div className="font-heading font-semibold text-sm">
-              {editing ? 'Edit Category' : 'New Category'}
+              {editing ? t('fin.budg.editCat') : t('fin.budg.newCat')}
             </div>
             <input
               className="input"
-              placeholder="Category name"
+              placeholder={t('fin.budg.catName')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoFocus
             />
             <input
               className="input"
-              placeholder="Monthly limit (€)"
+              placeholder={t('fin.budg.monthlyLimit')}
               inputMode="decimal"
               value={limit}
               onChange={(e) => setLimit(e.target.value)}
             />
             <div>
-              <div className="sec mb-1">Icon</div>
+              <div className="sec mb-1">{t('fin.budg.icon')}</div>
               <div className="flex gap-1 flex-wrap">
                 {ICONS.map((i) => (
                   <button
@@ -147,13 +149,13 @@ export default function ManageBudgets() {
                 budget module to net worth so the user doesn't have to
                 hand-update bank balances after every transaction. */}
             <div>
-              <div className="sec mb-1">Linked account (optional)</div>
+              <div className="sec mb-1">{t('fin.budg.linkedAccount')}</div>
               <select
                 className="input w-full"
                 value={linkedAssetId}
                 onChange={(e) => setLinkedAssetId(e.target.value)}
               >
-                <option value="">— None —</option>
+                <option value="">{t('fin.budg.none')}</option>
                 {manualAssets.map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.name} ({a.currency})
@@ -162,26 +164,26 @@ export default function ManageBudgets() {
               </select>
               <div className="text-[10px] text-text-muted mt-1">
                 {linkedAssetId
-                  ? 'Transactions in this category will auto-adjust the linked account balance.'
-                  : 'No auto-update. Net worth balances stay manual for this category.'}
+                  ? t('fin.budg.linkedOn')
+                  : t('fin.budg.linkedOff')}
               </div>
             </div>
             <div className="flex gap-2">
               <button className="btn flex-1" onClick={save}>
-                {editing ? 'Save' : 'Add'}
+                {editing ? t('common.save') : t('common.add')}
               </button>
               <button className="btn-ghost flex-1" onClick={cancel}>
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
           </div>
         )}
 
         <div className="card">
-          <div className="font-heading font-semibold text-sm mb-2">Categories</div>
+          <div className="font-heading font-semibold text-sm mb-2">{t('fin.budg.categories')}</div>
           {categories.length === 0 && (
             <div className="text-xs text-text-muted text-center py-4">
-              No categories yet — tap + New to add one
+              {t('fin.budg.empty')}
             </div>
           )}
           {categories.map((c) => {
@@ -200,25 +202,25 @@ export default function ManageBudgets() {
                     <span className="truncate">{c.name}</span>
                     {sharedFromOther && (
                       <span className="text-[9px] px-1.5 py-0.5 rounded-sm bg-primary/15 text-primary border border-primary/30 whitespace-nowrap">
-                        Shared
+                        {t('fin.budg.shared')}
                       </span>
                     )}
                     {linkedAsset && (
                       <span
                         className="text-[9px] px-1.5 py-0.5 rounded-sm bg-success/10 text-success border border-success/30 whitespace-nowrap"
-                        title={`Auto-updates ${linkedAsset.name}`}
+                        title={t('fin.budg.autoUpdates', { name: linkedAsset.name })}
                       >
                         → {linkedAsset.name}
                       </span>
                     )}
                   </div>
-                  <div className="text-[10px] text-text-muted">€{c.monthlyLimit.toFixed(2)} / month</div>
+                  <div className="text-[10px] text-text-muted">{t('fin.budg.perMonth', { amount: c.monthlyLimit.toFixed(2) })}</div>
                 </div>
                 <RowActions
                   onShare={!sharedFromOther ? () => setSharing(c) : undefined}
                   onEdit={() => startEdit(c)}
                   onDelete={!sharedFromOther ? () => deleteCategory(c.id) : undefined}
-                  confirmMsg={`Delete "${c.name}"? Transactions tagged to it will be untagged.`}
+                  confirmMsg={t('fin.budg.deleteConfirm', { name: c.name })}
                 />
               </div>
             );
@@ -227,7 +229,7 @@ export default function ManageBudgets() {
       </div>
       {sharing && (
         <ShareModal
-          title={`Share "${sharing.name}"`}
+          title={t('fin.budg.shareTitle', { name: sharing.name })}
           subjectId={sharing.id}
           onClose={() => setSharing(null)}
           list={listBudgetCategoryShares}
