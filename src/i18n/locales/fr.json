@@ -282,5 +282,25 @@
     "study_hours": "Heures d'étude",
     "lift_pr": "Record de force",
     "gpa": "Moyenne"
+  },
+  "lock": {
+    "secureAccess": "Accès sécurisé",
+    "deviceEncrypted": "Chiffré sur l'appareil · TLS 1.3",
+    "bioAria": "Déverrouillage biométrique",
+    "bioDisabled": "Biométrie désactivée",
+    "tapOrPin": "Touchez l'empreinte ou saisissez le PIN",
+    "usePin": "Utiliser le PIN",
+    "enterPin": "Saisissez votre PIN à 6 chiffres",
+    "setPin": "Définissez un PIN à 6 chiffres",
+    "confirmPin": "Confirmez votre PIN",
+    "wrongPin": "PIN incorrect",
+    "pinsNoMatch": "Les PIN ne correspondent pas — réessayez",
+    "tooManyError": "Trop de PIN erronés — bloqué pendant {{secs}} s.",
+    "tooManyPrefix": "Trop de PIN erronés — bloqué pendant",
+    "bioDisabledErr": "Biométrie désactivée dans les Paramètres",
+    "bioUnavailable": "Biométrie indisponible sur cet appareil",
+    "setPinFirst": "Définissez d'abord un PIN — la biométrie déverrouille APRÈS la configuration initiale",
+    "bio": "Bio",
+    "forgotPin": "PIN oublié ? Réinitialisez via Paramètres → Effacer toutes les données"
   }
 }

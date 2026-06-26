@@ -282,5 +282,25 @@
     "study_hours": "Opiskelutunnit",
     "lift_pr": "Noston ennätys",
     "gpa": "Keskiarvo"
+  },
+  "lock": {
+    "secureAccess": "Suojattu käyttö",
+    "deviceEncrypted": "Laitesalattu · TLS 1.3",
+    "bioAria": "Biometrinen avaus",
+    "bioDisabled": "Biometria poissa käytöstä",
+    "tapOrPin": "Napauta sormenjälkeä tai syötä PIN",
+    "usePin": "Käytä PIN-koodia",
+    "enterPin": "Syötä 6-numeroinen PIN",
+    "setPin": "Aseta 6-numeroinen PIN",
+    "confirmPin": "Vahvista PIN",
+    "wrongPin": "Väärä PIN",
+    "pinsNoMatch": "PIN-koodit eivät täsmää — yritä uudelleen",
+    "tooManyError": "Liian monta väärää PINiä — lukittu {{secs}} s.",
+    "tooManyPrefix": "Liian monta väärää PINiä — lukittu",
+    "bioDisabledErr": "Biometria poistettu käytöstä asetuksissa",
+    "bioUnavailable": "Biometria ei käytettävissä tällä laitteella",
+    "setPinFirst": "Aseta ensin PIN — biometria avaa vasta alkuasetuksen jälkeen",
+    "bio": "Bio",
+    "forgotPin": "Unohtuiko PIN? Nollaa kohdasta Asetukset → Tyhjennä kaikki tiedot"
   }
 }

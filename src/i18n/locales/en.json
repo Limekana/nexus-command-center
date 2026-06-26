@@ -282,5 +282,25 @@
     "study_hours": "Study Hours",
     "lift_pr": "Lift PR",
     "gpa": "GPA"
+  },
+  "lock": {
+    "secureAccess": "Secure Access",
+    "deviceEncrypted": "Device-encrypted · TLS 1.3",
+    "bioAria": "Biometric unlock",
+    "bioDisabled": "Biometric disabled",
+    "tapOrPin": "Tap fingerprint or enter PIN",
+    "usePin": "Use PIN",
+    "enterPin": "Enter your 6-digit PIN",
+    "setPin": "Set a 6-digit PIN",
+    "confirmPin": "Confirm your PIN",
+    "wrongPin": "Wrong PIN",
+    "pinsNoMatch": "PINs do not match — try again",
+    "tooManyError": "Too many wrong PINs — locked for {{secs}}s.",
+    "tooManyPrefix": "Too many wrong PINs — locked for",
+    "bioDisabledErr": "Biometric disabled in Settings",
+    "bioUnavailable": "Biometric unavailable on this device",
+    "setPinFirst": "Set a PIN first — biometric unlocks AFTER initial setup",
+    "bio": "Bio",
+    "forgotPin": "Forgot PIN? Reset in Settings → Clear All Data"
   }
 }
