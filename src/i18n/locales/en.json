@@ -57,6 +57,11 @@
     "goalBody": "Goals give your Life Score something to track against — a net-worth target, a workout count, a GPA. Optional; you can add them anytime.",
     "setGoal": "Set a goal",
     "goalLater": "Set up later in Settings",
-    "skip": "Skip"
+    "skip": "Skip",
+    "languageTitle": "Choose your language",
+    "languageBody": "You can change this anytime in Settings."
+  },
+  "settings": {
+    "language": "Language"
   }
 }

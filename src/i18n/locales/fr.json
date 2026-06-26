@@ -57,6 +57,11 @@
     "goalBody": "Les objectifs donnent un repère à votre score de vie — un patrimoine cible, un nombre de séances, une moyenne. Facultatif ; vous pouvez les ajouter à tout moment.",
     "setGoal": "Définir un objectif",
     "goalLater": "Configurer plus tard dans les paramètres",
-    "skip": "Passer"
+    "skip": "Passer",
+    "languageTitle": "Choisis ta langue",
+    "languageBody": "Tu peux changer cela à tout moment dans les paramètres."
+  },
+  "settings": {
+    "language": "Langue"
   }
 }

@@ -24,6 +24,7 @@ import {
   type LifeProfilePreset,
 } from '../lib/lifeProfile';
 import { setOnboarded } from '../lib/onboarding';
+import { setLanguage, SUPPORTED_LANGS, LANGUAGE_NAMES, type Lang } from '../i18n';
 
 interface Props {
   /** Called when the wizard finishes or is skipped. Parent flips the gate. */
@@ -31,8 +32,9 @@ interface Props {
 }
 
 export default function Onboarding({ onDone }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const currentLang = (i18n.language || 'en').split('-')[0] as Lang;
   const profile = useLifeProfileStore((s) => s.profile);
   const setProfile = useLifeProfileStore((s) => s.setProfile);
   const [step, setStep] = useState(0);
@@ -81,19 +83,43 @@ export default function Onboarding({ onDone }: Props) {
         {/* Step card */}
         <div className="glass rounded-2xl p-6 space-y-5">
           {step === 0 && (
+            <div className="space-y-4">
+              <h1 className="font-heading text-xl font-bold">{t('onboarding.languageTitle')}</h1>
+              <p className="text-sm text-text-muted leading-relaxed">{t('onboarding.languageBody')}</p>
+              <div className="grid grid-cols-2 gap-2">
+                {SUPPORTED_LANGS.map((code) => (
+                  <button
+                    key={code}
+                    onClick={() => setLanguage(code)}
+                    aria-pressed={currentLang === code}
+                    className={`glass-soft rounded-xl p-3 text-sm border transition-colors ${
+                      currentLang === code ? 'border-primary bg-primary/10 text-primary font-semibold' : 'border-glass-border'
+                    }`}
+                  >
+                    {LANGUAGE_NAMES[code]}
+                  </button>
+                ))}
+              </div>
+              <button className="btn w-full" onClick={() => setStep(1)}>
+                {t('common.continue')}
+              </button>
+            </div>
+          )}
+
+          {step === 1 && (
             <div className="space-y-4 text-center">
               <div className="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto">
                 <span aria-hidden className="text-2xl leading-none">✦</span>
               </div>
               <h1 className="font-heading text-2xl font-bold">{t('onboarding.welcomeTitle')}</h1>
               <p className="text-sm text-text-muted leading-relaxed">{t('onboarding.welcomeBody')}</p>
-              <button className="btn w-full" onClick={() => setStep(1)}>
+              <button className="btn w-full" onClick={() => setStep(2)}>
                 {t('onboarding.getStarted')}
               </button>
             </div>
           )}
 
-          {step === 1 && (
+          {step === 2 && (
             <div className="space-y-4">
               <h1 className="font-heading text-xl font-bold">{t('onboarding.profileTitle')}</h1>
               <p className="text-sm text-text-muted leading-relaxed">{t('onboarding.profileBody')}</p>
@@ -116,13 +142,13 @@ export default function Onboarding({ onDone }: Props) {
                 ))}
               </div>
               <p className="text-[10px] text-text-muted text-center">{t('onboarding.profileCustomHint')}</p>
-              <button className="btn w-full" onClick={() => setStep(2)}>
+              <button className="btn w-full" onClick={() => setStep(3)}>
                 {t('common.continue')}
               </button>
             </div>
           )}
 
-          {step === 2 && (
+          {step === 3 && (
             <div className="space-y-4">
               <h1 className="font-heading text-xl font-bold">{t('onboarding.domainsTitle')}</h1>
               <p className="text-sm text-text-muted leading-relaxed">{t('onboarding.domainsBody')}</p>
@@ -149,13 +175,13 @@ export default function Onboarding({ onDone }: Props) {
                   );
                 })}
               </div>
-              <button className="btn w-full" onClick={() => setStep(3)}>
+              <button className="btn w-full" onClick={() => setStep(4)}>
                 {t('common.continue')}
               </button>
             </div>
           )}
 
-          {step === 3 && (
+          {step === 4 && (
             <div className="space-y-4 text-center">
               <div className="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto">
                 <span aria-hidden className="text-2xl leading-none">◎</span>
@@ -174,7 +200,7 @@ export default function Onboarding({ onDone }: Props) {
 
         {/* Skip — available on every step except the final goal step (which has
             its own "later" affordance). */}
-        {step < 3 && (
+        {step < 4 && (
           <button
             className="block mx-auto text-xs uppercase tracking-wider text-text-muted py-3 px-4"
             onClick={() => finish(false)}
