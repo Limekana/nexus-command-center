@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import AppHeader from '../components/AppHeader';
 import SyncStatusChip from '../components/SyncStatusChip';
@@ -16,6 +17,7 @@ import { useTaskStore } from '../store/useTaskStore';
 import { formatCurrency, isOverdue, isToday } from '../utils/formatters';
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const transactions = useFinanceStore((s) => s.transactions);
   const budgetCategories = useFinanceStore((s) => s.budgetCategories);
@@ -64,8 +66,8 @@ export default function Dashboard() {
   }, [sessions]);
 
   const gpaDelta = studies && previousGpa != null
-    ? `${studies.calculatedGpa - previousGpa >= 0 ? '↑' : '↓'} ${Math.abs(studies.calculatedGpa - previousGpa).toFixed(2)} pts`
-    : studies ? `${studyCourses.length} courses` : 'No imports yet';
+    ? `${studies.calculatedGpa - previousGpa >= 0 ? '↑' : '↓'} ${Math.abs(studies.calculatedGpa - previousGpa).toFixed(2)} ${t('dash.pts')}`
+    : studies ? t('dash.coursesCount', { count: studyCourses.length }) : t('dash.noImports');
 
   const gpaSuffix = gradeMode === 'ib' ? '/7' : '';
   const gpaDisplay = studies ? studies.calculatedGpa.toFixed(2) + gpaSuffix : '—';
@@ -80,13 +82,13 @@ export default function Dashboard() {
               onClick={() => navigate('/goals')}
               className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary"
             >
-              🎯 Goals
+              🎯 {t('dash.goals')}
             </button>
             <button
               onClick={() => navigate('/review')}
               className="text-xs px-2 py-1 rounded-sm border border-primary/60 text-primary active:bg-primary/10"
             >
-              📊 Review
+              📊 {t('dash.review')}
             </button>
           </>
         }
@@ -108,72 +110,72 @@ export default function Dashboard() {
         <CrossDomainCard />
 
         <div>
-          <div className="sec mb-2">Overview</div>
+          <div className="sec mb-2">{t('dash.overview')}</div>
           <div className="grid grid-cols-2 gap-2">
             <StatCard
               value={formatCurrency(Math.max(0, monthBudget - monthExpenses))}
-              label="Budget Left"
-              sub={monthBudget > 0 ? `${budgetPct}% used` : 'No budgets set'}
+              label={t('dash.budgetLeft')}
+              sub={monthBudget > 0 ? t('dash.pctUsed', { pct: budgetPct }) : t('dash.noBudgets')}
               tone={budgetPct > 90 ? 'danger' : budgetPct > 70 ? 'warning' : 'success'}
               highlight
             />
             <StatCard
               value={gpaDisplay}
-              label="GPA"
+              label={t('dash.gpa')}
               sub={gpaDelta}
               tone={studies ? 'success' : 'default'}
             />
             <StatCard
               value={`${workoutsThisWeek}×`}
-              label="Workouts/wk"
-              sub={workoutsThisWeek >= 4 ? '↔ On target' : 'Push harder'}
+              label={t('dash.workoutsWk')}
+              sub={workoutsThisWeek >= 4 ? t('dash.onTarget') : t('dash.pushHarder')}
             />
             <StatCard
               value={tasksToday}
-              label="Tasks today"
-              sub={tasksOverdue > 0 ? `${tasksOverdue} overdue ⚠` : 'All on track'}
+              label={t('dash.tasksToday')}
+              sub={tasksOverdue > 0 ? t('dash.overdueWarn', { count: tasksOverdue }) : t('dash.allOnTrack')}
               tone={tasksOverdue > 0 ? 'danger' : 'default'}
             />
           </div>
         </div>
 
-        <div className="sec mb-2">Modules</div>
+        <div className="sec mb-2">{t('dash.modules')}</div>
         <div className="grid grid-cols-1 gap-2">
-          <ModuleSummaryCard title="Finance" icon="💰" tag={monthBudget > 0 ? 'LIVE' : 'IDLE'} to="/finance">
+          <ModuleSummaryCard title={t('domains.finance')} icon="💰" tag={monthBudget > 0 ? t('dash.tagLive') : t('dash.tagIdle')} to="/finance">
             {monthBudget > 0 ? (
               <ProgressBar
-                label="Budget used"
+                label={t('dash.budgetUsed')}
                 value={monthExpenses}
                 max={monthBudget || 1}
                 format={(v, m) => `${Math.round((v / m) * 100)}%`}
               />
             ) : (
-              <Empty msg="No budgets yet" />
+              <Empty msg={t('dash.noBudgetsYet')} />
             )}
             {stockQuotes[0] ? (
               <ListRow
-                label={`${stockQuotes[0].ticker} ${stockQuotes[0].cached ? '(cached)' : ''}`}
+                label={`${stockQuotes[0].ticker} ${stockQuotes[0].cached ? t('dash.cached') : ''}`}
                 value={`$${stockQuotes[0].quote.c.toFixed(2)}`}
               />
             ) : (
-              <Empty msg="No portfolio holdings" />
+              <Empty msg={t('dash.noHoldings')} />
             )}
           </ModuleSummaryCard>
 
-          <ModuleSummaryCard title="Tasks" icon="✅" tag={tasksOverdue > 0 ? 'OVERDUE' : tasksOpen.length > 0 ? 'OPEN' : 'CLEAR'} to="/tasks">
+          <ModuleSummaryCard title={t('nav.tasks')} icon="✅" tag={tasksOverdue > 0 ? t('dash.tagOverdue') : tasksOpen.length > 0 ? t('dash.tagOpen') : t('dash.tagClear')} to="/tasks">
             {tasksOpen.length > 0 ? (
-              tasksOpen.slice(0, 2).map((t) => (
+              tasksOpen.slice(0, 2).map((task) => (
                 <ListRow
-                  key={t.id}
-                  label={t.title}
-                  tag={t.dueDate && isOverdue(t.dueDate) ? { text: 'Late', tone: 'red' } :
-                       t.dueDate && isToday(t.dueDate) ? { text: 'Today', tone: 'amber' } : undefined}
+                  key={task.id}
+                  label={task.title}
+                  tag={task.dueDate && isOverdue(task.dueDate) ? { text: t('dash.late'), tone: 'red' } :
+                       task.dueDate && isToday(task.dueDate) ? { text: t('dash.today'), tone: 'amber' } : undefined}
                 />
               ))
             ) : (
               <>
-                <Empty msg="All clear" />
-                <Empty msg="Tap to add a task" />
+                <Empty msg={t('dash.allClear')} />
+                <Empty msg={t('dash.tapToAdd')} />
               </>
             )}
             {tasksOpen.length === 1 && <Empty msg=" " />}
