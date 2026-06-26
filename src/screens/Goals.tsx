@@ -7,6 +7,7 @@
 // portfolio immediately moves every relevant bar.
 
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import AppHeader from '../components/AppHeader';
 import RowActions from '../components/RowActions';
 import { useGoalsStore } from '../store/useGoalsStore';
@@ -31,6 +32,7 @@ import {
 } from '../types/goals';
 
 export default function Goals() {
+  const { t } = useTranslation();
   const goals = useGoalsStore((s) => s.goals);
   const addGoal = useGoalsStore((s) => s.addGoal);
   const updateGoal = useGoalsStore((s) => s.updateGoal);
@@ -91,9 +93,9 @@ export default function Goals() {
   return (
     <>
       <AppHeader
-        title="Goals"
+        title={t('goals.title')}
         back="/"
-        backLabel="Home"
+        backLabel={t('nav.home')}
         showAvatar={false}
         action={
           !editingNow && (
@@ -101,7 +103,7 @@ export default function Goals() {
               onClick={() => setAdding(true)}
               className="text-xs px-2 py-1 rounded-sm border border-primary text-primary active:bg-primary/10"
             >
-              + Goal
+              + {t('goals.new')}
             </button>
           )
         }
@@ -129,17 +131,16 @@ export default function Goals() {
 
         {goals.length === 0 && !editingNow && (
           <div className="card text-center text-xs text-text-muted py-6">
-            No goals yet. Tap + Goal to set one.
+            {t('goals.noGoalsTitle')}
             <div className="text-[10px] mt-2">
-              Goals are derived from data you already track — net worth,
-              tasks, workouts, study hours, lifts, GPA.
+              {t('goals.noGoalsBody')}
             </div>
           </div>
         )}
 
         {active.length > 0 && !editingNow && (
           <div className="card space-y-3">
-            <div className="text-[10px] uppercase tracking-wider text-text-muted">Active</div>
+            <div className="text-[10px] uppercase tracking-wider text-text-muted">{t('goals.active')}</div>
             {active.map((g) => (
               <GoalRow
                 key={g.id}
@@ -156,7 +157,7 @@ export default function Goals() {
 
         {completed.length > 0 && !editingNow && (
           <div className="card space-y-3 opacity-80">
-            <div className="text-[10px] uppercase tracking-wider text-success">Completed</div>
+            <div className="text-[10px] uppercase tracking-wider text-success">{t('goals.completed')}</div>
             {completed.map((g) => (
               <GoalRow
                 key={g.id}
@@ -194,11 +195,13 @@ function GoalRow({
   onComplete: () => void;
   onDelete: () => void;
 }) {
+  const { t } = useTranslation();
   const progress = useMemo(() => computeGoalProgress(goal, data), [goal, data]);
   // Fallback guards against a stored goal whose type was retired (e.g. the
   // v1.4 `reading_count` removal) — the v17 migration deletes such rows, but
   // this keeps the row from crashing if one is mid-flight from a cloud pull.
-  const meta = GOAL_TYPE_LABELS[goal.goalType] ?? { label: goal.goalType, unit: '', icon: '🎯' };
+  const rawMeta = GOAL_TYPE_LABELS[goal.goalType] ?? { label: goal.goalType, unit: '', icon: '🎯' };
+  const meta = { ...rawMeta, label: t(`goalTypes.${goal.goalType}`, { defaultValue: rawMeta.label }) };
   const pace = paceLabel(goal, progress);
   const pct = Math.min(100, Math.max(0, progress.percent));
 
@@ -222,7 +225,7 @@ function GoalRow({
             <RowActions
               onEdit={onEdit}
               onDelete={onDelete}
-              confirmMsg={`Delete "${goal.title}"?`}
+              confirmMsg={t('goals.deleteConfirm', { title: goal.title })}
             />
           </div>
           <div className="flex items-center gap-2 mt-1">
@@ -241,8 +244,8 @@ function GoalRow({
             </span>
             <span>
               {progress.daysRemaining != null
-                ? `${progress.daysRemaining}d left${pace ? ` · ${pace}` : ''}`
-                : 'no deadline'}
+                ? `${t('goals.daysLeft', { days: progress.daysRemaining })}${pace ? ` · ${pace}` : ''}`
+                : t('goals.noDeadline')}
             </span>
           </div>
           {progress.reached && !goal.completed && (
@@ -250,7 +253,7 @@ function GoalRow({
               onClick={onComplete}
               className="text-[10px] mt-2 px-2 py-1 rounded-sm border border-success/40 bg-success/5 text-success active:bg-success/10"
             >
-              ✓ Mark complete
+              {t('goals.markComplete')}
             </button>
           )}
           {goal.completed && (
@@ -258,7 +261,7 @@ function GoalRow({
               onClick={onComplete}
               className="text-[10px] mt-2 px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary"
             >
-              ↩ Reopen
+              {t('goals.reopen')}
             </button>
           )}
         </div>
@@ -282,6 +285,7 @@ function GoalForm({
   onCancel: () => void;
   onSave: (g: Omit<Goal, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus' | 'completed' | 'completedAt' | 'deletedAt'>) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState(initial?.title ?? '');
   const [goalType, setGoalType] = useState<GoalType>(initial?.goalType ?? 'workout_count');
   const [targetValue, setTargetValue] = useState<string>(
@@ -293,12 +297,12 @@ function GoalForm({
   );
   const [exerciseName, setExerciseName] = useState<string>(initial?.exerciseName ?? '');
 
-  const onPickType = (t: GoalType) => {
-    setGoalType(t);
+  const onPickType = (gt: GoalType) => {
+    setGoalType(gt);
     // Auto-suggest a sensible target when the user picks a new type — only
     // if they haven't typed something custom yet.
     if (!initial || targetValue === String(defaultTargetValue(initial.goalType))) {
-      setTargetValue(String(defaultTargetValue(t)));
+      setTargetValue(String(defaultTargetValue(gt)));
     }
   };
 
@@ -323,29 +327,29 @@ function GoalForm({
 
   return (
     <div className="card space-y-3">
-      <div className="font-heading font-semibold text-sm">{initial ? 'Edit Goal' : 'New Goal'}</div>
+      <div className="font-heading font-semibold text-sm">{initial ? t('goals.editGoal') : t('goals.newGoal')}</div>
 
       <input
         className="input"
-        placeholder="Goal title (e.g. 30 workouts by summer)"
+        placeholder={t('goals.titlePlaceholder')}
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         autoFocus
       />
 
       <div>
-        <div className="text-[10px] uppercase tracking-wider text-text-muted mb-1">Type</div>
+        <div className="text-[10px] uppercase tracking-wider text-text-muted mb-1">{t('goals.type')}</div>
         <div className="grid grid-cols-3 gap-1.5">
-          {GOAL_TYPES.map((t) => {
-            const m = GOAL_TYPE_LABELS[t];
+          {GOAL_TYPES.map((gt) => {
+            const m = GOAL_TYPE_LABELS[gt];
             return (
               <button
-                key={t}
+                key={gt}
                 type="button"
-                onClick={() => onPickType(t)}
-                className={`chip text-[11px] ${goalType === t ? 'chip-on' : ''}`}
+                onClick={() => onPickType(gt)}
+                className={`chip text-[11px] ${goalType === gt ? 'chip-on' : ''}`}
               >
-                {m.icon} {m.label}
+                {m.icon} {t(`goalTypes.${gt}`, { defaultValue: m.label })}
               </button>
             );
           })}
@@ -354,7 +358,7 @@ function GoalForm({
 
       <div>
         <div className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
-          Target {meta.unit ? `(${meta.unit})` : ''}
+          {t('goals.target')} {meta.unit ? `(${meta.unit})` : ''}
         </div>
         <input
           className="input"
@@ -368,17 +372,17 @@ function GoalForm({
       {needsExercise && (
         <div>
           <div className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
-            Exercise name
+            {t('goals.exerciseName')}
           </div>
           <input
             className="input"
-            placeholder="e.g. Bench Press"
+            placeholder={t('goals.exercisePlaceholder')}
             value={exerciseName}
             onChange={(e) => setExerciseName(e.target.value)}
             autoCapitalize="words"
           />
           <div className="text-[10px] text-text-muted mt-1">
-            Matches case-insensitively against the "exercise" field on your workout sets.
+            {t('goals.exerciseHint')}
           </div>
         </div>
       )}
@@ -386,7 +390,7 @@ function GoalForm({
       <div className="grid grid-cols-2 gap-2">
         <div>
           <div className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
-            Start date
+            {t('goals.startDate')}
           </div>
           <input
             type="date"
@@ -396,13 +400,13 @@ function GoalForm({
           />
           {isCumulative && (
             <div className="text-[9px] text-text-muted mt-1">
-              Only events on/after this date count.
+              {t('goals.startHint')}
             </div>
           )}
         </div>
         <div>
           <div className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
-            Target date {goalType === 'lift_pr' || goalType === 'gpa' ? '(optional)' : ''}
+            {t('goals.targetDate')} {goalType === 'lift_pr' || goalType === 'gpa' ? t('goals.optional') : ''}
           </div>
           <input
             type="date"
@@ -415,10 +419,10 @@ function GoalForm({
 
       <div className="flex gap-2">
         <button className="btn flex-1" onClick={save}>
-          {initial ? 'Save' : 'Add'}
+          {initial ? t('common.save') : t('common.add')}
         </button>
         <button className="btn-ghost flex-1" onClick={onCancel}>
-          Cancel
+          {t('common.cancel')}
         </button>
       </div>
     </div>
