@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
 import TemplateChips from '../../components/TemplateChips';
@@ -7,13 +8,14 @@ import { useTemplatesStore } from '../../store/useTemplatesStore';
 import type { TransactionTemplate } from '../../types/templates';
 import { TransactionType } from '../../types/finance';
 
-const types: { key: TransactionType; label: string }[] = [
-  { key: 'expense', label: '💸 Expense' },
-  { key: 'income', label: '💰 Income' },
-  { key: 'transfer', label: '📈 Transfer' },
+const types: { key: TransactionType; labelKey: string }[] = [
+  { key: 'expense', labelKey: 'fin.tx.expense' },
+  { key: 'income', labelKey: 'fin.tx.income' },
+  { key: 'transfer', labelKey: 'fin.tx.transfer' },
 ];
 
 export default function AddTransaction() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const editId = params.get('id');
@@ -90,11 +92,11 @@ export default function AddTransaction() {
     //     fresh-install edge case)
     if (type === 'transfer') {
       if (!destinationAccountId) {
-        alert('Pick a destination account for the transfer.');
+        alert(t('fin.tx.pickDest'));
         return;
       }
       if (destinationAccountId === accountId) {
-        alert('Transfer source and destination must differ.');
+        alert(t('fin.tx.srcDestDiffer'));
         return;
       }
     }
@@ -121,7 +123,7 @@ export default function AddTransaction() {
 
   const onDelete = async () => {
     if (!editId) return;
-    if (!confirm('Delete this transaction?')) return;
+    if (!confirm(t('fin.tx.deleteConfirm'))) return;
     await deleteTransaction(editId);
     navigate('/finance');
   };
@@ -142,9 +144,9 @@ export default function AddTransaction() {
   return (
     <>
       <AppHeader
-        title={editId ? 'Edit Transaction' : 'Add Transaction'}
+        title={editId ? t('fin.tx.editTitle') : t('fin.tx.addTitle')}
         back="/finance"
-        backLabel="Finance"
+        backLabel={t('fin.finance')}
         showAvatar={false}
       />
       <div className="space-y-3">
@@ -165,22 +167,22 @@ export default function AddTransaction() {
           />
         )}
         <div>
-          <div className="sec mb-2">Type</div>
+          <div className="sec mb-2">{t('fin.tx.type')}</div>
           <div className="flex gap-2">
-            {types.map((t) => (
+            {types.map((opt) => (
               <button
-                key={t.key}
-                onClick={() => setType(t.key)}
-                className={`chip ${type === t.key ? 'chip-on' : ''}`}
+                key={opt.key}
+                onClick={() => setType(opt.key)}
+                className={`chip ${type === opt.key ? 'chip-on' : ''}`}
               >
-                {t.label}
+                {t(opt.labelKey)}
               </button>
             ))}
           </div>
         </div>
 
         <div>
-          <div className="sec mb-2">Amount</div>
+          <div className="sec mb-2">{t('fin.tx.amount')}</div>
           <div className="bg-surface border-2 border-primary/40 rounded-md p-4 flex items-center gap-2 shadow-glow">
             <span className="text-text-muted font-heading text-2xl">€</span>
             <input
@@ -195,10 +197,10 @@ export default function AddTransaction() {
         </div>
 
         <div className="space-y-2">
-          <div className="sec">Details</div>
+          <div className="sec">{t('fin.tx.details')}</div>
           <input
             className="input"
-            placeholder="Description"
+            placeholder={t('fin.tx.description')}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
@@ -208,7 +210,7 @@ export default function AddTransaction() {
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
             >
-              <option value="">Category…</option>
+              <option value="">{t('fin.tx.categoryPh')}</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.icon ? `${c.icon} ` : ''}{c.name}
@@ -224,15 +226,15 @@ export default function AddTransaction() {
               accounts are created). */}
           {accounts.length === 0 ? (
             <div className="glass-soft rounded-md p-3 text-[11px] text-text-muted">
-              No accounts yet —{' '}
+              {t('fin.tx.noAccounts1')}
               <button
                 type="button"
                 onClick={() => navigate('/finance/networth')}
                 className="text-primary underline"
               >
-                add one in Net Worth
-              </button>{' '}
-              so this transaction can hit a balance.
+                {t('fin.tx.addInNetWorth')}
+              </button>
+              {t('fin.tx.noAccounts2')}
             </div>
           ) : (
             <select
@@ -241,7 +243,7 @@ export default function AddTransaction() {
               onChange={(e) => setAccountId(e.target.value)}
             >
               <option value="">
-                {type === 'transfer' ? 'From account…' : 'Account…'}
+                {type === 'transfer' ? t('fin.tx.fromAccount') : t('fin.tx.account')}
               </option>
               {accounts.map((a) => (
                 <option key={a.id} value={a.id}>
@@ -256,7 +258,7 @@ export default function AddTransaction() {
               value={destinationAccountId}
               onChange={(e) => setDestinationAccountId(e.target.value)}
             >
-              <option value="">To account…</option>
+              <option value="">{t('fin.tx.toAccount')}</option>
               {accounts
                 .filter((a) => a.id !== accountId)
                 .map((a) => (
@@ -275,7 +277,7 @@ export default function AddTransaction() {
             />
             <input
               className="input"
-              placeholder="Notes…"
+              placeholder={t('fin.tx.notes')}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
@@ -283,18 +285,18 @@ export default function AddTransaction() {
         </div>
 
         <button className="btn w-full" onClick={submit} disabled={saving}>
-          {saving ? 'Saving…' : editId ? 'Save Changes' : 'Save Transaction'}
+          {saving ? t('fin.tx.saving') : editId ? t('fin.tx.saveChanges') : t('fin.tx.saveTx')}
         </button>
         {editId && (
           <button
             className="btn-ghost w-full text-danger border-danger/40"
             onClick={onDelete}
           >
-            Delete Transaction
+            {t('fin.tx.deleteTx')}
           </button>
         )}
         <div className="text-[10px] text-text-muted text-center">
-          Queued locally · syncs when online
+          {t('fin.tx.queued')}
         </div>
       </div>
     </>
