@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
 import StatCard from '../../components/StatCard';
@@ -11,14 +12,15 @@ import { isOverdue, isToday, formatShortDate, localDateKey } from '../../utils/f
 import { Task } from '../../types/tasks';
 import { listTaskShares, shareTaskByEmail, revokeTaskShare } from '../../lib/sharing';
 
-const filters: { key: TaskFilter; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'today', label: 'Today' },
-  { key: 'overdue', label: 'Overdue' },
-  { key: 'done', label: 'Done' },
+const filterKeys: { key: TaskFilter; labelKey: string }[] = [
+  { key: 'all', labelKey: 'tasks.filterAll' },
+  { key: 'today', labelKey: 'tasks.filterToday' },
+  { key: 'overdue', labelKey: 'tasks.filterOverdue' },
+  { key: 'done', labelKey: 'tasks.filterDone' },
 ];
 
 export default function TasksOverview() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const tasks = useTaskStore((s) => s.tasks);
   const filter = useTaskStore((s) => s.filter);
@@ -88,23 +90,23 @@ export default function TasksOverview() {
   return (
     <>
       <AppHeader
-        title="Tasks"
+        title={t('nav.tasks')}
         action={
           <button
             onClick={() => navigate('/tasks/add')}
             className="text-xs px-2 py-1 rounded-sm border border-primary text-primary active:bg-primary/10"
           >
-            + New
+            + {t('tasks.new')}
           </button>
         }
       />
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-2">
-          <StatCard value={dueToday} label="Due Today" highlight />
+          <StatCard value={dueToday} label={t('tasks.dueToday')} highlight />
           <StatCard
             value={overdueCount}
-            label="Overdue"
-            sub={overdueCount > 0 ? '⚠ action needed' : 'All clear'}
+            label={t('tasks.overdue')}
+            sub={overdueCount > 0 ? t('tasks.actionNeeded') : t('tasks.allClear')}
             tone={overdueCount > 0 ? 'danger' : 'success'}
           />
         </div>
@@ -112,21 +114,21 @@ export default function TasksOverview() {
         {tasks.some((t) => t.completed) && (
           <div className="card">
             <div className="flex items-center justify-between mb-2">
-              <span className="font-heading font-semibold text-sm">Completion Streak</span>
-              <span className="text-[9px] uppercase tracking-wider text-text-muted">365 days</span>
+              <span className="font-heading font-semibold text-sm">{t('tasks.completionStreak')}</span>
+              <span className="text-[9px] uppercase tracking-wider text-text-muted">{t('tasks.days365')}</span>
             </div>
             <HeatmapCalendar data={completedByDay} tint="primary" unit="task" />
           </div>
         )}
 
         <div className="flex gap-2 overflow-x-auto no-scrollbar">
-          {filters.map((f) => (
+          {filterKeys.map((f) => (
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
               className={`chip flex-shrink-0 ${filter === f.key ? 'chip-on' : ''}`}
             >
-              {f.label}
+              {t(f.labelKey)}
             </button>
           ))}
         </div>
@@ -134,7 +136,7 @@ export default function TasksOverview() {
         {groups.overdue.length > 0 && (
           <div className="card">
             <div className="text-[10px] font-heading font-semibold uppercase tracking-wider text-danger mb-2">
-              Overdue
+              {t('tasks.overdue')}
             </div>
             {groups.overdue.map((t) => (
               <TaskItem key={t.id} {...itemProps(t)} />
@@ -145,7 +147,7 @@ export default function TasksOverview() {
         {groups.today.length > 0 && (
           <div className="card">
             <div className="text-[10px] font-heading font-semibold uppercase tracking-wider text-warning mb-2">
-              Today
+              {t('tasks.filterToday')}
             </div>
             {groups.today.map((t) => (
               <TaskItem key={t.id} {...itemProps(t)} />
@@ -156,7 +158,7 @@ export default function TasksOverview() {
         {groups.upcoming.length > 0 && (
           <div className="card">
             <div className="text-[10px] font-heading font-semibold uppercase tracking-wider text-text-muted mb-2">
-              Upcoming
+              {t('tasks.upcoming')}
             </div>
             {groups.upcoming.map((t) => (
               <TaskItem key={t.id} {...itemProps(t)} />
@@ -167,7 +169,7 @@ export default function TasksOverview() {
         {groups.done.length > 0 && filter === 'done' && (
           <div className="card">
             <div className="text-[10px] font-heading font-semibold uppercase tracking-wider text-success mb-2">
-              Completed
+              {t('tasks.completed')}
             </div>
             {groups.done.map((t) => (
               <TaskItem key={t.id} {...itemProps(t)} />
@@ -177,13 +179,13 @@ export default function TasksOverview() {
 
         {filtered.length === 0 && (
           <div className="card text-center text-xs text-text-muted py-6">
-            No tasks here. Tap + New to add one.
+            {t('tasks.noTasks')}
           </div>
         )}
       </div>
       {sharing && (
         <ShareModal
-          title={`Share "${sharing.title}"`}
+          title={t('tasks.shareTitle', { title: sharing.title })}
           subjectId={sharing.id}
           onClose={() => setSharing(null)}
           list={listTaskShares}
@@ -210,9 +212,10 @@ function TaskItem({
   onShare: (t: Task) => void;
   sharedFromOther: boolean;
 }) {
+  const { t } = useTranslation();
   const tagText =
     task.completed
-      ? { text: 'Done', tone: 'green' }
+      ? { text: t('tasks.done'), tone: 'green' }
       : task.dueDate && isOverdue(task.dueDate)
       ? { text: formatShortDate(task.dueDate), tone: 'red' }
       : task.dueDate && isToday(task.dueDate)
@@ -237,7 +240,7 @@ function TaskItem({
             ? 'bg-success border-success text-bg'
             : 'border-border bg-surface2'
         }`}
-        aria-label={task.completed ? 'Mark incomplete' : 'Complete task'}
+        aria-label={task.completed ? t('tasks.markIncomplete') : t('tasks.completeTask')}
       >
         {task.completed && '✓'}
       </button>
@@ -246,7 +249,7 @@ function TaskItem({
       </span>
       {sharedFromOther && (
         <span className="text-[9px] px-1.5 py-0.5 rounded-sm bg-primary/15 text-primary border border-primary/30 whitespace-nowrap">
-          Shared
+          {t('tasks.shared')}
         </span>
       )}
       {tagText && (
@@ -258,7 +261,7 @@ function TaskItem({
         onShare={!sharedFromOther ? () => onShare(task) : undefined}
         onEdit={() => onEdit(task.id)}
         onDelete={!sharedFromOther ? () => onDelete(task.id) : undefined}
-        confirmMsg={`Delete "${task.title}"?`}
+        confirmMsg={t('tasks.deleteConfirm', { title: task.title })}
       />
     </div>
   );
