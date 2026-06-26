@@ -1,0 +1,5 @@
+First multilingual release (English, Finnish, French, German, Spanish, Chinese).
+
+New:
+- Guided first-run onboarding (Life Profile setup)
+- Fixes: Finance now counts on a cold start; Life Profile syncs reliably to the cloud

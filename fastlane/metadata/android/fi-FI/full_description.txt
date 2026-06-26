@@ -1,0 +1,13 @@
+Nexus Command Center on Limecore-kokonaisuuden keskus — henkilökohtainen elämän kojelauta, joka kokoaa jo seuraamasi asiat yhdeksi selkeäksi signaaliksi.
+
+Se yhdistää viisi osa-aluetta yhdeksi elämäpisteluvuksi:
+
+* Talous — budjetit, tilit, nettovarallisuus, sijoitukset ja markkinanäkymät
+* Kunto — treenit LimeLogista
+* Opinnot — istunnot StudyDeskistä
+* Työ — nopea päivittäinen itsearviointi
+* Tavat — putkitietoinen tapaseuranta
+
+Valitse elämänprofiili (opiskelija, työssäkäyvä tai oma), painota osa-alueet haluamallasi tavalla, aseta tavoitteet ja seuraa kehitystä viikoittain.
+
+Paikallisesti Dexie-tallennuksella; valinnainen pilvisynkronointi Supabasen kautta, tiliin sidottu. Google-kirjautuminen käyttää tavallista web-OAuthia — ei Google Play -palveluita, ei Firebasea. Rakennettu avoimeksi ja F-Droid-yhteensopivaksi.

@@ -1,0 +1,5 @@
+Première version multilingue (anglais, finnois, français, allemand, espagnol, chinois).
+
+Nouveautés :
+- Intégration guidée au premier lancement (profil de vie)
+- Corrections : les finances sont comptées dès le démarrage ; le profil de vie se synchronise de façon fiable

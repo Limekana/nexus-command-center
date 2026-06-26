@@ -1,0 +1,13 @@
+Nexus Command Center ist die Zentrale der Limecore-Suite — ein persönliches Lebens-Dashboard, das deine bereits erfassten Daten zu einem klaren Signal bündelt.
+
+Es vereint fünf Bereiche zu einem Lebenswert:
+
+* Finanzen — Budgets, Konten, Nettovermögen, Portfolio und Marktdaten
+* Fitness — Trainings aus LimeLog
+* Studium — Sitzungen aus StudyDesk
+* Arbeit — eine schnelle tägliche Selbsteinschätzung
+* Gewohnheiten — ein streak-bewusster Gewohnheitstracker
+
+Wähle ein Lebensprofil (Studium, Berufstätig oder Eigen), gewichte die Bereiche nach Wunsch, setze Ziele und verfolge den Trend Woche für Woche.
+
+Local-first mit Dexie-Speicher; optionale Cloud-Synchronisierung über Supabase, kontogebunden. Google-Anmeldung über einen einfachen Web-OAuth-Flow — keine Google Play Services, kein Firebase. Offen und F-Droid-tauglich gebaut.

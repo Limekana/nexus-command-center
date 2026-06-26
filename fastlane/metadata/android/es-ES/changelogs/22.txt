@@ -1,0 +1,5 @@
+Primera versión multilingüe (inglés, finés, francés, alemán, español, chino).
+
+Novedades:
+- Onboarding guiado en el primer inicio (perfil de vida)
+- Correcciones: las finanzas cuentan desde el arranque; el perfil de vida se sincroniza de forma fiable

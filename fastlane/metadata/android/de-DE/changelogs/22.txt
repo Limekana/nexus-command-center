@@ -1,0 +1,5 @@
+Erste mehrsprachige Version (Englisch, Finnisch, Französisch, Deutsch, Spanisch, Chinesisch).
+
+Neu:
+- Geführtes Onboarding beim ersten Start (Lebensprofil)
+- Fixes: Finanzen zählen schon beim Kaltstart; Lebensprofil synchronisiert zuverlässig

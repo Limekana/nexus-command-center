@@ -1,0 +1,5 @@
+Ensimmäinen monikielinen julkaisu (englanti, suomi, ranska, saksa, espanja, kiina).
+
+Uutta:
+- Ohjattu käyttöönotto (elämänprofiilin asetus)
+- Korjaukset: talous lasketaan heti käynnistyksessä; elämänprofiili synkronoituu luotettavasti pilveen
