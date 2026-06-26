@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
 import TemplateChips from '../../components/TemplateChips';
@@ -7,20 +8,21 @@ import { useTemplatesStore } from '../../store/useTemplatesStore';
 import type { TaskTemplate } from '../../types/templates';
 import { TaskCategory, TaskPriority } from '../../types/tasks';
 
-const priorities: { key: TaskPriority; label: string }[] = [
-  { key: 'high', label: '🔴 High' },
-  { key: 'medium', label: '🟡 Medium' },
-  { key: 'low', label: '🟢 Low' },
+const priorities: { key: TaskPriority; labelKey: string }[] = [
+  { key: 'high', labelKey: 'addtask.prHigh' },
+  { key: 'medium', labelKey: 'addtask.prMedium' },
+  { key: 'low', labelKey: 'addtask.prLow' },
 ];
 
-const categories: { key: TaskCategory; label: string }[] = [
-  { key: 'study', label: '📚 Study' },
-  { key: 'personal', label: '🏠 Personal' },
-  { key: 'finance', label: '💰 Finance' },
-  { key: 'work', label: '💼 Work' },
+const categories: { key: TaskCategory; labelKey: string }[] = [
+  { key: 'study', labelKey: 'addtask.catStudy' },
+  { key: 'personal', labelKey: 'addtask.catPersonal' },
+  { key: 'finance', labelKey: 'addtask.catFinance' },
+  { key: 'work', labelKey: 'addtask.catWork' },
 ];
 
 export default function AddTask() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const editId = params.get('id');
@@ -75,7 +77,7 @@ export default function AddTask() {
 
   const onDelete = async () => {
     if (!editId) return;
-    if (!confirm('Delete this task?')) return;
+    if (!confirm(t('addtask.deleteConfirm'))) return;
     await deleteTask(editId);
     navigate('/tasks');
   };
@@ -93,9 +95,9 @@ export default function AddTask() {
   return (
     <>
       <AppHeader
-        title={editId ? 'Edit Task' : 'New Task'}
+        title={editId ? t('addtask.editTitle') : t('addtask.newTitle')}
         back="/tasks"
-        backLabel="Tasks"
+        backLabel={t('nav.tasks')}
         showAvatar={false}
       />
       <div className="space-y-3">
@@ -107,10 +109,10 @@ export default function AddTask() {
           />
         )}
         <div>
-          <div className="sec mb-2">Task Name</div>
+          <div className="sec mb-2">{t('addtask.taskName')}</div>
           <input
             className="input"
-            placeholder="What needs to be done?"
+            placeholder={t('addtask.taskNamePlaceholder')}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             autoFocus
@@ -118,7 +120,7 @@ export default function AddTask() {
         </div>
 
         <div>
-          <div className="sec mb-2">Due Date & Time</div>
+          <div className="sec mb-2">{t('addtask.dueDateTime')}</div>
           <input
             className="input"
             type="datetime-local"
@@ -128,7 +130,7 @@ export default function AddTask() {
         </div>
 
         <div>
-          <div className="sec mb-2">Priority</div>
+          <div className="sec mb-2">{t('addtask.priority')}</div>
           <div className="flex gap-2 flex-wrap">
             {priorities.map((p) => (
               <button
@@ -136,14 +138,14 @@ export default function AddTask() {
                 onClick={() => setPriority(p.key)}
                 className={`chip ${priority === p.key ? 'chip-on' : ''}`}
               >
-                {p.label}
+                {t(p.labelKey)}
               </button>
             ))}
           </div>
         </div>
 
         <div>
-          <div className="sec mb-2">Category</div>
+          <div className="sec mb-2">{t('addtask.category')}</div>
           <div className="flex gap-2 flex-wrap">
             {categories.map((c) => (
               <button
@@ -151,32 +153,32 @@ export default function AddTask() {
                 onClick={() => setCategory(c.key)}
                 className={`chip ${category === c.key ? 'chip-on' : ''}`}
               >
-                {c.label}
+                {t(c.labelKey)}
               </button>
             ))}
           </div>
         </div>
 
         <div>
-          <div className="sec mb-2">Notes</div>
+          <div className="sec mb-2">{t('addtask.notes')}</div>
           <textarea
             className="input min-h-[80px]"
-            placeholder="Optional notes…"
+            placeholder={t('addtask.notesPlaceholder')}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
           />
         </div>
 
         <button className="btn w-full" onClick={submit} disabled={saving || !title.trim()}>
-          {saving ? 'Saving…' : editId ? 'Save Changes' : 'Save Task'}
+          {saving ? t('addtask.saving') : editId ? t('addtask.saveChanges') : t('addtask.saveTask')}
         </button>
         {editId && (
           <button className="btn-ghost w-full text-danger border-danger/40" onClick={onDelete}>
-            Delete Task
+            {t('addtask.deleteTask')}
           </button>
         )}
         <div className="text-[10px] text-text-muted text-center">
-          Queued locally · syncs when online
+          {t('addtask.queued')}
         </div>
       </div>
     </>

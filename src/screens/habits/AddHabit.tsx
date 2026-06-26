@@ -6,31 +6,25 @@
 // picker collapses when frequencyKind=daily.
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
 import { Pill } from '../../components/ui/Pill';
 import { useHabitsStore } from '../../store/useHabitsStore';
 import type { HabitType, HabitFrequencyKind } from '../../types/habits';
 
-const TYPES: { key: HabitType; label: string; hint: string }[] = [
-  { key: 'binary', label: 'Binary', hint: 'Did it or didn\'t' },
-  { key: 'quantified', label: 'Quantified', hint: 'How much per day' },
+const TYPES: { key: HabitType; labelKey: string; hintKey: string }[] = [
+  { key: 'binary', labelKey: 'addhabit.binary', hintKey: 'addhabit.binaryHint' },
+  { key: 'quantified', labelKey: 'addhabit.quantified', hintKey: 'addhabit.quantifiedHint' },
 ];
 
-const FREQS: { key: HabitFrequencyKind; label: string }[] = [
-  { key: 'daily', label: 'Every day' },
-  { key: 'specific_days', label: 'Specific days' },
+const FREQS: { key: HabitFrequencyKind; labelKey: string }[] = [
+  { key: 'daily', labelKey: 'addhabit.everyDay' },
+  { key: 'specific_days', labelKey: 'addhabit.specificDays' },
 ];
 
-const DAYS = [
-  { idx: 0, short: 'Sun' },
-  { idx: 1, short: 'Mon' },
-  { idx: 2, short: 'Tue' },
-  { idx: 3, short: 'Wed' },
-  { idx: 4, short: 'Thu' },
-  { idx: 5, short: 'Fri' },
-  { idx: 6, short: 'Sat' },
-];
+const DAY_IDX = [0, 1, 2, 3, 4, 5, 6];
+const DAY_SLUGS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
 
 // Pre-curated palette pulled from the Cyber Slate Glass tokens. Keeps
 // things harmonious — the user can't pick a clashing color.
@@ -45,6 +39,7 @@ const COLORS = [
 ];
 
 export default function AddHabit() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const editId = params.get('id');
@@ -113,44 +108,44 @@ export default function AddHabit() {
 
   const onDelete = async () => {
     if (!editId) return;
-    if (!confirm(`Delete "${title}" and its history?`)) return;
+    if (!confirm(t('addhabit.deleteConfirm', { title }))) return;
     await deleteHabit(editId);
     navigate('/habits');
   };
 
   const validationMsg = !title.trim()
-    ? 'Give it a name.'
+    ? t('addhabit.valName')
     : type === 'quantified' && !targetAmount
-      ? 'How much per day?'
+      ? t('addhabit.valTarget')
       : frequencyKind === 'specific_days' && daysOfWeek.length === 0
-        ? 'Pick at least one day.'
+        ? t('addhabit.valDays')
         : null;
 
   return (
     <>
       <AppHeader
-        title={editId ? 'Edit Habit' : 'New Habit'}
+        title={editId ? t('addhabit.editTitle') : t('addhabit.newTitle')}
         back="/habits"
-        backLabel="Habits"
+        backLabel={t('domains.habits')}
         showAvatar={false}
       />
       <div className="space-y-4">
         {/* Type */}
         <div>
-          <div className="sec mb-2">Type</div>
+          <div className="sec mb-2">{t('addhabit.type')}</div>
           <div className="flex gap-2">
-            {TYPES.map((t) => (
+            {TYPES.map((opt) => (
               <Pill
-                key={t.key}
-                on={type === t.key}
-                onClick={() => setType(t.key)}
+                key={opt.key}
+                on={type === opt.key}
+                onClick={() => setType(opt.key)}
               >
-                {t.label}
+                {t(opt.labelKey)}
               </Pill>
             ))}
           </div>
           <div className="text-[10px] text-text-muted mt-1.5">
-            {TYPES.find((t) => t.key === type)?.hint}
+            {t(TYPES.find((opt) => opt.key === type)?.hintKey ?? 'addhabit.binaryHint')}
           </div>
         </div>
 
@@ -158,10 +153,10 @@ export default function AddHabit() {
             mini-header is programmatically tied to its input. Screen readers
             now announce "Title, edit text" instead of just "edit text". */}
         <label className="block">
-          <div className="sec mb-2">Title</div>
+          <div className="sec mb-2">{t('addhabit.title')}</div>
           <input
             className="input"
-            placeholder={type === 'binary' ? 'e.g. Meditate' : 'e.g. Read'}
+            placeholder={type === 'binary' ? t('addhabit.phBinary') : t('addhabit.phQuant')}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             autoFocus
@@ -173,37 +168,37 @@ export default function AddHabit() {
             readers. The glass-card wrapper is purely visual. */}
         {type === 'quantified' && (
           <div className="glass rounded-xl p-3 space-y-2 animate-fade-in-up">
-            <div className="sec">Daily target</div>
+            <div className="sec">{t('addhabit.dailyTarget')}</div>
             <div className="flex gap-2">
               <label className="flex-1 block">
-                <span className="sr-only">Target amount</span>
+                <span className="sr-only">{t('addhabit.targetAmountAria')}</span>
                 <input
                   className="input w-full"
                   inputMode="decimal"
-                  placeholder="Amount"
+                  placeholder={t('addhabit.amount')}
                   value={targetAmount}
                   onChange={(e) => setTargetAmount(e.target.value)}
                 />
               </label>
               <label className="flex-1 block">
-                <span className="sr-only">Unit</span>
+                <span className="sr-only">{t('addhabit.unitAria')}</span>
                 <input
                   className="input w-full"
-                  placeholder="Unit (e.g. pages)"
+                  placeholder={t('addhabit.unitPlaceholder')}
                   value={unit}
                   onChange={(e) => setUnit(e.target.value)}
                 />
               </label>
             </div>
             <div className="text-[10px] text-text-muted">
-              A day counts as done when you hit the amount.
+              {t('addhabit.dayCountsWhen')}
             </div>
           </div>
         )}
 
         {/* Frequency */}
         <div>
-          <div className="sec mb-2">Frequency</div>
+          <div className="sec mb-2">{t('addhabit.frequency')}</div>
           <div className="flex gap-2">
             {FREQS.map((f) => (
               <Pill
@@ -211,7 +206,7 @@ export default function AddHabit() {
                 on={frequencyKind === f.key}
                 onClick={() => setFrequencyKind(f.key)}
               >
-                {f.label}
+                {t(f.labelKey)}
               </Pill>
             ))}
           </div>
@@ -220,33 +215,32 @@ export default function AddHabit() {
         {/* Specific-day picker */}
         {frequencyKind === 'specific_days' && (
           <div className="glass rounded-xl p-3 space-y-2 animate-fade-in-up">
-            <div className="sec">Days of week</div>
+            <div className="sec">{t('addhabit.daysOfWeek')}</div>
             {/* v1.2 UI/UX review #5 — default-size Pill keeps the touch
                 target ≥40px (the .pill base height). size="sm" rendered
                 under-spec for WCAG 2.5.5. The row stays a single line on
                 360px+ devices because seven 3-letter labels fit comfortably
                 in the .pill horizontal padding. */}
             <div className="flex gap-1.5 flex-wrap">
-              {DAYS.map((d) => (
+              {DAY_IDX.map((idx) => (
                 <Pill
-                  key={d.idx}
-                  on={daysOfWeek.includes(d.idx)}
-                  onClick={() => toggleDay(d.idx)}
+                  key={idx}
+                  on={daysOfWeek.includes(idx)}
+                  onClick={() => toggleDay(idx)}
                 >
-                  {d.short}
+                  {t(`days.short.${DAY_SLUGS[idx]}`)}
                 </Pill>
               ))}
             </div>
             <div className="text-[10px] text-text-muted">
-              Streak grace still applies — one missed scheduled day per
-              7 days won't break the streak.
+              {t('addhabit.streakGrace')}
             </div>
           </div>
         )}
 
         {/* Reminder — wrapped in <label> for the same a11y reason as Title. */}
         <label className="block">
-          <div className="sec mb-2">Reminder (optional)</div>
+          <div className="sec mb-2">{t('addhabit.reminderOptional')}</div>
           <input
             type="time"
             className="input"
@@ -255,21 +249,21 @@ export default function AddHabit() {
           />
           <div className="text-[10px] text-text-muted mt-1">
             {reminderTime
-              ? `You'll get a notification at ${reminderTime} on eligible days.`
-              : 'Leave blank for no reminder.'}
+              ? t('addhabit.reminderAt', { time: reminderTime })
+              : t('addhabit.reminderBlank')}
           </div>
         </label>
 
         {/* Color swatches */}
         <div>
-          <div className="sec mb-2">Color</div>
+          <div className="sec mb-2">{t('addhabit.color')}</div>
           <div className="flex gap-2 flex-wrap">
             {COLORS.map((c) => (
               <button
                 key={c}
                 type="button"
                 onClick={() => setColor(c)}
-                aria-label={`Pick color ${c}`}
+                aria-label={t('addhabit.pickColor', { color: c })}
                 // v1.2 UI/UX review #4 — w-11 h-11 meets WCAG 2.5.5 (44×44).
                 // The selected ring stays as a scale-110 outline so the
                 // emphasized state remains visually distinct from idle.
@@ -295,18 +289,18 @@ export default function AddHabit() {
           onClick={submit}
           disabled={saving || validationMsg != null}
         >
-          {saving ? 'Saving…' : editId ? 'Save Changes' : 'Add Habit'}
+          {saving ? t('addhabit.saving') : editId ? t('addhabit.saveChanges') : t('addhabit.addHabit')}
         </button>
         {editId && (
           <button
             className="btn-ghost w-full text-danger border-danger/40"
             onClick={onDelete}
           >
-            Delete Habit
+            {t('addhabit.deleteHabit')}
           </button>
         )}
         <div className="text-[10px] text-text-muted text-center">
-          Synced across devices when online
+          {t('habits.syncedAcross')}
         </div>
       </div>
     </>
