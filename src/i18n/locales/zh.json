@@ -57,6 +57,11 @@
     "goalBody": "目标为你的生活评分提供参照——净资产目标、训练次数、绩点。可选；你可以随时添加。",
     "setGoal": "设定目标",
     "goalLater": "稍后在设置中配置",
-    "skip": "跳过"
+    "skip": "跳过",
+    "languageTitle": "选择你的语言",
+    "languageBody": "你可以随时在设置中更改。"
+  },
+  "settings": {
+    "language": "语言"
   }
 }

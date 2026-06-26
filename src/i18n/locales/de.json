@@ -57,6 +57,11 @@
     "goalBody": "Ziele geben deinem Lebenswert einen Maßstab — ein Vermögensziel, eine Trainingszahl, einen Notenschnitt. Optional; du kannst sie jederzeit hinzufügen.",
     "setGoal": "Ziel festlegen",
     "goalLater": "Später in den Einstellungen einrichten",
-    "skip": "Überspringen"
+    "skip": "Überspringen",
+    "languageTitle": "Wähle deine Sprache",
+    "languageBody": "Du kannst dies jederzeit in den Einstellungen ändern."
+  },
+  "settings": {
+    "language": "Sprache"
   }
 }

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { setLanguage, SUPPORTED_LANGS, LANGUAGE_NAMES, type Lang } from '../i18n';
 import AppHeader from '../components/AppHeader';
 import ListRow from '../components/ListRow';
 import { useLifeProfileStore } from '../store/useLifeProfileStore';
@@ -35,6 +37,8 @@ const autoLockOptions = [1, 5, 15, 30, 60];
 
 export default function Settings() {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+  const currentLang = (i18n.language || 'en').split('-')[0] as Lang;
   const lifeProfile = useLifeProfileStore((s) => s.profile);
   const biometricEnabled = useAuthStore((s) => s.biometricEnabled);
   const setBiometric = useAuthStore((s) => s.setBiometric);
@@ -381,6 +385,25 @@ export default function Settings() {
           </button>
           <div className="text-[10px] text-text-muted px-1 pb-1">
             Which domains shape your Life Score and how they're weighted.
+          </div>
+        </Section>
+
+        <Section title={t('settings.language')}>
+          <div className="grid grid-cols-2 gap-2">
+            {SUPPORTED_LANGS.map((code) => (
+              <button
+                key={code}
+                onClick={() => setLanguage(code)}
+                aria-pressed={currentLang === code}
+                className={`rounded-lg p-2.5 text-sm border transition-colors text-left ${
+                  currentLang === code
+                    ? 'border-primary bg-primary/10 text-primary font-semibold'
+                    : 'border-glass-border text-text'
+                }`}
+              >
+                {LANGUAGE_NAMES[code]}
+              </button>
+            ))}
           </div>
         </Section>
 

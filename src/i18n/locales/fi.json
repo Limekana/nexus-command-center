@@ -57,6 +57,11 @@
     "goalBody": "Tavoitteet antavat elämäpisteillesi mittapuun — nettovarallisuustavoite, treenimäärä, keskiarvo. Vapaaehtoinen; voit lisätä ne milloin tahansa.",
     "setGoal": "Aseta tavoite",
     "goalLater": "Tee myöhemmin asetuksissa",
-    "skip": "Ohita"
+    "skip": "Ohita",
+    "languageTitle": "Valitse kielesi",
+    "languageBody": "Voit vaihtaa tämän milloin tahansa asetuksissa."
+  },
+  "settings": {
+    "language": "Kieli"
   }
 }

@@ -57,6 +57,11 @@
     "goalBody": "Los objetivos dan a tu puntuación de vida una referencia: un patrimonio meta, un número de entrenamientos, una nota media. Opcional; puedes añadirlos cuando quieras.",
     "setGoal": "Establecer un objetivo",
     "goalLater": "Configurar luego en Ajustes",
-    "skip": "Omitir"
+    "skip": "Omitir",
+    "languageTitle": "Elige tu idioma",
+    "languageBody": "Puedes cambiarlo cuando quieras en Ajustes."
+  },
+  "settings": {
+    "language": "Idioma"
   }
 }
