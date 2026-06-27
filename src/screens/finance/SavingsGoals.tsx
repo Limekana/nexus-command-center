@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
 import BottomSheet from '../../components/BottomSheet';
@@ -51,6 +52,7 @@ function fmtCompact(amount: number, currency: string): string {
 }
 
 export default function SavingsGoals() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const goals = useSavingsGoalsStore((s) => s.goals);
   const loaded = useSavingsGoalsStore((s) => s.loaded);
@@ -174,14 +176,14 @@ export default function SavingsGoals() {
       ? amount
       : convertSync(amount, baseCurrency, source.currency, fxRates);
     if (amountInSourceCurrency == null) {
-      setFlashMessage(`Couldn't convert ${baseCurrency} → ${source.currency} (FX rate missing).`);
+      setFlashMessage(t('fin.sg.fxConvertFail', { from: baseCurrency, to: source.currency }));
       window.setTimeout(() => setFlashMessage(null), 4000);
       return;
     }
     const nextValue = Math.max(0, source.value - amountInSourceCurrency);
     await updateManualAsset(source.id, { value: nextValue });
     setInvestOpen(false);
-    setFlashMessage(`${fmtCompact(amount, baseCurrency)} moved from ${source.name} to investments.`);
+    setFlashMessage(t('fin.sg.movedToInvest', { amount: fmtCompact(amount, baseCurrency), name: source.name }));
     window.setTimeout(() => setFlashMessage(null), 5000);
     if (investNavigateAfter) {
       navigate('/finance/portfolio/manage');
@@ -218,9 +220,9 @@ export default function SavingsGoals() {
   return (
     <>
       <AppHeader
-        title="Savings"
+        title={t('fin.sg.title')}
         back="/finance"
-        backLabel="Finance"
+        backLabel={t('fin.finance')}
         showAvatar={false}
         action={
           <>
@@ -234,10 +236,10 @@ export default function SavingsGoals() {
               disabled={liquidAssets.length === 0}
               icon="→"
             >
-              Invest
+              {t('fin.sg.invest')}
             </Pill>
             <Pill on size="sm" onClick={openAdd} icon="+">
-              Goal
+              {t('fin.sg.goal')}
             </Pill>
           </>
         }
@@ -254,31 +256,31 @@ export default function SavingsGoals() {
         {/* ─── Available cash header ──────────────────────────────────── */}
         <div className={`glass rounded-xl p-4 ${overAllocated ? 'border-warning/45' : ''}`}>
           <div className="flex items-baseline justify-between">
-            <span className="sec">Available to allocate</span>
-            <span className="text-[10px] text-text-muted">in {baseCurrency}</span>
+            <span className="sec">{t('fin.sg.availableToAllocate')}</span>
+            <span className="text-[10px] text-text-muted">{t('fin.sg.inCur', { cur: baseCurrency })}</span>
           </div>
           <div className={`font-heading font-bold text-3xl tracking-tight mt-1 ${overAllocated ? 'text-warning' : 'text-text'}`}>
             {fmt(available.available, baseCurrency)}
           </div>
           {overAllocated && (
             <div className="text-[11px] text-warning mt-1">
-              Over-allocated — your goals + buffer exceed liquid cash by {fmt(Math.abs(available.available), baseCurrency)}.
+              {t('fin.sg.overAllocated', { amount: fmt(Math.abs(available.available), baseCurrency) })}
             </div>
           )}
           {noLiquidAssets && (
             <div className="text-[11px] text-text-muted mt-1">
-              No cash or savings assets logged yet. Add some under
-              <span className="text-primary"> Finance → Net Worth</span> to start allocating.
+              {t('fin.sg.noLiquid1')}
+              <span className="text-primary"> {t('fin.finance')} → {t('fin.ov.netWorth')}</span> {t('fin.sg.noLiquid2')}
             </div>
           )}
           <div className="grid grid-cols-3 gap-2 mt-3">
-            <Cell label="Liquid" value={fmtCompact(available.liquidBase, baseCurrency)} />
-            <Cell label="Buffer" value={fmtCompact(available.bufferAmount, baseCurrency)} tone="muted" />
-            <Cell label="Allocated" value={fmtCompact(available.allocatedBase, baseCurrency)} tone="muted" />
+            <Cell label={t('fin.sg.liquid')} value={fmtCompact(available.liquidBase, baseCurrency)} />
+            <Cell label={t('fin.sg.buffer')} value={fmtCompact(available.bufferAmount, baseCurrency)} tone="muted" />
+            <Cell label={t('fin.sg.allocated')} value={fmtCompact(available.allocatedBase, baseCurrency)} tone="muted" />
           </div>
           {available.unconvertable.length > 0 && (
             <div className="text-[10px] text-warning mt-2">
-              {available.unconvertable.length} item{available.unconvertable.length === 1 ? '' : 's'} couldn't be converted to {baseCurrency} (FX rate missing).
+              {t('fin.sg.unconvertable', { count: available.unconvertable.length, cur: baseCurrency })}
             </div>
           )}
         </div>
@@ -292,10 +294,9 @@ export default function SavingsGoals() {
         {/* ─── Goal list ──────────────────────────────────────────────── */}
         {goals.length === 0 ? (
           <div className="glass rounded-xl p-6 text-center">
-            <div className="font-heading font-semibold text-sm mb-1">No savings goals yet</div>
+            <div className="font-heading font-semibold text-sm mb-1">{t('fin.sg.noGoals')}</div>
             <div className="text-[11px] text-text-muted">
-              Tap + Goal to add one. Each goal is a named target with an
-              optional deadline; allocate from your available cash above.
+              {t('fin.sg.noGoalsSub')}
             </div>
           </div>
         ) : (
@@ -308,7 +309,7 @@ export default function SavingsGoals() {
                 onSet={(amount) => void setAllocated(g.id, amount)}
                 onEdit={() => openEdit(g)}
                 onDelete={() => {
-                  if (window.confirm(`Delete "${g.title}" and release the ${fmtCompact(g.allocatedAmount, g.currency)} allocation?`)) {
+                  if (window.confirm(t('fin.sg.deleteConfirm', { title: g.title, amount: fmtCompact(g.allocatedAmount, g.currency) }))) {
                     void deleteGoal(g.id);
                   }
                 }}
@@ -318,7 +319,7 @@ export default function SavingsGoals() {
         )}
 
         <div className="text-[10px] text-text-muted text-center">
-          Local only — savings goals don't sync across devices in v1.2.
+          {t('fin.sg.localOnly')}
         </div>
       </div>
 
@@ -326,14 +327,14 @@ export default function SavingsGoals() {
       <BottomSheet
         open={editorOpen}
         onClose={() => setEditorOpen(false)}
-        title={editing ? 'Edit Goal' : 'New Goal'}
+        title={editing ? t('fin.sg.editGoal') : t('fin.sg.newGoal')}
       >
         <div className="space-y-3">
           <div>
-            <div className="sec mb-2">Title</div>
+            <div className="sec mb-2">{t('fin.sg.gTitle')}</div>
             <input
               className="input"
-              placeholder="e.g. House down payment"
+              placeholder={t('fin.sg.titlePh')}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               autoFocus
@@ -341,7 +342,7 @@ export default function SavingsGoals() {
           </div>
           <div className="flex gap-2">
             <div className="flex-1">
-              <div className="sec mb-2">Target</div>
+              <div className="sec mb-2">{t('fin.sg.gTarget')}</div>
               <input
                 className="input"
                 inputMode="decimal"
@@ -351,7 +352,7 @@ export default function SavingsGoals() {
               />
             </div>
             <div className="w-24">
-              <div className="sec mb-2">Currency</div>
+              <div className="sec mb-2">{t('fin.sg.currency')}</div>
               <select
                 className="input"
                 value={currency}
@@ -364,7 +365,7 @@ export default function SavingsGoals() {
             </div>
           </div>
           <div>
-            <div className="sec mb-2">Allocated so far (optional)</div>
+            <div className="sec mb-2">{t('fin.sg.allocatedSoFar')}</div>
             <input
               className="input"
               inputMode="decimal"
@@ -373,11 +374,11 @@ export default function SavingsGoals() {
               onChange={(e) => setAllocatedInput(e.target.value)}
             />
             <div className="text-[10px] text-text-muted mt-1">
-              Stamp the initial allocation if you're tracking money already set aside. You can also leave this at 0 and use the +/- pills on the row to allocate over time.
+              {t('fin.sg.allocatedHint')}
             </div>
           </div>
           <div>
-            <div className="sec mb-2">Deadline (optional)</div>
+            <div className="sec mb-2">{t('fin.sg.deadlineOpt')}</div>
             <input
               type="date"
               className="input"
@@ -386,10 +387,10 @@ export default function SavingsGoals() {
             />
           </div>
           <div>
-            <div className="sec mb-2">Notes</div>
+            <div className="sec mb-2">{t('fin.sg.notes')}</div>
             <textarea
               className="input min-h-[60px]"
-              placeholder="What's this for?"
+              placeholder={t('fin.sg.notesPh')}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
@@ -400,10 +401,10 @@ export default function SavingsGoals() {
               onClick={submitEditor}
               disabled={!title.trim() || !target}
             >
-              {editing ? 'Save Changes' : 'Add Goal'}
+              {editing ? t('fin.sg.saveChanges') : t('fin.sg.addGoal')}
             </button>
             <button className="btn-ghost" onClick={() => setEditorOpen(false)}>
-              Cancel
+              {t('common.cancel')}
             </button>
           </div>
         </div>
@@ -413,16 +414,14 @@ export default function SavingsGoals() {
       <BottomSheet
         open={investOpen}
         onClose={() => setInvestOpen(false)}
-        title="Move to investments"
+        title={t('fin.sg.moveToInvest')}
       >
         <div className="space-y-3">
           <div className="text-[11px] text-text-muted">
-            Reduces the selected cash asset and frees up that amount from
-            your available pool. Record the actual buy in Portfolio so net
-            worth stays accurate.
+            {t('fin.sg.investHint')}
           </div>
           <div>
-            <div className="sec mb-2">Amount ({baseCurrency})</div>
+            <div className="sec mb-2">{t('fin.sg.amountCur', { cur: baseCurrency })}</div>
             <input
               className="input"
               inputMode="decimal"
@@ -433,14 +432,14 @@ export default function SavingsGoals() {
             />
           </div>
           <div>
-            <div className="sec mb-2">Source</div>
+            <div className="sec mb-2">{t('fin.sg.source')}</div>
             <select
               className="input"
               value={investSourceId}
               onChange={(e) => setInvestSourceId(e.target.value)}
             >
               {liquidAssets.length === 0 ? (
-                <option value="">No cash assets logged</option>
+                <option value="">{t('fin.sg.noCashAssets')}</option>
               ) : (
                 liquidAssets.map((a) => {
                   const inBase = convertSync(a.value, a.currency, baseCurrency, fxRates);
@@ -464,7 +463,7 @@ export default function SavingsGoals() {
               className="w-4 h-4"
             />
             <span className="text-[11px] text-text-muted">
-              Go to Portfolio to record the holding
+              {t('fin.sg.goToPortfolio')}
             </span>
           </label>
           <div className="flex gap-2">
@@ -473,10 +472,10 @@ export default function SavingsGoals() {
               onClick={submitInvest}
               disabled={!investAmount || !investSourceId || parseFloat(investAmount) <= 0}
             >
-              Move
+              {t('fin.sg.move')}
             </button>
             <button className="btn-ghost" onClick={() => setInvestOpen(false)}>
-              Cancel
+              {t('common.cancel')}
             </button>
           </div>
         </div>
@@ -507,6 +506,7 @@ interface GoalRowProps {
 }
 
 function GoalRow({ goal, onAllocate, onSet, onEdit, onDelete }: GoalRowProps) {
+  const { t } = useTranslation();
   const completed = !!goal.completedAt;
   const pct = goal.targetAmount > 0
     ? Math.min(100, (goal.allocatedAmount / goal.targetAmount) * 100)
@@ -573,25 +573,25 @@ function GoalRow({ goal, onAllocate, onSet, onEdit, onDelete }: GoalRowProps) {
           <div className="font-heading font-semibold text-sm flex items-center gap-1.5">
             {isBuffer && <span aria-hidden className="text-warning">🛟</span>}
             {!isBuffer && completed && <span aria-hidden>✓</span>}
-            <span className="truncate">{isBuffer ? 'Emergency Buffer' : goal.title}</span>
+            <span className="truncate">{isBuffer ? t('fin.sg.emergencyBuffer') : goal.title}</span>
           </div>
           <div className="text-[10px] text-text-muted truncate">
             {isBuffer ? (
               goal.targetAmount > 0 ? (
                 <>
-                  {fmtCompact(goal.allocatedAmount, goal.currency)} reserved · target {fmtCompact(goal.targetAmount, goal.currency)}
+                  {t('fin.sg.bufferReserved', { a: fmtCompact(goal.allocatedAmount, goal.currency), t: fmtCompact(goal.targetAmount, goal.currency) })}
                   {remaining > 0 && (
-                    <> · <span className="text-warning/80">{fmtCompact(remaining, goal.currency)} short</span></>
+                    <> · <span className="text-warning/80">{t('fin.sg.bufferShort', { a: fmtCompact(remaining, goal.currency) })}</span></>
                   )}
                 </>
               ) : (
-                <>{fmtCompact(goal.allocatedAmount, goal.currency)} reserved · set a target in Edit</>
+                <>{t('fin.sg.bufferNoTarget', { a: fmtCompact(goal.allocatedAmount, goal.currency) })}</>
               )
             ) : (
               <>
-                {fmtCompact(goal.allocatedAmount, goal.currency)} of {fmtCompact(goal.targetAmount, goal.currency)}
+                {t('fin.sg.ofTarget', { a: fmtCompact(goal.allocatedAmount, goal.currency), t: fmtCompact(goal.targetAmount, goal.currency) })}
                 {!completed && remaining > 0 && (
-                  <> · <span className="text-primary/70">{fmtCompact(remaining, goal.currency)} to go</span></>
+                  <> · <span className="text-primary/70">{t('fin.sg.toGo', { a: fmtCompact(remaining, goal.currency) })}</span></>
                 )}
               </>
             )}
@@ -600,7 +600,7 @@ function GoalRow({ goal, onAllocate, onSet, onEdit, onDelete }: GoalRowProps) {
         {/* Buffer goal never carries a deadline; show a "Reserve" pill instead
             so the row still has a right-rail affordance. */}
         {isBuffer ? (
-          <Pill asLabel size="sm" tone="warning">Reserve</Pill>
+          <Pill asLabel size="sm" tone="warning">{t('fin.sg.reserve')}</Pill>
         ) : goal.deadline && (
           <Pill
             asLabel
@@ -638,13 +638,13 @@ function GoalRow({ goal, onAllocate, onSet, onEdit, onDelete }: GoalRowProps) {
             {quickStep}
           </Pill>
           <Pill size="sm" onClick={() => setCustomOpen(true)} icon="✎">
-            Custom
+            {t('fin.sg.custom')}
           </Pill>
           <div className="ml-auto flex items-center gap-1.5">
-            <Pill size="sm" onClick={onEdit}>Edit</Pill>
+            <Pill size="sm" onClick={onEdit}>{t('fin.sg.edit')}</Pill>
             {/* Buffer goal is non-deletable — see store's deleteGoal guard. */}
             {!isBuffer && (
-              <Pill size="sm" tone="danger" onClick={onDelete}>Delete</Pill>
+              <Pill size="sm" tone="danger" onClick={onDelete}>{t('fin.sg.delete')}</Pill>
             )}
           </div>
         </div>
@@ -653,13 +653,13 @@ function GoalRow({ goal, onAllocate, onSet, onEdit, onDelete }: GoalRowProps) {
           <input
             className="input flex-1 py-2"
             inputMode="decimal"
-            placeholder={`Amount in ${goal.currency}`}
+            placeholder={t('fin.sg.amountIn', { cur: goal.currency })}
             value={customAmount}
             onChange={(e) => setCustomAmount(e.target.value)}
             autoFocus
           />
-          <Pill size="sm" on onClick={() => submitCustom('add')} icon="+">Add</Pill>
-          <Pill size="sm" onClick={() => submitCustom('set')}>Set</Pill>
+          <Pill size="sm" on onClick={() => submitCustom('add')} icon="+">{t('fin.sg.add')}</Pill>
+          <Pill size="sm" onClick={() => submitCustom('set')}>{t('fin.sg.set')}</Pill>
           <Pill size="sm" onClick={() => { setCustomOpen(false); setCustomAmount(''); }}>×</Pill>
         </div>
       )}
