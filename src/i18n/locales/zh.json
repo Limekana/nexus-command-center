@@ -441,6 +441,59 @@
       "fromOther": "来自另一个账户",
       "toName": "转入 {{name}}",
       "toOther": "转入另一个账户"
+    },
+    "assetClass": {
+      "stock": "📈 股票",
+      "etf": "🧺 ETF",
+      "crypto": "₿ 加密货币"
+    },
+    "assetAbbr": {
+      "stock": "股票",
+      "etf": "ETF",
+      "crypto": "加密"
+    },
+    "wl": {
+      "add": "+ 关注",
+      "editWatch": "编辑关注",
+      "newWatch": "新建关注",
+      "cgIdPh": "CoinGecko id（例如 bitcoin）",
+      "tickerPh": "代码（例如 NVDA, CNDX.L）",
+      "displayName": "显示名称",
+      "alerts": "提醒（可选）",
+      "alertAbove": "当 ≥ 时提醒",
+      "alertBelow": "当 ≤ 时提醒",
+      "helper": "关注项使用与持仓相同的报价管道。当价格越过你的目标时触发提醒。",
+      "watching": "关注中",
+      "tickers_one": "{{count}} 个代码",
+      "tickers_other": "{{count}} 个代码",
+      "empty": "还没有关注项。点击 + 关注以关注一个代码而无需持有。",
+      "targetAboveHit": "已达目标 ≥",
+      "targetBelowHit": "已达目标 ≤",
+      "stopWatching": "停止关注 {{ticker}}？"
+    },
+    "mh": {
+      "title": "管理持仓",
+      "new": "+ 新建",
+      "editHolding": "编辑持仓",
+      "newHolding": "新建持仓",
+      "cgIdPh": "CoinGecko id（例如 bitcoin）",
+      "etfTickerPh": "代码（例如 CNDX.L）",
+      "stockTickerPh": "代码（例如 AAPL）",
+      "displayName": "显示名称",
+      "sectorPh": "行业（可选，例如 科技、银行）",
+      "firstPurchase": "首次买入",
+      "quantity": "数量",
+      "pricePerUnit": "单价",
+      "stockHint": "报价来自 Finnhub。请使用交易所代码。",
+      "etfHint": "ETF 使用股票报价 — 代码规则相同。国际后缀（.L、.DE）走 Yahoo。",
+      "cryptoHint": "价格来自 CoinGecko。请使用小写的币种 id（bitcoin、ethereum、solana…）。",
+      "addLater": " 之后可从「买入记录」按钮添加更多买入。",
+      "holdings": "持仓",
+      "empty": "还没有持仓 — 点击 + 新建添加",
+      "noOpen": "没有未平仓位 — 所有持仓均已平仓",
+      "closed": "已平仓",
+      "removeConfirm": "将 {{ticker}} 从投资组合中移除？买入记录也将被删除。",
+      "closedPositions": "已平仓位"
     }
   }
 }

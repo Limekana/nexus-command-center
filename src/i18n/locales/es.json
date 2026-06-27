@@ -441,6 +441,59 @@
       "fromOther": "de otra cuenta",
       "toName": "a {{name}}",
       "toOther": "a otra cuenta"
+    },
+    "assetClass": {
+      "stock": "📈 Acción",
+      "etf": "🧺 ETF",
+      "crypto": "₿ Cripto"
+    },
+    "assetAbbr": {
+      "stock": "ACCIÓN",
+      "etf": "ETF",
+      "crypto": "CRIPTO"
+    },
+    "wl": {
+      "add": "+ Seguir",
+      "editWatch": "Editar seguimiento",
+      "newWatch": "Nuevo seguimiento",
+      "cgIdPh": "id de CoinGecko (p. ej. bitcoin)",
+      "tickerPh": "Ticker (p. ej. NVDA, CNDX.L)",
+      "displayName": "Nombre visible",
+      "alerts": "Alertas (opcional)",
+      "alertAbove": "Alerta cuando ≥",
+      "alertBelow": "Alerta cuando ≤",
+      "helper": "Los elementos de la lista de seguimiento usan el mismo flujo de cotización que tus posiciones. Las alertas se activan cuando el precio cruza tu objetivo.",
+      "watching": "Siguiendo",
+      "tickers_one": "{{count}} ticker",
+      "tickers_other": "{{count}} tickers",
+      "empty": "Aún no hay elementos. Toca + Seguir para seguir un ticker sin poseerlo.",
+      "targetAboveHit": "Objetivo ≥ alcanzado",
+      "targetBelowHit": "Objetivo ≤ alcanzado",
+      "stopWatching": "¿Dejar de seguir {{ticker}}?"
+    },
+    "mh": {
+      "title": "Gestionar posiciones",
+      "new": "+ Nueva",
+      "editHolding": "Editar posición",
+      "newHolding": "Nueva posición",
+      "cgIdPh": "id de CoinGecko (p. ej. bitcoin)",
+      "etfTickerPh": "Ticker (p. ej. CNDX.L)",
+      "stockTickerPh": "Ticker (p. ej. AAPL)",
+      "displayName": "Nombre visible",
+      "sectorPh": "Sector (opcional, p. ej. Tecnología, Banca)",
+      "firstPurchase": "Primera compra",
+      "quantity": "Cantidad",
+      "pricePerUnit": "Precio por unidad",
+      "stockHint": "Cotizaciones vía Finnhub. Usa el ticker de la bolsa.",
+      "etfHint": "Los ETF usan cotizaciones de acciones — mismas reglas de ticker. Los sufijos internacionales (.L, .DE) van por Yahoo.",
+      "cryptoHint": "Precios vía CoinGecko. Usa el id de la moneda en minúsculas (bitcoin, ethereum, solana…).",
+      "addLater": " Añade más compras luego desde el botón Compras.",
+      "holdings": "Posiciones",
+      "empty": "Aún no hay posiciones — toca + Nueva para añadir una",
+      "noOpen": "Sin posiciones abiertas — todas las posiciones están cerradas",
+      "closed": "cerrada",
+      "removeConfirm": "¿Eliminar {{ticker}} de la cartera? También se eliminará el historial de compras.",
+      "closedPositions": "Posiciones cerradas"
     }
   }
 }

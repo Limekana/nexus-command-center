@@ -441,6 +441,59 @@
       "fromOther": "von einem anderen Konto",
       "toName": "auf {{name}}",
       "toOther": "auf ein anderes Konto"
+    },
+    "assetClass": {
+      "stock": "📈 Aktie",
+      "etf": "🧺 ETF",
+      "crypto": "₿ Krypto"
+    },
+    "assetAbbr": {
+      "stock": "AKTIE",
+      "etf": "ETF",
+      "crypto": "KRYPTO"
+    },
+    "wl": {
+      "add": "+ Beobachten",
+      "editWatch": "Beobachtung bearbeiten",
+      "newWatch": "Neue Beobachtung",
+      "cgIdPh": "CoinGecko-ID (z. B. bitcoin)",
+      "tickerPh": "Ticker (z. B. NVDA, CNDX.L)",
+      "displayName": "Anzeigename",
+      "alerts": "Alarme (optional)",
+      "alertAbove": "Alarm bei ≥",
+      "alertBelow": "Alarm bei ≤",
+      "helper": "Beobachtungslisten-Einträge nutzen dieselbe Kurs-Pipeline wie deine Bestände. Alarme lösen aus, wenn der Kurs dein Ziel überschreitet.",
+      "watching": "Beobachtet",
+      "tickers_one": "{{count}} Ticker",
+      "tickers_other": "{{count}} Ticker",
+      "empty": "Noch keine Einträge. Tippe auf + Beobachten, um einen Ticker zu verfolgen, ohne ihn zu besitzen.",
+      "targetAboveHit": "Ziel ≥ erreicht",
+      "targetBelowHit": "Ziel ≤ erreicht",
+      "stopWatching": "{{ticker}} nicht mehr beobachten?"
+    },
+    "mh": {
+      "title": "Bestände verwalten",
+      "new": "+ Neu",
+      "editHolding": "Bestand bearbeiten",
+      "newHolding": "Neuer Bestand",
+      "cgIdPh": "CoinGecko-ID (z. B. bitcoin)",
+      "etfTickerPh": "Ticker (z. B. CNDX.L)",
+      "stockTickerPh": "Ticker (z. B. AAPL)",
+      "displayName": "Anzeigename",
+      "sectorPh": "Sektor (optional, z. B. Technologie, Banken)",
+      "firstPurchase": "Erster Kauf",
+      "quantity": "Menge",
+      "pricePerUnit": "Preis pro Einheit",
+      "stockHint": "Kurse über Finnhub. Verwende den Börsenticker.",
+      "etfHint": "ETFs verwenden Aktienkurse — gleiche Ticker-Regeln. Internationale Suffixe (.L, .DE) laufen über Yahoo.",
+      "cryptoHint": "Preise über CoinGecko. Verwende die kleingeschriebene Coin-ID (bitcoin, ethereum, solana…).",
+      "addLater": " Füge später weitere Käufe über die Käufe-Schaltfläche hinzu.",
+      "holdings": "Bestände",
+      "empty": "Noch keine Bestände — tippe auf + Neu zum Hinzufügen",
+      "noOpen": "Keine offenen Positionen — alle Bestände sind geschlossen",
+      "closed": "geschlossen",
+      "removeConfirm": "{{ticker}} aus dem Portfolio entfernen? Die Kaufhistorie wird ebenfalls gelöscht.",
+      "closedPositions": "Geschlossene Positionen"
     }
   }
 }

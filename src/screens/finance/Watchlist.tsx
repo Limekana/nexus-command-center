@@ -9,6 +9,7 @@
 // row and pulls live data via fetchHoldingDetail() based on ticker.
 
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import AppHeader from '../../components/AppHeader';
 import RowActions from '../../components/RowActions';
 import SparkLine from '../../components/SparkLine';
@@ -31,6 +32,7 @@ function fmt(amount: number, currency: string): string {
 }
 
 export default function Watchlist() {
+  const { t } = useTranslation();
   const watchlist = useFinanceStore((s) => s.watchlist);
   const stockQuotes = useFinanceStore((s) => s.stockQuotes);
   const cryptoPrices = useFinanceStore((s) => s.cryptoPrices);
@@ -160,9 +162,9 @@ export default function Watchlist() {
   return (
     <>
       <AppHeader
-        title="Watchlist"
+        title={t('fin.ov.watchlist')}
         back="/finance/portfolio"
-        backLabel="Portfolio"
+        backLabel={t('fin.ov.portfolio')}
         showAvatar={false}
         action={
           !editingNow && (
@@ -178,7 +180,7 @@ export default function Watchlist() {
                 onClick={startAdd}
                 className="text-xs px-2 py-1 rounded-sm border border-primary text-primary active:bg-primary/10"
               >
-                + Watch
+                {t('fin.wl.add')}
               </button>
             </>
           )
@@ -188,24 +190,24 @@ export default function Watchlist() {
         {editingNow && (
           <div className="card space-y-2">
             <div className="font-heading font-semibold text-sm">
-              {editing ? 'Edit Watch' : 'New Watch'}
+              {editing ? t('fin.wl.editWatch') : t('fin.wl.newWatch')}
             </div>
             <div className="flex gap-2">
-              {(['stock', 'etf', 'crypto'] as const).map((t) => (
+              {(['stock', 'etf', 'crypto'] as const).map((ty) => (
                 <button
-                  key={t}
+                  key={ty}
                   type="button"
-                  onClick={() => setAssetType(t)}
-                  className={`chip flex-1 ${assetType === t ? 'chip-on' : ''}`}
+                  onClick={() => setAssetType(ty)}
+                  className={`chip flex-1 ${assetType === ty ? 'chip-on' : ''}`}
                 >
-                  {t === 'stock' ? '📈 Stock' : t === 'etf' ? '🧺 ETF' : '₿ Crypto'}
+                  {t(`fin.assetClass.${ty}`)}
                 </button>
               ))}
             </div>
             <input
               className="input"
               placeholder={
-                assetType === 'crypto' ? 'CoinGecko id (e.g. bitcoin)' : 'Ticker (e.g. NVDA, CNDX.L)'
+                assetType === 'crypto' ? t('fin.wl.cgIdPh') : t('fin.wl.tickerPh')
               }
               value={ticker}
               onChange={(e) => {
@@ -221,24 +223,24 @@ export default function Watchlist() {
             )}
             <input
               className="input"
-              placeholder="Display name"
+              placeholder={t('fin.wl.displayName')}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
             <div className="text-[10px] uppercase tracking-wider text-text-muted mt-2">
-              Alerts (optional)
+              {t('fin.wl.alerts')}
             </div>
             <div className="flex gap-2">
               <input
                 className="input flex-1"
-                placeholder="Alert when ≥"
+                placeholder={t('fin.wl.alertAbove')}
                 inputMode="decimal"
                 value={targetAbove}
                 onChange={(e) => setTargetAbove(e.target.value)}
               />
               <input
                 className="input flex-1"
-                placeholder="Alert when ≤"
+                placeholder={t('fin.wl.alertBelow')}
                 inputMode="decimal"
                 value={targetBelow}
                 onChange={(e) => setTargetBelow(e.target.value)}
@@ -246,29 +248,28 @@ export default function Watchlist() {
             </div>
             <div className="flex gap-2">
               <button className="btn flex-1" onClick={save}>
-                {editing ? 'Save' : 'Add'}
+                {editing ? t('common.save') : t('common.add')}
               </button>
               <button className="btn-ghost flex-1" onClick={cancel}>
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
             <div className="text-[10px] text-text-muted">
-              Watchlist items use the same quote pipeline as your holdings.
-              Alerts trigger when the price crosses your target.
+              {t('fin.wl.helper')}
             </div>
           </div>
         )}
 
         <div className="card">
           <div className="flex items-center justify-between mb-3">
-            <span className="font-heading font-semibold text-sm">Watching</span>
+            <span className="font-heading font-semibold text-sm">{t('fin.wl.watching')}</span>
             <span className="text-[9px] uppercase tracking-wider text-text-muted">
-              {rows.length} {rows.length === 1 ? 'ticker' : 'tickers'}
+              {t('fin.wl.tickers', { count: rows.length })}
             </span>
           </div>
           {rows.length === 0 && !editingNow && (
             <div className="text-xs text-text-muted text-center py-6">
-              No watchlist items yet. Tap + Watch to track a ticker without owning it.
+              {t('fin.wl.empty')}
             </div>
           )}
           {rows.map((r) => (
@@ -292,7 +293,7 @@ export default function Watchlist() {
                 <div className="flex flex-col w-[68px] min-w-0">
                   <span className="text-sm font-medium truncate">{r.item.ticker.toUpperCase()}</span>
                   <span className="text-[9px] uppercase tracking-wider text-text-muted truncate">
-                    {r.item.assetType === 'etf' ? 'ETF' : r.item.assetType.toUpperCase()}
+                    {t(`fin.assetAbbr.${r.item.assetType}`, { defaultValue: r.item.assetType.toUpperCase() })}
                   </span>
                   {/* v1.2 — Insights tier pill. Stock + ETF only (crypto/fx
                       out of scope for the signal engine today). */}
@@ -322,7 +323,7 @@ export default function Watchlist() {
                         ? 'border-success/40 bg-success/10 text-success'
                         : 'border-warning/40 bg-warning/10 text-warning'
                     }`}>
-                      Target {r.alert === 'above' ? '≥' : '≤'} hit
+                      {r.alert === 'above' ? t('fin.wl.targetAboveHit') : t('fin.wl.targetBelowHit')}
                     </span>
                   )}
                 </div>
@@ -330,7 +331,7 @@ export default function Watchlist() {
               <RowActions
                 onEdit={() => startEdit(r.item)}
                 onDelete={() => deleteItem(r.item.id)}
-                confirmMsg={`Stop watching ${r.item.ticker.toUpperCase()}?`}
+                confirmMsg={t('fin.wl.stopWatching', { ticker: r.item.ticker.toUpperCase() })}
               />
             </div>
           ))}

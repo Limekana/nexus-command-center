@@ -441,6 +441,59 @@
       "fromOther": "from another account",
       "toName": "to {{name}}",
       "toOther": "to another account"
+    },
+    "assetClass": {
+      "stock": "📈 Stock",
+      "etf": "🧺 ETF",
+      "crypto": "₿ Crypto"
+    },
+    "assetAbbr": {
+      "stock": "STOCK",
+      "etf": "ETF",
+      "crypto": "CRYPTO"
+    },
+    "wl": {
+      "add": "+ Watch",
+      "editWatch": "Edit Watch",
+      "newWatch": "New Watch",
+      "cgIdPh": "CoinGecko id (e.g. bitcoin)",
+      "tickerPh": "Ticker (e.g. NVDA, CNDX.L)",
+      "displayName": "Display name",
+      "alerts": "Alerts (optional)",
+      "alertAbove": "Alert when ≥",
+      "alertBelow": "Alert when ≤",
+      "helper": "Watchlist items use the same quote pipeline as your holdings. Alerts trigger when the price crosses your target.",
+      "watching": "Watching",
+      "tickers_one": "{{count}} ticker",
+      "tickers_other": "{{count}} tickers",
+      "empty": "No watchlist items yet. Tap + Watch to track a ticker without owning it.",
+      "targetAboveHit": "Target ≥ hit",
+      "targetBelowHit": "Target ≤ hit",
+      "stopWatching": "Stop watching {{ticker}}?"
+    },
+    "mh": {
+      "title": "Manage Holdings",
+      "new": "+ New",
+      "editHolding": "Edit Holding",
+      "newHolding": "New Holding",
+      "cgIdPh": "CoinGecko id (e.g. bitcoin)",
+      "etfTickerPh": "Ticker (e.g. CNDX.L)",
+      "stockTickerPh": "Ticker (e.g. AAPL)",
+      "displayName": "Display name",
+      "sectorPh": "Sector (optional, e.g. Technology, Banking)",
+      "firstPurchase": "First Purchase",
+      "quantity": "Quantity",
+      "pricePerUnit": "Price per unit",
+      "stockHint": "Quotes via Finnhub. Use the exchange ticker.",
+      "etfHint": "ETFs use stock quotes — same ticker rules. International suffixes (.L, .DE) route to Yahoo.",
+      "cryptoHint": "Prices via CoinGecko. Use the lowercase coin id (bitcoin, ethereum, solana…).",
+      "addLater": " Add additional purchases later from the Purchases button.",
+      "holdings": "Holdings",
+      "empty": "No holdings yet — tap + New to add one",
+      "noOpen": "No open positions — all holdings are closed",
+      "closed": "closed",
+      "removeConfirm": "Remove {{ticker}} from portfolio? Purchase history will also be deleted.",
+      "closedPositions": "Closed positions"
     }
   }
 }
