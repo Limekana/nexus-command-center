@@ -14,6 +14,7 @@
 
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import AppHeader from '../components/AppHeader';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { useStudiesStore } from '../store/useStudiesStore';
@@ -50,6 +51,7 @@ const TONE_STYLES = {
 
 export default function WeeklyReview() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const transactions = useFinanceStore((s) => s.transactions);
   const budgetCategories = useFinanceStore((s) => s.budgetCategories);
   const holdings = useFinanceStore((s) => s.holdings);
@@ -107,7 +109,7 @@ export default function WeeklyReview() {
 
   return (
     <>
-      <AppHeader title="Weekly Review" back="/" backLabel="Home" showAvatar={false} />
+      <AppHeader title={t('weeklyReview.title')} back="/" backLabel={t('nav.home')} showAvatar={false} />
       <div className="space-y-3">
         {/* Week stepper */}
         <div className="card flex items-center justify-between">
@@ -115,11 +117,11 @@ export default function WeeklyReview() {
             onClick={() => setWeekOffset((w) => w - 1)}
             className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary"
           >
-            ← Prev
+            {t('weeklyReview.prev')}
           </button>
           <div className="text-center">
             <div className="text-[9px] uppercase tracking-[0.2em] text-text-muted">
-              Week
+              {t('weeklyReview.week')}
             </div>
             <div className="font-heading font-semibold text-sm">
               {formatRange(data.weekStart, data.weekEnd)}
@@ -130,14 +132,14 @@ export default function WeeklyReview() {
             disabled={weekOffset >= 0}
             className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary disabled:opacity-30"
           >
-            Next →
+            {t('weeklyReview.next')}
           </button>
         </div>
 
         {/* Insights */}
         {data.insights.length > 0 && (
           <div className="card">
-            <div className="font-heading font-semibold text-sm mb-2">Highlights</div>
+            <div className="font-heading font-semibold text-sm mb-2">{t('weeklyReview.highlights')}</div>
             <div className="space-y-1.5">
               {data.insights.map((insight, i) => (
                 <div
@@ -157,29 +159,29 @@ export default function WeeklyReview() {
           className="card text-left w-full active:bg-surface2/40"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="font-heading font-semibold text-sm">💰 Finance</span>
+            <span className="font-heading font-semibold text-sm">💰 {t('weeklyReview.finance')}</span>
             <span className="text-[9px] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-1.5 py-0.5">
-              Open
+              {t('weeklyReview.open')}
             </span>
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-text-muted">Spend</div>
+              <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.spend')}</div>
               <div className="font-heading font-bold text-base">{fmtMoney(data.finance.spend)}</div>
               <div className="text-[9px] text-text-muted">{data.finance.spendDelta}</div>
             </div>
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-text-muted">Income</div>
+              <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.income')}</div>
               <div className="font-heading font-bold text-base">{fmtMoney(data.finance.income)}</div>
             </div>
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-text-muted">Tx</div>
+              <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.tx')}</div>
               <div className="font-heading font-bold text-base">{data.finance.txCount}</div>
             </div>
           </div>
           {topCategoryName && (
             <div className="text-[10px] text-text-muted mt-2">
-              Top category: {topCategoryName} · {fmtMoney(data.finance.topCategoryAmount)}
+              {t('weeklyReview.topCategory', { name: topCategoryName, amount: fmtMoney(data.finance.topCategoryAmount) })}
             </div>
           )}
         </button>
@@ -188,22 +190,22 @@ export default function WeeklyReview() {
             the v1.3 scope reduction; this stays as a signal recap). */}
         <div className="card">
           <div className="flex items-center justify-between mb-2">
-            <span className="font-heading font-semibold text-sm">📚 Studies</span>
+            <span className="font-heading font-semibold text-sm">📚 {t('weeklyReview.studies')}</span>
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-text-muted">Studied</div>
+              <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.studied')}</div>
               <div className="font-heading font-bold text-base">
                 {formatHours(data.studies.studyMinutes)}
               </div>
               <div className="text-[9px] text-text-muted">{data.studies.minutesDelta}</div>
             </div>
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-text-muted">Sessions</div>
+              <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.sessions')}</div>
               <div className="font-heading font-bold text-base">{data.studies.sessionCount}</div>
             </div>
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-text-muted">GPA</div>
+              <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.gpa')}</div>
               <div className="font-heading font-bold text-base">
                 {data.studies.gpa != null ? data.studies.gpa.toFixed(2) : '—'}
               </div>
@@ -215,20 +217,20 @@ export default function WeeklyReview() {
             the v1.3 scope reduction; this stays as a signal recap). */}
         <div className="card">
           <div className="flex items-center justify-between mb-2">
-            <span className="font-heading font-semibold text-sm">🏋️ Fitness</span>
+            <span className="font-heading font-semibold text-sm">🏋️ {t('weeklyReview.fitness')}</span>
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-text-muted">Workouts</div>
+              <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.workouts')}</div>
               <div className="font-heading font-bold text-base">{data.fitness.workoutCount}</div>
               <div className="text-[9px] text-text-muted">{data.fitness.workoutsDelta}</div>
             </div>
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-text-muted">Sets</div>
+              <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.sets')}</div>
               <div className="font-heading font-bold text-base">{data.fitness.totalSets}</div>
             </div>
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-text-muted">Volume</div>
+              <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.volume')}</div>
               <div className="font-heading font-bold text-base">
                 {data.fitness.totalVolumeKg > 0
                   ? `${Math.round(data.fitness.totalVolumeKg).toLocaleString('fi-FI')} kg`
@@ -238,7 +240,7 @@ export default function WeeklyReview() {
           </div>
           {data.fitness.topExercise && (
             <div className="text-[10px] text-text-muted mt-2">
-              Most-trained: {data.fitness.topExercise} · {data.fitness.topExerciseSets} sets
+              {t('weeklyReview.mostTrained', { name: data.fitness.topExercise, sets: data.fitness.topExerciseSets })}
             </div>
           )}
         </div>
@@ -249,29 +251,29 @@ export default function WeeklyReview() {
           className="card text-left w-full active:bg-surface2/40"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="font-heading font-semibold text-sm">✓ Tasks</span>
+            <span className="font-heading font-semibold text-sm">✓ {t('weeklyReview.tasks')}</span>
             <span className="text-[9px] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-1.5 py-0.5">
-              Open
+              {t('weeklyReview.open')}
             </span>
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-text-muted">Completed</div>
+              <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.completed')}</div>
               <div className="font-heading font-bold text-base">{data.tasks.completed}</div>
               <div className="text-[9px] text-text-muted">{data.tasks.completedDelta}</div>
             </div>
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-text-muted">New</div>
+              <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.new')}</div>
               <div className="font-heading font-bold text-base">{data.tasks.created}</div>
             </div>
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-text-muted">Open</div>
+              <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.openCount')}</div>
               <div className="font-heading font-bold text-base">{data.tasks.stillOpen}</div>
             </div>
           </div>
           {data.tasks.overdue > 0 && (
             <div className="text-[10px] text-danger mt-2">
-              ⚠ {data.tasks.overdue} overdue
+              ⚠ {t('weeklyReview.overdue', { n: data.tasks.overdue })}
             </div>
           )}
         </button>
@@ -282,20 +284,19 @@ export default function WeeklyReview() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <div className="font-heading font-semibold text-sm">📅 Year in Review</div>
+              <div className="font-heading font-semibold text-sm">📅 {t('weeklyReview.yearInReview')}</div>
               <div className="text-[10px] text-text-muted mt-0.5">
-                Rolling 12-month recap with heatmaps + top rankings
+                {t('weeklyReview.yearInReviewSub')}
               </div>
             </div>
             <span className="text-[10px] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5">
-              Open
+              {t('weeklyReview.open')}
             </span>
           </div>
         </button>
 
         <div className="card text-center text-[10px] text-text-muted">
-          Sunday evenings at 18:00 you get a push reminder to open this.
-          Toggle in Settings → Notifications.
+          {t('weeklyReview.footer')}
         </div>
       </div>
     </>

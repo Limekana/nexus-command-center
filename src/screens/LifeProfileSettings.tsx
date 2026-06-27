@@ -12,11 +12,11 @@
 // Cyber Slate Glass — pill selector, glass rows, cyan accents.
 
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import AppHeader from '../components/AppHeader';
 import { useLifeProfileStore } from '../store/useLifeProfileStore';
 import {
   DOMAIN_KEYS,
-  DOMAIN_LABELS,
   MIN_DOMAIN_WEIGHT,
   MIN_ENABLED_DOMAINS,
   type DomainKey,
@@ -28,21 +28,22 @@ import {
   withWeight,
 } from '../lib/lifeProfile';
 
-const PRESETS: { key: LifeProfilePreset; label: string }[] = [
-  { key: 'student', label: 'Student' },
-  { key: 'professional', label: 'Professional' },
-  { key: 'custom', label: 'Custom' },
+const PRESETS: { key: LifeProfilePreset; labelKey: string }[] = [
+  { key: 'student', labelKey: 'lifeProfile.student' },
+  { key: 'professional', labelKey: 'lifeProfile.professional' },
+  { key: 'custom', labelKey: 'lifeProfile.custom' },
 ];
 
-const DOMAIN_NOTE: Record<DomainKey, string> = {
-  finance: 'NCC budgets & net worth',
-  fitness: 'LimeLog workouts',
-  studies: 'StudyDesk sessions',
-  work: 'Daily work self-assessment',
-  habits: 'NCC habit tracker',
+const DOMAIN_NOTE_KEY: Record<DomainKey, string> = {
+  finance: 'lifeProfile.noteFinance',
+  fitness: 'lifeProfile.noteFitness',
+  studies: 'lifeProfile.noteStudies',
+  work: 'lifeProfile.noteWork',
+  habits: 'lifeProfile.noteHabits',
 };
 
 export default function LifeProfileSettings() {
+  const { t } = useTranslation();
   const profile = useLifeProfileStore((s) => s.profile);
   const setProfile = useLifeProfileStore((s) => s.setProfile);
   const resetToPreset = useLifeProfileStore((s) => s.resetToPreset);
@@ -90,11 +91,10 @@ export default function LifeProfileSettings() {
 
   return (
     <>
-      <AppHeader title="Life Profile" back="/settings" backLabel="Settings" showAvatar={false} />
+      <AppHeader title={t('lifeProfile.title')} back="/settings" backLabel={t('settings.title')} showAvatar={false} />
       <div className="space-y-4">
         <p className="text-xs text-text-muted px-1 leading-relaxed">
-          Choose which life domains shape your Life Score and how much each one
-          counts. The score and the Life tab adapt to your selection.
+          {t('lifeProfile.blurb')}
         </p>
 
         {/* Preset selector */}
@@ -105,7 +105,7 @@ export default function LifeProfileSettings() {
               onClick={() => onPreset(p.key)}
               className={`flex-1 pill pill-lg justify-center ${draft.preset === p.key ? 'pill-on' : ''}`}
             >
-              {p.label}
+              {t(p.labelKey)}
             </button>
           ))}
         </div>
@@ -130,7 +130,7 @@ export default function LifeProfileSettings() {
                     }}
                     disabled={on && !canDisable}
                     aria-pressed={on}
-                    aria-label={`${DOMAIN_LABELS[key]} ${on ? 'enabled' : 'disabled'}`}
+                    aria-label={`${t(`domains.${key}`)} ${on ? t('lifeProfile.enabled') : t('lifeProfile.disabled')}`}
                     className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 transition-colors ${
                       on ? 'border-primary bg-primary/15 text-primary' : 'border-glass-border text-transparent'
                     } ${on && !canDisable ? 'opacity-60' : ''}`}
@@ -138,8 +138,8 @@ export default function LifeProfileSettings() {
                     <span className="text-[11px] leading-none">✓</span>
                   </button>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm">{DOMAIN_LABELS[key]}</div>
-                    <div className="text-[10px] text-text-muted">{DOMAIN_NOTE[key]}</div>
+                    <div className="text-sm">{t(`domains.${key}`)}</div>
+                    <div className="text-[10px] text-text-muted">{t(DOMAIN_NOTE_KEY[key])}</div>
                   </div>
                   <div className={`font-heading text-sm font-semibold tabular-nums ${on ? 'text-primary' : 'text-text-muted'}`}>
                     {weight}%
@@ -157,14 +157,14 @@ export default function LifeProfileSettings() {
                     setDraft(withWeight(isCustom ? draft : { ...draft, preset: 'custom' }, key, v));
                   }}
                   className="w-full accent-primary disabled:opacity-40"
-                  aria-label={`${DOMAIN_LABELS[key]} weight`}
+                  aria-label={t('lifeProfile.weightAria', { domain: t(`domains.${key}`) })}
                 />
               </div>
             );
           })}
 
           <div className="flex items-center justify-between pt-2 border-t border-glass-border">
-            <span className="sec">Total</span>
+            <span className="sec">{t('lifeProfile.total')}</span>
             <span className="font-heading text-sm font-semibold text-success">100%</span>
           </div>
         </div>
@@ -172,17 +172,16 @@ export default function LifeProfileSettings() {
         {isCustom && (
           <div className="flex gap-2">
             <button className="btn-ghost flex-1 text-xs py-2" onClick={() => onPreset('student')}>
-              Reset to Student
+              {t('lifeProfile.resetStudent')}
             </button>
             <button className="btn-ghost flex-1 text-xs py-2" onClick={() => onPreset('professional')}>
-              Reset to Professional
+              {t('lifeProfile.resetProfessional')}
             </button>
           </div>
         )}
 
         <p className="text-[10px] text-text-muted text-center px-2">
-          A custom profile needs at least {MIN_ENABLED_DOMAINS} domains, each at
-          least {MIN_DOMAIN_WEIGHT}%. Weights rebalance automatically to total 100%.
+          {t('lifeProfile.footer', { min: MIN_ENABLED_DOMAINS, weight: MIN_DOMAIN_WEIGHT })}
         </p>
       </div>
     </>

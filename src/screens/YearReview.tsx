@@ -8,6 +8,7 @@
 
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import AppHeader from '../components/AppHeader';
 import HeatmapCalendar from '../components/HeatmapCalendar';
 import { useFinanceStore } from '../store/useFinanceStore';
@@ -31,6 +32,7 @@ function formatDateRange(start: Date, end: Date): string {
 
 export default function YearReview() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const transactions = useFinanceStore((s) => s.transactions);
   const budgetCategories = useFinanceStore((s) => s.budgetCategories);
   const holdings = useFinanceStore((s) => s.holdings);
@@ -82,7 +84,7 @@ export default function YearReview() {
 
   return (
     <>
-      <AppHeader title="Year in Review" back="/review" backLabel="Weekly" showAvatar={false} />
+      <AppHeader title={t('yearReview.title')} back="/review" backLabel={t('yearReview.back')} showAvatar={false} />
       <div className="space-y-3">
         {/* Anchor stepper */}
         <div className="card flex items-center justify-between">
@@ -90,10 +92,10 @@ export default function YearReview() {
             onClick={() => setMonthsBack((m) => m + 1)}
             className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary"
           >
-            ← 1 month
+            {t('yearReview.step1Back')}
           </button>
           <div className="text-center">
-            <div className="text-[9px] uppercase tracking-[0.2em] text-text-muted">Trailing 12 months</div>
+            <div className="text-[9px] uppercase tracking-[0.2em] text-text-muted">{t('yearReview.trailing12')}</div>
             <div className="font-heading font-semibold text-sm">
               {formatDateRange(data.rangeStart, data.rangeEnd)}
             </div>
@@ -103,13 +105,13 @@ export default function YearReview() {
             disabled={monthsBack <= 0}
             className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary disabled:opacity-30"
           >
-            1 month →
+            {t('yearReview.step1Fwd')}
           </button>
         </div>
 
         {/* Highlights */}
         <div className="card">
-          <div className="font-heading font-semibold text-sm mb-2">Highlights</div>
+          <div className="font-heading font-semibold text-sm mb-2">{t('yearReview.highlights')}</div>
           <div className="space-y-1.5">
             {data.highlights.map((h, i) => (
               <div
@@ -128,12 +130,12 @@ export default function YearReview() {
           className="card text-left w-full active:bg-surface2/40"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="font-heading font-semibold text-sm">💰 Finance</span>
+            <span className="font-heading font-semibold text-sm">💰 {t('yearReview.finance')}</span>
           </div>
           <div className="grid grid-cols-3 gap-2 mb-3">
-            <Stat label="Spend" value={fmtMoney(data.finance.totalSpend)} />
-            <Stat label="Income" value={fmtMoney(data.finance.totalIncome)} />
-            <Stat label="Tx" value={String(data.finance.txCount)} />
+            <Stat label={t('yearReview.spend')} value={fmtMoney(data.finance.totalSpend)} />
+            <Stat label={t('yearReview.income')} value={fmtMoney(data.finance.totalIncome)} />
+            <Stat label={t('yearReview.tx')} value={String(data.finance.txCount)} />
           </div>
           {data.finance.spendByDay.size > 0 && (
             <HeatmapCalendar
@@ -144,7 +146,7 @@ export default function YearReview() {
           )}
           {topCategoryNames.length > 0 && (
             <div className="mt-3 space-y-1">
-              <div className="text-[10px] uppercase tracking-wider text-text-muted">Top categories</div>
+              <div className="text-[10px] uppercase tracking-wider text-text-muted">{t('yearReview.topCategories')}</div>
               {topCategoryNames.map((c, i) => (
                 <div key={i} className="flex items-center justify-between text-xs">
                   <span className="truncate">{c.name}</span>
@@ -159,15 +161,15 @@ export default function YearReview() {
             the v1.3 scope reduction; this stays as a signal recap). */}
         <div className="card">
           <div className="flex items-center justify-between mb-2">
-            <span className="font-heading font-semibold text-sm">📚 Studies</span>
+            <span className="font-heading font-semibold text-sm">📚 {t('yearReview.studies')}</span>
           </div>
           <div className="grid grid-cols-3 gap-2 mb-3">
             <Stat
-              label="Studied"
+              label={t('yearReview.studied')}
               value={`${Math.round(data.studies.totalStudyMinutes / 60)}h`}
             />
-            <Stat label="Sessions" value={String(data.studies.sessionCount)} />
-            <Stat label="Courses" value={String(data.studies.coursesAdded)} />
+            <Stat label={t('yearReview.sessions')} value={String(data.studies.sessionCount)} />
+            <Stat label={t('yearReview.courses')} value={String(data.studies.coursesAdded)} />
           </div>
           {data.studies.studyMinutesByDay.size > 0 && (
             <HeatmapCalendar
@@ -178,7 +180,7 @@ export default function YearReview() {
           )}
           {data.studies.coursesAdded > 0 && (
             <div className="text-[10px] text-text-muted mt-2">
-              {data.studies.coursesAdded} courses added during this window.
+              {t('yearReview.coursesAdded', { n: data.studies.coursesAdded })}
             </div>
           )}
         </div>
@@ -187,13 +189,13 @@ export default function YearReview() {
             the v1.3 scope reduction; this stays as a signal recap). */}
         <div className="card">
           <div className="flex items-center justify-between mb-2">
-            <span className="font-heading font-semibold text-sm">🏋️ Fitness</span>
+            <span className="font-heading font-semibold text-sm">🏋️ {t('yearReview.fitness')}</span>
           </div>
           <div className="grid grid-cols-3 gap-2 mb-3">
-            <Stat label="Workouts" value={String(data.fitness.workoutCount)} />
-            <Stat label="Sets" value={String(data.fitness.totalSets)} />
+            <Stat label={t('yearReview.workouts')} value={String(data.fitness.workoutCount)} />
+            <Stat label={t('yearReview.sets')} value={String(data.fitness.totalSets)} />
             <Stat
-              label="Volume"
+              label={t('yearReview.volume')}
               value={
                 data.fitness.totalVolumeKg > 0
                   ? `${Math.round(data.fitness.totalVolumeKg / 1000)}t`
@@ -206,11 +208,11 @@ export default function YearReview() {
           )}
           {data.fitness.topExercises.length > 0 && (
             <div className="mt-3 space-y-1">
-              <div className="text-[10px] uppercase tracking-wider text-text-muted">Most trained</div>
+              <div className="text-[10px] uppercase tracking-wider text-text-muted">{t('yearReview.mostTrained')}</div>
               {data.fitness.topExercises.map((ex, i) => (
                 <div key={i} className="flex items-center justify-between text-xs">
                   <span className="truncate">{ex.exercise}</span>
-                  <span className="text-text-muted whitespace-nowrap ml-2">{ex.sets} sets</span>
+                  <span className="text-text-muted whitespace-nowrap ml-2">{ex.sets} {t('yearReview.sets').toLowerCase()}</span>
                 </div>
               ))}
             </div>
@@ -223,11 +225,11 @@ export default function YearReview() {
           className="card text-left w-full active:bg-surface2/40"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="font-heading font-semibold text-sm">✓ Tasks</span>
+            <span className="font-heading font-semibold text-sm">✓ {t('yearReview.tasks')}</span>
           </div>
           <div className="grid grid-cols-2 gap-2 mb-3">
-            <Stat label="Completed" value={String(data.tasks.completed)} />
-            <Stat label="Created" value={String(data.tasks.created)} />
+            <Stat label={t('yearReview.completed')} value={String(data.tasks.completed)} />
+            <Stat label={t('yearReview.created')} value={String(data.tasks.created)} />
           </div>
           {data.tasks.completedByDay.size > 0 && (
             <HeatmapCalendar data={data.tasks.completedByDay} tint="primary" unit="task" />
@@ -235,8 +237,7 @@ export default function YearReview() {
         </button>
 
         <div className="card text-center text-[10px] text-text-muted">
-          This is a <span className="text-text">rolling</span> 12-month window —
-          step the anchor back month-by-month to see any 12-month slice of your history.
+          {t('yearReview.footerRolling', { word: t('yearReview.rollingWord') })}
         </div>
       </div>
     </>
