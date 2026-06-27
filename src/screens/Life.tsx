@@ -15,6 +15,7 @@
 // surface its card.
 
 import { useEffect, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import AppHeader from '../components/AppHeader';
 import LifeScoreRing, { type RingSegment } from '../components/LifeScoreRing';
 import LifeNarrativeCard from '../components/LifeNarrativeCard';
@@ -36,7 +37,6 @@ import {
 import { computeWorkScore, weeklyRatingStats } from '../lib/workScore';
 import { computeGoalProgress, type DataSources } from '../lib/goals';
 import {
-  DOMAIN_LABELS,
   enabledDomains,
   type DomainKey,
 } from '../lib/lifeProfile';
@@ -57,11 +57,11 @@ const TONE_GLYPH: Record<Insight['tone'], string> = {
   negative: '↓',
   neutral: '◌',
 };
-const DOMAIN_LABEL: Record<Insight['domain'], string> = {
-  'fitness-study': 'Fitness × Studies',
-  'fitness-finance': 'Fitness × Finance',
-  'habits-output': 'Habits × Output',
-  'life-score': 'Life score',
+const DOMAIN_LABEL_KEY: Record<Insight['domain'], string> = {
+  'fitness-study': 'life.xFitnessStudy',
+  'fitness-finance': 'life.xFitnessFinance',
+  'habits-output': 'life.xHabitsOutput',
+  'life-score': 'life.lifeScoreLabel',
 };
 
 // Per-domain ring/card accent + which LifeScore field holds its sub-score.
@@ -81,6 +81,7 @@ const DOMAIN_SUBSCORE: Record<DomainKey, keyof Pick<LifeScore, 'workouts' | 'stu
 };
 
 export default function Life() {
+  const { t } = useTranslation();
   const txns = useFinanceStore((s) => s.transactions);
   const budgets = useFinanceStore((s) => s.budgetCategories);
   const workouts = useFitnessStore((s) => s.sessions);
@@ -179,18 +180,18 @@ export default function Life() {
 
   return (
     <>
-      <AppHeader title="Life Patterns" back="/" backLabel="Home" showAvatar={false} />
+      <AppHeader title={t('life.title')} back="/" backLabel={t('nav.home')} showAvatar={false} />
       <div className="space-y-6">
         {/* ─── THIS WEEK ─────────────────────────────────────────────── */}
         <section className="space-y-3">
           <h2 className="font-heading font-semibold text-xs uppercase tracking-wider text-text-muted px-1">
-            This week
+            {t('life.thisWeek')}
           </h2>
           {!report.ready ? (
             <div className="glass rounded-xl p-6 text-center">
-              <div className="font-heading text-base font-semibold mb-1">Building your baseline</div>
+              <div className="font-heading text-base font-semibold mb-1">{t('life.buildingBaseline')}</div>
               <div className="text-xs text-text-muted">
-                Insights appear once you've got about 4 weeks of activity logged across the suite.
+                {t('life.buildingBaselineSub')}
               </div>
             </div>
           ) : (
@@ -198,7 +199,7 @@ export default function Life() {
               <LifeScoreRing segments={ringSegments} size={200}>
                 <div className="flex flex-col items-center leading-none">
                   <span className="font-heading text-5xl font-bold">{thisWeek.score}</span>
-                  <span className="text-[10px] uppercase tracking-wider text-text-muted mt-1">Life score</span>
+                  <span className="text-[10px] uppercase tracking-wider text-text-muted mt-1">{t('domains.lifeScore')}</span>
                 </div>
               </LifeScoreRing>
               <div className="grid grid-cols-2 gap-2 w-full mt-4">
@@ -212,11 +213,11 @@ export default function Life() {
                       measured={measured}
                       sub={
                         !measured
-                          ? 'Not counted yet'
+                          ? t('life.notCountedYet')
                           : k === 'work'
                             ? workStats.daysLoggedThisWeek > 0
-                              ? `Avg ${workStats.weeklyRatingAvg.toFixed(1)}/5 · ${workStats.daysLoggedThisWeek} ${workStats.daysLoggedThisWeek === 1 ? 'day' : 'days'}`
-                              : 'No ratings yet'
+                              ? t('life.avgRating', { avg: workStats.weeklyRatingAvg.toFixed(1), count: workStats.daysLoggedThisWeek, unit: workStats.daysLoggedThisWeek === 1 ? t('life.day') : t('life.days') })
+                              : t('life.noRatingsYet')
                             : undefined
                       }
                     />
@@ -247,18 +248,18 @@ export default function Life() {
         {report.ready && (
           <section className="space-y-2">
             <h2 className="font-heading font-semibold text-xs uppercase tracking-wider text-text-muted px-1">
-              Patterns
+              {t('life.patterns')}
             </h2>
             {report.insights.length === 0 ? (
               <div className="glass-soft rounded-xl p-4 text-center text-xs text-text-muted">
-                Nothing crosses the noise floor this week. Keep logging — strong patterns become more obvious over time.
+                {t('life.patternsEmpty')}
               </div>
             ) : (
               <div className="space-y-2 stagger-children">
                 {report.insights.map((ins) => (
                   <article key={ins.id} className={`glass rounded-xl p-4 border-l-2 ${TONE_BORDER[ins.tone]}`}>
                     <div className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
-                      {DOMAIN_LABEL[ins.domain]}
+                      {t(DOMAIN_LABEL_KEY[ins.domain])}
                     </div>
                     <div className={`font-heading text-base font-bold leading-tight ${TONE_TEXT[ins.tone]} mb-1`}>
                       <span aria-hidden className="mr-1">{TONE_GLYPH[ins.tone]}</span>
@@ -276,14 +277,14 @@ export default function Life() {
         {report.ready && (
           <section className="space-y-2">
             <h2 className="font-heading font-semibold text-xs uppercase tracking-wider text-text-muted px-1">
-              History
+              {t('life.history')}
             </h2>
             <div ref={historyScrollRef} className="flex gap-2 overflow-x-auto no-scrollbar px-1 stagger-children">
               {[...report.weeks.lifeScores].reverse().map((w) => (
                 <div key={w.weekStart} className="glass-soft rounded-xl p-3 flex-shrink-0 w-20 flex flex-col items-center">
                   <div className="text-[9px] uppercase tracking-wider text-text-muted">{w.weekStart.slice(5)}</div>
                   <div className="font-heading text-xl font-bold mt-1">{w.score}</div>
-                  <div className="text-[9px] text-text-muted mt-0.5">/ 100</div>
+                  <div className="text-[9px] text-text-muted mt-0.5">{t('life.per100')}</div>
                 </div>
               ))}
             </div>
@@ -291,7 +292,7 @@ export default function Life() {
         )}
 
         <div className="text-[10px] text-text-muted text-center">
-          Insights derived from your logged activity — never causal claims.
+          {t('life.footer')}
         </div>
       </div>
     </>
@@ -299,6 +300,7 @@ export default function Life() {
 }
 
 function DomainCard({ domain, score, sub, measured = true }: { domain: DomainKey; score: number; sub?: string; measured?: boolean }) {
+  const { t } = useTranslation();
   const isWork = domain === 'work';
   return (
     <div
@@ -312,7 +314,7 @@ function DomainCard({ domain, score, sub, measured = true }: { domain: DomainKey
     >
       <div className="flex items-center gap-1.5">
         <span aria-hidden className="w-2 h-2 rounded-full" style={{ background: measured ? DOMAIN_COLOR[domain] : 'rgba(168,178,188,0.4)' }} />
-        <div className="text-[10px] uppercase tracking-wider text-text-muted">{DOMAIN_LABELS[domain]}</div>
+        <div className="text-[10px] uppercase tracking-wider text-text-muted">{t(`domains.${domain}`)}</div>
       </div>
       <div className="font-heading text-xl font-bold mt-0.5">{measured ? score : '—'}</div>
       {sub && <div className="text-[10px] text-text-muted mt-0.5">{sub}</div>}

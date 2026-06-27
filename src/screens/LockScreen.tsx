@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/useAuthStore';
 import { authenticateBiometric, biometricCapability } from '../utils/biometric';
 
 export default function LockScreen() {
+  const { t } = useTranslation();
   const hasPin = useAuthStore((s) => s.hasPin);
   const setPin = useAuthStore((s) => s.setPin);
   const verifyPin = useAuthStore((s) => s.verifyPin);
@@ -79,13 +81,13 @@ export default function LockScreen() {
           // Brute-force lockout active. The countdown effect above will tick
           // the visible seconds; here we just set a stable message.
           setError(
-            `Too many wrong PINs — locked for ${Math.ceil(result.locked.remainingSeconds)}s.`,
+            t('lock.tooManyError', { secs: Math.ceil(result.locked.remainingSeconds) }),
           );
           setShake(true);
           setTimeout(() => setShake(false), 400);
           setCode('');
         } else {
-          setError('Wrong PIN');
+          setError(t('lock.wrongPin'));
           setShake(true);
           setTimeout(() => setShake(false), 400);
           setCode('');
@@ -99,7 +101,7 @@ export default function LockScreen() {
           await setPin(code);
           unlock();
         } else {
-          setError('PINs do not match — try again');
+          setError(t('lock.pinsNoMatch'));
           setShake(true);
           setTimeout(() => setShake(false), 400);
           setFirst('');
@@ -112,15 +114,15 @@ export default function LockScreen() {
 
   const tryBiometric = async () => {
     if (!biometricEnabled) {
-      setError('Biometric disabled in Settings');
+      setError(t('lock.bioDisabledErr'));
       return;
     }
     if (!bioAvailable) {
-      setError(bioReason || 'Biometric unavailable on this device');
+      setError(bioReason || t('lock.bioUnavailable'));
       return;
     }
     if (!hasPin) {
-      setError('Set a PIN first — biometric unlocks AFTER initial setup');
+      setError(t('lock.setPinFirst'));
       return;
     }
     const result = await authenticateBiometric();
@@ -132,17 +134,17 @@ export default function LockScreen() {
   };
 
   const subtitle =
-    mode === 'enter' ? 'Enter your 6-digit PIN' :
-    mode === 'set' ? 'Set a 6-digit PIN' :
-    'Confirm your PIN';
+    mode === 'enter' ? t('lock.enterPin') :
+    mode === 'set' ? t('lock.setPin') :
+    t('lock.confirmPin');
 
   return (
     <div className="min-h-full flex flex-col items-center justify-center bg-bg p-6 safe-top safe-bottom">
       <div className="w-full max-w-xs flex flex-col items-center gap-6">
         <div className="text-center space-y-1">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-text-muted">Nexus Command Center</div>
-          <h1 className="font-heading font-bold text-2xl text-text">Secure Access</h1>
-          <div className="text-[10px] text-text-muted">Device-encrypted · TLS 1.3</div>
+          <div className="text-[10px] uppercase tracking-[0.2em] text-text-muted">{t('app.name')}</div>
+          <h1 className="font-heading font-bold text-2xl text-text">{t('lock.secureAccess')}</h1>
+          <div className="text-[10px] text-text-muted">{t('lock.deviceEncrypted')}</div>
         </div>
 
         <button
@@ -152,16 +154,16 @@ export default function LockScreen() {
               ? 'border-primary/60 bg-primary/10 shadow-glow'
               : 'border-border bg-surface opacity-50'
           }`}
-          aria-label="Biometric unlock"
+          aria-label={t('lock.bioAria')}
         >
           👆
         </button>
         <div className="text-[10px] text-text-muted -mt-2">
           {!biometricEnabled
-            ? 'Biometric disabled'
+            ? t('lock.bioDisabled')
             : bioAvailable
-            ? 'Tap fingerprint or enter PIN'
-            : bioReason || 'Use PIN'}
+            ? t('lock.tapOrPin')
+            : bioReason || t('lock.usePin')}
         </div>
 
         <div className={`flex flex-col items-center gap-4 w-full ${shake ? 'animate-pulse' : ''}`}>
@@ -178,7 +180,7 @@ export default function LockScreen() {
           </div>
           {isLockedOut ? (
             <div className="text-xs text-danger text-center px-2">
-              Too many wrong PINs — locked for{' '}
+              {t('lock.tooManyPrefix')}{' '}
               <span className="font-heading font-semibold">{secondsLeft}s</span>
             </div>
           ) : (
@@ -200,7 +202,7 @@ export default function LockScreen() {
               onClick={tryBiometric}
               className="h-12 rounded-md bg-surface border border-border text-text-muted text-xs active:bg-surface2"
             >
-              Bio
+              {t('lock.bio')}
             </button>
             <button
               onClick={() => press('0')}
@@ -219,7 +221,7 @@ export default function LockScreen() {
           </div>
         </div>
 
-        <div className="text-[10px] text-text-muted/60">Forgot PIN? Reset in Settings → Clear All Data</div>
+        <div className="text-[10px] text-text-muted/60">{t('lock.forgotPin')}</div>
       </div>
     </div>
   );

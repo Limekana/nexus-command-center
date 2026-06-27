@@ -1,0 +1,3 @@
+Täysi kuuden kielen tuki kaikilla näytöillä (englanti, suomi, ranska, saksa, espanja, kiina), mukaan lukien asetukset, elämänprofiili, elämänkuviot sekä viikko- ja vuosikatsaukset.
+
+Aiemmin tässä versiosarjassa: profiilipainotettu Elämäpiste työ-osa-alueella, ensikäynnistyksen perehdytys ja nopeampi talouden lataus.

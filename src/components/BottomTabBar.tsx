@@ -22,28 +22,30 @@
 //   - Tab labels stay 11px (UI/UX review v1.1 #4 settled this).
 
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface Tab {
   to: string;
-  label: string;
+  labelKey: string;
   icon: string;
   match: (p: string) => boolean;
 }
 
 const tabs: Tab[] = [
-  { to: '/', label: 'Home', icon: '⊞', match: (p) => p === '/' },
-  { to: '/finance', label: 'Finance', icon: '💰', match: (p) => p === '/finance' || p.startsWith('/finance/') },
+  { to: '/', labelKey: 'nav.home', icon: '⊞', match: (p) => p === '/' },
+  { to: '/finance', labelKey: 'nav.finance', icon: '💰', match: (p) => p === '/finance' || p.startsWith('/finance/') },
   // v1.3 scope reduction — Studies + Fitness tabs removed (their dedicated
   // screens were retired). Life is promoted to a primary tab; it surfaces
   // the cross-domain life score those domains now feed as signals.
-  { to: '/life', label: 'Life', icon: '◎', match: (p) => p === '/life' },
-  { to: '/tasks', label: 'Tasks', icon: '✅', match: (p) => p === '/tasks' || p.startsWith('/tasks/') },
+  { to: '/life', labelKey: 'nav.life', icon: '◎', match: (p) => p === '/life' },
+  { to: '/tasks', labelKey: 'nav.tasks', icon: '✅', match: (p) => p === '/tasks' || p.startsWith('/tasks/') },
 ];
 
 export default function BottomTabBar() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const activeIdx = tabs.findIndex((t) => t.match(pathname));
+  const activeIdx = tabs.findIndex((tab) => tab.match(pathname));
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 safe-bottom z-30 px-3 pb-2 pt-2 pointer-events-none">
@@ -76,14 +78,14 @@ export default function BottomTabBar() {
             />
           )}
           <div className="relative flex items-stretch">
-            {tabs.map((t) => {
-              const isActive = t.match(pathname);
+            {tabs.map((tab) => {
+              const isActive = tab.match(pathname);
               return (
                 <button
-                  key={t.to}
+                  key={tab.to}
                   type="button"
-                  onClick={() => navigate(t.to)}
-                  aria-label={t.label}
+                  onClick={() => navigate(tab.to)}
+                  aria-label={t(tab.labelKey)}
                   aria-current={isActive ? 'page' : undefined}
                   className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2 rounded-pill relative z-10 transition-colors duration-200 ease-spring-soft active:scale-[0.94] ${
                     isActive ? 'text-primary' : 'text-text-muted'
@@ -94,9 +96,9 @@ export default function BottomTabBar() {
                       isActive ? 'scale-110' : 'scale-100'
                     }`}
                   >
-                    {t.icon}
+                    {tab.icon}
                   </span>
-                  <span className="text-[11px] font-medium tracking-wide leading-tight">{t.label}</span>
+                  <span className="text-[11px] font-medium tracking-wide leading-tight">{t(tab.labelKey)}</span>
                 </button>
               );
             })}

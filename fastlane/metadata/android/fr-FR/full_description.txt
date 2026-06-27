@@ -1,0 +1,12 @@
+Nexus Command Center est le cœur de la suite Limecore — un tableau de bord de vie personnel qui combine cinq domaines (Finances, Forme, Études, Travail, Habitudes) en un seul Score de vie.
+
+Fonctionnalités :
+* Budgets, comptes, valeur nette, portefeuille et données de marché en direct
+* Récupère les séances de LimeLog et les sessions d'étude de StudyDesk
+* Suivi d'habitudes avec séries
+* Profils de vie et objectifs configurables
+* Bilans hebdomadaires et annuels avec cartes de chaleur
+
+Local d'abord, stockage sur l'appareil ; synchronisation cloud optionnelle liée au compte. Pas de Google Play Services, pas de Firebase — la connexion Google est un simple flux web OAuth. Les données de marché tierces (Finnhub, CoinGecko, Yahoo, BCE) et une fonction IA optionnelle sont des appels HTTPS initiés par l'utilisateur.
+
+Disponible en anglais, finnois, français, allemand, espagnol et chinois.

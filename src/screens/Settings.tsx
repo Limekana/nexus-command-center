@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { setLanguage, SUPPORTED_LANGS, LANGUAGE_NAMES, type Lang } from '../i18n';
 import AppHeader from '../components/AppHeader';
 import ListRow from '../components/ListRow';
 import { useLifeProfileStore } from '../store/useLifeProfileStore';
-import { enabledDomains, DOMAIN_LABELS } from '../lib/lifeProfile';
+import { enabledDomains } from '../lib/lifeProfile';
 import pkg from '../../package.json';
 import { useAuthStore } from '../store/useAuthStore';
 import { useSyncStore } from '../store/useSyncStore';
@@ -35,6 +37,8 @@ const autoLockOptions = [1, 5, 15, 30, 60];
 
 export default function Settings() {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+  const currentLang = (i18n.language || 'en').split('-')[0] as Lang;
   const lifeProfile = useLifeProfileStore((s) => s.profile);
   const biometricEnabled = useAuthStore((s) => s.biometricEnabled);
   const setBiometric = useAuthStore((s) => s.setBiometric);
@@ -124,28 +128,26 @@ export default function Settings() {
   };
 
   const onClearKey = async (slot: 'finnhub' | 'finnhub2') => {
-    if (!confirm(`Remove this API key? You'll need to paste it again to use Finnhub.`)) return;
+    if (!confirm(t('settings.clearKeyConfirm'))) return;
     await clearApiKey(slot);
     if (slot === 'finnhub') setFinnhubKey('');
     else setFinnhubKey2('');
   };
 
   const onClearAll = async () => {
-    if (!confirm('Wipe ALL local data? This cannot be undone.')) return;
+    if (!confirm(t('settings.clearAllConfirm'))) return;
     // PIN re-entry gate. Without this, briefly-unlocked devices left in
     // someone else's hands could be nuked by a single tap. We require the PIN
     // even though the user has already unlocked the app in this session.
     if (hasPin) {
-      const entered = window.prompt('Re-enter your 6-digit PIN to confirm wipe:');
+      const entered = window.prompt(t('settings.pinReentry'));
       if (!entered) return;
       const result = await verifyPin(entered);
       if (!result.ok) {
         if (result.locked) {
-          alert(
-            `Too many wrong attempts — locked for ${result.locked.remainingSeconds}s. Wipe cancelled.`,
-          );
+          alert(t('settings.wipeLocked', { n: result.locked.remainingSeconds }));
         } else {
-          alert('Wrong PIN — wipe cancelled.');
+          alert(t('settings.wrongPin'));
         }
         return;
       }
@@ -175,15 +177,15 @@ export default function Settings() {
     if (!user?.email) return;
     const { error } = await supabase.auth.resetPasswordForEmail(user.email);
     if (error) {
-      alert(`Could not send reset email: ${error.message}`);
+      alert(t('settings.pwResetFail', { msg: error.message }));
     } else {
-      alert('Password reset email sent. Check your inbox.');
+      alert(t('settings.pwResetSent'));
     }
   };
 
   const onForceResync = async () => {
     if (!user) return;
-    if (!confirm('Re-queue ALL local data for upload to your cloud account? Useful if sync got stuck.')) return;
+    if (!confirm(t('settings.forceResyncConfirm'))) return;
     const { adoptLocalData } = await import('../lib/cloudSync');
     await adoptLocalData(user.id);
     await refreshPending();
@@ -196,25 +198,25 @@ export default function Settings() {
 
   return (
     <>
-      <AppHeader title="Settings" showAvatar={false} />
+      <AppHeader title={t('settings.title')} showAvatar={false} />
       <div className="space-y-3">
-        <Section title="Account">
+        <Section title={t('settings.account')}>
           {user ? (
             <>
-              <ListRow label="Name" value={userDisplayName(user) || '—'} />
-              <ListRow label="Email" value={user?.email ?? '—'} />
+              <ListRow label={t('settings.name')} value={userDisplayName(user) || '—'} />
+              <ListRow label={t('settings.email')} value={user?.email ?? '—'} />
               <button
                 className="btn-ghost w-full mt-2"
                 onClick={onChangePassword}
                 disabled={!user?.email}
               >
-                Send Password Reset Email
+                {t('settings.sendPwReset')}
               </button>
               <button
                 className="btn-ghost w-full mt-2 text-danger border-danger/40"
                 onClick={() => setSignOutOpen(true)}
               >
-                Sign Out
+                {t('settings.signOut')}
               </button>
             </>
           ) : (
@@ -225,11 +227,9 @@ export default function Settings() {
                   null. Local Dexie data is preserved (the AdoptionPrompt
                   on Login → app re-entry handles the keep-or-discard
                   choice when the user signs in). */}
-              <ListRow label="Status" value="Guest — local only" />
+              <ListRow label={t('settings.status')} value={t('settings.guestStatus')} />
               <p className="text-xs text-text-muted mt-1 mb-3 leading-relaxed">
-                You're using NCC without an account. Local data stays on this device,
-                but won't sync across devices and won't survive uninstall. Sign in
-                to enable Supabase sync and cross-app SSO with LimeLog + StudyDesk.
+                {t('settings.guestBlurb')}
               </p>
               <button
                 className="btn w-full"
@@ -242,31 +242,31 @@ export default function Settings() {
                   // causes the gate's conditional to flip.
                 }}
               >
-                Sign in
+                {t('settings.signIn')}
               </button>
             </>
           )}
         </Section>
 
-        <Section title="Security">
+        <Section title={t('settings.security')}>
           <Toggle
-            label="Biometric Unlock"
-            sub={bioAvailable ? 'Fingerprint / Face' : bioReason || 'Unavailable on this device'}
+            label={t('settings.biometricUnlock')}
+            sub={bioAvailable ? t('settings.biometricSub') : bioReason || t('settings.biometricUnavail')}
             value={biometricEnabled && bioAvailable}
             onChange={setBiometric}
             locked={!bioAvailable}
           />
           <Toggle
-            label="PIN Fallback"
-            sub="6-digit passphrase (always on)"
+            label={t('settings.pinFallback')}
+            sub={t('settings.pinFallbackSub')}
             value={true}
             onChange={() => {}}
             locked
           />
           <div className="py-2 flex items-center justify-between gap-2">
             <div>
-              <div className="text-sm">Auto-lock</div>
-              <div className="text-[10px] text-text-muted">After idle</div>
+              <div className="text-sm">{t('settings.autoLock')}</div>
+              <div className="text-[10px] text-text-muted">{t('settings.autoLockSub')}</div>
             </div>
             <select
               className="input max-w-[120px] py-2"
@@ -275,14 +275,14 @@ export default function Settings() {
             >
               {autoLockOptions.map((m) => (
                 <option key={m} value={m}>
-                  {m === 0 ? 'Never' : `${m} min`}
+                  {m === 0 ? t('settings.never') : t('settings.minShort', { n: m })}
                 </option>
               ))}
             </select>
           </div>
           <Toggle
-            label="Encryption"
-            sub="Device-encrypted at rest (Android FBE) · TLS 1.3 in transit"
+            label={t('settings.encryption')}
+            sub={t('settings.encryptionSub')}
             value={true}
             onChange={() => {}}
             locked
@@ -291,27 +291,27 @@ export default function Settings() {
             className="btn-ghost w-full mt-2 text-warning border-warning/40"
             onClick={lock}
           >
-            Lock Now
+            {t('settings.lockNow')}
           </button>
         </Section>
 
-        <Section title="Data & Sync">
+        <Section title={t('settings.dataSync')}>
           <ListRow
-            label="Cloud Sync"
-            value={user ? (isOnline ? 'Active' : 'Offline') : 'Not signed in'}
+            label={t('settings.cloudSync')}
+            value={user ? (isOnline ? t('settings.active') : t('settings.offline')) : t('settings.notSignedIn')}
             tag={{ text: 'Supabase', tone: 'green' }}
           />
           <Toggle
-            label="Offline Mode"
-            sub="Always-on · local first"
+            label={t('settings.offlineMode')}
+            sub={t('settings.offlineModeSub')}
             value={true}
             onChange={() => {}}
             locked
           />
-          <ListRow label="Last sync" value={lastSyncDisplay} />
+          <ListRow label={t('settings.lastSync')} value={lastSyncDisplay} />
           <ListRow
-            label="Pending writes"
-            value={pendingCount === 0 ? 'Up to date' : `${pendingCount} queued`}
+            label={t('settings.pendingWrites')}
+            value={pendingCount === 0 ? t('settings.upToDate') : t('settings.queued', { n: pendingCount })}
           />
           {lastError && (
             <div className="alert alert-warn text-xs mt-2">
@@ -333,22 +333,22 @@ export default function Settings() {
             onClick={syncNow}
             disabled={!isOnline || syncing}
           >
-            {syncing ? 'Syncing…' : isOnline ? 'Sync Now' : 'Offline'}
+            {syncing ? t('settings.syncing') : isOnline ? t('settings.syncNow') : t('settings.offline')}
           </button>
           <button
             className="btn-ghost w-full mt-2 text-warning border-warning/40"
             onClick={onForceResync}
             disabled={!user || !isOnline || syncing}
           >
-            Force Re-sync All Local Data
+            {t('settings.forceResync')}
           </button>
         </Section>
 
-        <Section title="Preferences">
+        <Section title={t('settings.preferences')}>
           <div className="py-2 flex items-center justify-between gap-2">
             <div>
-              <div className="text-sm">Base Currency</div>
-              <div className="text-[10px] text-text-muted">Portfolio totals · FX rates daily</div>
+              <div className="text-sm">{t('settings.baseCurrency')}</div>
+              <div className="text-[10px] text-text-muted">{t('settings.baseCurrencySub')}</div>
             </div>
             <select
               className="input max-w-[120px] py-2"
@@ -364,27 +364,46 @@ export default function Settings() {
           </div>
         </Section>
 
-        <Section title="Life Profile">
+        <Section title={t('settings.lifeProfile')}>
           <button
             className="w-full py-2 flex items-center justify-between gap-3 text-left active:opacity-80"
             onClick={() => navigate('/settings/life-profile')}
           >
             <div className="min-w-0">
-              <div className="text-sm capitalize">{lifeProfile.preset}</div>
+              <div className="text-sm">{t(`lifeProfile.${lifeProfile.preset}`)}</div>
               <div className="text-[10px] text-text-muted truncate">
                 {enabledDomains(lifeProfile)
-                  .map((k) => `${DOMAIN_LABELS[k]} ${lifeProfile.domains[k]}%`)
+                  .map((k) => `${t(`domains.${k}`)} ${lifeProfile.domains[k]}%`)
                   .join(' · ')}
               </div>
             </div>
             <span className="text-primary text-lg flex-shrink-0">›</span>
           </button>
           <div className="text-[10px] text-text-muted px-1 pb-1">
-            Which domains shape your Life Score and how they're weighted.
+            {t('settings.lifeProfileBlurb')}
           </div>
         </Section>
 
-        <Section title="Notifications">
+        <Section title={t('settings.language')}>
+          <div className="grid grid-cols-2 gap-2">
+            {SUPPORTED_LANGS.map((code) => (
+              <button
+                key={code}
+                onClick={() => setLanguage(code)}
+                aria-pressed={currentLang === code}
+                className={`rounded-lg p-2.5 text-sm border transition-colors text-left ${
+                  currentLang === code
+                    ? 'border-primary bg-primary/10 text-primary font-semibold'
+                    : 'border-glass-border text-text'
+                }`}
+              >
+                {LANGUAGE_NAMES[code]}
+              </button>
+            ))}
+          </div>
+        </Section>
+
+        <Section title={t('settings.notifications')}>
           {/* Informational warning when the plugin reports unavailable. Toggles
               below are NOT locked anymore — the previous behavior gated them
               behind `notifAvailable`, but on devices where the Capacitor
@@ -395,9 +414,7 @@ export default function Settings() {
               never produces unwanted alerts. */}
           {!notifAvailable && (
             <div className="text-[10px] text-warning px-1 py-1">
-              Notifications plugin unavailable. Toggles still record your
-              choice, but actual notifications need a working native build +
-              OS-level permission to fire.
+              {t('settings.notifPluginUnavail')}
             </div>
           )}
           {/* Master kill-switch. Off = nothing fires regardless of sub-toggle
@@ -408,11 +425,11 @@ export default function Settings() {
               individual state so the user can toggle the master back on
               without losing prior preferences. */}
           <Toggle
-            label="Notifications"
+            label={t('settings.notifMaster')}
             sub={
               notifMasterEnabled
-                ? 'Master switch · individual types below'
-                : 'All notifications off — turn on to enable categories below'
+                ? t('settings.notifMasterOnSub')
+                : t('settings.notifMasterOffSub')
             }
             value={notifMasterEnabled}
             onChange={async (on) => {
@@ -452,8 +469,8 @@ export default function Settings() {
                     const perm = await requestNotificationPermission();
                     if (!perm.ok) {
                       setNotifMsg(
-                        (perm.reason ?? 'Permission check failed.') +
-                          ' If notifications already work at the OS level you can ignore this.',
+                        (perm.reason ?? t('settings.permCheckFailed')) +
+                          t('settings.permMasterTail'),
                       );
                     }
                   } catch (e) {
@@ -476,8 +493,8 @@ export default function Settings() {
             }}
           />
           <Toggle
-            label="Weekly Review"
-            sub="Sunday 18:00 · summary of finance, study, fitness, tasks"
+            label={t('settings.weeklyReviewLabel')}
+            sub={t('settings.weeklyReviewSub')}
             value={weeklyReminder}
             locked={!notifMasterEnabled}
             onChange={async (on) => {
@@ -492,14 +509,14 @@ export default function Settings() {
                     const perm = await requestNotificationPermission();
                     if (!perm.ok) {
                       setNotifMsg(
-                        (perm.reason ?? 'Permission check failed.') +
-                          ' Toggle is on but reminder won’t fire until permission is granted.',
+                        (perm.reason ?? t('settings.permCheckFailed')) +
+                          t('settings.permWeeklyTail'),
                       );
                       return;
                     }
                     const sched = await scheduleWeeklyReview();
                     if (!sched.ok) {
-                      setNotifMsg(sched.reason ?? 'Failed to schedule.');
+                      setNotifMsg(sched.reason ?? t('settings.failedSchedule'));
                     }
                   } catch (e) {
                     setNotifMsg((e as Error).message);
@@ -512,8 +529,8 @@ export default function Settings() {
             }}
           />
           <Toggle
-            label="Task Reminders"
-            sub="Heads-up when a task is due"
+            label={t('settings.taskReminders')}
+            sub={t('settings.taskRemindersSub')}
             value={notifTasksEnabled}
             locked={!notifMasterEnabled}
             onChange={(on) => handleNotifToggle({
@@ -522,6 +539,7 @@ export default function Settings() {
               setEnabled: setNotifTasksEnabled,
               requestPerm: requestNotificationPermission,
               setMsg: setNotifMsg,
+              t,
               // On flip-on, schedule alarms for every existing incomplete
               // task — otherwise the user has to add a new task before any
               // notifications show up.
@@ -529,8 +547,8 @@ export default function Settings() {
             })}
           />
           <Toggle
-            label="Budget Alerts"
-            sub="When a category nears or exceeds its monthly cap"
+            label={t('settings.budgetAlerts')}
+            sub={t('settings.budgetAlertsSub')}
             value={notifBudgetsEnabled}
             locked={!notifMasterEnabled}
             onChange={(on) => handleNotifToggle({
@@ -539,11 +557,12 @@ export default function Settings() {
               setEnabled: setNotifBudgetsEnabled,
               requestPerm: requestNotificationPermission,
               setMsg: setNotifMsg,
+              t,
             })}
           />
           <Toggle
-            label="Portfolio End of Day"
-            sub="Recap of today's move on US market close"
+            label={t('settings.portfolioEod')}
+            sub={t('settings.portfolioEodSub')}
             value={notifPortfolioEodEnabled}
             locked={!notifMasterEnabled}
             onChange={(on) => handleNotifToggle({
@@ -552,6 +571,7 @@ export default function Settings() {
               setEnabled: setNotifPortfolioEodEnabled,
               requestPerm: requestNotificationPermission,
               setMsg: setNotifMsg,
+              t,
               // Prime today's 4:05pm + 4:35pm alarms immediately on flip-on
               // (if today is a trading day, etc.). Otherwise the user
               // wouldn't get any notification until the next portfolio
@@ -560,8 +580,8 @@ export default function Settings() {
             })}
           />
           <Toggle
-            label="Market News"
-            sub="Stories about tickers you own + major market moves"
+            label={t('settings.marketNews')}
+            sub={t('settings.marketNewsSub')}
             value={notifNewsEnabled}
             locked={!notifMasterEnabled}
             onChange={(on) => handleNotifToggle({
@@ -570,6 +590,7 @@ export default function Settings() {
               setEnabled: setNotifNewsEnabled,
               requestPerm: requestNotificationPermission,
               setMsg: setNotifMsg,
+              t,
               // Scan whatever news is already in store. If the portfolio
               // hasn't refreshed yet this is a no-op; the next refresh
               // will populate news and fire then.
@@ -581,8 +602,8 @@ export default function Settings() {
               When News is off this toggle does nothing — we lock it visually
               to make that clear. */}
           <Toggle
-            label="Include Macro Headlines"
-            sub="Fed, CPI, jobs, FOMC, inflation, recession"
+            label={t('settings.macroHeadlines')}
+            sub={t('settings.macroHeadlinesSub')}
             value={notifMacroKeywordsEnabled}
             locked={!notifMasterEnabled || !notifNewsEnabled}
             onChange={setNotifMacroKeywordsEnabled}
@@ -592,15 +613,15 @@ export default function Settings() {
           )}
         </Section>
 
-        <Section title="API Keys">
+        <Section title={t('settings.apiKeys')}>
           {editingSlot ? (
             <div className="space-y-2 py-2">
               <div className="text-[10px] uppercase tracking-wider text-text-muted">
-                {editingSlot === 'finnhub' ? 'Finnhub Key (slot 1)' : 'Finnhub Key (slot 2)'}
+                {editingSlot === 'finnhub' ? t('settings.finnhubSlot1') : t('settings.finnhubSlot2')}
               </div>
               <input
                 className="input"
-                placeholder="Paste your Finnhub API key"
+                placeholder={t('settings.finnhubPlaceholder')}
                 value={keyDraft}
                 onChange={(e) => setKeyDraft(e.target.value)}
                 autoFocus
@@ -610,17 +631,17 @@ export default function Settings() {
               />
               <div className="flex gap-2">
                 <button className="btn flex-1" onClick={onSaveKey}>
-                  Save
+                  {t('common.save')}
                 </button>
                 <button
                   className="btn-ghost flex-1"
                   onClick={() => setEditingSlot(null)}
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
               </div>
               <div className="text-[10px] text-text-muted">
-                Get a free key at finnhub.io · 60 calls/min per key
+                {t('settings.finnhubHelp')}
               </div>
             </div>
           ) : (
@@ -629,13 +650,12 @@ export default function Settings() {
                 <div className="alert alert-warn text-xs mb-2">
                   <span className="w-2 h-2 rounded-full bg-warning" />
                   <span className="flex-1">
-                    No Finnhub key configured — US stock fundamentals, news and
-                    earnings will fall back to Yahoo. Add a key for richer data.
+                    {t('settings.noFinnhubKey')}
                   </span>
                 </div>
               )}
               <FinnhubKeyRow
-                label="Finnhub Key 1"
+                label={t('settings.finnhubKey1')}
                 value={finnhubKey}
                 onEdit={() => {
                   setKeyDraft('');
@@ -644,7 +664,7 @@ export default function Settings() {
                 onClear={() => onClearKey('finnhub')}
               />
               <FinnhubKeyRow
-                label="Finnhub Key 2 (optional)"
+                label={t('settings.finnhubKey2')}
                 value={finnhubKey2}
                 onEdit={() => {
                   setKeyDraft('');
@@ -653,16 +673,16 @@ export default function Settings() {
                 onClear={() => onClearKey('finnhub2')}
               />
               <div className="text-[10px] text-text-muted py-1 px-1">
-                Two slots round-robin per call — doubles your 60/min headroom.
+                {t('settings.twoSlots')}
               </div>
-              <ListRow label="CoinGecko" tag={{ text: 'Free', tone: 'green' }} />
-              <ListRow label="Yahoo Finance" tag={{ text: 'Free · fallback', tone: 'green' }} />
-              <ListRow label="Health Connect" tag={{ text: 'Samsung Android', tone: 'muted' }} />
+              <ListRow label="CoinGecko" tag={{ text: t('settings.tagFree'), tone: 'green' }} />
+              <ListRow label="Yahoo Finance" tag={{ text: t('settings.tagFreeFallback'), tone: 'green' }} />
+              <ListRow label="Health Connect" tag={{ text: t('settings.tagSamsung'), tone: 'muted' }} />
             </>
           )}
         </Section>
 
-        <Section title="API Usage Today">
+        <Section title={t('settings.apiUsageToday')}>
           {budgets.map((b) => {
             const pct = b.max > 0 ? Math.min(100, (b.used / b.max) * 100) : 0;
             const exhausted = b.used >= b.max;
@@ -684,28 +704,28 @@ export default function Settings() {
             );
           })}
           <div className="text-[10px] text-text-muted">
-            Resets at local midnight. Cached responses don't count against the budget.
+            {t('settings.apiUsageResets')}
           </div>
         </Section>
 
-        <Section title="About">
-          <ListRow label="Version" value={pkg.version} />
-          <ListRow label="Studio" value="Limecore" />
-          <ListRow label="Build" value="Capacitor · Web → Android" />
+        <Section title={t('settings.about')}>
+          <ListRow label={t('settings.version')} value={pkg.version} />
+          <ListRow label={t('settings.studio')} value="Limecore" />
+          <ListRow label={t('settings.build')} value={t('settings.buildValue')} />
           <button
             className="btn-ghost w-full mt-2 text-danger border-danger/40"
             onClick={onClearAll}
           >
-            Clear All Local Data
+            {t('settings.clearAllData')}
           </button>
         </Section>
       </div>
       {signOutOpen && createPortal(
         <div className="fixed inset-0 bg-bg/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="card-elevated max-w-sm w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="font-heading font-bold text-base mb-1">Sign out?</h2>
+            <h2 className="font-heading font-bold text-base mb-1">{t('settings.signOutTitle')}</h2>
             <p className="text-xs text-text-muted mb-4">
-              Choose what happens to data already saved on this device. Cloud data is untouched either way.
+              {t('settings.signOutBlurb')}
             </p>
             <div className="space-y-2">
               <button
@@ -713,27 +733,27 @@ export default function Settings() {
                 disabled={signOutBusy}
                 onClick={() => doSignOut(false)}
               >
-                {signOutBusy ? 'Working…' : 'Keep local data'}
+                {signOutBusy ? t('settings.working') : t('settings.keepLocal')}
               </button>
               <p className="text-[10px] text-text-muted -mt-1 px-1">
-                Faster next sign-in. Choose this on your own phone.
+                {t('settings.keepLocalSub')}
               </p>
               <button
                 className="btn-ghost w-full text-danger border-danger/40"
                 disabled={signOutBusy}
                 onClick={() => doSignOut(true)}
               >
-                Sign out &amp; wipe local data
+                {t('settings.wipeLocal')}
               </button>
               <p className="text-[10px] text-text-muted -mt-1 px-1">
-                Recommended on shared or borrowed devices.
+                {t('settings.wipeLocalSub')}
               </p>
               <button
                 className="btn-ghost w-full"
                 disabled={signOutBusy}
                 onClick={() => setSignOutOpen(false)}
               >
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
           </div>
@@ -786,9 +806,10 @@ async function handleNotifToggle(opts: {
   setEnabled: (on: boolean) => Promise<void>;
   requestPerm: () => Promise<{ ok: boolean; reason?: string }>;
   setMsg: (msg: string | null) => void;
+  t: (key: string) => string;
   onAfterEnable?: () => Promise<void> | void;
 }): Promise<void> {
-  const { on, category, setEnabled, requestPerm, setMsg, onAfterEnable } = opts;
+  const { on, category, setEnabled, requestPerm, setMsg, t, onAfterEnable } = opts;
   setMsg(null);
   if (on) {
     // Step 1 — flip immediately. UI is responsive even if perm hangs.
@@ -799,8 +820,8 @@ async function handleNotifToggle(opts: {
         const perm = await requestPerm();
         if (!perm.ok) {
           setMsg(
-            (perm.reason ?? 'Permission check failed.') +
-              ' Toggle is on but notifications may not fire until permission is granted in Android Settings.',
+            (perm.reason ?? t('settings.permCheckFailed')) +
+              t('settings.permToggleTail'),
           );
         }
       } catch (e) {
@@ -838,12 +859,13 @@ function FinnhubKeyRow({
   onEdit: () => void;
   onClear: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="py-2 flex items-center justify-between gap-2">
       <div className="min-w-0">
         <div className="text-sm">{label}</div>
         <div className={`text-[10px] ${value ? 'text-text-muted' : 'text-warning'}`}>
-          {value ? maskKey(value) : 'Not set'}
+          {value ? maskKey(value) : t('settings.notSet')}
         </div>
       </div>
       <div className="flex gap-1 flex-shrink-0">
@@ -851,7 +873,7 @@ function FinnhubKeyRow({
           onClick={onEdit}
           className="text-[10px] uppercase tracking-wider px-2 py-1 rounded-sm border border-primary/40 text-primary active:bg-primary/10"
         >
-          {value ? 'Edit' : 'Set'}
+          {value ? t('common.edit') : t('settings.set')}
         </button>
         {value && (
           <button

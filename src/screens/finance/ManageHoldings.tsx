@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
 import RowActions from '../../components/RowActions';
@@ -14,6 +15,7 @@ const CURRENCIES = ['EUR', 'USD', 'GBP', 'SEK', 'NOK', 'DKK', 'CHF', 'JPY'];
 // lots — that's what the Purchases sub-screen is for. This split is important:
 // editing the ticker shouldn't accidentally erase your purchase history.
 export default function ManageHoldings() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const holdings = useFinanceStore((s) => s.holdings);
   const portfolioLots = useFinanceStore((s) => s.portfolioLots);
@@ -133,13 +135,6 @@ export default function ManageHoldings() {
 
   const editingNow = adding || editing != null;
 
-  // Asset-class metadata for UI labels.
-  const ASSET_LABELS: Record<AssetType, string> = {
-    stock: '📈 Stock',
-    etf: '🧺 ETF',
-    crypto: '₿ Crypto',
-  };
-
   const renderHoldingRow = (h: PortfolioHolding, closed = false) => {
     const lotCount = lotsByHolding(h.id).length;
     return (
@@ -148,12 +143,12 @@ export default function ManageHoldings() {
         className={`flex items-center gap-2 py-2 border-b border-border/40 last:border-0 ${closed ? 'opacity-60' : ''}`}
       >
         <span className="text-[9px] uppercase text-text-muted w-10 flex-shrink-0">
-          {h.assetType === 'stock' ? 'STOCK' : h.assetType === 'etf' ? 'ETF' : 'CRYPTO'}
+          {t(`fin.assetAbbr.${h.assetType}`)}
         </span>
         <div className="flex-1 min-w-0">
           <div className="text-sm font-heading font-semibold truncate">
             {h.ticker.toUpperCase()}
-            {closed && <span className="ml-1.5 text-[8px] uppercase tracking-wider text-text-muted">closed</span>}
+            {closed && <span className="ml-1.5 text-[8px] uppercase tracking-wider text-text-muted">{t('fin.mh.closed')}</span>}
           </div>
           <div className="text-[10px] text-text-muted truncate">
             {h.name} · {h.quantity}
@@ -169,7 +164,7 @@ export default function ManageHoldings() {
         <RowActions
           onEdit={() => startEdit(h)}
           onDelete={() => onDelete(h.id)}
-          confirmMsg={`Remove ${h.ticker.toUpperCase()} from portfolio? Purchase history will also be deleted.`}
+          confirmMsg={t('fin.mh.removeConfirm', { ticker: h.ticker.toUpperCase() })}
         />
       </div>
     );
@@ -178,9 +173,9 @@ export default function ManageHoldings() {
   return (
     <>
       <AppHeader
-        title="Manage Holdings"
+        title={t('fin.mh.title')}
         back="/finance/portfolio"
-        backLabel="Portfolio"
+        backLabel={t('fin.ov.portfolio')}
         showAvatar={false}
         action={
           !editingNow && (
@@ -188,7 +183,7 @@ export default function ManageHoldings() {
               onClick={startAdd}
               className="text-xs px-2 py-1 rounded-sm border border-primary text-primary active:bg-primary/10"
             >
-              + New
+              {t('fin.mh.new')}
             </button>
           )
         }
@@ -197,17 +192,17 @@ export default function ManageHoldings() {
         {editingNow && (
           <div className="card space-y-2">
             <div className="font-heading font-semibold text-sm">
-              {editing ? 'Edit Holding' : 'New Holding'}
+              {editing ? t('fin.mh.editHolding') : t('fin.mh.newHolding')}
             </div>
             <div className="flex gap-2">
-              {(['stock', 'etf', 'crypto'] as AssetType[]).map((t) => (
+              {(['stock', 'etf', 'crypto'] as AssetType[]).map((ty) => (
                 <button
-                  key={t}
-                  onClick={() => setAssetType(t)}
-                  className={`chip flex-1 ${assetType === t ? 'chip-on' : ''}`}
+                  key={ty}
+                  onClick={() => setAssetType(ty)}
+                  className={`chip flex-1 ${assetType === ty ? 'chip-on' : ''}`}
                   type="button"
                 >
-                  {ASSET_LABELS[t]}
+                  {t(`fin.assetClass.${ty}`)}
                 </button>
               ))}
             </div>
@@ -215,10 +210,10 @@ export default function ManageHoldings() {
               className="input"
               placeholder={
                 assetType === 'crypto'
-                  ? 'CoinGecko id (e.g. bitcoin)'
+                  ? t('fin.mh.cgIdPh')
                   : assetType === 'etf'
-                    ? 'Ticker (e.g. CNDX.L)'
-                    : 'Ticker (e.g. AAPL)'
+                    ? t('fin.mh.etfTickerPh')
+                    : t('fin.mh.stockTickerPh')
               }
               value={ticker}
               onChange={(e) => {
@@ -232,32 +227,32 @@ export default function ManageHoldings() {
             )}
             <input
               className="input"
-              placeholder="Display name"
+              placeholder={t('fin.mh.displayName')}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
             <input
               className="input"
-              placeholder="Sector (optional, e.g. Technology, Banking)"
+              placeholder={t('fin.mh.sectorPh')}
               value={sectorOverride}
               onChange={(e) => setSectorOverride(e.target.value)}
             />
             {!editing && (
               <>
                 <div className="text-[10px] uppercase tracking-wider text-text-muted mt-1">
-                  First Purchase
+                  {t('fin.mh.firstPurchase')}
                 </div>
                 <div className="flex gap-2">
                   <input
                     className="input flex-1"
-                    placeholder="Quantity"
+                    placeholder={t('fin.mh.quantity')}
                     inputMode="decimal"
                     value={firstQty}
                     onChange={(e) => setFirstQty(e.target.value)}
                   />
                   <input
                     className="input flex-1"
-                    placeholder="Price per unit"
+                    placeholder={t('fin.mh.pricePerUnit')}
                     inputMode="decimal"
                     value={firstPrice}
                     onChange={(e) => setFirstPrice(e.target.value)}
@@ -282,33 +277,33 @@ export default function ManageHoldings() {
             )}
             <div className="flex gap-2">
               <button className="btn flex-1" onClick={save}>
-                {editing ? 'Save' : 'Add'}
+                {editing ? t('common.save') : t('common.add')}
               </button>
               <button className="btn-ghost flex-1" onClick={cancel}>
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
             <div className="text-[10px] text-text-muted">
               {assetType === 'stock'
-                ? 'Quotes via Finnhub. Use the exchange ticker.'
+                ? t('fin.mh.stockHint')
                 : assetType === 'etf'
-                  ? 'ETFs use stock quotes — same ticker rules. International suffixes (.L, .DE) route to Yahoo.'
-                  : 'Prices via CoinGecko. Use the lowercase coin id (bitcoin, ethereum, solana…).'}
-              {' Add additional purchases later from the Purchases button.'}
+                  ? t('fin.mh.etfHint')
+                  : t('fin.mh.cryptoHint')}
+              {t('fin.mh.addLater')}
             </div>
           </div>
         )}
 
         <div className="card">
-          <div className="font-heading font-semibold text-sm mb-2">Holdings</div>
+          <div className="font-heading font-semibold text-sm mb-2">{t('fin.mh.holdings')}</div>
           {holdings.length === 0 && (
             <div className="text-xs text-text-muted text-center py-4">
-              No holdings yet — tap + New to add one
+              {t('fin.mh.empty')}
             </div>
           )}
           {holdings.length > 0 && openH.length === 0 && (
             <div className="text-xs text-text-muted text-center py-4">
-              No open positions — all holdings are closed
+              {t('fin.mh.noOpen')}
             </div>
           )}
           {openH.map((h) => renderHoldingRow(h))}
@@ -320,7 +315,7 @@ export default function ManageHoldings() {
               onClick={() => setShowClosed((s) => !s)}
               className="w-full flex items-center justify-between text-sm font-heading font-semibold"
             >
-              <span className="text-text-muted">Closed positions</span>
+              <span className="text-text-muted">{t('fin.mh.closedPositions')}</span>
               <span className="text-[10px] uppercase tracking-wider text-text-muted">
                 {closedH.length} · {showClosed ? '▲' : '▼'}
               </span>

@@ -14,6 +14,7 @@
 //     actual position, not zero.
 
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import AppHeader from '../../components/AppHeader';
 import { useFinanceStore } from '../../store/useFinanceStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
@@ -28,6 +29,7 @@ const OPTIMISTIC_DEFAULT = 7;
 const INFLATION_DEFAULT = 2.5;
 
 export default function WhatIf() {
+  const { t } = useTranslation();
   const holdings = useFinanceStore((s) => s.holdings);
   const stockQuotes = useFinanceStore((s) => s.stockQuotes);
   const cryptoPrices = useFinanceStore((s) => s.cryptoPrices);
@@ -128,19 +130,19 @@ export default function WhatIf() {
 
   return (
     <>
-      <AppHeader title="What If?" back="/finance/networth" backLabel="Net Worth" showAvatar={false} />
+      <AppHeader title={t('fin.wi.title')} back="/finance/networth" backLabel={t('fin.ov.netWorth')} showAvatar={false} />
       <div className="space-y-3">
         {/* Inputs */}
         <div className="card space-y-3">
-          <div className="font-heading font-semibold text-sm">Scenario</div>
+          <div className="font-heading font-semibold text-sm">{t('fin.wi.scenario')}</div>
 
           <div>
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] uppercase tracking-wider text-text-muted">
-                Starting balance
+                {t('fin.wi.startingBalance')}
               </span>
               <span className="text-[10px] text-text-muted">
-                Auto-filled from your net worth
+                {t('fin.wi.autoFilled')}
               </span>
             </div>
             <input
@@ -154,7 +156,7 @@ export default function WhatIf() {
           <div>
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] uppercase tracking-wider text-text-muted">
-                Monthly contribution
+                {t('fin.wi.monthly')}
               </span>
               <span className="text-xs">{fmtMoney(monthly)}</span>
             </div>
@@ -172,9 +174,9 @@ export default function WhatIf() {
           <div>
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] uppercase tracking-wider text-text-muted">
-                Time horizon
+                {t('fin.wi.horizon')}
               </span>
-              <span className="text-xs">{years} years</span>
+              <span className="text-xs">{t('fin.wi.yearsN', { n: years })}</span>
             </div>
             <input
               type="range"
@@ -190,12 +192,12 @@ export default function WhatIf() {
 
         {/* Return rates */}
         <div className="card space-y-3">
-          <div className="font-heading font-semibold text-sm">Return rates · annual %</div>
+          <div className="font-heading font-semibold text-sm">{t('fin.wi.returnRates')}</div>
 
           <div className="grid grid-cols-2 gap-2">
             <div>
               <div className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
-                Conservative
+                {t('fin.wi.conservative')}
               </div>
               <div className="flex items-center gap-1">
                 <input
@@ -209,7 +211,7 @@ export default function WhatIf() {
             </div>
             <div>
               <div className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
-                Optimistic
+                {t('fin.wi.optimistic')}
               </div>
               <div className="flex items-center gap-1">
                 <input
@@ -226,9 +228,9 @@ export default function WhatIf() {
           <div>
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] uppercase tracking-wider text-text-muted">
-                Inflation assumption
+                {t('fin.wi.inflation')}
               </span>
-              <span className="text-xs">{inflationPct.toFixed(1)}% / yr</span>
+              <span className="text-xs">{t('fin.wi.perYr', { pct: inflationPct.toFixed(1) })}</span>
             </div>
             <input
               type="range"
@@ -243,9 +245,9 @@ export default function WhatIf() {
 
           <div className="flex items-center justify-between pt-1 border-t border-border/40">
             <div>
-              <div className="text-sm">Show in today's money</div>
+              <div className="text-sm">{t('fin.wi.showToday')}</div>
               <div className="text-[10px] text-text-muted">
-                Deflates nominal balance by inflation
+                {t('fin.wi.deflates')}
               </div>
             </div>
             <button
@@ -281,31 +283,31 @@ export default function WhatIf() {
         {/* Result summary */}
         <div className="card space-y-2">
           <div className="font-heading font-semibold text-sm">
-            In {years} years
+            {t('fin.wi.inYears', { n: years })}
             {showInToday && (
               <span className="text-[10px] uppercase tracking-wider text-text-muted ml-2">
-                · today's money
+                · {t('fin.wi.todayMoney')}
               </span>
             )}
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-sm border border-border bg-surface2/40 p-2">
               <div className="text-[10px] uppercase tracking-wider text-text-muted">
-                Conservative · {conservativePct}%
+                {t('fin.wi.consPct', { pct: conservativePct })}
               </div>
               <div className="font-heading font-bold text-lg">{fmtMoney(finalCons)}</div>
             </div>
             <div className="rounded-sm border border-success/40 bg-success/5 p-2">
               <div className="text-[10px] uppercase tracking-wider text-success">
-                Optimistic · {optimisticPct}%
+                {t('fin.wi.optPct', { pct: optimisticPct })}
               </div>
               <div className="font-heading font-bold text-lg">{fmtMoney(finalOpt)}</div>
             </div>
           </div>
           <div className="text-[10px] text-text-muted">
-            Total contributions over {years} years:{' '}
+            {t('fin.wi.totalContrib', { n: years })}{' '}
             <span className="text-text">{fmtMoney(conservative.totalContributions)}</span>
-            {' · '}Growth above contributions:{' '}
+            {' · '}{t('fin.wi.growthAbove')}{' '}
             <span className="text-text">
               {fmtMoney(finalCons - startingBalance - conservative.totalContributions)}
             </span>{' '}
@@ -316,21 +318,21 @@ export default function WhatIf() {
         {/* Milestones */}
         {milestoneRows.length > 0 && (
           <div className="card">
-            <div className="font-heading font-semibold text-sm mb-2">Milestones</div>
+            <div className="font-heading font-semibold text-sm mb-2">{t('fin.wi.milestones')}</div>
             <div className="space-y-1">
               <div className="grid grid-cols-3 gap-2 text-[9px] uppercase tracking-wider text-text-muted pb-1 border-b border-border/40">
-                <span>Target</span>
-                <span className="text-center">Conservative</span>
-                <span className="text-right">Optimistic</span>
+                <span>{t('fin.wi.target')}</span>
+                <span className="text-center">{t('fin.wi.conservative')}</span>
+                <span className="text-right">{t('fin.wi.optimistic')}</span>
               </div>
               {milestoneRows.map((row) => (
                 <div key={row.target} className="grid grid-cols-3 gap-2 text-xs py-1">
                   <span className="font-heading">{fmtMoney(row.target)}</span>
                   <span className="text-center text-text-muted">
-                    {row.conservative != null ? `in ${row.conservative}y` : '—'}
+                    {row.conservative != null ? t('fin.wi.inYearsShort', { n: row.conservative }) : '—'}
                   </span>
                   <span className="text-right text-success">
-                    {row.optimistic != null ? `in ${row.optimistic}y` : '—'}
+                    {row.optimistic != null ? t('fin.wi.inYearsShort', { n: row.optimistic }) : '—'}
                   </span>
                 </div>
               ))}
@@ -341,15 +343,12 @@ export default function WhatIf() {
         {/* Honesty footnote */}
         <div className="card text-[10px] text-text-muted space-y-1">
           <div className="font-heading uppercase tracking-wider text-[9px] text-text">
-            Assumptions you're making
+            {t('fin.wi.assumptions')}
           </div>
-          <div>
-            • Returns are <span className="text-text">nominal</span> (before inflation). 7%
-            nominal ≈ 4.5% real at 2.5% inflation.
-          </div>
-          <div>• Markets don't return smoothly. A 7% average is wild year-to-year.</div>
-          <div>• Taxes and fund fees aren't modeled. Real-world outcomes are lower.</div>
-          <div>• Monthly contribution is constant — no raises or career changes.</div>
+          <div>• {t('fin.wi.assume1')}</div>
+          <div>• {t('fin.wi.assume2')}</div>
+          <div>• {t('fin.wi.assume3')}</div>
+          <div>• {t('fin.wi.assume4')}</div>
         </div>
       </div>
     </>
@@ -366,6 +365,7 @@ function ProjectionChart({
   optimistic: number[];
   years: number;
 }) {
+  const { t } = useTranslation();
   const W = 320;
   const H = 140;
   const PAD_L = 4;
@@ -407,15 +407,15 @@ function ProjectionChart({
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-2">
-        <span className="font-heading font-semibold text-sm">Projection</span>
+        <span className="font-heading font-semibold text-sm">{t('fin.wi.projection')}</span>
         <div className="flex items-center gap-2 text-[9px] uppercase tracking-wider">
           <span className="flex items-center gap-1 text-text-muted">
             <span className="inline-block w-2 h-2 rounded-sm bg-text-muted/60" />
-            Cons.
+            {t('fin.wi.consShort')}
           </span>
           <span className="flex items-center gap-1 text-success">
             <span className="inline-block w-2 h-2 rounded-sm bg-success" />
-            Opt.
+            {t('fin.wi.optShort')}
           </span>
         </div>
       </div>
@@ -435,9 +435,9 @@ function ProjectionChart({
         <path d={optPath} fill="none" stroke="#3FB950" strokeWidth={2} strokeLinejoin="round" />
       </svg>
       <div className="flex justify-between text-[9px] text-text-muted mt-1">
-        <span>Today</span>
-        <span>+{Math.floor(years / 2)}y</span>
-        <span>+{years}y</span>
+        <span>{t('fin.wi.today')}</span>
+        <span>{t('fin.wi.plusYears', { n: Math.floor(years / 2) })}</span>
+        <span>{t('fin.wi.plusYears', { n: years })}</span>
       </div>
     </div>
   );

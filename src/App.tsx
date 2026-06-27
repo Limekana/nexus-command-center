@@ -42,6 +42,7 @@ import YearReview from './screens/YearReview';
 import Goals from './screens/Goals';
 import Settings from './screens/Settings';
 import LifeProfileSettings from './screens/LifeProfileSettings';
+import Onboarding from './screens/Onboarding';
 import { onNotificationTap, scheduleWeeklyReview } from './lib/weeklyNotification';
 import { onNotificationAction } from './lib/notifications';
 import { installRatingHistory } from './lib/ratingHistory';
@@ -51,6 +52,8 @@ import { useHabitsStore } from './store/useHabitsStore';
 import { useBodyMetricsStore } from './store/useBodyMetricsStore';
 import { useWorkQualityStore } from './store/useWorkQualityStore';
 import { useLifeProfileStore } from './store/useLifeProfileStore';
+import { useFinanceStore } from './store/useFinanceStore';
+import { isOnboarded, setOnboarded } from './lib/onboarding';
 
 export default function App() {
   const unlocked = useAuthStore((s) => s.unlocked);
@@ -69,6 +72,10 @@ export default function App() {
   // the session-loading branch so we don't flash the Login screen for
   // returning guest-mode users.
   const [guestMode, setGuestModeState] = useState<boolean | null>(null);
+  // v1.6 — first-run onboarding gate. `onboarded` flips when the wizard
+  // finishes/skips; seeded from the local flag (or a pre-1.6 saved profile).
+  const [onboarded, setOnboardedState] = useState<boolean>(() => isOnboarded());
+  const lifeProfileLoaded = useLifeProfileStore((s) => s.loaded);
 
   useEffect(() => {
     (async () => {
@@ -197,6 +204,21 @@ export default function App() {
       } catch (e) {
         console.warn('[app-init] work quality hydration threw:', e);
       }
+      // v1.6 — Finance store load. Finance (transactions + budget categories)
+      // is NCC-native and pulled by fullSync below, but the in-memory finance
+      // store starts empty and is only refreshed by reloadDataStores() inside
+      // syncNow — which is gated on a clean pull. On a cold start the Life tab
+      // computes its report (incl. the Finance domain's "ever used" flag from
+      // budgets) before that lands, so Finance reads "Not counted yet" despite
+      // budgets existing. Loading from Dexie here — the local source of truth,
+      // persisted across launches — makes the Finance domain count immediately
+      // for any user who has ever synced budgets to this device. Cheap (no
+      // network); fire-and-forget so a failure doesn't block app-init.
+      try {
+        await useFinanceStore.getState().load();
+      } catch (e) {
+        console.warn('[app-init] finance load threw:', e);
+      }
       // v1.5 — Life Profile. Reads the local cache instantly at store
       // creation; load() pulls the cross-device value from
       // user_preferences.life_profile now that we have a session.
@@ -276,6 +298,24 @@ export default function App() {
   // so the lock UX stays consistent regardless of cloud auth state.
   if (!unlocked) {
     return <LockScreen />;
+  }
+
+  // 3.5 First-run onboarding. Show the wizard once on a fresh setup — no
+  // Life Profile configured and the onboarding flag unset. For a signed-in
+  // user we wait for the cloud life_profile load to resolve (so a returning
+  // user whose profile lives only in the cloud isn't flashed the wizard);
+  // guests have no cloud load, so the local check stands alone. Re-checking
+  // isOnboarded() here catches the case where the cloud load just wrote a
+  // profile into local storage.
+  if (!onboarded && (!session || lifeProfileLoaded) && !isOnboarded()) {
+    return (
+      <Onboarding
+        onDone={() => {
+          setOnboarded();
+          setOnboardedState(true);
+        }}
+      />
+    );
   }
 
   // 4. Fully authenticated. Render the app.

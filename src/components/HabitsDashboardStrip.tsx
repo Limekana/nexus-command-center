@@ -11,12 +11,14 @@
 
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import HabitRing from './HabitRing';
 import { useHabitsStore } from '../store/useHabitsStore';
 import { isEligibleOn, dateKey } from '../lib/habitStreaks';
 
 export default function HabitsDashboardStrip() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const habits = useHabitsStore((s) => s.habits);
   const completions = useHabitsStore((s) => s.completions);
 
@@ -41,12 +43,12 @@ export default function HabitsDashboardStrip() {
         className="glass rounded-xl p-4 flex items-center justify-between press-spring text-left w-full"
       >
         <div className="min-w-0">
-          <div className="font-heading font-semibold text-sm">Build a habit</div>
+          <div className="font-heading font-semibold text-sm">{t('dash.buildHabitTitle')}</div>
           <div className="text-[11px] text-text-muted mt-0.5">
-            One small daily action — start with one.
+            {t('dash.buildHabitBody')}
           </div>
         </div>
-        <div className="pill pill-on flex-shrink-0 ml-3">+ Habit</div>
+        <div className="pill pill-on flex-shrink-0 ml-3">{t('dash.addHabit')}</div>
       </button>
     );
   }
@@ -58,9 +60,9 @@ export default function HabitsDashboardStrip() {
         onClick={() => navigate('/habits')}
         className="glass rounded-xl p-4 press-spring text-left w-full block"
       >
-        <div className="font-heading font-semibold text-sm">Habits</div>
+        <div className="font-heading font-semibold text-sm">{t('dash.habits')}</div>
         <div className="text-[11px] text-text-muted mt-0.5">
-          Nothing scheduled today — rest up.
+          {t('dash.nothingToday')}
         </div>
       </button>
     );
@@ -83,10 +85,10 @@ export default function HabitsDashboardStrip() {
           onClick={() => navigate('/habits')}
           className="font-heading font-semibold text-sm press-spring"
         >
-          Today's habits
+          {t('dash.habitsToday')}
         </button>
         <div className="text-[10px] text-text-muted uppercase tracking-wider">
-          {completedToday} of {eligible.length} done
+          {t('dash.doneOfTotal', { done: completedToday, total: eligible.length })}
         </div>
       </div>
       <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-1 px-1 stagger-children">

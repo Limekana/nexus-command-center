@@ -81,6 +81,16 @@ export const useLifeProfileStore = create<LifeProfileStore>((set, get) => ({
           const cloud = sanitiseLifeProfile(data.life_profile);
           writeLocal(cloud);
           set({ profile: cloud });
+        } else if (!error && !data?.life_profile) {
+          // v1.6 — back-fill. A signed-in user with NO cloud life_profile but
+          // a non-default local one almost certainly set their profile while
+          // the session was still resolving (so setProfile only wrote locally,
+          // never reaching the cloud). Push the local value up now so it
+          // propagates cross-device. Guarded to a configured local profile —
+          // we never overwrite cloud with the untouched Student default.
+          if (localStorage.getItem(LOCAL_KEY)) {
+            await get().setProfile(local);
+          }
         }
       } catch (e) {
         console.warn('[life-profile] cloud load failed:', (e as Error).message);

@@ -1,0 +1,3 @@
+Full six-language support across every screen (English, Finnish, French, German, Spanish, Chinese), including Settings, Life Profile, Life patterns and the weekly/yearly reviews.
+
+Earlier in this line: profile-weighted Life Score with a Work domain, first-run onboarding, and a faster cold-start finance read.

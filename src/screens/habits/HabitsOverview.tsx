@@ -13,6 +13,7 @@
 // uncluttered.
 
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
 import BottomSheet from '../../components/BottomSheet';
@@ -22,6 +23,9 @@ import { isEligibleOn, dateKey } from '../../lib/habitStreaks';
 import type { Habit } from '../../types/habits';
 
 export default function HabitsOverview() {
+  const { t } = useTranslation();
+  const dShort = (i: number) => t(`days.short.${['sun','mon','tue','wed','thu','fri','sat'][i]}`);
+  const dMini = (i: number) => t(`days.mini.${['sun','mon','tue','wed','thu','fri','sat'][i]}`);
   const navigate = useNavigate();
   const habits = useHabitsStore((s) => s.habits);
   const completions = useHabitsStore((s) => s.completions);
@@ -103,9 +107,9 @@ export default function HabitsOverview() {
   return (
     <>
       <AppHeader
-        title="Habits"
+        title={t('domains.habits')}
         back="/"
-        backLabel="Home"
+        backLabel={t('nav.home')}
         showAvatar={false}
         action={
           <button
@@ -113,7 +117,7 @@ export default function HabitsOverview() {
             className="pill pill-on pill-lg press-spring"
             type="button"
           >
-            + Habit
+            + {t('habits.addHabit')}
           </button>
         }
       />
@@ -121,17 +125,17 @@ export default function HabitsOverview() {
         {active.length === 0 ? (
           <div className="glass rounded-xl p-8 text-center stagger-children">
             <div className="font-heading text-base font-semibold mb-1">
-              No habits yet
+              {t('habits.noHabitsTitle')}
             </div>
             <div className="text-xs text-text-muted mb-4">
-              Start with one small daily action.
+              {t('habits.noHabitsBody')}
             </div>
             <button
               onClick={() => navigate('/habits/add')}
               className="pill pill-on pill-lg press-spring"
               type="button"
             >
-              + First habit
+              + {t('habits.firstHabit')}
             </button>
           </div>
         ) : (
@@ -140,22 +144,22 @@ export default function HabitsOverview() {
             <section className="space-y-2">
               <div className="flex items-baseline justify-between px-1">
                 <div className="font-heading font-semibold text-xs uppercase tracking-wider text-text-muted">
-                  Today
+                  {t('habits.today')}
                 </div>
                 {totalEligible > 0 && (
                   <div className="text-[10px] text-text-muted uppercase tracking-wider">
-                    {doneToday.length} of {totalEligible}
+                    {t('habits.doneOfTotal', { done: doneToday.length, total: totalEligible })}
                   </div>
                 )}
               </div>
               {todayLeft.length === 0 && doneToday.length === 0 && (
                 <div className="glass-soft rounded-xl p-4 text-center text-xs text-text-muted">
-                  Nothing scheduled today. Tomorrow's habits will surface here.
+                  {t('habits.nothingToday')}
                 </div>
               )}
               {todayLeft.length === 0 && doneToday.length > 0 && (
                 <div className="glass-soft rounded-xl p-4 text-center text-xs text-success">
-                  Cleared. Streaks intact.
+                  {t('habits.cleared')}
                 </div>
               )}
               {todayLeft.length > 0 && (
@@ -189,8 +193,8 @@ export default function HabitsOverview() {
                           type="button"
                           aria-label={
                             h.type === 'binary'
-                              ? `Mark ${h.title} done`
-                              : `Add ${step}${h.unit ? ` ${h.unit}` : ''} to ${h.title}`
+                              ? t('habits.markTitleDone', { title: h.title })
+                              : t('habits.addToHabit', { amt: `${step}${h.unit ? ` ${h.unit}` : ''}`, title: h.title })
                           }
                           className="press-spring"
                         >
@@ -203,7 +207,7 @@ export default function HabitsOverview() {
                             <div className="flex flex-col items-center leading-none">
                               {h.type === 'binary' ? (
                                 <span className="text-[10px] uppercase tracking-wider text-text-muted">
-                                  Tap
+                                  {t('habits.tap')}
                                 </span>
                               ) : (
                                 <>
@@ -216,7 +220,7 @@ export default function HabitsOverview() {
                                       it, and the button overflowed when the
                                       unit was longer than ~5 chars. */}
                                   <span className="text-[9px] text-text-muted">
-                                    of {h.targetAmount}{h.unit ? ` ${h.unit}` : ''}
+                                    {t('habits.of')} {h.targetAmount}{h.unit ? ` ${h.unit}` : ''}
                                   </span>
                                 </>
                               )}
@@ -230,7 +234,7 @@ export default function HabitsOverview() {
                           {streak.current > 0 ? (
                             <>🔥 {streak.current}d</>
                           ) : (
-                            <>No streak</>
+                            <>{t('habits.noStreak')}</>
                           )}
                         </div>
                         {/* v1.2 hotfix — all three action buttons now share
@@ -248,13 +252,13 @@ export default function HabitsOverview() {
                               className="pill pill-on flex-1 press-spring min-h-11"
                               type="button"
                             >
-                              Mark done
+                              {t('habits.markDone')}
                             </button>
                             <button
                               onClick={() => setActiveMenu(h.id)}
                               className="pill press-spring min-w-11 min-h-11 inline-flex items-center justify-center leading-none flex-shrink-0"
                               type="button"
-                              aria-label="More"
+                              aria-label={t('habits.more')}
                             >
                               ⋯
                             </button>
@@ -265,7 +269,7 @@ export default function HabitsOverview() {
                               onClick={() => addToCompletion(h.id, -step)}
                               className="pill press-spring min-h-11 min-w-11 inline-flex items-center justify-center flex-shrink-0"
                               type="button"
-                              aria-label={`Subtract ${step}${h.unit ? ` ${h.unit}` : ''}`}
+                              aria-label={t('habits.subtract', { amt: `${step}${h.unit ? ` ${h.unit}` : ''}` })}
                             >
                               −{step}
                             </button>
@@ -278,7 +282,7 @@ export default function HabitsOverview() {
                               onClick={() => addToCompletion(h.id, step)}
                               className="pill pill-on flex-1 press-spring min-h-11 inline-flex items-center justify-center whitespace-nowrap"
                               type="button"
-                              aria-label={`Add ${step}${h.unit ? ` ${h.unit}` : ''}`}
+                              aria-label={t('habits.addToHabit', { amt: `${step}${h.unit ? ` ${h.unit}` : ''}`, title: h.title })}
                             >
                               +{step}
                             </button>
@@ -286,7 +290,7 @@ export default function HabitsOverview() {
                               onClick={() => setActiveMenu(h.id)}
                               className="pill press-spring min-w-11 min-h-11 inline-flex items-center justify-center leading-none flex-shrink-0"
                               type="button"
-                              aria-label="More"
+                              aria-label={t('habits.more')}
                             >
                               ⋯
                             </button>
@@ -303,7 +307,7 @@ export default function HabitsOverview() {
             {doneToday.length > 0 && (
               <section className="space-y-2">
                 <div className="font-heading font-semibold text-xs uppercase tracking-wider text-text-muted px-1">
-                  Done today
+                  {t('habits.doneToday')}
                 </div>
                 <div className="space-y-2 stagger-children">
                   {doneToday.map((h) => {
@@ -325,22 +329,22 @@ export default function HabitsOverview() {
                             {h.title}
                           </div>
                           <div className="text-[10px] text-text-muted">
-                            🔥 {streak.current}d streak
+                            🔥 {streak.current}d {t('habits.streakSuffix')}
                           </div>
                         </div>
                         <button
                           onClick={() => toggle(h.id)}
                           className="pill press-spring min-h-11"
                           type="button"
-                          title="Undo"
+                          title={t('habits.undo')}
                         >
-                          Undo
+                          {t('habits.undo')}
                         </button>
                         <button
                           onClick={() => setActiveMenu(h.id)}
                           className="pill press-spring min-w-11 min-h-11"
                           type="button"
-                          aria-label="More"
+                          aria-label={t('habits.more')}
                         >
                           ⋯
                         </button>
@@ -355,14 +359,14 @@ export default function HabitsOverview() {
             {rest.length > 0 && (
               <section className="space-y-2">
                 <div className="font-heading font-semibold text-xs uppercase tracking-wider text-text-muted px-1">
-                  Rest
+                  {t('habits.rest')}
                 </div>
                 <div className="space-y-2">
                   {rest.map((h) => {
                     const streak = streakFor(h.id);
                     const days = h.daysOfWeek ?? [];
                     const dayLabels = days
-                      .map((d) => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d])
+                      .map((d) => dShort(d))
                       .join(', ');
                     return (
                       <div
@@ -380,14 +384,14 @@ export default function HabitsOverview() {
                             {h.title}
                           </div>
                           <div className="text-[10px] text-text-muted truncate">
-                            {dayLabels || 'Specific days'} · 🔥 {streak.current}d
+                            {dayLabels || t('habits.specificDays')} · 🔥 {streak.current}d
                           </div>
                         </div>
                         <button
                           onClick={() => setActiveMenu(h.id)}
                           className="pill press-spring min-w-11 min-h-11"
                           type="button"
-                          aria-label="More"
+                          aria-label={t('habits.more')}
                         >
                           ⋯
                         </button>
@@ -409,7 +413,7 @@ export default function HabitsOverview() {
               type="button"
             >
               <span className="font-heading font-semibold text-sm">
-                📦 Archived ({archived.length})
+                📦 {t('habits.archivedLabel')} ({archived.length})
               </span>
               <span className="text-text-muted">{showArchived ? '▲' : '▼'}</span>
             </button>
@@ -425,7 +429,7 @@ export default function HabitsOverview() {
                         {h.title}
                       </div>
                       <div className="text-[10px] text-text-muted">
-                        Archived {h.archivedAt?.slice(0, 10)}
+                        {t('habits.archivedOn', { date: h.archivedAt?.slice(0, 10) })}
                       </div>
                     </div>
                     <button
@@ -433,13 +437,13 @@ export default function HabitsOverview() {
                       className="pill press-spring min-h-11"
                       type="button"
                     >
-                      Restore
+                      {t('habits.restore')}
                     </button>
                     <button
                       onClick={() => setActiveMenu(h.id)}
                       className="pill press-spring min-w-11 min-h-11"
                       type="button"
-                      aria-label="More"
+                      aria-label={t('habits.more')}
                     >
                       ⋯
                     </button>
@@ -451,7 +455,7 @@ export default function HabitsOverview() {
         )}
 
         <div className="text-[10px] text-text-muted text-center">
-          Synced across devices when online
+          {t('habits.syncedAcross')}
         </div>
       </div>
 
@@ -459,34 +463,34 @@ export default function HabitsOverview() {
       <BottomSheet
         open={!!activeMenu}
         onClose={() => setActiveMenu(null)}
-        title={menuHabit?.title ?? 'Habit'}
+        title={menuHabit?.title ?? t('habits.habitFallback')}
       >
         {menuHabit && (
           <div className="space-y-2">
             <div className="glass-soft rounded-lg p-3 text-xs text-text-muted space-y-1">
               <div>
-                Type: <span className="text-text">{menuHabit.type}</span>
+                {t('habits.typeLabel')}: <span className="text-text">{menuHabit.type}</span>
                 {menuHabit.type === 'quantified' && menuHabit.targetAmount && (
-                  <> · Target: <span className="text-text">{menuHabit.targetAmount}{menuHabit.unit ? ` ${menuHabit.unit}` : ''}</span></>
+                  <> · {t('habits.targetLabel')}: <span className="text-text">{menuHabit.targetAmount}{menuHabit.unit ? ` ${menuHabit.unit}` : ''}</span></>
                 )}
               </div>
               <div>
-                Frequency: <span className="text-text">
+                {t('habits.frequencyLabel')}: <span className="text-text">
                   {menuHabit.frequencyKind === 'daily'
-                    ? 'Daily'
+                    ? t('habits.daily')
                     : (menuHabit.daysOfWeek ?? [])
-                        .map((d) => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d])
-                        .join(', ') || 'No days set'}
+                        .map((d) => dShort(d))
+                        .join(', ') || t('habits.noDaysSet')}
                 </span>
               </div>
               {menuHabit.reminderTime && (
-                <div>Reminder: <span className="text-text">{menuHabit.reminderTime}</span></div>
+                <div>{t('habits.reminderLabel')}: <span className="text-text">{menuHabit.reminderTime}</span></div>
               )}
               {(() => {
                 const s = streakFor(menuHabit.id);
                 return (
                   <div>
-                    🔥 Current {s.current}d · Longest {s.longest}d
+                    🔥 {t('habits.current')} {s.current}d · {t('habits.longest')} {s.longest}d
                   </div>
                 );
               })()}
@@ -496,7 +500,7 @@ export default function HabitsOverview() {
                 bed at night, logged the next morning. Eligible days only. */}
             {!menuHabit.archivedAt && (
               <div className="glass-soft rounded-lg p-3">
-                <div className="sec mb-2">Catch up — tap a day</div>
+                <div className="sec mb-2">{t('habits.catchUp')}</div>
                 <div className="flex justify-between gap-1">
                   {Array.from({ length: 7 }).map((_, i) => {
                     const d = new Date(today);
@@ -525,10 +529,10 @@ export default function HabitsOverview() {
                               ? 'border-glass-border text-text-muted active:border-primary/40'
                               : 'border-transparent text-text-muted/30'
                         }`}
-                        aria-label={`${done ? 'Logged' : 'Not logged'} ${d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}`}
+                        aria-label={`${done ? t('habits.logged') : t('habits.notLogged')} ${d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}`}
                       >
                         <span className="text-[9px] uppercase tracking-wider">
-                          {isToday ? 'TODAY' : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'][d.getDay()]}
+                          {isToday ? t('days.todayShort') : dMini(d.getDay())}
                         </span>
                         <span className="text-sm font-heading font-semibold leading-none">
                           {done ? '✓' : d.getDate()}
@@ -547,7 +551,7 @@ export default function HabitsOverview() {
               className="w-full pill pill-lg press-spring"
               type="button"
             >
-              Edit
+              {t('habits.edit')}
             </button>
             {menuHabit.archivedAt ? (
               <button
@@ -558,7 +562,7 @@ export default function HabitsOverview() {
                 className="w-full pill pill-lg press-spring"
                 type="button"
               >
-                Restore
+                {t('habits.restore')}
               </button>
             ) : (
               <button
@@ -569,12 +573,12 @@ export default function HabitsOverview() {
                 className="w-full pill pill-lg press-spring"
                 type="button"
               >
-                Archive
+                {t('habits.archive')}
               </button>
             )}
             <button
               onClick={() => {
-                if (confirm(`Delete "${menuHabit.title}" and its history?`)) {
+                if (confirm(t('habits.deleteConfirm', { title: menuHabit.title }))) {
                   deleteHabit(menuHabit.id);
                   setActiveMenu(null);
                 }
@@ -582,7 +586,7 @@ export default function HabitsOverview() {
               className="w-full pill pill-lg press-spring text-danger border-danger/40"
               type="button"
             >
-              Delete
+              {t('habits.delete')}
             </button>
           </div>
         )}
