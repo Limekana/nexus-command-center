@@ -561,6 +561,27 @@
       "unitsAt": "{{qty}} Einheiten @ {{price}} {{cur}}",
       "totalCost": "{{amount}} {{cur}} gesamt",
       "deletePurchase": "Diesen Kauf löschen?"
+    },
+    "ins": {
+      "computing": "Berechne",
+      "refresh": "Aktualisieren",
+      "technical": "Technisch",
+      "fundamental": "Fundamental",
+      "techDesc": "Zusammengesetzte Kaufen/Halten/Verkaufen-Signale aus RSI, SMA-Kreuzung, Preis-Momentum, Volumendruck und Schlagzeilen-Stimmung. Heuristisch — keine Anlageberatung. Einmal täglich aktualisiert.",
+      "fundDesc": "Zusammengesetzte Kaufen/Halten/Verkaufen-Signale aus KGV vs. Sektor, KBV, KUV, PEG, Verschuldungsgrad, Umsatzwachstum, Gewinnüberraschungen und Analystenkonsens. Heuristisch — keine Anlageberatung. Einmal wöchentlich aktualisiert.",
+      "lastComputed": "Zuletzt berechnet {{time}}",
+      "skipped_one": "{{count}} Ticker übersprungen",
+      "skipped_other": "{{count}} Ticker übersprungen",
+      "tierAll": "Alle",
+      "tierStrongBuy": "Starker Kauf",
+      "tierBuy": "Kaufen",
+      "tierHold": "Halten",
+      "tierSell": "Verkaufen",
+      "tierStrongSell": "Starker Verkauf",
+      "computingSignals": "Signale werden berechnet…",
+      "emptyUniverse": "Noch keine Bestände oder Beobachtungslisten-Ticker. Füge welche aus dem Portfolio oder der Beobachtungsliste hinzu, um hier Bewertungen zu sehen.",
+      "nothingIn": "Nichts in {{filter}}.",
+      "composite": "Komposit {{score}}"
     }
   }
 }

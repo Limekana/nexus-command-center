@@ -561,6 +561,27 @@
       "unitsAt": "{{qty}} 个单位 @ {{price}} {{cur}}",
       "totalCost": "共 {{amount}} {{cur}}",
       "deletePurchase": "删除这笔买入？"
+    },
+    "ins": {
+      "computing": "计算中",
+      "refresh": "刷新",
+      "technical": "技术面",
+      "fundamental": "基本面",
+      "techDesc": "基于 RSI、SMA 交叉、价格动量、成交量压力和头条情绪的综合买入/持有/卖出信号。启发式 — 非投资建议。每日刷新一次。",
+      "fundDesc": "基于市盈率对比行业、市净率、市销率、PEG、负债权益比、营收增长、盈利惊喜和分析师共识的综合买入/持有/卖出信号。启发式 — 非投资建议。每周刷新一次。",
+      "lastComputed": "上次计算 {{time}}",
+      "skipped_one": "跳过 {{count}} 个代码",
+      "skipped_other": "跳过 {{count}} 个代码",
+      "tierAll": "全部",
+      "tierStrongBuy": "强烈买入",
+      "tierBuy": "买入",
+      "tierHold": "持有",
+      "tierSell": "卖出",
+      "tierStrongSell": "强烈卖出",
+      "computingSignals": "正在计算信号…",
+      "emptyUniverse": "还没有持仓或关注的代码。从投资组合或关注列表添加一些以在此查看评级。",
+      "nothingIn": "{{filter}} 中没有内容。",
+      "composite": "综合 {{score}}"
     }
   }
 }

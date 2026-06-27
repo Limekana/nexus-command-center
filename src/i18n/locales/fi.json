@@ -561,6 +561,27 @@
       "unitsAt": "{{qty}} yksikköä @ {{price}} {{cur}}",
       "totalCost": "{{amount}} {{cur}} yhteensä",
       "deletePurchase": "Poistetaanko tämä osto?"
+    },
+    "ins": {
+      "computing": "Lasketaan",
+      "refresh": "Päivitä",
+      "technical": "Tekninen",
+      "fundamental": "Fundamentaali",
+      "techDesc": "Yhdistetyt osta/pidä/myy-signaalit: RSI, SMA-risteys, hintamomentum, volyymipaine ja otsikoiden tunnelma. Heuristinen — ei sijoitusneuvontaa. Päivittyy kerran päivässä.",
+      "fundDesc": "Yhdistetyt osta/pidä/myy-signaalit: P/E vs sektori, P/B, P/S, PEG, velka/oma pääoma, liikevaihdon kasvu, tulosyllätykset ja analyytikkokonsensus. Heuristinen — ei sijoitusneuvontaa. Päivittyy kerran viikossa.",
+      "lastComputed": "Laskettu viimeksi {{time}}",
+      "skipped_one": "{{count}} tikkeri ohitettu",
+      "skipped_other": "{{count}} tikkeriä ohitettu",
+      "tierAll": "Kaikki",
+      "tierStrongBuy": "Vahva osto",
+      "tierBuy": "Osta",
+      "tierHold": "Pidä",
+      "tierSell": "Myy",
+      "tierStrongSell": "Vahva myynti",
+      "computingSignals": "Lasketaan signaaleja…",
+      "emptyUniverse": "Ei vielä omistuksia tai seurattavia tikkereitä. Lisää niitä Salkusta tai Seurantalistasta nähdäksesi arviot tässä.",
+      "nothingIn": "Ei mitään luokassa {{filter}}.",
+      "composite": "Yhdistelmä {{score}}"
     }
   }
 }
