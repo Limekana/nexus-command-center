@@ -15,6 +15,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { useFitnessStore } from '../store/useFitnessStore';
 import { useStudiesStore } from '../store/useStudiesStore';
@@ -37,6 +38,7 @@ const TONE_GLYPH: Record<Insight['tone'], string> = {
 
 export default function CrossDomainCard() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const txns = useFinanceStore((s) => s.transactions);
   const budgets = useFinanceStore((s) => s.budgetCategories);
   const workouts = useFitnessStore((s) => s.sessions);
@@ -76,14 +78,13 @@ export default function CrossDomainCard() {
         className="glass rounded-xl p-4 text-left w-full press-spring"
       >
         <div className="flex items-center justify-between mb-1">
-          <h2 className="font-heading font-semibold text-sm">Life patterns</h2>
+          <h2 className="font-heading font-semibold text-sm">{t('dash.lifePatterns')}</h2>
           <span className="text-[10px] text-text-muted uppercase tracking-wider">
-            Building baseline
+            {t('dash.buildingBaseline')}
           </span>
         </div>
         <p className="text-[11px] text-text-muted">
-          Cross-domain insights surface after about 4 weeks of data. Keep
-          logging — patterns will appear here when there's enough to see.
+          {t('dash.baselineBody')}
         </p>
       </button>
     );
@@ -98,14 +99,13 @@ export default function CrossDomainCard() {
         className="glass rounded-xl p-4 text-left w-full press-spring"
       >
         <div className="flex items-center justify-between mb-1">
-          <h2 className="font-heading font-semibold text-sm">Life patterns</h2>
+          <h2 className="font-heading font-semibold text-sm">{t('dash.lifePatterns')}</h2>
           <span className="text-[10px] text-text-muted uppercase tracking-wider">
-            Quiet week
+            {t('dash.quietWeek')}
           </span>
         </div>
         <p className="text-[11px] text-text-muted">
-          No standout patterns this week. Tap for your weekly life score
-          breakdown.
+          {t('dash.quietBody')}
         </p>
       </button>
     );
@@ -121,10 +121,10 @@ export default function CrossDomainCard() {
       onPointerEnter={() => setPaused(true)}
       onPointerLeave={() => setPaused(false)}
       className="glass rounded-xl p-4 text-left w-full press-spring"
-      aria-label="Open life patterns"
+      aria-label={t('dash.openLifePatterns')}
     >
       <div className="flex items-center justify-between mb-2">
-        <h2 className="font-heading font-semibold text-sm">Life patterns</h2>
+        <h2 className="font-heading font-semibold text-sm">{t('dash.lifePatterns')}</h2>
         {report.insights.length > 1 && (
           <div className="flex gap-1" aria-hidden>
             {report.insights.map((_, i) => (
