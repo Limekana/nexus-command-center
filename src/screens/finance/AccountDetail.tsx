@@ -16,6 +16,7 @@
 // display so newest sits on top with the final balance.
 
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
 import { Pill } from '../../components/ui/Pill';
@@ -56,6 +57,7 @@ interface RowEntry {
 }
 
 export default function AccountDetail() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const baseCurrency = useSettingsStore((s) => s.baseCurrency);
@@ -139,10 +141,10 @@ export default function AccountDetail() {
       let counterparty: string | null = null;
       if (m.kind === 'transfer_in') {
         const src = accounts.find((a) => a.id === m.txn.accountId);
-        counterparty = src ? `from ${src.name}` : 'from another account';
+        counterparty = src ? t('fin.ad.fromName', { name: src.name }) : t('fin.ad.fromOther');
       } else if (m.kind === 'transfer_out') {
         const dst = accounts.find((a) => a.id === m.txn.destinationAccountId);
-        counterparty = dst ? `to ${dst.name}` : 'to another account';
+        counterparty = dst ? t('fin.ad.toName', { name: dst.name }) : t('fin.ad.toOther');
       } else if (cat) {
         counterparty = cat.name;
       }
@@ -157,19 +159,19 @@ export default function AccountDetail() {
 
     // Reverse — newest sits on top of the list (canonical statement view).
     return built.reverse();
-  }, [account, allTransactions, categories, accounts, fxRates, baseCurrency]);
+  }, [account, allTransactions, categories, accounts, fxRates, baseCurrency, t]);
 
   if (!account) {
     return (
       <>
         <AppHeader
-          title="Account"
+          title={t('fin.ad.account')}
           back="/finance/networth"
-          backLabel="Net Worth"
+          backLabel={t('fin.ov.netWorth')}
           showAvatar={false}
         />
         <div className="card text-center text-xs text-text-muted py-6">
-          Account not found — it may have been deleted. Go back to Net Worth.
+          {t('fin.ad.notFound')}
         </div>
       </>
     );
@@ -186,11 +188,11 @@ export default function AccountDetail() {
       <AppHeader
         title={account.name}
         back="/finance/networth"
-        backLabel="Net Worth"
+        backLabel={t('fin.ov.netWorth')}
         showAvatar={false}
         action={
           <Pill size="sm" onClick={() => navigate('/finance/add')} icon="+">
-            Txn
+            {t('fin.ad.txn')}
           </Pill>
         }
       />
@@ -198,7 +200,7 @@ export default function AccountDetail() {
         {/* Header card — derived balance + delta + opening */}
         <div className="card-elevated">
           <div className="text-[10px] uppercase tracking-[0.15em] text-text-muted mb-1">
-            {isLiability ? 'Amount Owed' : 'Current Balance'}
+            {isLiability ? t('fin.ad.amountOwed') : t('fin.ad.currentBalance')}
           </div>
           <div
             className={`font-heading font-bold text-3xl tracking-tight ${
@@ -210,7 +212,7 @@ export default function AccountDetail() {
           <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border/40">
             <div>
               <div className="text-[10px] uppercase tracking-wider text-text-muted">
-                Opened
+                {t('fin.ad.opened')}
               </div>
               <div className="text-xs font-medium">
                 {fmt(account.startingBalance, account.currency)}
@@ -218,7 +220,7 @@ export default function AccountDetail() {
             </div>
             <div>
               <div className="text-[10px] uppercase tracking-wider text-text-muted">
-                Net change
+                {t('fin.ad.netChange')}
               </div>
               <div
                 className={`text-xs font-medium ${
@@ -235,16 +237,14 @@ export default function AccountDetail() {
             </div>
             <div>
               <div className="text-[10px] uppercase tracking-wider text-text-muted">
-                Transactions
+                {t('fin.ad.transactions')}
               </div>
               <div className="text-xs font-medium">{rows.length}</div>
             </div>
           </div>
           {unconvertableCount > 0 && (
             <div className="text-[10px] text-warning mt-2">
-              {unconvertableCount} transaction
-              {unconvertableCount === 1 ? '' : 's'} couldn't be FX-converted
-              to {account.currency}; balance may be understated.
+              {t('fin.ad.unconvertable', { count: unconvertableCount, cur: account.currency })}
             </div>
           )}
         </div>
@@ -252,12 +252,12 @@ export default function AccountDetail() {
         {/* Statement list */}
         {rows.length === 0 ? (
           <div className="card text-center text-xs text-text-muted py-8">
-            No transactions yet. Tap + Txn above to log one.
+            {t('fin.ad.noTx')}
           </div>
         ) : (
           <div className="card">
             <div className="font-heading font-semibold text-sm mb-2">
-              Transactions
+              {t('fin.ad.transactions')}
             </div>
             {rows.map((r) => {
               const tone =

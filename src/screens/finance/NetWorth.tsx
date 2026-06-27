@@ -13,6 +13,7 @@
 // reserve on the Savings screen; this card mirrors it.
 
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
 import RowActions from '../../components/RowActions';
@@ -64,6 +65,7 @@ const ASSET_META: Record<ManualAssetType, { icon: string; label: string }> = {
 const LIQUID_TYPES: ManualAssetType[] = ['cash', 'savings', 'checking'];
 
 export default function NetWorth() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const baseCurrency = useSettingsStore((s) => s.baseCurrency);
   const manualAssets = useFinanceStore((s) => s.manualAssets);
@@ -272,9 +274,9 @@ export default function NetWorth() {
   return (
     <>
       <AppHeader
-        title="Net Worth"
+        title={t('fin.ov.netWorth')}
         back="/finance"
-        backLabel="Finance"
+        backLabel={t('fin.finance')}
         showAvatar={false}
         action={
           !editingNow && (
@@ -283,13 +285,13 @@ export default function NetWorth() {
                 onClick={() => navigate('/finance/whatif')}
                 className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary"
               >
-                🔮 What if?
+                {t('fin.nw.whatIf')}
               </button>
               <button
                 onClick={startAdd}
                 className="text-xs px-2 py-1 rounded-sm border border-primary text-primary active:bg-primary/10"
               >
-                + Asset
+                {t('fin.nw.addAsset')}
               </button>
             </>
           )
@@ -299,15 +301,15 @@ export default function NetWorth() {
         {/* Total */}
         <div className="card-elevated">
           <div className="text-[10px] uppercase tracking-[0.15em] text-text-muted mb-1">
-            Total Net Worth
+            {t('fin.nw.totalNetWorth')}
           </div>
           <div className={`font-heading font-bold text-3xl tracking-tight ${netWorth >= 0 ? 'text-text' : 'text-danger'}`}>
             {fmt(netWorth, baseCurrency)}
           </div>
           <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border/40">
-            <Cell label="Portfolio" value={fmt(portfolioTotalBase, baseCurrency)} />
-            <Cell label="Other assets" value={fmt(totalAssets, baseCurrency)} />
-            <Cell label="Liabilities" value={`−${fmt(totalLiabilities, baseCurrency)}`} tone={totalLiabilities > 0 ? 'danger' : 'default'} />
+            <Cell label={t('fin.ov.portfolio')} value={fmt(portfolioTotalBase, baseCurrency)} />
+            <Cell label={t('fin.nw.otherAssets')} value={fmt(totalAssets, baseCurrency)} />
+            <Cell label={t('fin.nw.liabilities')} value={`−${fmt(totalLiabilities, baseCurrency)}`} tone={totalLiabilities > 0 ? 'danger' : 'default'} />
           </div>
         </div>
 
@@ -326,7 +328,7 @@ export default function NetWorth() {
           className="card w-full text-left press-spring"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="font-heading font-semibold text-sm">Savings Runway</span>
+            <span className="font-heading font-semibold text-sm">{t('fin.nw.savingsRunway')}</span>
             <span className={`text-[9px] uppercase tracking-wider border rounded-sm px-1.5 py-0.5 ${
               savingsAccountsBase <= 0
                 ? 'border-text-muted/40 bg-surface2 text-text-muted'
@@ -337,26 +339,24 @@ export default function NetWorth() {
                     : 'border-danger/40 bg-danger/5 text-danger'
             }`}>
               {savingsAccountsBase <= 0
-                ? 'No savings yet'
-                : runwayStatus === 'good' ? 'Strong' : runwayStatus === 'ok' ? 'OK' : 'Low'}
+                ? t('fin.nw.noSavings')
+                : runwayStatus === 'good' ? t('fin.nw.strong') : runwayStatus === 'ok' ? t('fin.nw.ok') : t('fin.nw.low')}
             </span>
           </div>
           <div className="flex items-baseline justify-between mb-1">
             <span className="font-heading font-bold text-xl tracking-tight">
               {runwayMonths > 0 && isFinite(runwayMonths)
-                ? `${runwayMonths.toFixed(1)} months`
+                ? t('fin.nw.months', { n: runwayMonths.toFixed(1) })
                 : '—'}
             </span>
             <span className="text-xs text-text-muted">
-              of expenses covered
+              {t('fin.nw.ofExpenses')}
             </span>
           </div>
           <div className="text-[10px] text-text-muted">
-            {savingsAccountsBase > 0 ? (
-              <>Savings {fmt(savingsAccountsBase, baseCurrency)} ÷ avg {fmt(monthlyExpensesAvg, baseCurrency)}/mo (last 90d). Target: 3-6 months.</>
-            ) : (
-              <>Add a Savings account above to start building runway. Liquid cash: {fmt(liquidBase, baseCurrency)}.</>
-            )}
+            {savingsAccountsBase > 0
+              ? t('fin.nw.runwayDesc', { sav: fmt(savingsAccountsBase, baseCurrency), exp: fmt(monthlyExpensesAvg, baseCurrency) })
+              : t('fin.nw.runwayEmpty', { liq: fmt(liquidBase, baseCurrency) })}
           </div>
         </button>
 
@@ -364,24 +364,24 @@ export default function NetWorth() {
         {editingNow && (
           <div className="card space-y-2">
             <div className="font-heading font-semibold text-sm">
-              {editing ? 'Edit Account' : 'New Account'}
+              {editing ? t('fin.nw.editAccount') : t('fin.nw.newAccount')}
             </div>
             <div className="grid grid-cols-4 gap-2">
-              {(Object.keys(ASSET_META) as ManualAssetType[]).map((t) => (
+              {(Object.keys(ASSET_META) as ManualAssetType[]).map((ty) => (
                 <button
-                  key={t}
+                  key={ty}
                   type="button"
-                  onClick={() => setAssetType(t)}
-                  className={`chip flex-col gap-0.5 py-2 ${assetType === t ? 'chip-on' : ''}`}
+                  onClick={() => setAssetType(ty)}
+                  className={`chip flex-col gap-0.5 py-2 ${assetType === ty ? 'chip-on' : ''}`}
                 >
-                  <span className="text-sm">{ASSET_META[t].icon}</span>
-                  <span className="text-[9px] uppercase tracking-wider">{ASSET_META[t].label}</span>
+                  <span className="text-sm">{ASSET_META[ty].icon}</span>
+                  <span className="text-[9px] uppercase tracking-wider">{t(`fin.acctType.${ty}`)}</span>
                 </button>
               ))}
             </div>
             <input
               className="input"
-              placeholder="Name (e.g. Nordea Savings)"
+              placeholder={t('fin.nw.namePh')}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -393,12 +393,12 @@ export default function NetWorth() {
                 will resolve. */}
             <div>
               <div className="sec mb-1">
-                {editing ? 'Current balance' : 'Starting balance'}
+                {editing ? t('fin.nw.currentBalance') : t('fin.nw.startingBalance')}
               </div>
               <div className="flex gap-2">
                 <input
                   className="input flex-1"
-                  placeholder={editing ? 'Current balance' : 'Starting balance'}
+                  placeholder={editing ? t('fin.nw.currentBalance') : t('fin.nw.startingBalance')}
                   inputMode="decimal"
                   value={value}
                   onChange={(e) => setValue(e.target.value)}
@@ -415,30 +415,28 @@ export default function NetWorth() {
               </div>
               {editing && (
                 <div className="text-[10px] text-text-muted mt-1">
-                  Opening was {fmt(editing.startingBalance, editing.currency)} ·
-                  saving here adjusts the opening figure so the displayed
-                  balance matches what you typed.
+                  {t('fin.nw.openingNote', { amt: fmt(editing.startingBalance, editing.currency) })}
                 </div>
               )}
             </div>
             <input
               className="input"
-              placeholder="Notes (optional)"
+              placeholder={t('fin.nw.notesPh')}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
             <div className="flex gap-2">
               <button className="btn flex-1" onClick={save}>
-                {editing ? 'Save' : 'Add'}
+                {editing ? t('common.save') : t('common.add')}
               </button>
               <button className="btn-ghost flex-1" onClick={cancel}>
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
             <div className="text-[10px] text-text-muted">
               {LIABILITY_TYPES.includes(assetType)
-                ? 'Liabilities (credit cards / loans) carry a negative balance — enter what you OWE as a negative number for new accounts.'
-                : 'Account balance updates automatically when you log transactions against this account.'}
+                ? t('fin.nw.liabilityHint')
+                : t('fin.nw.assetHint')}
             </div>
           </div>
         )}
@@ -461,7 +459,7 @@ export default function NetWorth() {
             <div key={type} className="card">
               <div className="flex items-center justify-between mb-2">
                 <span className="font-heading font-semibold text-sm">
-                  {meta.icon} {meta.label}
+                  {meta.icon} {t(`fin.acctType.${type}`)}
                 </span>
                 <span className={`text-xs ${isLiability ? 'text-danger' : 'text-text-muted'}`}>
                   {isLiability ? '−' : ''}{fmt(groupTotal, baseCurrency)}
@@ -476,14 +474,14 @@ export default function NetWorth() {
                   >
                     <div className="text-sm font-medium truncate">{a.name}</div>
                     <div className="text-[10px] text-text-muted truncate">
-                      {fmt(a.balanceNative, a.currency)} · opened {fmt(a.startingBalance, a.currency)}
+                      {fmt(a.balanceNative, a.currency)} · {t('fin.ad.opened').toLowerCase()} {fmt(a.startingBalance, a.currency)}
                       {a.notes && ` · ${a.notes}`}
                     </div>
                   </button>
                   <RowActions
                     onEdit={() => startEdit(a)}
                     onDelete={() => deleteAsset(a.id)}
-                    confirmMsg={`Remove ${a.name}?`}
+                    confirmMsg={t('fin.nw.removeConfirm', { name: a.name })}
                   />
                 </div>
               ))}
@@ -494,7 +492,7 @@ export default function NetWorth() {
         {manualAssets.length === 0 && !editingNow && (
           <div className="card">
             <div className="text-xs text-text-muted text-center py-3">
-              No manual assets yet. Add cash savings, property, loans, or anything outside your stock portfolio.
+              {t('fin.nw.empty')}
             </div>
           </div>
         )}
