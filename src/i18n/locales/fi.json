@@ -441,6 +441,59 @@
       "fromOther": "toiselta tililtä",
       "toName": "tilille {{name}}",
       "toOther": "toiselle tilille"
+    },
+    "assetClass": {
+      "stock": "📈 Osake",
+      "etf": "🧺 ETF",
+      "crypto": "₿ Krypto"
+    },
+    "assetAbbr": {
+      "stock": "OSAKE",
+      "etf": "ETF",
+      "crypto": "KRYPTO"
+    },
+    "wl": {
+      "add": "+ Seuraa",
+      "editWatch": "Muokkaa seurantaa",
+      "newWatch": "Uusi seuranta",
+      "cgIdPh": "CoinGecko-tunnus (esim. bitcoin)",
+      "tickerPh": "Tikkeri (esim. NVDA, CNDX.L)",
+      "displayName": "Näyttönimi",
+      "alerts": "Hälytykset (valinnainen)",
+      "alertAbove": "Hälytä kun ≥",
+      "alertBelow": "Hälytä kun ≤",
+      "helper": "Seurantalistan kohteet käyttävät samaa hintaputkea kuin omistuksesi. Hälytykset laukeavat kun hinta ylittää tavoitteen.",
+      "watching": "Seurannassa",
+      "tickers_one": "{{count}} tikkeri",
+      "tickers_other": "{{count}} tikkeriä",
+      "empty": "Ei vielä seurattavia. Napauta + Seuraa seurataksesi tikkeriä omistamatta sitä.",
+      "targetAboveHit": "Tavoite ≥ saavutettu",
+      "targetBelowHit": "Tavoite ≤ saavutettu",
+      "stopWatching": "Lopetetaanko seuranta {{ticker}}?"
+    },
+    "mh": {
+      "title": "Hallitse omistuksia",
+      "new": "+ Uusi",
+      "editHolding": "Muokkaa omistusta",
+      "newHolding": "Uusi omistus",
+      "cgIdPh": "CoinGecko-tunnus (esim. bitcoin)",
+      "etfTickerPh": "Tikkeri (esim. CNDX.L)",
+      "stockTickerPh": "Tikkeri (esim. AAPL)",
+      "displayName": "Näyttönimi",
+      "sectorPh": "Sektori (valinnainen, esim. Teknologia, Pankit)",
+      "firstPurchase": "Ensimmäinen osto",
+      "quantity": "Määrä",
+      "pricePerUnit": "Hinta per yksikkö",
+      "stockHint": "Hinnat Finnhubista. Käytä pörssin tikkeriä.",
+      "etfHint": "ETF:t käyttävät osakehintoja — samat tikkerisäännöt. Kansainväliset päätteet (.L, .DE) ohjautuvat Yahooseen.",
+      "cryptoHint": "Hinnat CoinGeckosta. Käytä pienaakkosista kolikkotunnusta (bitcoin, ethereum, solana…).",
+      "addLater": " Lisää muita ostoja myöhemmin Ostot-painikkeesta.",
+      "holdings": "Omistukset",
+      "empty": "Ei vielä omistuksia — lisää napauttamalla + Uusi",
+      "noOpen": "Ei avoimia positioita — kaikki omistukset suljettu",
+      "closed": "suljettu",
+      "removeConfirm": "Poistetaanko {{ticker}} salkusta? Myös ostohistoria poistetaan.",
+      "closedPositions": "Suljetut positiot"
     }
   }
 }
