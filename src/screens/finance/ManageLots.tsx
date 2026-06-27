@@ -5,6 +5,7 @@
 // aggregates in sync via recomputeHoldingAggregates() on every CRUD call.
 
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
 import RowActions from '../../components/RowActions';
@@ -20,6 +21,7 @@ function formatNumber(n: number, max = 4): string {
 }
 
 export default function ManageLots() {
+  const { t } = useTranslation();
   const { id: holdingId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const holding = useFinanceStore((s) => s.holdings.find((h) => h.id === holdingId));
@@ -58,9 +60,9 @@ export default function ManageLots() {
   if (!holding) {
     return (
       <>
-        <AppHeader title="Purchases" back="/finance/portfolio/manage" backLabel="Holdings" showAvatar={false} />
+        <AppHeader title={t('fin.ml.purchases')} back="/finance/portfolio/manage" backLabel={t('fin.mh.holdings')} showAvatar={false} />
         <div className="text-xs text-text-muted text-center py-6">
-          Holding not found. <button className="text-primary" onClick={() => navigate('/finance/portfolio/manage')}>Go back</button>.
+          {t('fin.ml.holdingNotFound')} <button className="text-primary" onClick={() => navigate('/finance/portfolio/manage')}>{t('fin.ml.goBack')}</button>.
         </div>
       </>
     );
@@ -210,7 +212,7 @@ export default function ManageLots() {
       <AppHeader
         title={holding.ticker.toUpperCase()}
         back="/finance/portfolio/manage"
-        backLabel="Holdings"
+        backLabel={t('fin.mh.holdings')}
         showAvatar={false}
         action={
           !editingNow && !selling && (
@@ -220,14 +222,14 @@ export default function ManageLots() {
                   onClick={startSell}
                   className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary"
                 >
-                  − Sell
+                  {t('fin.ml.sell')}
                 </button>
               )}
               <button
                 onClick={startAdd}
                 className="text-xs px-2 py-1 rounded-sm border border-primary text-primary active:bg-primary/10"
               >
-                + Purchase
+                {t('fin.ml.purchase')}
               </button>
             </>
           )
@@ -246,23 +248,23 @@ export default function ManageLots() {
               </div>
             </div>
             <div className="text-right">
-              <div className="text-[10px] uppercase tracking-wider text-text-muted">Total Units</div>
+              <div className="text-[10px] uppercase tracking-wider text-text-muted">{t('fin.ml.totalUnits')}</div>
               <div className="font-heading font-bold text-lg">{formatNumber(holding.quantity)}</div>
             </div>
           </div>
           {totalsByCurrency.length === 0 && (
-            <div className="text-xs text-text-muted">No purchases recorded yet.</div>
+            <div className="text-xs text-text-muted">{t('fin.ml.noPurchasesYet')}</div>
           )}
-          {totalsByCurrency.map((t) => (
-            <div key={t.currency} className="flex items-center justify-between text-xs py-1 border-t border-border/40 first:border-t-0 pt-1">
+          {totalsByCurrency.map((row) => (
+            <div key={row.currency} className="flex items-center justify-between text-xs py-1 border-t border-border/40 first:border-t-0 pt-1">
               <span className="text-text-muted">
-                Avg cost <span className="text-text font-medium">
-                  {formatNumber(t.avgPrice)} {t.currency}
+                {t('fin.ml.avgCost')} <span className="text-text font-medium">
+                  {formatNumber(row.avgPrice)} {row.currency}
                 </span>
               </span>
               <span className="text-text-muted">
-                Cost basis <span className="text-text font-medium">
-                  {formatNumber(t.cost, 2)} {t.currency}
+                {t('fin.ml.costBasis')} <span className="text-text font-medium">
+                  {formatNumber(row.cost, 2)} {row.currency}
                 </span>
               </span>
             </div>
@@ -273,12 +275,12 @@ export default function ManageLots() {
         {editingNow && (
           <div className="card space-y-2">
             <div className="font-heading font-semibold text-sm">
-              {editingId ? 'Edit Purchase' : 'New Purchase'}
+              {editingId ? t('fin.ml.editPurchase') : t('fin.ml.newPurchase')}
             </div>
             <div className="flex gap-2">
               <input
                 className="input flex-1"
-                placeholder="Quantity"
+                placeholder={t('fin.ml.quantity')}
                 inputMode="decimal"
                 value={qty}
                 onChange={(e) => setQty(e.target.value)}
@@ -286,7 +288,7 @@ export default function ManageLots() {
               />
               <input
                 className="input flex-1"
-                placeholder="Price per unit"
+                placeholder={t('fin.ml.pricePerUnit')}
                 inputMode="decimal"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
@@ -309,21 +311,20 @@ export default function ManageLots() {
             />
             <input
               className="input"
-              placeholder="Notes (optional)"
+              placeholder={t('fin.ml.notesPh')}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
             <div className="flex gap-2">
               <button className="btn flex-1" onClick={save}>
-                {editingId ? 'Save' : 'Add Purchase'}
+                {editingId ? t('common.save') : t('fin.ml.addPurchase')}
               </button>
               <button className="btn-ghost flex-1" onClick={cancel}>
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
             <div className="text-[10px] text-text-muted">
-              Cost is stored in the currency you paid in. The Portfolio screen
-              converts everything to your base currency at quote time.
+              {t('fin.ml.costHint')}
             </div>
           </div>
         )}
@@ -331,14 +332,14 @@ export default function ManageLots() {
         {/* Record Sale form (v1.3.1 BUG-23) — FIFO cost basis over oldest lots */}
         {selling && (
           <div className="card space-y-2">
-            <div className="font-heading font-semibold text-sm">Record Sale</div>
+            <div className="font-heading font-semibold text-sm">{t('fin.ml.recordSale')}</div>
             <div className="text-[10px] text-text-muted">
-              {formatNumber(remainingShares)} units available · cost basis is FIFO (oldest lots first)
+              {t('fin.ml.unitsAvailable', { units: formatNumber(remainingShares) })}
             </div>
             <div className="flex gap-2">
               <input
                 className="input flex-1"
-                placeholder="Shares to sell"
+                placeholder={t('fin.ml.sharesToSell')}
                 inputMode="decimal"
                 value={sellShares}
                 onChange={(e) => setSellShares(e.target.value)}
@@ -346,7 +347,7 @@ export default function ManageLots() {
               />
               <input
                 className="input flex-1"
-                placeholder="Sale price / unit"
+                placeholder={t('fin.ml.salePrice')}
                 inputMode="decimal"
                 value={sellPrice}
                 onChange={(e) => setSellPrice(e.target.value)}
@@ -371,14 +372,14 @@ export default function ManageLots() {
             {salePreview && (
               <div className="text-xs rounded-sm border border-border/60 bg-surface2/30 px-2.5 py-2 space-y-0.5">
                 <div className="flex justify-between">
-                  <span className="text-text-muted">Cost basis (FIFO)</span>
+                  <span className="text-text-muted">{t('fin.ml.costBasisFifo')}</span>
                   <span className="font-medium">
-                    {formatNumber(salePreview.costBasisPerShare)} {sellCurrency}/unit
+                    {t('fin.ml.perUnit', { amount: formatNumber(salePreview.costBasisPerShare), cur: sellCurrency })}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-text-muted">
-                    Realized {salePreview.realizedGainLoss >= 0 ? 'gain' : 'loss'}
+                    {salePreview.realizedGainLoss >= 0 ? t('fin.ml.realizedGain') : t('fin.ml.realizedLoss')}
                   </span>
                   <span className={`font-semibold ${salePreview.realizedGainLoss >= 0 ? 'text-success' : 'text-danger'}`}>
                     {salePreview.realizedGainLoss >= 0 ? '+' : '−'}
@@ -389,37 +390,37 @@ export default function ManageLots() {
             )}
             <div className="flex gap-2">
               <button className="btn flex-1" onClick={submitSale} disabled={!salePreview}>
-                Record Sale
+                {t('fin.ml.recordSale')}
               </button>
-              <button className="btn-ghost flex-1" onClick={cancel}>Cancel</button>
+              <button className="btn-ghost flex-1" onClick={cancel}>{t('common.cancel')}</button>
             </div>
           </div>
         )}
 
         {/* Lots list */}
         <div className="card">
-          <div className="font-heading font-semibold text-sm mb-2">Purchase History</div>
+          <div className="font-heading font-semibold text-sm mb-2">{t('fin.ml.purchaseHistory')}</div>
           {lots.length === 0 && (
             <div className="text-xs text-text-muted text-center py-4">
-              No purchases yet — tap + Purchase to record one
+              {t('fin.ml.noPurchases')}
             </div>
           )}
           {lots.map((lot) => (
             <div key={lot.id} className="flex items-center gap-2 py-2 border-b border-border/40 last:border-0">
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium">
-                  {formatNumber(lot.quantity)} units @ {formatNumber(lot.costPerUnit)} {lot.costCurrency}
+                  {t('fin.ml.unitsAt', { qty: formatNumber(lot.quantity), price: formatNumber(lot.costPerUnit), cur: lot.costCurrency })}
                 </div>
                 <div className="text-[10px] text-text-muted">
                   {lot.purchaseDate ?? lot.createdAt.slice(0, 10)}
-                  {' · '}{formatNumber(lot.quantity * lot.costPerUnit, 2)} {lot.costCurrency} total
+                  {' · '}{t('fin.ml.totalCost', { amount: formatNumber(lot.quantity * lot.costPerUnit, 2), cur: lot.costCurrency })}
                   {lot.notes && <> · {lot.notes}</>}
                 </div>
               </div>
               <RowActions
                 onEdit={() => startEdit(lot)}
                 onDelete={() => onDelete(lot.id)}
-                confirmMsg="Delete this purchase?"
+                confirmMsg={t('fin.ml.deletePurchase')}
               />
             </div>
           ))}

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
 import SparkLine from '../../components/SparkLine';
@@ -204,6 +205,7 @@ function metricsFor(
 }
 
 export default function Portfolio() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const holdings = useFinanceStore((s) => s.holdings);
   const portfolioLots = useFinanceStore((s) => s.portfolioLots);
@@ -230,9 +232,9 @@ export default function Portfolio() {
   // Helper used by all three Tier 2 surfaces — looks up a holding by ticker
   // (case-insensitive, equity bias) and opens the detail sheet.
   const openDetailByTicker = (ticker: string) => {
-    const t = ticker.toUpperCase();
+    const up = ticker.toUpperCase();
     const h = holdings.find(
-      (h) => h.ticker.toUpperCase() === t && (h.assetType === 'stock' || h.assetType === 'etf'),
+      (h) => h.ticker.toUpperCase() === up && (h.assetType === 'stock' || h.assetType === 'etf'),
     );
     if (h) setDetailHolding(h);
   };
@@ -334,7 +336,7 @@ export default function Portfolio() {
 
   const stockBadge =
     sources.length === 0
-      ? 'STOCKS'
+      ? t('fin.port.stocksBadge')
       : sources.length === 1
         ? sources[0].toUpperCase()
         : 'FINNHUB + YAHOO';
@@ -371,9 +373,9 @@ export default function Portfolio() {
   return (
     <>
       <AppHeader
-        title="Portfolio"
+        title={t('fin.ov.portfolio')}
         back="/finance"
-        backLabel="Finance"
+        backLabel={t('fin.finance')}
         showAvatar={false}
         action={
           <>
@@ -387,7 +389,7 @@ export default function Portfolio() {
               onClick={() => navigate('/finance/portfolio/manage')}
               className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary"
             >
-              Manage
+              {t('fin.ov.manage')}
             </button>
             <button
               onClick={() => refreshPortfolio()}
@@ -409,12 +411,12 @@ export default function Portfolio() {
             <div className="flex-1 min-w-0">
               <div className="font-semibold">
                 {refreshErrors.length > 0
-                  ? `${refreshErrors.length} fetch error${refreshErrors.length === 1 ? '' : 's'}`
-                  : `Cache ${formatCacheAge(oldestAge)}`}
+                  ? t('fin.port.fetchErrors', { count: refreshErrors.length })
+                  : t('fin.port.cacheAge', { age: formatCacheAge(oldestAge) })}
               </div>
               {refreshErrors.length === 0 && (
                 <div className="text-[10px] opacity-80">
-                  Showing cached data. Tap retry to attempt a fresh fetch.
+                  {t('fin.port.cachedDataHint')}
                 </div>
               )}
               {/* Expanded per-ticker error list — surfaces exactly which
@@ -431,14 +433,14 @@ export default function Portfolio() {
                   ))}
                   {refreshErrors.length > 8 && (
                     <div className="opacity-60">
-                      +{refreshErrors.length - 8} more — see adb logcat
+                      {t('fin.port.moreErrors', { count: refreshErrors.length - 8 })}
                     </div>
                   )}
                 </div>
               )}
             </div>
             <button onClick={() => refreshPortfolio()} className="btn-ghost btn-sm flex-shrink-0">
-              Retry
+              {t('fin.port.retry')}
             </button>
           </div>
         )}
@@ -446,7 +448,7 @@ export default function Portfolio() {
         {/* Totals card — value, day change, cost basis, P/L */}
         <div className="card-elevated">
           <div className="text-[10px] uppercase tracking-[0.15em] text-text-muted mb-1">
-            Total Estimated Value
+            {t('fin.port.totalValue')}
           </div>
           <div className="font-heading font-bold text-3xl tracking-tight">
             {fmt(totals.total, baseCurrency)}
@@ -455,22 +457,22 @@ export default function Portfolio() {
             <span className={totals.dayChange >= 0 ? 'text-success' : 'text-danger'}>
               {totals.dayChange >= 0 ? '↑' : '↓'} {fmt(Math.abs(totals.dayChange), baseCurrency)}
               {' '}
-              <span className="opacity-70">({Math.abs(totals.dayPct).toFixed(2)}% today)</span>
+              <span className="opacity-70">({t('fin.port.todayPct', { pct: Math.abs(totals.dayPct).toFixed(2) })})</span>
             </span>
           </div>
           {Math.abs(totals.cash) > 1e-9 && (
             <div className="text-[10px] text-text-muted mt-1">
-              Holdings {fmt(totals.positionsValue, baseCurrency)} · incl. cash {fmt(totals.cash, baseCurrency)}
+              {t('fin.port.holdingsInclCash', { holdings: fmt(totals.positionsValue, baseCurrency), cash: fmt(totals.cash, baseCurrency) })}
             </div>
           )}
           {totals.hasCost && (
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/40 text-xs">
               <div>
-                <div className="text-[10px] uppercase tracking-wider text-text-muted">Cost</div>
+                <div className="text-[10px] uppercase tracking-wider text-text-muted">{t('fin.port.cost')}</div>
                 <div className="font-medium">{fmt(totals.cost, baseCurrency)}</div>
               </div>
               <div className="text-right">
-                <div className="text-[10px] uppercase tracking-wider text-text-muted">Total P/L</div>
+                <div className="text-[10px] uppercase tracking-wider text-text-muted">{t('fin.port.totalPL')}</div>
                 <div className={`font-medium ${totals.pl >= 0 ? 'text-success' : 'text-danger'}`}>
                   {totals.pl >= 0 ? '+' : '−'}{fmt(Math.abs(totals.pl), baseCurrency)}
                   {totals.plPct != null && (
@@ -481,10 +483,10 @@ export default function Portfolio() {
             </div>
           )}
           <div className="text-[10px] text-text-muted mt-2">
-            {totals.missingFx ? 'Partial — some holdings missing prices or FX · ' : ''}
-            Cached · {oldestAge > 0 ? formatCacheAge(oldestAge) : 'fresh'}
+            {totals.missingFx ? t('fin.port.partial') : ''}
+            {t('fin.port.cached')}{oldestAge > 0 ? formatCacheAge(oldestAge) : t('fin.port.fresh')}
             {!totals.hasCost && holdings.length > 0 && (
-              <> · Add cost basis in <span className="text-primary">Manage</span> to see P/L</>
+              <> · {t('fin.port.addCostPre')} <span className="text-primary">{t('fin.ov.manage')}</span> {t('fin.port.addCostPost')}</>
             )}
           </div>
         </div>
@@ -500,7 +502,7 @@ export default function Portfolio() {
         {allocationSlices.length > 0 && (
           <div className="card">
             <div className="flex items-center justify-between mb-3">
-              <span className="font-heading font-semibold text-sm">Allocation</span>
+              <span className="font-heading font-semibold text-sm">{t('fin.port.allocation')}</span>
               <div className="flex gap-1">
                 {(['class', 'sector', 'currency'] as AllocationView[]).map((v) => (
                   <button
@@ -512,7 +514,7 @@ export default function Portfolio() {
                         : 'border-border text-text-muted'
                     }`}
                   >
-                    {v}
+                    {v === 'class' ? t('fin.port.viewClass') : v === 'sector' ? t('fin.port.viewSector') : t('fin.port.viewCurrency')}
                   </button>
                 ))}
               </div>
@@ -523,7 +525,7 @@ export default function Portfolio() {
                 size={120}
                 thickness={20}
                 centerTop={fmtCompact(totals.total, baseCurrency)}
-                centerBottom={`${allocationSlices.length} ${allocationView === 'class' ? 'classes' : allocationView === 'sector' ? 'sectors' : 'curr.'}`}
+                centerBottom={allocationView === 'class' ? t('fin.port.classesCount', { count: allocationSlices.length }) : allocationView === 'sector' ? t('fin.port.sectorsCount', { count: allocationSlices.length }) : t('fin.port.currCount', { count: allocationSlices.length })}
               />
               <div className="flex-1 min-w-0 space-y-1.5">
                 {allocationSlices.map((s, i) => {
@@ -534,7 +536,7 @@ export default function Portfolio() {
                         className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
                         style={{ backgroundColor: colorForIndex(i) }}
                       />
-                      <span className="flex-1 min-w-0 truncate">{s.label}</span>
+                      <span className="flex-1 min-w-0 truncate">{t(`fin.port.cls${s.label}`, { defaultValue: s.label })}</span>
                       <span className="text-text-muted text-[10px]">
                         {pct.toFixed(0)}%
                       </span>
@@ -565,14 +567,14 @@ export default function Portfolio() {
         {/* Stocks + ETFs list — value, P/L, sparkline */}
         <div className="card">
           <div className="flex items-center justify-between mb-3">
-            <span className="font-heading font-semibold text-sm">Stocks & ETFs</span>
+            <span className="font-heading font-semibold text-sm">{t('fin.port.stocksEtfs')}</span>
             <span className="text-[9px] uppercase tracking-wider text-primary border border-primary/40 bg-primary/5 rounded-sm px-1.5 py-0.5">
               {stockBadge}
             </span>
           </div>
           {sortedEquities.length === 0 && (
             <div className="text-xs text-text-muted text-center py-3">
-              {refreshing ? 'Loading quotes…' : 'No quotes — tap ↻ to refresh'}
+              {refreshing ? t('fin.port.loadingQuotes') : t('fin.port.noQuotes')}
             </div>
           )}
           {sortedEquities.map((p) => (
@@ -590,14 +592,14 @@ export default function Portfolio() {
         {/* Crypto list */}
         <div className="card">
           <div className="flex items-center justify-between mb-3">
-            <span className="font-heading font-semibold text-sm">Crypto</span>
+            <span className="font-heading font-semibold text-sm">{t('fin.port.crypto')}</span>
             <span className="text-[9px] uppercase tracking-wider text-success border border-success/40 bg-success/5 rounded-sm px-1.5 py-0.5">
               CoinGecko
             </span>
           </div>
           {sortedCryptos.length === 0 && (
             <div className="text-xs text-text-muted text-center py-3">
-              {refreshing ? 'Loading prices…' : 'No prices — tap ↻ to refresh'}
+              {refreshing ? t('fin.port.loadingPrices') : t('fin.port.noPrices')}
             </div>
           )}
           {sortedCryptos.map((p) => (
