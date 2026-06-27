@@ -1,0 +1,3 @@
+Prise en charge complète de six langues sur tous les écrans (anglais, finnois, français, allemand, espagnol, chinois), y compris Paramètres, Profil de vie, Schémas de vie et les bilans hebdomadaires/annuels.
+
+Plus tôt dans cette série : Score de vie pondéré par profil avec un domaine Travail, intégration au premier lancement et lecture financière plus rapide au démarrage.

@@ -1,0 +1,3 @@
+Compatibilidad completa con seis idiomas en todas las pantallas (inglés, finlandés, francés, alemán, español, chino), incluidos Ajustes, Perfil de vida, Patrones de vida y los resúmenes semanales/anuales.
+
+Antes en esta serie: Puntuación de vida ponderada por perfil con un área de Trabajo, incorporación en el primer arranque y lectura financiera más rápida al iniciar.
