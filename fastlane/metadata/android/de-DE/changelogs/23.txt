@@ -1,0 +1,3 @@
+Vollständige Unterstützung für sechs Sprachen auf allen Bildschirmen (Englisch, Finnisch, Französisch, Deutsch, Spanisch, Chinesisch), einschließlich Einstellungen, Lebensprofil, Lebensmuster sowie Wochen-/Jahresrückblicke.
+
+Früher in dieser Reihe: profilgewichteter Life Score mit Arbeitsbereich, Erststart-Onboarding und schnelleres Laden der Finanzen beim Start.
