@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import AppHeader from '../../components/AppHeader';
 import { Pill } from '../../components/ui/Pill';
 import InsightsBreakdownSheet from '../../components/InsightsBreakdownSheet';
@@ -25,13 +26,13 @@ import { type InsightTier } from '../../lib/insightsScore';
  * reflects the same view.
  */
 
-const TIER_FILTERS: { key: InsightTier | 'all'; label: string }[] = [
-  { key: 'all',          label: 'All' },
-  { key: 'strong_buy',   label: 'Strong Buy' },
-  { key: 'buy',          label: 'Buy' },
-  { key: 'hold',         label: 'Hold' },
-  { key: 'sell',         label: 'Sell' },
-  { key: 'strong_sell',  label: 'Strong Sell' },
+const TIER_FILTERS: { key: InsightTier | 'all'; labelKey: string }[] = [
+  { key: 'all',          labelKey: 'fin.ins.tierAll' },
+  { key: 'strong_buy',   labelKey: 'fin.ins.tierStrongBuy' },
+  { key: 'buy',          labelKey: 'fin.ins.tierBuy' },
+  { key: 'hold',         labelKey: 'fin.ins.tierHold' },
+  { key: 'sell',         labelKey: 'fin.ins.tierSell' },
+  { key: 'strong_sell',  labelKey: 'fin.ins.tierStrongSell' },
 ];
 
 // Active-tab type used internally — same union as InsightsTab from settings.
@@ -43,6 +44,7 @@ type BreakdownTarget =
   | { kind: 'fundamental'; rating: FundamentalRating };
 
 export default function Insights() {
+  const { t } = useTranslation();
   // Both maps are read so the tab toggle is instant. Selectors are cheap
   // — they return shallow refs to existing objects.
   const technical = useInsightsStore((s) => s.ratings);
@@ -125,9 +127,9 @@ export default function Insights() {
   return (
     <>
       <AppHeader
-        title="Insights"
+        title={t('fin.ov.insights')}
         back="/finance"
-        backLabel="Finance"
+        backLabel={t('fin.finance')}
         showAvatar={false}
         action={
           <Pill
@@ -136,7 +138,7 @@ export default function Insights() {
             icon={isLoadingActive ? '⟳' : '↻'}
             disabled={isLoadingActive}
           >
-            {isLoadingActive ? 'Computing' : 'Refresh'}
+            {isLoadingActive ? t('fin.ins.computing') : t('fin.ins.refresh')}
           </Pill>
         }
       />
@@ -156,7 +158,7 @@ export default function Insights() {
             }
             aria-pressed={activeTab === 'technical'}
           >
-            Technical
+            {t('fin.ins.technical')}
           </button>
           <button
             type="button"
@@ -171,33 +173,20 @@ export default function Insights() {
             }
             aria-pressed={activeTab === 'fundamental'}
           >
-            Fundamental
+            {t('fin.ins.fundamental')}
           </button>
         </div>
 
         {/* ─── Subhead ─────────────────────────────────────────────── */}
         <div className="glass-soft rounded-xl px-4 py-3">
           <div className="text-[11px] text-text-muted leading-relaxed">
-            {activeTab === 'technical' ? (
-              <>
-                Composite Buy/Hold/Sell signals from RSI, SMA cross, price
-                momentum, volume pressure, and headline sentiment. Heuristic
-                — not investment advice. Refreshed once per calendar day.
-              </>
-            ) : (
-              <>
-                Composite Buy/Hold/Sell signals from P/E vs sector, P/B, P/S,
-                PEG, debt/equity, revenue growth, earnings surprises, and
-                analyst consensus. Heuristic — not investment advice.
-                Refreshed once per week.
-              </>
-            )}
+            {activeTab === 'technical' ? t('fin.ins.techDesc') : t('fin.ins.fundDesc')}
           </div>
           {lastAt && (
             <div className="text-[10px] text-text-muted/70 mt-1.5">
-              Last computed {new Date(lastAt).toLocaleTimeString()}
+              {t('fin.ins.lastComputed', { time: new Date(lastAt).toLocaleTimeString() })}
               {failed.length > 0 && (
-                <span className="text-warning"> · {failed.length} ticker{failed.length === 1 ? '' : 's'} skipped</span>
+                <span className="text-warning"> · {t('fin.ins.skipped', { count: failed.length })}</span>
               )}
             </div>
           )}
@@ -205,14 +194,14 @@ export default function Insights() {
 
         {/* ─── Tier filter ─────────────────────────────────────────── */}
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-          {TIER_FILTERS.map((t) => (
+          {TIER_FILTERS.map((f) => (
             <Pill
-              key={t.key}
-              on={tierFilter === t.key}
-              onClick={() => setTierFilter(t.key)}
+              key={f.key}
+              on={tierFilter === f.key}
+              onClick={() => setTierFilter(f.key)}
               className="flex-shrink-0"
             >
-              {t.label} <span className="opacity-60">{counts[t.key] ?? 0}</span>
+              {t(f.labelKey)} <span className="opacity-60">{counts[f.key] ?? 0}</span>
             </Pill>
           ))}
         </div>
@@ -222,10 +211,10 @@ export default function Insights() {
           <div className="glass rounded-xl p-6 text-center">
             <div className="text-xs text-text-muted">
               {isLoadingActive
-                ? 'Computing signals…'
+                ? t('fin.ins.computingSignals')
                 : Object.keys(sourceMap).length === 0
-                  ? 'No holdings or watchlist tickers yet. Add some from Portfolio or Watchlist to see ratings here.'
-                  : `Nothing in ${TIER_FILTERS.find((t) => t.key === tierFilter)?.label}.`}
+                  ? t('fin.ins.emptyUniverse')
+                  : t('fin.ins.nothingIn', { filter: t(TIER_FILTERS.find((f) => f.key === tierFilter)?.labelKey ?? 'fin.ins.tierAll') })}
             </div>
           </div>
         ) : (
@@ -247,7 +236,7 @@ export default function Insights() {
                   <div className="flex flex-col items-end gap-1">
                     <RatingPill ticker={r.ticker} />
                     <div className="text-[11px] font-medium text-text-muted">
-                      Composite {r.score >= 0 ? '+' : ''}{r.score.toFixed(0)}
+                      {t('fin.ins.composite', { score: `${r.score >= 0 ? '+' : ''}${r.score.toFixed(0)}` })}
                     </div>
                   </div>
                 </div>

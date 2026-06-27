@@ -561,6 +561,27 @@
       "unitsAt": "{{qty}} units @ {{price}} {{cur}}",
       "totalCost": "{{amount}} {{cur}} total",
       "deletePurchase": "Delete this purchase?"
+    },
+    "ins": {
+      "computing": "Computing",
+      "refresh": "Refresh",
+      "technical": "Technical",
+      "fundamental": "Fundamental",
+      "techDesc": "Composite Buy/Hold/Sell signals from RSI, SMA cross, price momentum, volume pressure, and headline sentiment. Heuristic — not investment advice. Refreshed once per calendar day.",
+      "fundDesc": "Composite Buy/Hold/Sell signals from P/E vs sector, P/B, P/S, PEG, debt/equity, revenue growth, earnings surprises, and analyst consensus. Heuristic — not investment advice. Refreshed once per week.",
+      "lastComputed": "Last computed {{time}}",
+      "skipped_one": "{{count}} ticker skipped",
+      "skipped_other": "{{count}} tickers skipped",
+      "tierAll": "All",
+      "tierStrongBuy": "Strong Buy",
+      "tierBuy": "Buy",
+      "tierHold": "Hold",
+      "tierSell": "Sell",
+      "tierStrongSell": "Strong Sell",
+      "computingSignals": "Computing signals…",
+      "emptyUniverse": "No holdings or watchlist tickers yet. Add some from Portfolio or Watchlist to see ratings here.",
+      "nothingIn": "Nothing in {{filter}}.",
+      "composite": "Composite {{score}}"
     }
   }
 }

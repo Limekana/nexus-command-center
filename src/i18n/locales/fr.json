@@ -561,6 +561,27 @@
       "unitsAt": "{{qty}} unités @ {{price}} {{cur}}",
       "totalCost": "{{amount}} {{cur}} au total",
       "deletePurchase": "Supprimer cet achat ?"
+    },
+    "ins": {
+      "computing": "Calcul",
+      "refresh": "Actualiser",
+      "technical": "Technique",
+      "fundamental": "Fondamental",
+      "techDesc": "Signaux composites Acheter/Conserver/Vendre à partir du RSI, du croisement SMA, du momentum, de la pression du volume et du sentiment des titres. Heuristique — pas un conseil en investissement. Actualisé une fois par jour.",
+      "fundDesc": "Signaux composites Acheter/Conserver/Vendre à partir du P/E vs secteur, P/B, P/S, PEG, dette/capitaux propres, croissance du chiffre d’affaires, surprises de résultats et consensus des analystes. Heuristique — pas un conseil en investissement. Actualisé une fois par semaine.",
+      "lastComputed": "Dernier calcul {{time}}",
+      "skipped_one": "{{count}} ticker ignoré",
+      "skipped_other": "{{count}} tickers ignorés",
+      "tierAll": "Tous",
+      "tierStrongBuy": "Achat fort",
+      "tierBuy": "Acheter",
+      "tierHold": "Conserver",
+      "tierSell": "Vendre",
+      "tierStrongSell": "Vente forte",
+      "computingSignals": "Calcul des signaux…",
+      "emptyUniverse": "Aucune position ou ticker en liste de suivi. Ajoutez-en depuis le Portefeuille ou la Liste de suivi pour voir les notations ici.",
+      "nothingIn": "Rien dans {{filter}}.",
+      "composite": "Composite {{score}}"
     }
   }
 }
