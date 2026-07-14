@@ -1,6 +1,6 @@
 // ─── v1.2 Habit add/edit screen ─────────────────────────────────────────
 //
-// Same pattern as AddReading: single screen used both for adding new habits
+// Single screen used both for adding new habits
 // (no ?id query param) and editing existing ones (?id=<uuid>). The form is
 // dynamic — quantified-only inputs collapse when type=binary; specific-day
 // picker collapses when frequencyKind=daily.

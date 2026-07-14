@@ -269,6 +269,21 @@ export default function Portfolio() {
     [cashEntries, baseCurrency, fxRates],
   );
 
+  // v1.7 (BUG-2) — dividends realized so far this calendar year, base currency.
+  // Sourced from the auto-realized `dividend` cash-ledger entries (which also
+  // fold into the `cash` balance above). Surfaces in DividendTracker so the
+  // user sees projected income actually being captured, not just projected.
+  const realizedDividendYtd = useMemo(() => {
+    const yearPrefix = new Date().getFullYear().toString();
+    let total = 0;
+    for (const e of cashEntries) {
+      if (e.type !== 'dividend') continue;
+      if (!e.createdAt.startsWith(yearPrefix)) continue;
+      total += convertSync(e.amount, e.currency, baseCurrency, fxRates) ?? 0;
+    }
+    return total;
+  }, [cashEntries, baseCurrency, fxRates]);
+
   const totals = useMemo(() => {
     let positionsValue = 0;
     let dayChange = 0;
@@ -561,6 +576,7 @@ export default function Portfolio() {
           fxRates={fxRates}
           baseCurrency={baseCurrency}
           formatCurrency={fmt}
+          realizedYtd={realizedDividendYtd}
           onTapTicker={openDetailByTicker}
         />
 

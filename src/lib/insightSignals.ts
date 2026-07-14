@@ -155,7 +155,7 @@ export function smaCrossSignal(bars: YahooHistoryBar[]): SignalResult {
 // 52w-high one alone (which lags through a long pullback).
 
 export function momentumSignal(bars: YahooHistoryBar[], high52w: number | undefined): SignalResult {
-  if (bars.length < 30) {
+  if (bars.length < 31) {
     return { score: 0, label: 'Momentum', detail: 'Not enough data', available: false };
   }
   const last = bars[bars.length - 1].close;

@@ -64,7 +64,9 @@ export default function ManageBudgets() {
 
   const save = async () => {
     const n = parseFloat(limit);
-    if (!name.trim() || !n) return;
+    // Reject <= 0: a negative limit makes the ProgressBar force 0% (max not > 0),
+    // silently hiding overspending instead of surfacing it.
+    if (!name.trim() || !n || n <= 0) return;
     // v1.2 follow-up — BUG-6. Pass `linkedManualAssetId: undefined` when the
     // picker is "None" so an existing link gets cleared on edit. Empty
     // string means "no selection" → undefined in the model.

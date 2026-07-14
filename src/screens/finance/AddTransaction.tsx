@@ -84,7 +84,7 @@ export default function AddTransaction() {
 
   const submit = async () => {
     const n = parseFloat(amount);
-    if (!n || !description.trim()) return;
+    if (!n || n < 0 || !description.trim()) return;
     // v1.2 follow-up — CTO Account refactor. Validation:
     //   - Transfers require source != destination (would be a no-op)
     //   - All transactions need an accountId for net-worth math to work;

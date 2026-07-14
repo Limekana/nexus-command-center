@@ -4,12 +4,15 @@
 // refresh and a stale indicator when a refresh falls back to cached data.
 
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import SparkLine from './SparkLine';
-import { useMarketsStore, type MacroRate } from '../store/useMarketsStore';
+import { useMarketsStore, type MacroRate, type SentimentGauge } from '../store/useMarketsStore';
 import { upcomingEvents, EVENT_ICONS } from '../data/economicCalendar';
 
 export default function MarketsSegment() {
-  const { indices, fxRates, macroRates, commodities, isLoading, stale, error, lastFetched, fetchMarkets } =
+  const { t } = useTranslation();
+  const { indices, fxRates, macroRates, commodities, sentiment, isLoading, stale, error, lastFetched, fetchMarkets } =
     useMarketsStore();
 
   useEffect(() => {
@@ -24,11 +27,11 @@ export default function MarketsSegment() {
       <div className="flex items-center justify-between">
         <span className="text-[10px] uppercase tracking-[0.15em] text-text-muted">
           {lastFetched
-            ? `Updated ${minutesAgo(lastFetched)}`
+            ? t('markets.updated', { time: minutesAgo(lastFetched, t) })
             : isLoading
-              ? 'Loading…'
-              : 'Markets'}
-          {stale && <span className="text-warning"> · ⚠ cached</span>}
+              ? t('markets.loading')
+              : t('markets.title')}
+          {stale && <span className="text-warning"> · ⚠ {t('markets.cached')}</span>}
         </span>
         <button
           type="button"
@@ -36,7 +39,7 @@ export default function MarketsSegment() {
           disabled={isLoading}
           className="text-[10px] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5 active:bg-primary/10 disabled:opacity-40"
         >
-          {isLoading ? '…' : '↻ Refresh'}
+          {isLoading ? '…' : `↻ ${t('markets.refresh')}`}
         </button>
       </div>
 
@@ -44,21 +47,23 @@ export default function MarketsSegment() {
 
       {empty && !isLoading && (
         <div className="card text-center text-xs text-text-muted py-6">
-          {error ?? 'No market data available right now.'}
-          <div className="text-[10px] mt-1">Tap ↻ Refresh to try again.</div>
+          {error ?? t('markets.noData')}
+          <div className="text-[10px] mt-1">{t('markets.retryHint')}</div>
         </div>
       )}
 
       {indices.length > 0 && (
-        <Section title="Indices">
+        <Section title={t('markets.indices')}>
           {indices.map((i) => (
             <QuoteRow key={i.ticker} label={i.label} value={fmtNum(i.price)} change={i.changePercent} spark={i.spark} />
           ))}
         </Section>
       )}
 
+      <SentimentSection sentiment={sentiment} />
+
       {fxRates.length > 0 && (
-        <Section title="FX · EUR base">
+        <Section title={t('markets.fx')}>
           {fxRates.map((f) => (
             <QuoteRow key={f.pair} label={f.pair} value={fmtNum(f.rate, 4)} change={f.changePercent} spark={f.spark} />
           ))}
@@ -66,7 +71,7 @@ export default function MarketsSegment() {
       )}
 
       {macroRates.length > 0 && (
-        <Section title="Rates">
+        <Section title={t('markets.rates')}>
           {macroRates.map((r) => (
             <RateRow key={r.label} rate={r} />
           ))}
@@ -74,16 +79,16 @@ export default function MarketsSegment() {
       )}
 
       {commodities.length > 0 && (
-        <Section title="Commodities">
+        <Section title={t('markets.commodities')}>
           {commodities.map((c) => (
             <CommodityRow key={c.label} label={c.label} value={`$${fmtNum(c.price)}`} change={c.changePercent} />
           ))}
         </Section>
       )}
 
-      <Section title="Economic Calendar">
+      <Section title={t('markets.calendar')}>
         {events.length === 0 && (
-          <div className="text-[11px] text-text-muted text-center py-2">No upcoming events scheduled.</div>
+          <div className="text-[11px] text-text-muted text-center py-2">{t('markets.noEvents')}</div>
         )}
         {events.map((e) => (
           <div key={`${e.date}-${e.label}`} className="flex items-center gap-2 py-1.5 border-b border-border/30 last:border-0">
@@ -123,6 +128,69 @@ function QuoteRow({ label, value, change, spark }: { label: string; value: strin
         {spark.length >= 2 ? <SparkLine data={spark} height={20} /> : <div className="h-5" />}
       </div>
       <ChangePill change={change} />
+    </div>
+  );
+}
+
+// ── Sentiment: VIX row + Fear & Greed gauge ────────────────────────────────
+function SentimentSection({ sentiment }: { sentiment: SentimentGauge }) {
+  const { t } = useTranslation();
+  const { vix, fearGreed } = sentiment;
+  if (!vix && !fearGreed) return null;
+  return (
+    <Section title={t('markets.sentiment')}>
+      {vix && (
+        <div className="flex items-center gap-2 py-1.5 border-b border-border/30 last:border-0">
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-heading font-semibold truncate">{t('markets.vix')}</div>
+            <div className="text-[10px] text-text-muted">{fmtNum(vix.value)} · {t('markets.fearGauge')}</div>
+          </div>
+          <ChangePill change={vix.changePercent} />
+        </div>
+      )}
+      {fearGreed && <FearGreedGauge score={fearGreed.score} />}
+    </Section>
+  );
+}
+
+function fearGreedTone(score: number): { bar: string; text: string } {
+  if (score < 25) return { bar: 'bg-danger', text: 'text-danger' };
+  if (score < 45) return { bar: 'bg-warning', text: 'text-warning' };
+  if (score <= 55) return { bar: 'bg-text-muted', text: 'text-text-muted' };
+  if (score <= 75) return { bar: 'bg-success/80', text: 'text-success' };
+  return { bar: 'bg-success', text: 'text-success' };
+}
+
+// Translated 0–100 band label — derived from score so it localizes regardless
+// of the (English) rating string the CNN endpoint returns.
+function fearGreedRating(score: number, t: TFunction): string {
+  if (score < 25) return t('markets.extremeFear');
+  if (score < 45) return t('markets.fear');
+  if (score <= 55) return t('markets.neutral');
+  if (score <= 75) return t('markets.greed');
+  return t('markets.extremeGreed');
+}
+
+function FearGreedGauge({ score }: { score: number }) {
+  const { t } = useTranslation();
+  const tone = fearGreedTone(score);
+  const clamped = Math.max(0, Math.min(100, score));
+  return (
+    <div className="py-1.5">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-xs font-heading font-semibold">{t('markets.fearGreed')}</span>
+        <span className={`text-xs font-heading font-semibold ${tone.text}`}>{score} · {fearGreedRating(score, t)}</span>
+      </div>
+      <div className="relative h-2 rounded-full bg-surface2 overflow-hidden" aria-hidden>
+        <div
+          className={`absolute inset-y-0 left-0 rounded-full ${tone.bar}`}
+          style={{ width: `${clamped}%` }}
+        />
+      </div>
+      <div className="flex justify-between text-[9px] uppercase tracking-wider text-text-muted mt-1">
+        <span>{t('markets.extremeFear')}</span>
+        <span>{t('markets.extremeGreed')}</span>
+      </div>
     </div>
   );
 }
@@ -185,6 +253,7 @@ function ChangePill({ change }: { change: number }) {
 
 // ── Days-until badge ───────────────────────────────────────────────────────
 function CountdownBadge({ daysUntil, isToday }: { daysUntil: number; isToday: boolean }) {
+  const { t } = useTranslation();
   const tone = isToday
     ? 'bg-danger/15 text-danger border-danger/40'
     : daysUntil <= 7
@@ -194,7 +263,7 @@ function CountdownBadge({ daysUntil, isToday }: { daysUntil: number; isToday: bo
         : 'bg-surface2 text-text-muted border-border';
   return (
     <span className={`text-[9px] font-heading font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-sm border w-10 text-center flex-shrink-0 ${tone}`}>
-      {isToday ? 'Today' : `${daysUntil}d`}
+      {isToday ? t('markets.today') : `${daysUntil}d`}
     </span>
   );
 }
@@ -218,13 +287,12 @@ function fmtNum(n: number, decimals = 2): string {
   return n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
-function minutesAgo(ts: number): string {
+function minutesAgo(ts: number, t: TFunction): string {
   const mins = Math.floor((Date.now() - ts) / 60000);
-  if (mins <= 0) return 'just now';
-  if (mins === 1) return '1 min ago';
-  if (mins < 60) return `${mins} min ago`;
+  if (mins <= 0) return t('markets.justNow');
+  if (mins < 60) return t('markets.minAgo', { count: mins });
   const hrs = Math.floor(mins / 60);
-  return hrs === 1 ? '1 hr ago' : `${hrs} hrs ago`;
+  return t('markets.hrAgo', { count: hrs });
 }
 
 function fmtEventDate(iso: string): string {
