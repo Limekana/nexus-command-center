@@ -23,6 +23,7 @@ import {
   type DividendEvent,
 } from '../api/stockDetail';
 import { getMarketNews } from '../api/marketNews';
+import { computeDividendCredits } from '../lib/dividendRealize';
 import { useSettingsStore } from './useSettingsStore';
 import { checkBudgetThresholds } from '../lib/budgetAlerts';
 // v1.2 follow-up — CTO Account refactor. The BUG-6 budgetAssetBridge helper
@@ -778,6 +779,35 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
       refreshErrors: [...lastProviderErrors],
       lastRefreshAt: Date.now(),
     });
+    // v1.7 (BUG-2) — auto-realize dividends whose pay date has arrived. Each
+    // newly-payable dividend not already in the ledger credits portfolio cash,
+    // so projected dividend income becomes real instead of vanishing when the
+    // date passes. Deterministic ids (see lib/dividendRealize.ts) keep this
+    // idempotent across refreshes, reloads, and devices. The set is tiny (a
+    // handful of dividends per refresh at most). Isolated try/catch so a bad
+    // dividend row can't fail the whole refresh.
+    try {
+      const credits = computeDividendCredits(
+        get().holdings,
+        nextDividends,
+        get().portfolioCashEntries,
+      );
+      for (const c of credits) {
+        await addCashEntry(set, get, {
+          id: c.id,
+          type: 'dividend',
+          amount: c.amount,
+          currency: c.currency,
+          relatedId: c.relatedId,
+          note: c.note,
+        });
+      }
+      if (credits.length) {
+        console.log(`[refreshPortfolio] realized ${credits.length} dividend credit(s)`);
+      }
+    } catch (e) {
+      console.warn('[refreshPortfolio] dividend realize failed:', (e as Error).message);
+    }
     // adb logcat diagnostic: shows which tickers had quotes returned vs
     // requested. If the user has 10 holdings but only 3 returned data,
     // this surfaces the gap immediately:
@@ -943,10 +973,13 @@ async function addCashEntry(
     accountId?: string;
     relatedId?: string;
     note?: string;
+    /** Explicit deterministic PK (dividend auto-realize). Defaults to a fresh
+     *  random UUID for the buy/sell/deposit/withdrawal paths. */
+    id?: string;
   },
 ): Promise<void> {
   const entry: PortfolioCashEntry = {
-    id: generateId(),
+    id: input.id ?? generateId(),
     type: input.type,
     amount: input.amount,
     currency: input.currency,

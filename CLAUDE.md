@@ -38,3 +38,8 @@ Nexus Dashboard is the central hub/launcher for the Limecore OS suite. React 18 
 - State lives in Zustand stores (`src/store/`), not component-local state
 - API layer in `src/api/`, database layer in `src/db/`
 - Don't read `node_modules/` or `dist/`
+
+## Data Contract (shared Supabase — binding)
+- NCC is a consumer. Reads all suite tables; upserts ONLY `subjects` and `grades` (LWW on `updated_at`).
+- NEVER write `workout_sessions` / `workout_sets` (LimeLog is push-only) or `study_sessions`.
+- NCC is never schema-authoritative for tables it doesn't own. Any schema change → stop and confirm first (see `D:\emilh\Projects\CLAUDE.md`).

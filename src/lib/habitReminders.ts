@@ -19,6 +19,18 @@
 // on in-app completion to keep nags honest. Worst case the user gets one soft,
 // well-worded nudge they can ignore.
 //
+// v1.7 (BUG-3) — the evening nudge and morning catch-up assert a state
+// ("streak at risk" / "did you do it last night?") that's simply wrong once the
+// habit is already done. Previously they were scheduled `every: 'day'`, so a
+// repeating alarm kept firing that false claim the next morning even after the
+// habit was logged. Fix: (1) both are now completion-aware — suppressed when
+// today is already done — and (2) both are ONE-SHOT (next occurrence only),
+// re-armed on every app open AND on every in-app completion toggle (the store
+// now re-arms in toggleCompletion / setCompletionAmount). The daily primary
+// reminder stays repeating: its "time to <habit>" copy is state-neutral, and
+// keeping it as a standing alarm means a user who stops opening the app still
+// gets their daily prompt.
+//
 // ID allocation: 3 slots per habit inside the 8000-8999 habits range —
 //   slot = hash(id) % 300; base = 8000 + slot*3 → {primary, evening, morning}.
 // Milestones use a small shared sub-range (8990-8998), one-off so collisions
@@ -77,8 +89,14 @@ function nextSpecificDaysFire(hour: number, minute: number, daysOfWeek: number[]
 }
 
 /** Schedule (or re-schedule) a habit's reminders. Pass the current streak so
- *  the copy + evening nudge are streak-aware. Idempotent by ID. */
-export async function scheduleHabitReminder(habit: Habit, streak = 0): Promise<void> {
+ *  the copy + evening nudge are streak-aware, and `completedToday` so the
+ *  evening/morning nudges don't nag about a habit that's already logged.
+ *  Idempotent by ID. */
+export async function scheduleHabitReminder(
+  habit: Habit,
+  streak = 0,
+  completedToday = false,
+): Promise<void> {
   const ids = habitIds(habit.id);
 
   // No reminder / archived / malformed → make sure nothing is left scheduled.
@@ -118,18 +136,19 @@ export async function scheduleHabitReminder(habit: Habit, streak = 0): Promise<v
     return;
   }
 
-  // ── 2. Evening risk nudge — only when there's a streak to protect, and
-  //       only if ~3h after the reminder still lands at a sane hour (≤ 21:00).
-  const eveningHour = parsed.hour + 3;
-  if (streak > 0 && eveningHour <= 21) {
+  // ── 2. Evening risk nudge — only when there's a streak to protect, the
+  //       habit ISN'T already done today, and ~3h after the reminder still
+  //       lands at a sane hour (≤ 21:00). One-shot (next occurrence): re-armed
+  //       on app open + on completion, so a same-day log cancels it instead of
+  //       a repeating alarm asserting "at risk" after it's already done.
+  if (streak > 0 && eveningHourInRange(parsed.hour) && !completedToday) {
     const m = habitMessage('evening', habit.title, streak);
     await scheduleNotification({
       id: ids.evening,
       category: 'habits',
       title: m.title,
       body: m.body,
-      at: nextDailyFire(eveningHour, parsed.minute),
-      every: 'day',
+      at: nextDailyFire(parsed.hour + 3, parsed.minute),
       extra: { route: `/habits?catchup=${habit.id}`, habitId: habit.id },
     });
   } else {
@@ -137,16 +156,27 @@ export async function scheduleHabitReminder(habit: Habit, streak = 0): Promise<v
   }
 
   // ── 3. Morning catch-up at 08:00 — log last night's habit from bed-time.
-  const mm = habitMessage('morning', habit.title, streak);
-  await scheduleNotification({
-    id: ids.morning,
-    category: 'habits',
-    title: mm.title,
-    body: mm.body,
-    at: nextDailyFire(8, 0),
-    every: 'day',
-    extra: { route: `/habits?catchup=${habit.id}`, habitId: habit.id },
-  });
+  //       Suppressed when today is already logged (nothing to catch up on —
+  //       this was the "fires next morning even though I did it" bug). One-shot
+  //       + re-armed, same as the evening nudge.
+  if (!completedToday) {
+    const mm = habitMessage('morning', habit.title, streak);
+    await scheduleNotification({
+      id: ids.morning,
+      category: 'habits',
+      title: mm.title,
+      body: mm.body,
+      at: nextDailyFire(8, 0),
+      extra: { route: `/habits?catchup=${habit.id}`, habitId: habit.id },
+    });
+  } else {
+    await cancelNotifications([ids.morning]);
+  }
+}
+
+/** ~3h after the reminder still lands at or before 21:00 (a sane evening). */
+function eveningHourInRange(reminderHour: number): boolean {
+  return reminderHour + 3 <= 21;
 }
 
 /** Cancel all of a habit's reminders. */

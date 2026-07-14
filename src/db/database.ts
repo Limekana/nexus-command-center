@@ -813,6 +813,24 @@ class NexusDB extends Dexie {
     this.version(19).stores({
       workQualityLogs: 'id, date, syncStatus',
     });
+
+    // ─── v20 — Reading list (v1.7 self-improvement hub) ────────────────────
+    //
+    // Additive single local-only table for the rebuilt Reading module: title /
+    // status / page-progress. `status` indexed for the hub's per-status
+    // grouping; `updatedAt` for recency sort. No upgrade hook (comes up empty),
+    // no cloud sync — deliberately local, like the retired v1.x Reading Log.
+    this.version(20).stores({
+      readingItems: 'id, status, updatedAt',
+    });
+
+    // v21 — reverted the v1.7 self-improvement / Growth hub. Reading was the
+    // only local-only store that feature added; drop it. The v20 declaration
+    // stays for version-chain integrity, and `null` here deletes the table on
+    // upgrade for any device that already created it at v20.
+    this.version(21).stores({
+      readingItems: null,
+    });
   }
 }
 

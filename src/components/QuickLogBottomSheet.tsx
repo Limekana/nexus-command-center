@@ -5,6 +5,7 @@ import { useFinanceStore } from '../store/useFinanceStore';
 import { useTaskStore } from '../store/useTaskStore';
 import { useTemplatesStore } from '../store/useTemplatesStore';
 import { useWorkQualityStore, todayKey } from '../store/useWorkQualityStore';
+import { localDateKey } from '../utils/formatters';
 
 // v1.5.2 — Quick Log is NCC-native only. Grade (StudyDesk), study Session
 // (StudyDesk) and workout Set (LimeLog) were removed: cramming stripped-down
@@ -91,13 +92,19 @@ function QuickExpense({ onDone }: { onDone: () => void }) {
 
   const submit = async () => {
     const n = parseFloat(amount);
-    if (!n || !desc.trim() || !accountId) return;
+    // Reject negative amounts too: a negative expense inverts the account
+    // balance and budget math downstream (renders as a red expense that ADDS
+    // to the balance). Quick Log has no visible amount-sign control.
+    if (!n || n < 0 || !desc.trim() || !accountId) return;
     await addTransaction({
       amount: n,
       description: desc.trim(),
       categoryId: categoryId || undefined,
       accountId,
-      date: new Date().toISOString().slice(0, 10),
+      // Local calendar day, not UTC. QuickExpense exposes no date field, so a
+      // toISOString() slice would silently file a late-night entry under
+      // yesterday (fi-FI is UTC+2/+3).
+      date: localDateKey(new Date()),
       type: 'expense',
     });
     onDone();

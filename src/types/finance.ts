@@ -154,11 +154,23 @@ export interface StockSale {
 //   - `deposit`    +amount    (transfer in from a cash/savings account)
 //   - `withdrawal` −amount    (transfer out to a cash/savings account)
 //   - `adjust`     ±amount    (manual correction, reserved)
+//   - `dividend`   +amount    (v1.7 — auto-realized on/after a holding's
+//                              dividend pay date; credits portfolio cash so a
+//                              projected dividend becomes real income instead
+//                              of silently vanishing when the date passes)
 //
 // Start-at-zero / going-forward: lots & sales that pre-date this feature do
 // NOT get entries (existing holdings are treated as already funded). Only new
-// buys/sells/transfers move cash.
-export type PortfolioCashEntryType = 'deposit' | 'withdrawal' | 'buy' | 'sell' | 'adjust';
+// buys/sells/transfers move cash. Dividends are likewise realized only from
+// the first run of v1.7 forward (anchored in lib/dividendRealize.ts) so an
+// upgrade doesn't back-credit the whole trailing-12m dividend history at once.
+export type PortfolioCashEntryType =
+  | 'deposit'
+  | 'withdrawal'
+  | 'buy'
+  | 'sell'
+  | 'adjust'
+  | 'dividend';
 
 export interface PortfolioCashEntry {
   id: string;
