@@ -38,11 +38,20 @@ export interface Commodity {
   spark: number[];
 }
 
+// v1.7 — market sentiment gauges surfaced on the Markets page: the CBOE
+// Volatility Index (VIX, the "fear gauge") and CNN's Fear & Greed Index (0–100
+// with a categorical rating). Either may be null when its source is unreachable.
+export interface SentimentGauge {
+  vix: { value: number; changePercent: number } | null;
+  fearGreed: { score: number; rating: string } | null;
+}
+
 interface MarketsState {
   indices: MarketIndex[];
   fxRates: FxRateRow[];
   macroRates: MacroRate[];
   commodities: Commodity[];
+  sentiment: SentimentGauge;
   lastFetched: number | null;
   isLoading: boolean;
   /** True when the last refresh failed but we're showing cached data. */
@@ -85,6 +94,49 @@ const ECB_SERIES = {
   bund: '/service/data/YC/B.U2.EUR.4F.G_N_A.SV_C_YM.SR_10Y?format=jsondata&lastNObservations=1',
 };
 
+// ── CNN Fear & Greed Index ─────────────────────────────────────────────────
+// Unofficial but stable public endpoint powering CNN's own dashboard. Returns
+// the current composite score (0–100) + a categorical rating. Native only —
+// CapacitorHttp bypasses CORS and lets us send a browser-like UA (the endpoint
+// 403s bare clients); on web dev it's simply omitted. Best-effort, like the ECB
+// rates: any failure just drops the Fear & Greed row.
+async function fetchFearGreed(): Promise<{ score: number; rating: string } | null> {
+  if (!Capacitor.isNativePlatform()) return null;
+  try {
+    const res = await CapacitorHttp.request({
+      method: 'GET',
+      url: 'https://production.dataviz.cnn.io/index/fearandgreed/graphdata',
+      headers: {
+        Accept: 'application/json',
+        'User-Agent':
+          'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Mobile Safari/537.36',
+      },
+      connectTimeout: 8000,
+      readTimeout: 8000,
+    });
+    if (res.status >= 400) return null;
+    const body = (typeof res.data === 'string' ? JSON.parse(res.data) : res.data) as {
+      fear_and_greed?: { score?: number; rating?: string };
+    };
+    const score = body.fear_and_greed?.score;
+    if (typeof score !== 'number' || !isFinite(score)) return null;
+    const rounded = Math.round(score);
+    const rating = body.fear_and_greed?.rating;
+    return { score: rounded, rating: typeof rating === 'string' && rating ? rating : ratingFromScore(rounded) };
+  } catch {
+    return null;
+  }
+}
+
+/** Fallback categorical rating from a 0–100 score, matching CNN's bands. */
+export function ratingFromScore(s: number): string {
+  if (s < 25) return 'Extreme Fear';
+  if (s < 45) return 'Fear';
+  if (s <= 55) return 'Neutral';
+  if (s <= 75) return 'Greed';
+  return 'Extreme Greed';
+}
+
 async function fetchEcbLatest(pathSuffix: string): Promise<number | null> {
   const url = `${ECB_BASE}${pathSuffix}`;
   try {
@@ -126,6 +178,7 @@ export const useMarketsStore = create<MarketsState>((set, get) => ({
   fxRates: [],
   macroRates: [],
   commodities: [],
+  sentiment: { vix: null, fearGreed: null },
   lastFetched: null,
   isLoading: false,
   stale: false,
@@ -151,7 +204,7 @@ export const useMarketsStore = create<MarketsState>((set, get) => ({
     };
 
     try {
-      const [indexRows, fxRows, commodityRows, treasury, ecbDeposit, ecbBund] = await Promise.all([
+      const [indexRows, fxRows, commodityRows, treasury, ecbDeposit, ecbBund, vix, fearGreed] = await Promise.all([
         Promise.all(INDEX_DEFS.map(async (d) => {
           const r = await loadQuote(d.ticker);
           return r ? { ticker: d.ticker, label: d.label, price: r.quote.c, changePercent: r.quote.dp, spark: r.spark } : null;
@@ -167,6 +220,9 @@ export const useMarketsStore = create<MarketsState>((set, get) => ({
         loadQuote('^TNX'),
         fetchEcbLatest(ECB_SERIES.deposit),
         fetchEcbLatest(ECB_SERIES.bund),
+        // v1.7 — VIX (Yahoo) + CNN Fear & Greed. Best-effort; each null on failure.
+        loadQuote('^VIX'),
+        fetchFearGreed(),
       ]);
 
       const indices = indexRows.filter((x): x is MarketIndex => x != null);
@@ -178,13 +234,21 @@ export const useMarketsStore = create<MarketsState>((set, get) => ({
       if (ecbBund != null) macroRates.push({ label: '10Y Bund Yield', value: ecbBund, rangeMax: 5 });
       if (treasury) macroRates.push({ label: 'US 10Y Treasury', value: treasury.quote.c, rangeMax: 6 });
 
-      const gotAnything = indices.length || fxRates.length || commodities.length || macroRates.length;
+      const sentiment: SentimentGauge = {
+        vix: vix ? { value: vix.quote.c, changePercent: vix.quote.dp } : null,
+        fearGreed,
+      };
+
+      const gotAnything =
+        indices.length || fxRates.length || commodities.length || macroRates.length ||
+        sentiment.vix != null || sentiment.fearGreed != null;
 
       set({
         indices,
         fxRates,
         commodities,
         macroRates,
+        sentiment,
         isLoading: false,
         lastFetched: gotAnything ? Date.now() : get().lastFetched,
         stale: !gotAnything,

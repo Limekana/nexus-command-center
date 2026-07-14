@@ -65,6 +65,10 @@ interface HabitsStore {
   /** Internal — fire a milestone celebration if the streak just hit 7/30/100/365. */
   _celebrateIfMilestone: (habitId: string) => void;
 
+  /** Internal — re-arm a habit's reminders from current completion state so the
+   *  one-shot evening/morning nudges cancel on log (and re-arm on un-log). */
+  _rearmReminder: (habitId: string) => void;
+
   // ─── Selectors (no React hooks; pure derivations from current slice) ───
   streakFor: (habitId: string) => StreakResult;
   completionsFor: (habitId: string) => HabitCompletion[];
@@ -98,9 +102,21 @@ export const useHabitsStore = create<HabitsStore>((set, get) => ({
     for (const h of habits) {
       if (h.reminderTime && !h.archivedAt) {
         const st = computeStreak(h, completions.filter((c) => c.habitId === h.id));
-        void scheduleHabitReminder(h, st.current);
+        void scheduleHabitReminder(h, st.current, st.todayHit);
       }
     }
+  },
+
+  // v1.7 (BUG-3) — re-arm a single habit's reminders from current completion
+  // state. Called after every completion toggle so the one-shot evening/morning
+  // nudges are cancelled the moment the habit is logged (and re-scheduled if a
+  // completion is undone). No-op for habits without a reminder / archived.
+  _rearmReminder(habitId: string) {
+    const habit = get().habits.find((h) => h.id === habitId);
+    if (!habit || !habit.reminderTime || habit.archivedAt) return;
+    const rows = get().completions.filter((c) => c.habitId === habitId);
+    const st = computeStreak(habit, rows);
+    void scheduleHabitReminder(habit, st.current, st.todayHit);
   },
 
   // Fire a one-off celebration if the habit's streak just landed on a
@@ -194,6 +210,7 @@ export const useHabitsStore = create<HabitsStore>((set, get) => ({
       await db.habitCompletions.delete(existing.id);
       await enqueue('habit_completion', existing.id, 'delete', { id: existing.id });
       set({ completions: get().completions.filter((c) => c.id !== existing.id) });
+      get()._rearmReminder(habitId);
       return;
     }
     const now = new Date().toISOString();
@@ -209,6 +226,7 @@ export const useHabitsStore = create<HabitsStore>((set, get) => ({
     await enqueue('habit_completion', row.id, 'insert', row);
     set({ completions: [...get().completions, row] });
     get()._celebrateIfMilestone(habitId);
+    get()._rearmReminder(habitId);
   },
 
   async setCompletionAmount(habitId, amount, date) {
@@ -222,6 +240,7 @@ export const useHabitsStore = create<HabitsStore>((set, get) => ({
       await db.habitCompletions.delete(existing.id);
       await enqueue('habit_completion', existing.id, 'delete', { id: existing.id });
       set({ completions: get().completions.filter((c) => c.id !== existing.id) });
+      get()._rearmReminder(habitId);
       return;
     }
     if (existing) {
@@ -232,6 +251,7 @@ export const useHabitsStore = create<HabitsStore>((set, get) => ({
         completions: get().completions.map((c) => (c.id === existing.id ? updated : c)),
       });
       get()._celebrateIfMilestone(habitId);
+      get()._rearmReminder(habitId);
       return;
     }
     const now = new Date().toISOString();
@@ -247,6 +267,7 @@ export const useHabitsStore = create<HabitsStore>((set, get) => ({
     await enqueue('habit_completion', row.id, 'insert', row);
     set({ completions: [...get().completions, row] });
     get()._celebrateIfMilestone(habitId);
+    get()._rearmReminder(habitId);
   },
 
   async addToCompletion(habitId, delta, date) {

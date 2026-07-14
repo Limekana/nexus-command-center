@@ -18,6 +18,9 @@ interface Props {
   fxRates: Record<string, number> | null;
   baseCurrency: string;
   formatCurrency: (amount: number, currency: string) => string;
+  /** v1.7 — dividends auto-realized into portfolio cash this calendar year,
+   *  base currency. Shown as a "realized" counterpoint to projected income. */
+  realizedYtd?: number;
   onTapTicker?: (ticker: string) => void;
 }
 
@@ -67,6 +70,7 @@ export default function DividendTracker({
   fxRates,
   baseCurrency,
   formatCurrency,
+  realizedYtd,
   onTapTicker,
 }: Props) {
   const rows = useMemo(() => {
@@ -106,6 +110,14 @@ export default function DividendTracker({
         <div className="font-heading font-bold text-xl tracking-tight">
           {formatCurrency(totalProjected, baseCurrency)}
         </div>
+        {realizedYtd != null && realizedYtd > 0 && (
+          <div className="text-[10px] text-text-muted mt-1">
+            Realized this year:{' '}
+            <span className="text-success font-medium">
+              {formatCurrency(realizedYtd, baseCurrency)}
+            </span>
+          </div>
+        )}
         {soon && soon.nextExDiv && (
           <div className="text-[10px] text-text-muted mt-1">
             Next ex-div: <span className="text-text font-medium">{soon.ticker}</span> on {soon.nextExDiv}

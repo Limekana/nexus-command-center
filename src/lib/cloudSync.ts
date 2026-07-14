@@ -602,8 +602,10 @@ const ENTITY_PRIORITY: Record<SyncQueueItem['entityType'], number> = {
 // Postgres integrity-constraint violations whose cause is the payload itself, not
 // a transient network/auth condition. Retrying these can never succeed, so the
 // queue should drop them rather than retry forever. (23502 not-null, 23503 FK,
-// 23514 check, 22P02 invalid-text, 22003 numeric-out-of-range.)
-const PERMANENT_PG_CODES = new Set(['23502', '23503', '23514', '22P02', '22003']);
+// 23514 check, 22P02 invalid-text, 22003 numeric-out-of-range, 23505 unique_violation
+// — a duplicate insert will never stop conflicting, 42501 insufficient_privilege/RLS
+// denial — the policy isn't going to change on the next retry.)
+const PERMANENT_PG_CODES = new Set(['23502', '23503', '23514', '22P02', '22003', '23505', '42501']);
 function isPermanentSyncError(e: unknown): boolean {
   const code = (e as { code?: string } | null)?.code;
   return typeof code === 'string' && PERMANENT_PG_CODES.has(code);
@@ -1481,24 +1483,28 @@ export async function adoptLocalData(userId: string): Promise<number> {
     }
   };
 
-  const [txs, budgets, holdings, lots, manualAssets, watchlistItems, sessions, sets, tasks, courses, grades, studySessions, goals, stockSales, cashEntries, workQualityLogs] =
+  // Only adopt rows that were created locally and never synced. On a shared
+  // device, signing in as User A hydrates A's cloud rows into local Dexie as
+  // syncStatus: 'synced' and leaves them local on sign-out; without this
+  // filter, User B adopting would re-push A's rows under B's account using
+  // A's original ids — cross-user data corruption. Tables with no
+  // per-row syncStatus field (budgetCategories/portfolioHoldings/courses)
+  // adopt in full, same as before.
+  const [txs, budgets, holdings, lots, manualAssets, watchlistItems, tasks, courses, grades, goals, stockSales, cashEntries, workQualityLogs] =
     await Promise.all([
-      db.transactions.toArray(),
-      db.budgetCategories.toArray(),
-      db.portfolioHoldings.toArray(),
-      db.portfolioLots.toArray(),
-      db.manualAssets.toArray(),
-      db.watchlistItems.toArray(),
-      db.workoutSessions.toArray(),
-      db.workoutSets.toArray(),
-      db.tasks.toArray(),
-      db.courses.toArray(),
-      db.grades.toArray(),
-      db.studySessions.toArray(),
-      db.goals.toArray(),
-      db.stockSales.toArray(),
-      db.portfolioCashEntries.toArray(),
-      db.workQualityLogs.toArray(),
+      db.transactions.filter((r) => r.syncStatus === 'pending').toArray(),
+      db.budgetCategories.toArray(), // no syncStatus field
+      db.portfolioHoldings.toArray(), // no syncStatus field
+      db.portfolioLots.filter((r) => r.syncStatus === 'pending').toArray(),
+      db.manualAssets.filter((r) => r.syncStatus === 'pending').toArray(),
+      db.watchlistItems.filter((r) => r.syncStatus === 'pending').toArray(),
+      db.tasks.filter((r) => r.syncStatus === 'pending').toArray(),
+      db.courses.toArray(), // no syncStatus field
+      db.grades.filter((r) => r.syncStatus === 'pending').toArray(),
+      db.goals.filter((r) => r.syncStatus === 'pending').toArray(),
+      db.stockSales.filter((r) => r.syncStatus === 'pending').toArray(),
+      db.portfolioCashEntries.filter((r) => r.syncStatus === 'pending').toArray(),
+      db.workQualityLogs.filter((r) => r.syncStatus === 'pending').toArray(),
     ]);
 
   await enqueueAll('transaction', txs);
@@ -1507,12 +1513,12 @@ export async function adoptLocalData(userId: string): Promise<number> {
   await enqueueAll('portfolio_lot', lots);
   await enqueueAll('manual_asset', manualAssets);
   await enqueueAll('watchlist_item', watchlistItems);
-  await enqueueAll('workout_session', sessions);
-  await enqueueAll('workout_set', sets);
+  // workout_session / workout_set / study_session are intentionally never
+  // enqueued here — those tables are consumer-read-only for NCC per the
+  // suite data contract (LimeLog/StudyDesk own them).
   await enqueueAll('task', tasks);
   await enqueueAll('course', courses);
   await enqueueAll('grade', grades);
-  await enqueueAll('study_session', studySessions);
   await enqueueAll('goal', goals);
   await enqueueAll('stock_sale', stockSales);
   await enqueueAll('portfolio_cash_entry', cashEntries);
@@ -1537,15 +1543,17 @@ export async function fullSync(userId: string): Promise<{ push: PushResult; pull
 // Heuristic: does local data exist? Used to gate the adoption prompt.
 // ============================================================================
 export async function hasLocalData(): Promise<boolean> {
+  // Counts only pending (never-synced) rows so a 'synced' row hydrated from
+  // another user on a shared device doesn't trip the adoption prompt — see
+  // adoptLocalData. workoutSessions/studySessions are dropped from the
+  // heuristic entirely: NCC doesn't own those tables.
   const counts = await Promise.all([
-    db.transactions.count(),
-    db.budgetCategories.count(),
-    db.portfolioHoldings.count(),
-    db.workoutSessions.count(),
-    db.tasks.count(),
-    db.courses.count(),
-    db.grades.count(),
-    db.studySessions.count(),
+    db.transactions.filter((r) => r.syncStatus === 'pending').count(),
+    db.budgetCategories.count(), // no syncStatus field
+    db.portfolioHoldings.count(), // no syncStatus field
+    db.tasks.filter((r) => r.syncStatus === 'pending').count(),
+    db.courses.count(), // no syncStatus field
+    db.grades.filter((r) => r.syncStatus === 'pending').count(),
   ]);
   return counts.some((c) => c > 0);
 }
