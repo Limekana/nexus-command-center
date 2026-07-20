@@ -1,0 +1,73 @@
+# F-Droid metadata for Nexus Command Center — fdroiddata MR !41550.
+# FD-1 Fastlane metadata present (6 locales). FD-2 gradle wrapper SHA present.
+# FD-3 FOSS audit PASS (no GMS/Firebase). LICENSE MIT in repo root.
+#
+# Reproducible-build target (linsui's request on !41550): F-Droid builds from
+# source, then byte-compares against the signed APK at `Binaries:`. On a match
+# F-Droid adopts our signing cert, so updates stay interchangeable with our
+# GitHub Releases builds.
+#
+# `fdroid lint` passes clean as of 2026-07-17.
+#
+# BLOCKED — one owner action outstanding, see fdroid/README.md:
+#   No signed APK is published at the v1.7.0 tag, so the Binaries URL below
+#   404s. Latest published release is v1.6.1. Either attach a signed APK to a
+#   v1.7.0 release, or roll this Build entry back to 1.6.1 / vc23.
+Categories:
+  # 'Money' is not in fdroiddata's config/categories.yml and fails `fdroid lint`.
+  - Finance Manager
+License: MIT
+AuthorName: Limecore Studio
+SourceCode: https://github.com/Limekana/nexus-command-center
+IssueTracker: https://github.com/Limekana/nexus-command-center/issues
+
+AutoName: Nexus Command Center
+
+RepoType: git
+Repo: https://github.com/Limekana/nexus-command-center.git
+
+Binaries: https://github.com/Limekana/nexus-command-center/releases/download/v%v/NexusCommandCenter-%v.apk
+
+Builds:
+  - versionName: 1.7.0
+    versionCode: 24
+    commit: v1.7.0
+    subdir: android/app
+    sudo:
+      # Debian's packaged npm pulls Node 18, but @capacitor/cli 7 requires
+      # node >=20 and hard-fails `cap sync`. Install a pinned Node instead of
+      # apt's, and verify the tarball — an unverified download is both a
+      # supply-chain hole and an fdroiddata review blocker.
+      - curl -Lo node.tar.xz https://nodejs.org/dist/v22.23.1/node-v22.23.1-linux-x64.tar.xz
+      - echo "9749e988f437343b7fa832c69ded82a312e41a03116d766797ac14f6f9eee578  node.tar.xz" | sha256sum -c -
+      - tar xJf node.tar.xz --directory /opt
+      - ln -s /opt/node-v22.23.1-linux-x64/bin/node /usr/local/bin/node
+      - ln -s /opt/node-v22.23.1-linux-x64/bin/npm /usr/local/bin/npm
+      - ln -s /opt/node-v22.23.1-linux-x64/bin/npx /usr/local/bin/npx
+    init:
+      - npm ci
+    prebuild:
+      - npm run build
+      - npx cap sync android
+    scandelete:
+      # `cap sync` has already copied the built web assets into
+      # android/app/src/main/assets, so Gradle no longer needs node_modules.
+      # Drop it before the scan: esbuild ships a prebuilt binary and Rollup
+      # ships native .node modules, which the fdroidserver scanner rejects.
+      - node_modules
+    gradle:
+      - yes
+
+# Shared Limecore Studio release key (CN=Emil Hongisto, O=Limecore) — the same
+# cert signs LimeLog, so com.limecore.workouttracker.yml pins this same value.
+# Read from the published NexusCommandCenter-1.6.1.apk via `apksigner verify`.
+AllowedAPKSigningKeys: 27e17d1fba157da6eacde58485aab56066200cc45ad00bd518d828367ec155e4
+
+AntiFeatures:
+  - NonFreeNet   # Supabase sync, Google OAuth, finance APIs, AI Edge Function (all user-initiated HTTPS)
+
+# Tags are v-prefixed (v1.7.0), so the version pattern needs the literal `v`.
+AutoUpdateMode: Version v%v
+UpdateCheckMode: Tags
+CurrentVersion: 1.7.0
+CurrentVersionCode: 24
