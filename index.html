@@ -19,8 +19,8 @@
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
       script-src 'self';
-      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-      font-src 'self' https://fonts.gstatic.com data:;
+      style-src 'self' 'unsafe-inline';
+      font-src 'self' data:;
       img-src 'self' data: blob: https:;
       connect-src 'self' https://*.supabase.co wss://*.supabase.co https://finnhub.io https://api.coingecko.com https://query1.finance.yahoo.com https://query2.finance.yahoo.com https://open.er-api.com;
       object-src 'none';
@@ -29,12 +29,14 @@
       form-action 'self';
     " />
     <title>Nexus Command Center</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap"
-      rel="stylesheet"
-    />
+    <!--
+      Fonts are self-hosted (see @font-face in src/index.css). We used to pull
+      Space Grotesk / Inter from fonts.googleapis.com, but that render-blocking
+      <link rel="stylesheet"> made the WebView's first paint depend on reaching
+      Google — a device that's offline, or an F-Droid user who firewalls
+      Google, could stall on it. Self-hosting also removes the third-party
+      Google call, which F-Droid disallows.
+    -->
   </head>
   <body>
     <!--

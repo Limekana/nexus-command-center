@@ -1,3 +1,27 @@
+/* Self-hosted variable fonts (latin). Previously loaded from
+   fonts.googleapis.com via a render-blocking <link> in index.html, which made
+   first paint depend on reaching Google — on an offline device, or an F-Droid
+   user who firewalls Google, the WebView could stall on that request instead
+   of failing fast. Bundling them locally makes rendering network-independent
+   and removes the third-party Google call, which F-Droid disallows. These are
+   the same variable woff2 files Google served, so rendering is unchanged.
+   font-display: swap keeps text visible in the system fallback while the
+   woff2 loads. */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('/fonts/space-grotesk.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/inter.woff2') format('woff2');
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
