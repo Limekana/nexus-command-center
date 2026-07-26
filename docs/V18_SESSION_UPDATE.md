@@ -16,9 +16,9 @@ file replaces it and is the complete record of what changed.
 
 | Repo | Branch | Head | Base |
 |---|---|---|---|
-| `nexus-command-center` | `claude/ncc-repos-setup-3kvqoj` | see §6 | `develop` |
-| `studydesk` | `feature/v1.8-act2-act4-auth-gate` | `bf74dc6` | `develop` |
-| `limelog` | `feature/v1.8-act2-auth-i18n` | `d7167b0` | `develop` |
+| `nexus-command-center` | `claude/ncc-repos-setup-3kvqoj` | `6d39df6` | `develop` |
+| `studydesk` | `feature/v1.8-act2-act4-auth-gate` | `d38c0c9` | `develop` |
+| `limelog` | `feature/v1.8-act2-auth-i18n` | `222b129` | `develop` |
 
 No PRs opened. No merges to `main`. No tags. No Supabase migrations, DDL, or
 writes of any kind — the only database access this session was read-only
@@ -178,29 +178,59 @@ ten so font fallback resolves for Devanagari and Arabic script. Verified:
 > screens using physical `left`/`right` CSS or directional icons have **not**
 > been swept. Treat Arabic as unreleased until that pass happens.
 
-### ⚠️ Translation scope — READ THIS
+### ✅ Translation scope — COMPLETE
 
-**The new locale files cover the auth gate only** (~40/36/28 keys per app).
-`fallbackLng: 'en'` is configured in all three apps, so every other key renders
-**English**, not a raw key name. The four languages are therefore safe to ship
-partial, and the rest can land later without blocking them.
+**All four new locales are fully translated across all three apps.** Every key
+in every app now has hi/pt/id/ar copy; nothing falls back to English.
 
-**Outstanding: ~1,460 keys per language ≈ 5,800 strings** (NCC 901, StudyDesk
-393, LimeLog 273 total keys; auth already done).
+| App | Keys | en | hi | pt | id | ar |
+|---|---|---|---|---|---|---|
+| NCC | 901 | 901 | 901 | 907 | 895 | 925 |
+| StudyDesk | 393 | 393 | 393 | 398 | 388 | 413 |
+| LimeLog | 273 | 273 | 273 | 278 | 268 | 293 |
 
-Not attempted this session, for a reason worth recording: the remaining strings
-concentrate in domain vocabulary the agent could not validate — LimeLog's
-*periodization / deload / RPE / e1RM*, StudyDesk's *ECTS / period / weighted
-average* (grading systems differ per country, so literal translation can be
-actively wrong), NCC's *FIFO cost basis / realized P&L / dividend yield*. In
-`fi/fr/de/es` output is self-checkable; in `hi/id/ar` it is not.
+Counts differ by design — plural categories are derived per language from CLDR,
+not copied from English:
 
-**Recommendation:** extract `en.json` to a translation-ready format, route
-through native reviewers or a service, import back — one pass over ~1,567 source
-strings. Do **not** bulk-generate unreviewed strings straight to production; the
-users are real and, per §1, largely in exactly these locales.
+- **`id`** has no grammatical plural → one form (`_other`) only, so it is *below*
+  the English count.
+- **`hi`** matches English (`one`/`other`).
+- **`pt`** needs `_many`. CLDR assigns Portuguese a `many` category at ≥ 1e6;
+  with no form supplied, i18next falls through to **English**, not to `_other`.
+  This was caught in testing (`gv.courses` at 1,000,000 rendered
+  "1000000 courses") and fixed in all three apps.
+- **`ar`** needs all six: `zero`/`one`/`two`/`few`/`many`/`other`.
 
-**Any locale content added so far has NOT had native review.**
+**Terminology was researched, not glossed**, and the research found three real
+errors in StudyDesk that are now fixed:
+
+1. **Indonesian** used `mata kuliah` (university-only). IB and upper-secondary
+   schools use **`mata pelajaran`**. Same class of error in `IPK` (tertiary GPA →
+   plain `GPA`) and `SKS` (university credit unit → `kredit`).
+2. **Arabic** used `مقرّر` (the *syllabus*) where the app means `مادة` (the
+   *subject*). Because `مادة` is feminine and `مقرّر` masculine, numerals, the
+   dual, the broken plural and the demonstrative all had to change with it — a
+   plain noun swap would have produced ungrammatical Arabic.
+3. **Hindi** used the transliteration `कोर्स`; **`विषय`** is the standard school
+   term.
+
+Domain vocabulary deliberately kept as English loanwords, because that is how
+each community actually writes it: **deload, RPE, 1RM** (lifting); **FIFO, RSI,
+SMA, P/E, P/B, P/S, PEG** (finance); ticker symbols and vendor/index names
+(Finnhub, Yahoo, CoinGecko, ETF, VIX, Fear & Greed).
+
+**Verification applied to all three apps:** 100% coverage against `en.json` for
+all nine non-English locales, and every plural key confirmed to define every
+CLDR category its language requires — checked against each locale's own resource
+bundle, not by comparing rendered strings. (String comparison cannot distinguish
+a deliberate loanword from a fallback; it produced a false positive on NCC's
+`fin.wl.tickers`, where "ticker" is legitimately verbatim in pt and id.)
+
+> ⚠️ **None of it has had native review.** The research narrowed the
+> highest-risk gap; it did not close it. The likeliest places a reviewer will
+> want changes are the finance vocabulary in NCC, the lifting vocabulary in
+> LimeLog, and the grading-system terms in StudyDesk (IB/GPA scales, credits,
+> period/jakso).
 
 ### Picker relayout — 7 instances, all capped
 
