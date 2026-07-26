@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { setLanguage, SUPPORTED_LANGS, LANGUAGE_NAMES, type Lang } from '../i18n';
+import { type Lang } from '../i18n';
+import LanguageGrid from '../components/LanguageGrid';
 import AppHeader from '../components/AppHeader';
 import ListRow from '../components/ListRow';
 import { useLifeProfileStore } from '../store/useLifeProfileStore';
@@ -385,22 +386,7 @@ export default function Settings() {
         </Section>
 
         <Section title={t('settings.language')}>
-          <div className="grid grid-cols-2 gap-2">
-            {SUPPORTED_LANGS.map((code) => (
-              <button
-                key={code}
-                onClick={() => setLanguage(code)}
-                aria-pressed={currentLang === code}
-                className={`rounded-lg p-2.5 text-sm border transition-colors text-left ${
-                  currentLang === code
-                    ? 'border-primary bg-primary/10 text-primary font-semibold'
-                    : 'border-glass-border text-text'
-                }`}
-              >
-                {LANGUAGE_NAMES[code]}
-              </button>
-            ))}
-          </div>
+          <LanguageGrid current={currentLang} variant="settings" />
         </Section>
 
         <Section title={t('settings.notifications')}>

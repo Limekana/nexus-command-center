@@ -24,7 +24,8 @@ import {
   type LifeProfilePreset,
 } from '../lib/lifeProfile';
 import { setOnboarded } from '../lib/onboarding';
-import { setLanguage, SUPPORTED_LANGS, LANGUAGE_NAMES, type Lang } from '../i18n';
+import { type Lang } from '../i18n';
+import LanguageGrid from '../components/LanguageGrid';
 
 interface Props {
   /** Called when the wizard finishes or is skipped. Parent flips the gate. */
@@ -94,20 +95,7 @@ export default function Onboarding({ onDone }: Props) {
             <div className="space-y-4">
               <h1 className="font-heading text-xl font-bold">{t('onboarding.languageTitle')}</h1>
               <p className="text-sm text-text-muted leading-relaxed">{t('onboarding.languageBody')}</p>
-              <div className="grid grid-cols-2 gap-2">
-                {SUPPORTED_LANGS.map((code) => (
-                  <button
-                    key={code}
-                    onClick={() => setLanguage(code)}
-                    aria-pressed={currentLang === code}
-                    className={`glass-soft rounded-xl p-3 text-sm border transition-colors ${
-                      currentLang === code ? 'border-primary bg-primary/10 text-primary font-semibold' : 'border-glass-border'
-                    }`}
-                  >
-                    {LANGUAGE_NAMES[code]}
-                  </button>
-                ))}
-              </div>
+              <LanguageGrid current={currentLang} variant="onboarding" />
               <button className="btn w-full" onClick={() => setStep(1)}>
                 {t('common.continue')}
               </button>
