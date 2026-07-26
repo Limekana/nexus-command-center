@@ -394,6 +394,38 @@ a screen, which tips it to MINOR in my read.
 > so a cardio session logged with zero sets still counts as a full session —
 > which is the desired outcome. `totalSetCount` is computed but is not read
 > anywhere, so it has no effect either way.
+>
+> Confirmed from the LimeLog side too: `nexusSync.ts:64` already pushes
+> `sessionType: session?.name ?? 'workout'` — the session's own name, free text.
+> Whatever a session is called is what lands in the shared column today.
+
+### ⚠️ But the LimeLog-side work is NOT small — re-estimate before scheduling
+
+The schema question being answered "no" does **not** make this a quick UI job.
+LimeLog's data model is built entirely around structured strength programming:
+
+| Fact | Source |
+|---|---|
+| `SessionLog.sessionTemplateId` and `.programId` are both **required** (no `?`) | `src/types/logging.ts:15` |
+| Sessions are started as `startSession(sessionTemplateId, programId)` | `src/store/logStore.ts:22` |
+| A `SessionTemplate` lives inside a phase and carries `exercises[]` with `targetSets` / `targetReps` / `targetRpe` / `targetWeight` | `src/types/program.ts:46` |
+| **No ad-hoc / freestyle / cardio logging path exists anywhere** | grep across `src/` returns nothing |
+
+So today the only way to log "Basketball" is to build a Program → Phase →
+SessionTemplate named Basketball and give it exercises. Making non-gym training
+loggable means adding a **new ad-hoc session path** that does not belong to a
+program, plus a logging surface with duration/intensity instead of sets × reps ×
+weight, plus a local (Dexie) shape for template-less sessions.
+
+**Genuinely undecided and not specified in the braindump** — surface before
+building: does an ad-hoc session belong to a program at all, or sit outside the
+periodization model entirely? What fields does a cardio log carry? Does it feed
+deload/fatigue logic, or only the Nexus fitness score? These are design calls,
+not implementation details.
+
+**Recommendation:** treat this as its own chunk, sized independently of ACT-2/3/4
+rather than bundled with them. It carries no release pressure — LimeLog cannot
+tag until !41548 merges regardless.
 
 ---
 
