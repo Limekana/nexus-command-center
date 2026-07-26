@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Trans, useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
+import { translateAuthError } from '../../lib/authErrors';
 
 export default function Signup() {
+  const { t } = useTranslation();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -12,12 +15,12 @@ export default function Signup() {
   const [sent, setSent] = useState(false);
 
   const validate = (): string | null => {
-    if (!fullName.trim()) return 'Enter your name.';
-    if (password.length < 10) return 'Password must be at least 10 characters.';
+    if (!fullName.trim()) return t('auth.errNameRequired');
+    if (password.length < 10) return t('auth.errPasswordShort');
     if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
-      return 'Password needs upper + lower case, a digit, and a symbol.';
+      return t('auth.errPasswordWeak');
     }
-    if (password !== confirm) return 'Passwords do not match.';
+    if (password !== confirm) return t('auth.errPasswordMismatch');
     return null;
   };
 
@@ -39,7 +42,7 @@ export default function Signup() {
     });
     setSubmitting(false);
     if (error) {
-      setError(error.message);
+      setError(translateAuthError(error, t));
       return;
     }
     setSent(true);
@@ -49,13 +52,18 @@ export default function Signup() {
     return (
       <div className="min-h-full bg-bg text-text flex flex-col">
         <div className="flex-1 flex flex-col justify-center px-6 max-w-md mx-auto w-full">
-          <h1 className="font-heading font-bold text-2xl tracking-tight mb-2">Check your email</h1>
+          <h1 className="font-heading font-bold text-2xl tracking-tight mb-2">
+            {t('auth.checkEmailTitle')}
+          </h1>
           <p className="text-sm text-text-muted mb-6">
-            We sent a confirmation link to <span className="text-text">{email}</span>. Click it
-            to verify, then come back here and sign in.
+            <Trans
+              i18nKey="auth.checkEmailBody"
+              values={{ email }}
+              components={{ 1: <span className="text-text" /> }}
+            />
           </p>
           <Link to="/auth/login" className="btn w-full text-center">
-            Back to Sign In
+            {t('auth.backToSignIn')}
           </Link>
         </div>
       </div>
@@ -66,14 +74,17 @@ export default function Signup() {
     <div className="min-h-full bg-bg text-text flex flex-col">
       <div className="flex-1 flex flex-col justify-center px-6 max-w-md mx-auto w-full">
         <div className="mb-8">
-          <h1 className="font-heading font-bold text-3xl tracking-tight">Create account</h1>
+          <h1 className="font-heading font-bold text-3xl tracking-tight">
+            {t('auth.createTitle')}
+          </h1>
+          {/* Product name — deliberately not a translation key. */}
           <p className="text-sm text-text-muted mt-1">Nexus Command Center</p>
         </div>
 
         <form onSubmit={onSubmit} className="space-y-3">
           <div>
             <label className="block text-[10px] uppercase tracking-wider text-text-muted mb-1">
-              Full Name
+              {t('auth.fullNameLabel')}
             </label>
             <input
               type="text"
@@ -82,12 +93,12 @@ export default function Signup() {
               className="input w-full"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              placeholder="Emil Heinonen"
+              placeholder={t('auth.fullNamePlaceholder')}
             />
           </div>
           <div>
             <label className="block text-[10px] uppercase tracking-wider text-text-muted mb-1">
-              Email
+              {t('auth.emailLabel')}
             </label>
             <input
               type="email"
@@ -96,12 +107,12 @@ export default function Signup() {
               className="input w-full"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
+              placeholder={t('auth.emailPlaceholder')}
             />
           </div>
           <div>
             <label className="block text-[10px] uppercase tracking-wider text-text-muted mb-1">
-              Password
+              {t('auth.passwordLabel')}
             </label>
             <input
               type="password"
@@ -111,15 +122,13 @@ export default function Signup() {
               className="input w-full"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="At least 10 characters"
+              placeholder={t('auth.passwordPlaceholder')}
             />
-            <p className="text-[10px] text-text-muted mt-1">
-              Needs upper + lower case, a digit, and a symbol.
-            </p>
+            <p className="text-[10px] text-text-muted mt-1">{t('auth.passwordHint')}</p>
           </div>
           <div>
             <label className="block text-[10px] uppercase tracking-wider text-text-muted mb-1">
-              Confirm Password
+              {t('auth.confirmPasswordLabel')}
             </label>
             <input
               type="password"
@@ -140,14 +149,14 @@ export default function Signup() {
           )}
 
           <button type="submit" disabled={submitting} className="btn w-full">
-            {submitting ? 'Creating account…' : 'Create Account'}
+            {submitting ? t('auth.creatingAccount') : t('auth.createAccount')}
           </button>
         </form>
 
         <p className="text-center text-xs text-text-muted mt-6">
-          Already have an account?{' '}
+          {t('auth.haveAccount')}{' '}
           <Link to="/auth/login" className="text-primary">
-            Sign in
+            {t('auth.signIn')}
           </Link>
         </p>
       </div>
