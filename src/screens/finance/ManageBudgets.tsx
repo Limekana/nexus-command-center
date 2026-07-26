@@ -212,7 +212,7 @@ export default function ManageBudgets() {
                         className="text-[9px] px-1.5 py-0.5 rounded-sm bg-success/10 text-success border border-success/30 whitespace-nowrap"
                         title={t('fin.budg.autoUpdates', { name: linkedAsset.name })}
                       >
-                        → {linkedAsset.name}
+                        <span className="rtl-mirror" aria-hidden>→</span> {linkedAsset.name}
                       </span>
                     )}
                   </div>

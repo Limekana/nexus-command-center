@@ -100,7 +100,7 @@ export default function ShareModal({
           <button
             onClick={onClose}
             aria-label="Close"
-            className="text-text-muted active:text-text px-2 -mr-2"
+            className="text-text-muted active:text-text px-2 -me-2"
           >
             ✕
           </button>

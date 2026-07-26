@@ -129,7 +129,7 @@ export default function DividendTracker({
           <button
             key={r.ticker}
             onClick={() => onTapTicker?.(r.ticker)}
-            className="w-full flex items-center justify-between py-1.5 px-1 rounded-sm active:bg-surface2/50 text-left"
+            className="w-full flex items-center justify-between py-1.5 px-1 rounded-sm active:bg-surface2/50 text-start"
           >
             <div className="min-w-0">
               <div className="text-sm font-medium truncate">{r.ticker}</div>
@@ -137,7 +137,7 @@ export default function DividendTracker({
                 {r.trailingPerShare.toFixed(2)} {r.trailingCurrency}/share · trailing
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-end">
               <div className="text-xs font-medium text-success">
                 {formatCurrency(r.projectedAnnualBase, baseCurrency)}
               </div>

@@ -367,7 +367,7 @@ export default function Settings() {
 
         <Section title={t('settings.lifeProfile')}>
           <button
-            className="w-full py-2 flex items-center justify-between gap-3 text-left active:opacity-80"
+            className="w-full py-2 flex items-center justify-between gap-3 text-start active:opacity-80"
             onClick={() => navigate('/settings/life-profile')}
           >
             <div className="min-w-0">

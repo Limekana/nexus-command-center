@@ -183,7 +183,7 @@ function FearGreedGauge({ score }: { score: number }) {
       </div>
       <div className="relative h-2 rounded-full bg-surface2 overflow-hidden" aria-hidden>
         <div
-          className={`absolute inset-y-0 left-0 rounded-full ${tone.bar}`}
+          className={`absolute inset-y-0 start-0 rounded-full ${tone.bar}`}
           style={{ width: `${clamped}%` }}
         />
       </div>
@@ -231,7 +231,7 @@ function RateRow({ rate }: { rate: MacroRate }) {
           />
         ))}
       </div>
-      <span className="text-xs font-heading font-semibold text-text w-12 text-right">
+      <span className="text-xs font-heading font-semibold text-text w-12 text-end">
         {rate.value.toFixed(2)}%
       </span>
     </div>
@@ -244,7 +244,7 @@ function ChangePill({ change }: { change: number }) {
   const arrow = flat ? '→' : change > 0 ? '↑' : '↓';
   const tone = flat ? 'text-text-muted' : change > 0 ? 'text-success' : 'text-danger';
   return (
-    <span className={`text-[11px] font-heading whitespace-nowrap w-16 text-right ${tone}`}>
+    <span className={`text-[11px] font-heading whitespace-nowrap w-16 text-end ${tone}`}>
       {change > 0 && !flat ? '+' : ''}
       {change.toFixed(2)}% {arrow}
     </span>

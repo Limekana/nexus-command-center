@@ -288,7 +288,7 @@ export default function Watchlist() {
                     createdAt: r.item.createdAt,
                   });
                 }}
-                className="flex-1 flex items-center gap-2 min-w-0 text-left"
+                className="flex-1 flex items-center gap-2 min-w-0 text-start"
               >
                 <div className="flex flex-col w-[68px] min-w-0">
                   <span className="text-sm font-medium truncate">{r.item.ticker.toUpperCase()}</span>

@@ -148,7 +148,7 @@ export default function ManageHoldings() {
         <div className="flex-1 min-w-0">
           <div className="text-sm font-heading font-semibold truncate">
             {h.ticker.toUpperCase()}
-            {closed && <span className="ml-1.5 text-[8px] uppercase tracking-wider text-text-muted">{t('fin.mh.closed')}</span>}
+            {closed && <span className="ms-1.5 text-[8px] uppercase tracking-wider text-text-muted">{t('fin.mh.closed')}</span>}
           </div>
           <div className="text-[10px] text-text-muted truncate">
             {h.name} · {h.quantity}

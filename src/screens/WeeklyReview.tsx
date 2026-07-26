@@ -156,7 +156,7 @@ export default function WeeklyReview() {
         {/* Finance */}
         <button
           onClick={() => navigate('/finance')}
-          className="card text-left w-full active:bg-surface2/40"
+          className="card text-start w-full active:bg-surface2/40"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="font-heading font-semibold text-sm">💰 {t('weeklyReview.finance')}</span>
@@ -248,7 +248,7 @@ export default function WeeklyReview() {
         {/* Tasks */}
         <button
           onClick={() => navigate('/tasks')}
-          className="card text-left w-full active:bg-surface2/40"
+          className="card text-start w-full active:bg-surface2/40"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="font-heading font-semibold text-sm">✓ {t('weeklyReview.tasks')}</span>
@@ -280,7 +280,7 @@ export default function WeeklyReview() {
 
         <button
           onClick={() => navigate('/review/year')}
-          className="card w-full text-left active:bg-surface2/40"
+          className="card w-full text-start active:bg-surface2/40"
         >
           <div className="flex items-center justify-between">
             <div>

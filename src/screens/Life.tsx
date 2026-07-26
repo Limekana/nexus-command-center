@@ -257,12 +257,12 @@ export default function Life() {
             ) : (
               <div className="space-y-2 stagger-children">
                 {report.insights.map((ins) => (
-                  <article key={ins.id} className={`glass rounded-xl p-4 border-l-2 ${TONE_BORDER[ins.tone]}`}>
+                  <article key={ins.id} className={`glass rounded-xl p-4 border-s-2 ${TONE_BORDER[ins.tone]}`}>
                     <div className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
                       {t(DOMAIN_LABEL_KEY[ins.domain])}
                     </div>
                     <div className={`font-heading text-base font-bold leading-tight ${TONE_TEXT[ins.tone]} mb-1`}>
-                      <span aria-hidden className="mr-1">{TONE_GLYPH[ins.tone]}</span>
+                      <span aria-hidden className="me-1">{TONE_GLYPH[ins.tone]}</span>
                       {ins.headline}
                     </div>
                     <div className="text-xs text-text-muted">{ins.detail}</div>

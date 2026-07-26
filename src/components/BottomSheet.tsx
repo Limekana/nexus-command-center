@@ -99,7 +99,7 @@ export default function BottomSheet({ open, onClose, title, children }: BottomSh
           <button
             onClick={onClose}
             aria-label="Close"
-            className="text-text-muted text-3xl leading-none active:text-primary press-spring w-11 h-11 flex items-center justify-center rounded-pill -mr-2"
+            className="text-text-muted text-3xl leading-none active:text-primary press-spring w-11 h-11 flex items-center justify-center rounded-pill -me-2"
             style={{ touchAction: 'manipulation' }}
           >
             ×

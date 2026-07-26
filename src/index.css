@@ -29,6 +29,26 @@
 @layer base {
   :root {
     color-scheme: dark;
+    /* v1.8 RTL — sign multiplier for transforms that have no logical form.
+       `translateX` is always physical, so a sliding indicator anchored with a
+       logical property (start-*) would travel away from its target once the
+       axis flips. Multiplying the offset by --dir keeps the two in step.
+       Set on :root/[dir] rather than per-component so any future slider gets
+       it for free. */
+    --dir: 1;
+  }
+
+  [dir='rtl'] {
+    --dir: -1;
+  }
+
+  /* Directional glyphs (→, ←) are Unicode-neutral: the bidi algorithm does not
+     mirror them, so an arrow meaning "next" keeps pointing right in RTL and
+     reads as "back". Mirror them explicitly. Applied to a class rather than
+     every arrow character so symmetric or decorative glyphs are untouched. */
+  [dir='rtl'] .rtl-mirror {
+    display: inline-block;
+    transform: scaleX(-1);
   }
 
   html, body, #root {

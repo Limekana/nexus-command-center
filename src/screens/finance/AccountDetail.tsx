@@ -277,7 +277,7 @@ export default function AccountDetail() {
                   key={r.txn.id}
                   type="button"
                   onClick={() => navigate(`/finance/add?id=${r.txn.id}`)}
-                  className="w-full flex items-center gap-2 py-2 border-b border-border/40 last:border-0 text-left press-spring"
+                  className="w-full flex items-center gap-2 py-2 border-b border-border/40 last:border-0 text-start press-spring"
                 >
                   <span className={`text-base ${tone} w-5 text-center`}>
                     {glyph}
@@ -291,7 +291,7 @@ export default function AccountDetail() {
                       {r.counterparty ? ` · ${r.counterparty}` : ''}
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-end">
                     <div className={`text-sm font-semibold tabular-nums ${tone}`}>
                       {r.delta >= 0 ? '+' : ''}
                       {fmt(r.delta, account.currency)}

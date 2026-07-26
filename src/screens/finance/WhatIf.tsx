@@ -261,8 +261,8 @@ export default function WhatIf() {
                 * predictable. With a 40px track and a 20px knob, translating
                 * 16px puts it 2px from the right edge — symmetric inset. */}
               <span
-                className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-text transition-transform ${
-                  showInToday ? 'translate-x-4' : 'translate-x-0'
+                className={`absolute top-0.5 start-0.5 w-5 h-5 rounded-full bg-text transition-transform ${
+                  showInToday ? 'translate-x-4 rtl:-translate-x-4' : 'translate-x-0'
                 }`}
               />
             </button>
@@ -285,7 +285,7 @@ export default function WhatIf() {
           <div className="font-heading font-semibold text-sm">
             {t('fin.wi.inYears', { n: years })}
             {showInToday && (
-              <span className="text-[10px] uppercase tracking-wider text-text-muted ml-2">
+              <span className="text-[10px] uppercase tracking-wider text-text-muted ms-2">
                 · {t('fin.wi.todayMoney')}
               </span>
             )}
@@ -323,7 +323,7 @@ export default function WhatIf() {
               <div className="grid grid-cols-3 gap-2 text-[9px] uppercase tracking-wider text-text-muted pb-1 border-b border-border/40">
                 <span>{t('fin.wi.target')}</span>
                 <span className="text-center">{t('fin.wi.conservative')}</span>
-                <span className="text-right">{t('fin.wi.optimistic')}</span>
+                <span className="text-end">{t('fin.wi.optimistic')}</span>
               </div>
               {milestoneRows.map((row) => (
                 <div key={row.target} className="grid grid-cols-3 gap-2 text-xs py-1">
@@ -331,7 +331,7 @@ export default function WhatIf() {
                   <span className="text-center text-text-muted">
                     {row.conservative != null ? t('fin.wi.inYearsShort', { n: row.conservative }) : '—'}
                   </span>
-                  <span className="text-right text-success">
+                  <span className="text-end text-success">
                     {row.optimistic != null ? t('fin.wi.inYearsShort', { n: row.optimistic }) : '—'}
                   </span>
                 </div>

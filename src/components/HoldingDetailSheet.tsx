@@ -111,7 +111,7 @@ export default function HoldingDetailSheet({ holding, onClose }: Props) {
             </div>
           </div>
           {stockQuote && (
-            <div className="text-right flex-shrink-0">
+            <div className="text-end flex-shrink-0">
               <div className="font-heading font-bold text-base">
                 {stockQuote.currency} {fmtNum(stockQuote.quote.c)}
               </div>

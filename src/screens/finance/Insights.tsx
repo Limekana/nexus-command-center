@@ -224,7 +224,7 @@ export default function Insights() {
                 key={r.ticker}
                 type="button"
                 onClick={() => openBreakdown(r)}
-                className="glass rounded-xl p-3 w-full text-left press-spring"
+                className="glass rounded-xl p-3 w-full text-start press-spring"
               >
                 <div className="flex items-center gap-3">
                   <div className="flex-1 min-w-0">

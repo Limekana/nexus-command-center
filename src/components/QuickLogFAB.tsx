@@ -16,7 +16,7 @@ export default function QuickLogFAB({ onClick }: QuickLogFABProps) {
       onClick={onClick}
       // bottom = glass nav-bar height (~5.5rem) + safe-area-inset + 1rem gap
       style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 7rem)' }}
-      className="fixed right-5 w-14 h-14 rounded-full bg-primary text-bg z-20 flex items-center justify-center shadow-glass-glow animate-pop-in press-spring"
+      className="fixed end-5 w-14 h-14 rounded-full bg-primary text-bg z-20 flex items-center justify-center shadow-glass-glow animate-pop-in press-spring"
       aria-label="Quick log"
     >
       <svg

@@ -486,12 +486,12 @@ export default function Portfolio() {
                 <div className="text-[10px] uppercase tracking-wider text-text-muted">{t('fin.port.cost')}</div>
                 <div className="font-medium">{fmt(totals.cost, baseCurrency)}</div>
               </div>
-              <div className="text-right">
+              <div className="text-end">
                 <div className="text-[10px] uppercase tracking-wider text-text-muted">{t('fin.port.totalPL')}</div>
                 <div className={`font-medium ${totals.pl >= 0 ? 'text-success' : 'text-danger'}`}>
                   {totals.pl >= 0 ? '+' : '−'}{fmt(Math.abs(totals.pl), baseCurrency)}
                   {totals.plPct != null && (
-                    <span className="opacity-70 ml-1">({totals.pl >= 0 ? '+' : ''}{totals.plPct.toFixed(1)}%)</span>
+                    <span className="opacity-70 ms-1">({totals.pl >= 0 ? '+' : ''}{totals.plPct.toFixed(1)}%)</span>
                   )}
                 </div>
               </div>
@@ -678,7 +678,7 @@ function HoldingRow({
   return (
     <button
       onClick={onTap}
-      className="w-full py-2 border-b border-border/40 last:border-0 active:bg-surface2/40 text-left"
+      className="w-full py-2 border-b border-border/40 last:border-0 active:bg-surface2/40 text-start"
     >
       <div className="flex items-center gap-2">
         <div className="flex flex-col min-w-0 w-[68px]">

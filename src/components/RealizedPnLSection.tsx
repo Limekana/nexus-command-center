@@ -96,7 +96,7 @@ export default function RealizedPnLSection() {
       {/* Realized P&L — tap to expand the per-sale history */}
       <button
         onClick={() => setShowHistory((v) => !v)}
-        className="card text-left w-full active:bg-surface2/40"
+        className="card text-start w-full active:bg-surface2/40"
       >
         <div className="flex items-center justify-between">
           <div>
@@ -132,7 +132,7 @@ export default function RealizedPnLSection() {
                   {s.soldAt} · {s.sharesSold} sh @ {fmt(s.salePricePerShare, s.currency)}
                 </div>
               </div>
-              <div className={`text-right whitespace-nowrap ${s.realizedGainLoss >= 0 ? 'text-success' : 'text-danger'}`}>
+              <div className={`text-end whitespace-nowrap ${s.realizedGainLoss >= 0 ? 'text-success' : 'text-danger'}`}>
                 {s.realizedGainLoss >= 0 ? '+' : '−'}{fmt(s.realizedGainLoss, s.currency)}
               </div>
             </div>
@@ -145,7 +145,7 @@ export default function RealizedPnLSection() {
         <div className="card" style={{ opacity: 0.85 }}>
           <button
             onClick={() => setShowClosed((v) => !v)}
-            className="flex items-center justify-between w-full text-left"
+            className="flex items-center justify-between w-full text-start"
           >
             <span className="font-heading font-semibold text-sm">Closed positions</span>
             <span className="text-[10px] uppercase tracking-wider text-text-muted">
@@ -165,7 +165,7 @@ export default function RealizedPnLSection() {
                       Invested {fmt(c.invested, baseCurrency)} → Proceeds {fmt(c.proceeds, baseCurrency)}
                     </div>
                   </div>
-                  <div className={`text-right whitespace-nowrap ${c.gl >= 0 ? 'text-success' : 'text-danger'}`}>
+                  <div className={`text-end whitespace-nowrap ${c.gl >= 0 ? 'text-success' : 'text-danger'}`}>
                     {c.gl >= 0 ? '+' : '−'}{fmt(c.gl, baseCurrency)}
                   </div>
                 </div>

@@ -65,7 +65,7 @@ export default function EarningsStrip({ events, onTapTicker }: Props) {
             <button
               key={`${e.symbol}-${e.date}`}
               onClick={() => onTapTicker?.(e.symbol)}
-              className="w-full flex items-center justify-between py-1.5 px-1 rounded-sm active:bg-surface2/50 text-left"
+              className="w-full flex items-center justify-between py-1.5 px-1 rounded-sm active:bg-surface2/50 text-start"
             >
               <div className="flex items-center gap-2 min-w-0">
                 <span className="text-sm font-medium">{e.symbol}</span>

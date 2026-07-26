@@ -174,9 +174,12 @@ Arabic sets `dir="rtl"` on `<html>` via a new `applyDirection()` in each app's
 ten so font fallback resolves for Devanagari and Arabic script. Verified:
 `dir=rtl` for `ar` only, across all three apps.
 
-> ⚠️ **RTL is wired, not audited.** Setting `dir` is the first step; individual
-> screens using physical `left`/`right` CSS or directional icons have **not**
-> been swept. Treat Arabic as unreleased until that pass happens.
+> ✅ **RTL audited 2026-07-26.** Physical CSS across all three apps replaced with
+> logical properties (`margin-inline-*`, `border-inline-*`, `text-align:start/end`,
+> `inset-inline-*`), directional arrow glyphs mirrored via an `.rtl-mirror` class,
+> and the direction-dependent transforms fixed. Verified in the built apps at
+> 390px in Arabic: `dir=rtl`, no horizontal overflow, nav order reversed, text
+> right-aligned. Details in §5a.
 
 ### ✅ Translation scope — COMPLETE
 
@@ -418,3 +421,61 @@ deep-link `useEffect`) and fixed rather than left.
    translation scope and the RTL audit as open items.
 6. **Add the NCC → LimeLog-tables write path** (§7.1) as an open blocker.
 7. **Version bumps remain unconfirmed** — no tags were created.
+
+---
+
+## 5a. RTL audit (2026-07-26) — Arabic is now layout-clean
+
+Arabic shipped with `dir="rtl"` set but no layout sweep. This closes that gap.
+
+**Physical → logical properties** across all three apps: `margin/padding-left/right`
+→ `-inline-start/-end`, `border-left/right` → `border-inline-*`,
+`text-align: left/right` → `start/end`, fixed `right:` → `inset-inline-end`. In
+NCC (Tailwind) that meant `ml-/mr-/pl-/pr-` → `ms-/me-/ps-/pe-`, `text-left/right`
+→ `text-start/end`, `border-l-2` → `border-s-2`, and `right-5` → `end-5` on the FAB.
+
+### Three classes of bug this found
+
+1. **`translateX` is not direction-aware.** NCC's segmented control, bottom-tab
+   indicator and What-If toggle knob all slide with `translateX`. Once their
+   anchor became logical (`start-*`), the transform still moved the same
+   physical way — so in Arabic the pill would slide *away* from the active tab.
+   Fixed with a `--dir` custom property (`1` in LTR, `-1` in RTL, set on
+   `:root`/`[dir='rtl']`) multiplied into the offset, plus Tailwind's `rtl:`
+   variant for the knob. Any future slider gets this for free.
+
+2. **Inline `borderLeftColor` vs logical `border-inline-start`.** StudyDesk's
+   course and exam cards set their accent colour inline while the stripe itself
+   became logical. In RTL the stripe renders right and the inline style paints a
+   zero-width left edge — **the accent colour disappears entirely**. Now
+   `borderInlineStartColor`. This was introduced by the logical-property change
+   itself, and is the kind of thing only a sweep catches.
+
+3. **Unicode arrows are bidi-neutral.** The layout engine does *not* mirror
+   `→`/`←`, so "Continue →", StudyDesk's calendar month steppers, LimeLog's
+   "← Programs" back link and NCC's finance affordances all kept pointing the
+   LTR way — "next" read as "back". They now carry `.rtl-mirror`
+   (`transform: scaleX(-1)` under `[dir='rtl']`), as does StudyDesk's disclosure
+   chevron, which composes with its existing rotate.
+
+### Deliberately left physical
+
+Centring (`left:50%` + `translateX(-50%)`), full-bleed `left:0;right:0`
+stretches, border-drawn checkmarks (a checkmark is a symbol, not directional
+text), and flat-trend arrows (`→` meaning "unchanged" beside `↑`/`↓`).
+
+### Fonts
+
+The self-hosted woff2 subsets are Latin-only, so Arabic and Devanagari fall back
+to the device's system font through the generic `serif` / `sans-serif` /
+`monospace` at the end of each stack — verified present in all three apps.
+That is correct: Android ships Noto for both scripts. **The screenshot container
+has no Devanagari font, which is why Hindi renders broken there and only there** —
+not an app defect.
+
+### Still not covered
+
+Verification was at 390px on each app's landing surface. Deep screens (NCC's
+portfolio tables and charts, LimeLog's session logger, StudyDesk's timer) were
+not individually walked in Arabic. The mechanical sweep covers their CSS, but a
+human pass on a real device is worth doing before Arabic is promoted.

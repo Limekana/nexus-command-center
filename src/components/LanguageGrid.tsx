@@ -27,7 +27,7 @@ const VARIANTS = {
     off: 'border-glass-border',
   },
   settings: {
-    base: 'rounded-lg p-2.5 text-sm border transition-colors text-left',
+    base: 'rounded-lg p-2.5 text-sm border transition-colors text-start',
     on: 'border-primary bg-primary/10 text-primary font-semibold',
     off: 'border-glass-border text-text',
   },
@@ -73,7 +73,7 @@ export default function LanguageGrid({ current, variant }: Props) {
   return (
     <div
       ref={ref}
-      className="grid grid-cols-2 gap-2 max-h-[184px] overflow-y-auto overscroll-contain pr-0.5"
+      className="grid grid-cols-2 gap-2 max-h-[184px] overflow-y-auto overscroll-contain pe-0.5"
     >
       {SUPPORTED_LANGS.map((code) => (
         <button

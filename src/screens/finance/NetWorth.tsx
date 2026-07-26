@@ -325,7 +325,7 @@ export default function NetWorth() {
         <button
           type="button"
           onClick={() => navigate('/finance/savings')}
-          className="card w-full text-left press-spring"
+          className="card w-full text-start press-spring"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="font-heading font-semibold text-sm">{t('fin.nw.savingsRunway')}</span>
@@ -470,7 +470,7 @@ export default function NetWorth() {
                   <button
                     type="button"
                     onClick={() => navigate(`/finance/account/${a.id}`)}
-                    className="flex-1 min-w-0 text-left press-spring"
+                    className="flex-1 min-w-0 text-start press-spring"
                   >
                     <div className="text-sm font-medium truncate">{a.name}</div>
                     <div className="text-[10px] text-text-muted truncate">

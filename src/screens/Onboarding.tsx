@@ -125,7 +125,7 @@ export default function Onboarding({ onDone }: Props) {
                     key={p.key}
                     onClick={() => choosePreset(p.key)}
                     aria-pressed={picked === p.key}
-                    className={`w-full text-left glass-soft rounded-xl p-3 border transition-colors ${
+                    className={`w-full text-start glass-soft rounded-xl p-3 border transition-colors ${
                       picked === p.key ? 'border-primary bg-primary/10' : 'border-glass-border'
                     }`}
                   >

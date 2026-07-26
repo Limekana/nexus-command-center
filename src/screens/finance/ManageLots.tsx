@@ -247,7 +247,7 @@ export default function ManageLots() {
                 {holding.assetType === 'crypto' ? '₿' : holding.assetType === 'etf' ? '🧺' : '📈'} {holding.ticker.toUpperCase()}
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-end">
               <div className="text-[10px] uppercase tracking-wider text-text-muted">{t('fin.ml.totalUnits')}</div>
               <div className="font-heading font-bold text-lg">{formatNumber(holding.quantity)}</div>
             </div>

@@ -127,7 +127,7 @@ export default function YearReview() {
         {/* Finance */}
         <button
           onClick={() => navigate('/finance')}
-          className="card text-left w-full active:bg-surface2/40"
+          className="card text-start w-full active:bg-surface2/40"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="font-heading font-semibold text-sm">💰 {t('yearReview.finance')}</span>
@@ -150,7 +150,7 @@ export default function YearReview() {
               {topCategoryNames.map((c, i) => (
                 <div key={i} className="flex items-center justify-between text-xs">
                   <span className="truncate">{c.name}</span>
-                  <span className="text-text-muted whitespace-nowrap ml-2">{fmtMoney(c.total)}</span>
+                  <span className="text-text-muted whitespace-nowrap ms-2">{fmtMoney(c.total)}</span>
                 </div>
               ))}
             </div>
@@ -212,7 +212,7 @@ export default function YearReview() {
               {data.fitness.topExercises.map((ex, i) => (
                 <div key={i} className="flex items-center justify-between text-xs">
                   <span className="truncate">{ex.exercise}</span>
-                  <span className="text-text-muted whitespace-nowrap ml-2">{ex.sets} {t('yearReview.sets').toLowerCase()}</span>
+                  <span className="text-text-muted whitespace-nowrap ms-2">{ex.sets} {t('yearReview.sets').toLowerCase()}</span>
                 </div>
               ))}
             </div>
@@ -222,7 +222,7 @@ export default function YearReview() {
         {/* Tasks */}
         <button
           onClick={() => navigate('/tasks')}
-          className="card text-left w-full active:bg-surface2/40"
+          className="card text-start w-full active:bg-surface2/40"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="font-heading font-semibold text-sm">✓ {t('yearReview.tasks')}</span>

@@ -234,7 +234,7 @@ export default function SavingsGoals() {
               size="sm"
               onClick={openInvest}
               disabled={liquidAssets.length === 0}
-              icon="→"
+              icon={<span className="rtl-mirror">→</span>}
             >
               {t('fin.sg.invest')}
             </Pill>
@@ -624,7 +624,7 @@ function GoalRow({ goal, onAllocate, onSet, onEdit, onDelete }: GoalRowProps) {
       <div className="flex items-center justify-between mt-1">
         <div className="text-[10px] text-text-muted">{pct.toFixed(0)}%</div>
         {goal.notes && (
-          <div className="text-[10px] text-text-muted/80 italic truncate ml-2">{goal.notes}</div>
+          <div className="text-[10px] text-text-muted/80 italic truncate ms-2">{goal.notes}</div>
         )}
       </div>
 
@@ -640,7 +640,7 @@ function GoalRow({ goal, onAllocate, onSet, onEdit, onDelete }: GoalRowProps) {
           <Pill size="sm" onClick={() => setCustomOpen(true)} icon="✎">
             {t('fin.sg.custom')}
           </Pill>
-          <div className="ml-auto flex items-center gap-1.5">
+          <div className="ms-auto flex items-center gap-1.5">
             <Pill size="sm" onClick={onEdit}>{t('fin.sg.edit')}</Pill>
             {/* Buffer goal is non-deletable — see store's deleteGoal guard. */}
             {!isBuffer && (
