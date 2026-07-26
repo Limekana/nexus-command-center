@@ -376,11 +376,29 @@ const DOMAIN_TO_SUBSCORE: Record<DomainKey, keyof Pick<LifeScore, 'workouts' | '
   habits: 'habits',
 };
 
+/** Weekly workout sessions that score 100. */
+export const WEEKLY_WORKOUT_TARGET = 3;
+
+/**
+ * Fraction of the week that has elapsed, counting today as a whole day, so
+ * Monday is 1/7 and Sunday is 7/7. Used to pace-adjust the fitness sub-score
+ * for the in-progress week (see `paceFraction` on `lifeScoreForWeek`).
+ *
+ * Clamped to [1/7, 1]: never zero (which would divide by zero on Monday) and
+ * never past a full week if the caller passes an already-closed week.
+ */
+export function weekElapsedFraction(today: Date = new Date()): number {
+  const dow = today.getDay(); // 0 Sun .. 6 Sat
+  const dayIndex = dow === 0 ? 7 : dow; // Mon=1 .. Sun=7, matching startOfWeek
+  return Math.min(1, Math.max(1 / 7, dayIndex / 7));
+}
+
 /**
  * Weighted composite. Each component normalizes to 0..100 against a target.
  *
  * Targets (chosen to feel attainable but not trivial):
- *   - workouts: 3 sessions/week → 100
+ *   - workouts: 3 sessions/week → 100, pace-adjusted for the in-progress week
+ *               via `opts.paceFraction` (see below)
  *   - study   : 240 minutes/week → 100
  *   - habits  : hit ratio 80% → 100
  *   - budget  : adherence ratio ≤ 1.0 → 100, 1.2 → 0 (linear between)
@@ -404,9 +422,35 @@ export function lifeScoreForWeek(
   study: WeeklyStudy,
   fin: WeeklyFinance,
   habits: WeeklyHabits,
-  opts?: { workScore?: number; profile?: LifeProfile; workHasData?: boolean; everUsed?: Record<DomainKey, boolean> },
+  opts?: {
+    workScore?: number;
+    profile?: LifeProfile;
+    workHasData?: boolean;
+    everUsed?: Record<DomainKey, boolean>;
+    /**
+     * v1.8 — fraction of the week elapsed, for the in-progress week only.
+     * Omit (or pass 1) for a closed week, which scores against the full target.
+     */
+    paceFraction?: number;
+  },
 ): LifeScore {
-  const workouts = Math.min(100, (fit.sessionsCount / 3) * 100);
+  // v1.8 — pace-adjusted fitness. This used to be `sessionsCount / 3`, which
+  // scored the in-progress week against the *whole* week's target: on Wednesday
+  // with 2 of 3 logged it read 67 even though the user was ahead of pace, and
+  // the composite only stopped looking broken on Sunday. Now the denominator is
+  // what you'd expect to have done by today, so being on pace reads as 100 all
+  // week. Hitting the full weekly target early still caps at 100 rather than
+  // scoring above it.
+  //
+  // Past weeks pass no paceFraction and keep scoring against the full target —
+  // a week where you did 2 of 3 is a 67 once it's closed, and history must not
+  // drift.
+  const pace = Math.min(1, Math.max(1 / 7, opts?.paceFraction ?? 1));
+  const expectedSessions = WEEKLY_WORKOUT_TARGET * pace;
+  const workouts =
+    fit.sessionsCount >= WEEKLY_WORKOUT_TARGET
+      ? 100
+      : Math.min(100, (fit.sessionsCount / expectedSessions) * 100);
   const studyScore = Math.min(100, (study.totalMinutes / 240) * 100);
   const habitsScore = habits.hitRatio != null ? habits.hitRatio * 100 : 0;
   let budget = 50; // default mid when no budgets set
@@ -517,6 +561,8 @@ export function buildCrossDomainReport(
       workScore: i === 0 ? opts?.currentWorkScore ?? 0 : 0,
       workHasData: i === 0 ? opts?.workHasData === true : false,
       everUsed,
+      // Only week 0 is in progress; closed weeks score against the full target.
+      paceFraction: i === 0 ? weekElapsedFraction() : 1,
     }),
   );
 
