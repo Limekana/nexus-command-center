@@ -59,38 +59,63 @@ four locales fall back to en-US images.
 
 ---
 
-## 1. StudyDesk — in progress
+## 1. StudyDesk — ✅ top four done
 
-| # | Item | Value |
+Branch `feature/v1.8-act2-act4-auth-gate`, pushed.
+
+| # | Item | Status |
 |---|---|---|
-| SD-1 | **A2** `fmtDate` hardcoded `"No date"` → `av.noDate` (exists, translated ×10) | 🟠 |
-| SD-2 | **A1** six hardcoded `en-GB` date sites | 🔴 |
-| SD-3 | **C1** secret scanner + pre-commit hook + CI | 🔴 |
-| SD-4 | **A4** clear 6 lint warnings, add `--max-warnings 0` | 🟠 |
-| SD-5 | **A5** custom course colour (closed set of 8) | 🟡 |
-| SD-6 | **A3** extract modals from 2,112-line `App.jsx` | 🟠 |
-| SD-7 | **A6/B1/B2** one native `confirm()`, unnecessary exports, `postcss.config.cjs` | 🟡 |
+| SD-1 | **A2** `fmtDate` hardcoded `"No date"` → `av.noDate` | ✅ `93c0f76` |
+| SD-2 | **A1** six hardcoded `en-GB` date sites | ✅ `93c0f76` |
+| SD-3 | **C1** secret scanner + pre-commit hook + CI | ✅ `44071f5` |
+| SD-4 | **A4** clear 6 lint warnings, add `--max-warnings 0` | ✅ `236d201` |
+| SD-5 | **A5** custom course colour (closed set of 8) | ⬜ open |
+| SD-6 | **A3** extract modals from 2,112-line `App.jsx` | ⬜ open |
+| SD-7 | **A6/B1/B2** one native `confirm()`, unnecessary exports, `postcss.config.cjs` | ⬜ open |
 
-SD-2 is the headline: the Arabic RTL screenshot from earlier this session shows
-**"Sunday 26 July" in English** across the top of an otherwise fully-Arabic
-screen. Four sites in this codebase already thread `lang` correctly; six do not.
+SD-2 was the headline: the Arabic RTL screenshot from earlier in the session
+shows "Sunday 26 July" in English across an otherwise fully-Arabic screen. All
+six sites now route through one `src/lib/dates.js`, which also de-duplicated a
+time formatter that had been copy-pasted into three files.
 
-## 2. LimeLog — next
+SD-4 turned up more than lint noise: `OnboardingView` declared its `Shell`
+wrapper inside the render body, so React replaced the step-2 course-name
+`<input>` DOM node on **every keystroke** (measured with Playwright before and
+after). `autoFocus` re-fired each time, which masked it — the typed value came
+out correct either way, which is why nobody noticed.
 
-| # | Item | Value |
+## 2. LimeLog — ✅ all six done
+
+Branch `feature/v1.8-act2-auth-i18n`, pushed.
+
+| # | Item | Status |
 |---|---|---|
-| LL-1 | **A2** PR detection fires above the 1RM chart's rep cap | 🔴 correctness |
-| LL-2 | **A3** Today e1RM chip hardcodes `kg`, ignores `unitPreference` | 🟠 |
-| LL-3 | **C1** secret scanner + CI (repo has none) | 🔴 |
-| LL-4 | **A4** `en-GB` dates, English `DAY_NAMES`, English `DAY_LABELS` | 🟠 |
-| LL-5 | **B1+B2+A5** delete `ExerciseBlock` (~13 KB), drop `clsx`/`date-fns`/`@capacitor/assets`, unify the two kg↔lb converters | 🟡 |
-| LL-6 | **A1** translate the workout logger — 11 components, ~59 strings ×10 locales | 🔴 biggest win |
-| LL-7 | **A6/A7/B3** 5 native `confirm()`, closed pattern/equipment enums, unnecessary exports | 🟡 |
+| LL-1 | **A2** PR detection fires above the 1RM chart's rep cap | ✅ `b85bb38` |
+| LL-2 | **A3** Today e1RM chip hardcodes `kg` | ✅ `91009d2` |
+| LL-3 | **C1** secret scanner + CI | ✅ `fe14832` |
+| LL-4 | **A4** `en-GB` dates, English `DAY_NAMES`/`DAY_LABELS` | ✅ `a555416` |
+| LL-5 | **B1+B2+A5** delete `ExerciseBlock`, drop 3 deps, unify converters | ✅ `0841e5f` |
+| LL-6 | **A1** translate the workout logger | ✅ `9e1d6cd` |
+| LL-7 | **A6/A7/B3** 5 native `confirm()`, closed enums, unnecessary exports | ⬜ open |
 
-LL-6 is the one that undercuts the whole v1.8 translation effort: the earlier
-"100% coverage" claim was true locale-against-locale but **not**
-UI-against-locale — `en.json` never had keys for the logging flow, so the screen
-a user spends 95% of their time in was never translatable.
+**LL-1 was worse than the audit recorded.** The audit said the two estimators
+shared the same formula and differed only on the rep cap. They also use
+*different formulas* below 11 reps — PR detection was plain Epley, the chart
+blends Brzycki. At 100 kg × 5 that is 116.67 against 112.50, so the two
+surfaces reported different numbers for the same set. Fixed by making
+`oneRepMax.ts` the single estimator, plus a migration that re-values stored PRs
+— without it every user's existing PRs would have become ~4 kg per 100 kg
+harder to beat and frozen.
+
+**LL-2 was also bigger than recorded.** The audit said `helpers.formatWeight`
+was reachable only through the dead `ExerciseBlock`. It is live in four places.
+The `2.2046` constant turned out to be inlined in five further files against
+the precise value in `types/bodyMetrics.ts`; all now share one converter.
+
+**LL-6** ended at 351 keys (from 273). Smaller than the ~59-string estimate
+because 15 keys already existed fully translated and were simply never wired
+up, and NexusSyncCard reuses `auth.*`. A follow-up sweep found 19 more
+hardcoded strings in files that *did* already call `useTranslation`.
 
 ## 3. NCC — after the other two
 
@@ -106,15 +131,27 @@ a user spends 95% of their time in was never translatable.
 
 ## 4. Cross-app, from the MR reports
 
-| # | Item | Value |
+| # | Item | Status |
 |---|---|---|
-| X-1 | **R1** add `26.txt` (NCC) / `19.txt` (LimeLog) changelogs across all 6 locales | 🔴 |
-| X-2 | **R2** add `hi`, `pt`, `id`, `ar` store metadata to both apps **[ACT-5]** | 🟠 |
-| X-3 | **R2** screenshots for the four locales that fall back to en-US | 🟡 |
+| X-1 | **R1** `26.txt` (NCC) / `19.txt` (LimeLog) changelogs, all 10 locales | ✅ `401a3da` / `f3fb4f6` |
+| X-2 | **R2** `hi`, `pt-BR`, `id`, `ar` store metadata, both apps **[ACT-5]** | ✅ `401a3da` / `f3fb4f6` |
+| X-3 | **R2** screenshots for locales that fall back to en-US | ⬜ open — needs a device |
+| X-4 | pt locale normalised to Brazilian Portuguese (LimeLog had drifted) | ✅ `f3fb4f6` |
+| X-5 | plural `many` forms missing in `fr`/`es` — **all three apps** | ✅ `435a75a` / `bcf247b` / `9e1d6cd` |
 
-**X-1/X-2/X-3 touch `fastlane/metadata/` in the app repos, not fdroiddata.**
-The fdroiddata MRs themselves stay untouched — F-Droid pulls metadata from the
-app repo at the build tag.
+**X-1/X-2 touch `fastlane/metadata/` in the app repos, not fdroiddata.** The
+fdroiddata MRs themselves stay untouched — F-Droid pulls metadata from the app
+repo at the build tag.
+
+**X-5 is a correction to earlier work in this session.** I found and fixed the
+Portuguese `_many` plural leak (a missing form falls back to *English*, not to
+`_other`) but did not check whether other locales had the same exposure. French
+and Spanish both carry a CLDR `many` category and both were missing forms — 6
+keys in NCC, 5 in StudyDesk, 5 in LimeLog. All three are now verified complete
+against `Intl.PluralRules`, and Arabic's six forms resolve correctly.
+
+**X-3 is the one item left open here**, because it needs screenshots taken on a
+device in each language rather than anything editable from the repo.
 
 ---
 
