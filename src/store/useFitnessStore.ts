@@ -4,7 +4,6 @@ import { db } from '../db/database';
 import { WorkoutSession, WorkoutSet, WorkoutType } from '../types/fitness';
 import { generateId } from '../utils/uuid';
 import { localDateKey } from '../utils/formatters';
-import { enqueue } from '../db/syncQueue';
 import {
   healthCapability,
   hasHealthPermissions,
@@ -234,7 +233,6 @@ export const useFitnessStore = create<FitnessStore>((set, get) => ({
       createdAt: new Date().toISOString(),
     };
     await db.workoutSessions.add(session);
-    await enqueue('workout_session', id, 'insert', session);
     set({ todaySession: { ...session, sets: [] } });
     await get().load();
     return id;
@@ -248,7 +246,6 @@ export const useFitnessStore = create<FitnessStore>((set, get) => ({
       createdAt: new Date().toISOString(),
     };
     await db.workoutSets.add(newSet);
-    await enqueue('workout_set', newSet.id, 'insert', newSet);
     await get().load();
   },
 
@@ -257,13 +254,11 @@ export const useFitnessStore = create<FitnessStore>((set, get) => ({
     if (!existing) return;
     const updated: WorkoutSet = { ...existing, ...patch, id };
     await db.workoutSets.put(updated);
-    await enqueue('workout_set', id, 'update', updated);
     await get().load();
   },
 
   async deleteSet(id) {
     await db.workoutSets.delete(id);
-    await enqueue('workout_set', id, 'delete', { id });
     await get().load();
   },
 
@@ -271,7 +266,6 @@ export const useFitnessStore = create<FitnessStore>((set, get) => ({
     const sets = await db.workoutSets.where('sessionId').equals(id).toArray();
     await Promise.all(sets.map((s) => db.workoutSets.delete(s.id)));
     await db.workoutSessions.delete(id);
-    await enqueue('workout_session', id, 'delete', { id });
     await get().load();
   },
 

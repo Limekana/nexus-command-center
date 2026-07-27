@@ -301,51 +301,6 @@ async function pushGoal(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (error) throw error;
 }
 
-async function pushWorkoutSession(item: SyncQueueItem, ctx: PushContext): Promise<void> {
-  if (item.operation === 'delete') {
-    const { error } = await supabase
-      .from('workout_sessions')
-      .delete()
-      .eq('id', legacyIdToUuid(item.entityId));
-    if (error) throw error;
-    return;
-  }
-  const local: WorkoutSession = JSON.parse(item.payload);
-  const row = {
-    id: legacyIdToUuid(local.id),
-    user_id: ctx.userId,
-    session_type: local.sessionType,
-    date: local.date,
-    notes: local.notes ?? null,
-    updated_at: item.createdAt,
-  };
-  const { error } = await supabase.from('workout_sessions').upsert(row);
-  if (error) throw error;
-}
-
-async function pushWorkoutSet(item: SyncQueueItem, ctx: PushContext): Promise<void> {
-  if (item.operation === 'delete') {
-    const { error } = await supabase
-      .from('workout_sets')
-      .delete()
-      .eq('id', legacyIdToUuid(item.entityId));
-    if (error) throw error;
-    return;
-  }
-  const local: WorkoutSet = JSON.parse(item.payload);
-  const row = {
-    id: legacyIdToUuid(local.id),
-    user_id: ctx.userId,
-    session_id: legacyIdToUuid(local.sessionId),
-    exercise: local.exercise,
-    weight_kg: local.weightKg ?? null,
-    reps: local.reps ?? null,
-    rpe: local.rpe ?? null,
-  };
-  const { error } = await supabase.from('workout_sets').upsert(row);
-  if (error) throw error;
-}
-
 async function pushTask(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (item.operation === 'delete') {
     const { error } = await supabase
@@ -370,30 +325,6 @@ async function pushTask(item: SyncQueueItem, ctx: PushContext): Promise<void> {
     updated_at: updatedAt,
   };
   const { error } = await supabase.from('tasks').upsert(row);
-  if (error) throw error;
-}
-
-async function pushStudySession(item: SyncQueueItem, ctx: PushContext): Promise<void> {
-  if (item.operation === 'delete') {
-    const { error } = await supabase
-      .from('study_sessions')
-      .delete()
-      .eq('id', legacyIdToUuid(item.entityId));
-    if (error) throw error;
-    return;
-  }
-  const local: StudySession = JSON.parse(item.payload);
-  const updatedAt = local.updatedAt || item.createdAt;
-  const row = {
-    id: legacyIdToUuid(local.id),
-    user_id: ctx.userId,
-    subject_id: local.subjectId ? legacyIdToUuid(local.subjectId) : null,
-    started_at: local.startedAt,
-    duration_minutes: local.durationMinutes,
-    notes: local.notes ?? null,
-    updated_at: updatedAt,
-  };
-  const { error } = await supabase.from('study_sessions').upsert(row);
   if (error) throw error;
 }
 
@@ -546,12 +477,27 @@ const pushHandlers: Record<SyncQueueItem['entityType'], (item: SyncQueueItem, ct
   manual_asset: pushManualAsset,
   watchlist_item: pushWatchlistItem,
   goal: pushGoal,
-  workout_session: pushWorkoutSession,
-  workout_set: pushWorkoutSet,
+  // LimeLog owns workout_sessions / workout_sets. The binding data contract
+  // makes NCC a read-only consumer of those tables, and the UI that fed this
+  // path was removed in v1.5.2 — but the enqueue calls in useFitnessStore
+  // survived, leaving a live write path one caller away from the production
+  // tables. Those calls are gone now; these entries stay as drops rather than
+  // being deleted so any mutation already sitting in an upgrading user's
+  // outbox drains harmlessly instead of retrying forever.
+  workout_session: async () => {
+    /* discarded — see note above */
+  },
+  workout_set: async () => {
+    /* discarded — see note above */
+  },
   task: pushTask,
   course: pushCourse,
   grade: pushGrade,
-  study_session: pushStudySession,
+  // StudyDesk owns study_sessions; the contract makes NCC a read-only
+  // consumer, same as the workout tables above. No UI reached this either.
+  study_session: async () => {
+    /* discarded — see note above */
+  },
   habit: pushHabit,
   habit_completion: pushHabitCompletion,
   work_quality_log: pushWorkQualityLog,
