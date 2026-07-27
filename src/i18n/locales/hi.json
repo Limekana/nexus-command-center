@@ -58,7 +58,12 @@
     "continue": "जारी रखें",
     "retry": "फिर कोशिश करें",
     "loading": "लोड हो रहा है…",
-    "settings": "सेटिंग्स"
+    "settings": "सेटिंग्स",
+    "wipeTestData": "सभी स्थानीय परीक्षण डेटा मिटाएँ? इसे पूर्ववत नहीं किया जा सकता।",
+    "revokeAccess": "{{name}} की पहुँच हटाएँ?",
+    "thisUser": "यह उपयोगकर्ता",
+    "deleteTitle": "हटाएँ",
+    "deleteItem": "यह आइटम हटाएँ?"
   },
   "domains": {
     "lifeScore": "लाइफ़ स्कोर",

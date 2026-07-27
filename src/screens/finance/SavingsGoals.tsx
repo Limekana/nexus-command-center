@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useConfirm } from '../../components/ConfirmDialog';
 import { formatMoney } from '../../lib/currencies';
 import { formatLocale } from '../../utils/formatters';
 import { useTranslation } from 'react-i18next';
@@ -46,6 +47,7 @@ function fmtCompact(amount: number, currency: string): string {
 
 export default function SavingsGoals() {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const navigate = useNavigate();
   const goals = useSavingsGoalsStore((s) => s.goals);
   const loaded = useSavingsGoalsStore((s) => s.loaded);
@@ -302,9 +304,12 @@ export default function SavingsGoals() {
                 onSet={(amount) => void setAllocated(g.id, amount)}
                 onEdit={() => openEdit(g)}
                 onDelete={() => {
-                  if (window.confirm(t('fin.sg.deleteConfirm', { title: g.title, amount: fmtCompact(g.allocatedAmount, g.currency) }))) {
-                    void deleteGoal(g.id);
-                  }
+                  void (async () => {
+                    const ok = await confirm({
+                      message: t('fin.sg.deleteConfirm', { title: g.title, amount: fmtCompact(g.allocatedAmount, g.currency) }),
+                    });
+                    if (ok) await deleteGoal(g.id);
+                  })();
                 }}
               />
             ))}

@@ -16,7 +16,12 @@
     "continue": "Continue",
     "retry": "Retry",
     "loading": "Loading…",
-    "settings": "Settings"
+    "settings": "Settings",
+    "wipeTestData": "Wipe all local test data? This cannot be undone.",
+    "revokeAccess": "Remove {{name}}'s access?",
+    "thisUser": "this user",
+    "deleteTitle": "Delete",
+    "deleteItem": "Delete this item?"
   },
   "domains": {
     "lifeScore": "Life Score",

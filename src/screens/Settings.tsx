@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useConfirm } from '../components/ConfirmDialog';
 import { currencyOptions } from '../lib/currencies';
 import { formatLocale } from '../utils/formatters';
 import { createPortal } from 'react-dom';
@@ -39,6 +40,7 @@ import { setGuestMode } from '../lib/guestMode';
 const autoLockOptions = [1, 5, 15, 30, 60];
 
 export default function Settings() {
+  const confirm = useConfirm();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const currentLang = (i18n.language || 'en').split('-')[0] as Lang;
@@ -131,14 +133,14 @@ export default function Settings() {
   };
 
   const onClearKey = async (slot: 'finnhub' | 'finnhub2') => {
-    if (!confirm(t('settings.clearKeyConfirm'))) return;
+    if (!(await confirm({ message: t('settings.clearKeyConfirm') }))) return;
     await clearApiKey(slot);
     if (slot === 'finnhub') setFinnhubKey('');
     else setFinnhubKey2('');
   };
 
   const onClearAll = async () => {
-    if (!confirm(t('settings.clearAllConfirm'))) return;
+    if (!(await confirm({ message: t('settings.clearAllConfirm') }))) return;
     // PIN re-entry gate. Without this, briefly-unlocked devices left in
     // someone else's hands could be nuked by a single tap. We require the PIN
     // even though the user has already unlocked the app in this session.
@@ -188,7 +190,7 @@ export default function Settings() {
 
   const onForceResync = async () => {
     if (!user) return;
-    if (!confirm(t('settings.forceResyncConfirm'))) return;
+    if (!(await confirm({ message: t('settings.forceResyncConfirm') }))) return;
     const { adoptLocalData } = await import('../lib/cloudSync');
     await adoptLocalData(user.id);
     await refreshPending();

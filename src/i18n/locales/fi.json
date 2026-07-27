@@ -16,7 +16,12 @@
     "continue": "Jatka",
     "retry": "Yritä uudelleen",
     "loading": "Ladataan…",
-    "settings": "Asetukset"
+    "settings": "Asetukset",
+    "wipeTestData": "Poistetaanko kaikki paikalliset testitiedot? Tätä ei voi kumota.",
+    "revokeAccess": "Poistetaanko käyttäjän {{name}} käyttöoikeus?",
+    "thisUser": "tämä käyttäjä",
+    "deleteTitle": "Poista",
+    "deleteItem": "Poistetaanko tämä?"
   },
   "domains": {
     "lifeScore": "Elämäpisteet",

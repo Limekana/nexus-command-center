@@ -16,7 +16,12 @@
     "continue": "Continuer",
     "retry": "Réessayer",
     "loading": "Chargement…",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "wipeTestData": "Effacer toutes les données de test locales ? Action irréversible.",
+    "revokeAccess": "Retirer l'accès de {{name}} ?",
+    "thisUser": "cet utilisateur",
+    "deleteTitle": "Supprimer",
+    "deleteItem": "Supprimer cet élément ?"
   },
   "domains": {
     "lifeScore": "Score de vie",

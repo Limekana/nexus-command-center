@@ -16,7 +16,12 @@
     "continue": "Weiter",
     "retry": "Erneut versuchen",
     "loading": "Wird geladen…",
-    "settings": "Einstellungen"
+    "settings": "Einstellungen",
+    "wipeTestData": "Alle lokalen Testdaten löschen? Das lässt sich nicht rückgängig machen.",
+    "revokeAccess": "Zugriff von {{name}} entfernen?",
+    "thisUser": "diese Person",
+    "deleteTitle": "Löschen",
+    "deleteItem": "Dieses Element löschen?"
   },
   "domains": {
     "lifeScore": "Lebenswert",

@@ -58,7 +58,12 @@
     "continue": "متابعة",
     "retry": "إعادة المحاولة",
     "loading": "جارٍ التحميل…",
-    "settings": "الإعدادات"
+    "settings": "الإعدادات",
+    "wipeTestData": "مسح جميع بيانات الاختبار المحلية؟ لا يمكن التراجع عن هذا.",
+    "revokeAccess": "إزالة صلاحية {{name}}؟",
+    "thisUser": "هذا المستخدم",
+    "deleteTitle": "حذف",
+    "deleteItem": "حذف هذا العنصر؟"
   },
   "domains": {
     "lifeScore": "مؤشر الحياة",

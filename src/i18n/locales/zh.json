@@ -16,7 +16,12 @@
     "continue": "继续",
     "retry": "重试",
     "loading": "加载中…",
-    "settings": "设置"
+    "settings": "设置",
+    "wipeTestData": "清除所有本地测试数据？此操作无法撤销。",
+    "revokeAccess": "移除 {{name}} 的访问权限？",
+    "thisUser": "该用户",
+    "deleteTitle": "删除",
+    "deleteItem": "删除此项？"
   },
   "domains": {
     "lifeScore": "生活评分",

@@ -58,7 +58,12 @@
     "continue": "Lanjutkan",
     "retry": "Coba lagi",
     "loading": "Memuat…",
-    "settings": "Pengaturan"
+    "settings": "Pengaturan",
+    "wipeTestData": "Hapus semua data uji lokal? Tindakan ini tidak dapat dibatalkan.",
+    "revokeAccess": "Cabut akses {{name}}?",
+    "thisUser": "pengguna ini",
+    "deleteTitle": "Hapus",
+    "deleteItem": "Hapus item ini?"
   },
   "domains": {
     "lifeScore": "Skor Hidup",

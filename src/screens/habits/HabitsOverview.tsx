@@ -13,6 +13,7 @@
 // uncluttered.
 
 import { useEffect, useMemo, useState } from 'react';
+import { useConfirm } from '../../components/ConfirmDialog';
 import { formatLocale } from '../../utils/formatters';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -25,6 +26,7 @@ import type { Habit } from '../../types/habits';
 
 export default function HabitsOverview() {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const dShort = (i: number) => t(`days.short.${['sun','mon','tue','wed','thu','fri','sat'][i]}`);
   const dMini = (i: number) => t(`days.mini.${['sun','mon','tue','wed','thu','fri','sat'][i]}`);
   const navigate = useNavigate();
@@ -579,10 +581,13 @@ export default function HabitsOverview() {
             )}
             <button
               onClick={() => {
-                if (confirm(t('habits.deleteConfirm', { title: menuHabit.title }))) {
-                  deleteHabit(menuHabit.id);
-                  setActiveMenu(null);
-                }
+                void (async () => {
+                  const ok = await confirm({ message: t('habits.deleteConfirm', { title: menuHabit.title }) });
+                  if (ok) {
+                    deleteHabit(menuHabit.id);
+                    setActiveMenu(null);
+                  }
+                })();
               }}
               className="w-full pill pill-lg press-spring text-danger border-danger/40"
               type="button"

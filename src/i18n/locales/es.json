@@ -16,7 +16,12 @@
     "continue": "Continuar",
     "retry": "Reintentar",
     "loading": "Cargando…",
-    "settings": "Ajustes"
+    "settings": "Ajustes",
+    "wipeTestData": "¿Borrar todos los datos de prueba locales? Esto no se puede deshacer.",
+    "revokeAccess": "¿Quitar el acceso de {{name}}?",
+    "thisUser": "este usuario",
+    "deleteTitle": "Eliminar",
+    "deleteItem": "¿Eliminar este elemento?"
   },
   "domains": {
     "lifeScore": "Puntuación de vida",
