@@ -14,6 +14,7 @@
 //     actual position, not zero.
 
 import { useEffect, useMemo, useState } from 'react';
+import { formatLocale } from '../../utils/formatters';
 import { useTranslation } from 'react-i18next';
 import AppHeader from '../../components/AppHeader';
 import { useFinanceStore } from '../../store/useFinanceStore';
@@ -109,7 +110,7 @@ export default function WhatIf() {
   );
 
   const fmtMoney = (n: number) =>
-    new Intl.NumberFormat('fi-FI', {
+    new Intl.NumberFormat(formatLocale(), {
       style: 'currency',
       currency: baseCurrency,
       maximumFractionDigits: 0,

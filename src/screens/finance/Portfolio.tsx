@@ -17,7 +17,7 @@ import RealizedPnLSection from '../../components/RealizedPnLSection';
 import PortfolioCashCard from '../../components/PortfolioCashCard';
 import { useFinanceStore } from '../../store/useFinanceStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
-import { formatCacheAge } from '../../utils/formatters';
+import { formatCacheAge, formatLocale } from '../../utils/formatters';
 import { convertSync, normalizeCurrency } from '../../api/fxRates';
 import type { PortfolioHolding, PortfolioLot } from '../../types/finance';
 import type { QuoteResult } from '../../api/finnhub';
@@ -38,7 +38,7 @@ const CURRENCY_SYMBOL: Record<string, string> = {
 function fmt(amount: number, currency: string): string {
   const sym = CURRENCY_SYMBOL[currency.toUpperCase()] ?? '';
   const isSuffix = ['kr', 'Fr'].includes(sym);
-  const num = amount.toLocaleString('fi-FI', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+  const num = amount.toLocaleString(formatLocale(), { maximumFractionDigits: 2, minimumFractionDigits: 2 });
   return isSuffix ? `${num} ${sym}` : sym ? `${sym}${num}` : `${num} ${currency}`;
 }
 
@@ -48,7 +48,7 @@ function fmtCompact(amount: number, currency: string): string {
   const sym = CURRENCY_SYMBOL[currency.toUpperCase()] ?? '';
   const isSuffix = ['kr', 'Fr'].includes(sym);
   const fractionDigits = Math.abs(amount) >= 1000 ? 0 : 2;
-  const num = amount.toLocaleString('fi-FI', { maximumFractionDigits: fractionDigits, minimumFractionDigits: fractionDigits });
+  const num = amount.toLocaleString(formatLocale(), { maximumFractionDigits: fractionDigits, minimumFractionDigits: fractionDigits });
   return isSuffix ? `${num} ${sym}` : sym ? `${sym}${num}` : `${num} ${currency}`;
 }
 

@@ -5,6 +5,7 @@
 // instantly reflects in the goal's progress bar.
 
 import type { Goal, GoalType } from '../types/goals';
+import { formatLocale } from '../utils/formatters';
 import { isCumulativeGoal } from '../types/goals';
 import type { Transaction, PortfolioHolding, ManualAsset } from '../types/finance';
 import { LIABILITY_TYPES } from '../types/finance';
@@ -160,7 +161,7 @@ export function paceLabel(g: Goal, p: GoalProgress): string | null {
 export function formatGoalValue(goal: Goal, value: number, baseCurrency: string): string {
   switch (goal.goalType) {
     case 'net_worth':
-      return new Intl.NumberFormat('fi-FI', {
+      return new Intl.NumberFormat(formatLocale(), {
         style: 'currency',
         currency: goal.currency ?? baseCurrency,
         maximumFractionDigits: 0,
@@ -172,7 +173,7 @@ export function formatGoalValue(goal: Goal, value: number, baseCurrency: string)
     case 'gpa':
       return value.toFixed(2);
     default:
-      return value.toLocaleString('fi-FI');
+      return value.toLocaleString(formatLocale());
   }
 }
 

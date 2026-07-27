@@ -12,7 +12,7 @@ import MarketsSegment from '../../components/MarketsSegment';
 import { useFinanceStore } from '../../store/useFinanceStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { convertSync, normalizeCurrency } from '../../api/fxRates';
-import { formatCurrency, formatShortDate, localDateKey } from '../../utils/formatters';
+import { formatCurrency, formatShortDate, localDateKey, formatLocale } from '../../utils/formatters';
 import { computeAccountBalance } from '../../lib/accountBalance';
 import { portfolioCashBalance } from '../../lib/portfolioCash';
 
@@ -205,7 +205,7 @@ export default function FinanceOverview() {
                   </div>
                   <div className={`font-heading font-bold text-xl ${netWorth.total >= 0 ? 'text-text' : 'text-danger'}`}>
                     {netWorth.hasData
-                      ? new Intl.NumberFormat('fi-FI', {
+                      ? new Intl.NumberFormat(formatLocale(), {
                           style: 'currency',
                           currency: baseCurrency,
                           maximumFractionDigits: 0,

@@ -6,6 +6,7 @@
 // straight from useFinanceStore; renders nothing until the first sale exists.
 
 import { useMemo, useState } from 'react';
+import { formatLocale } from '../utils/formatters';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { convertSync } from '../api/fxRates';
@@ -20,7 +21,7 @@ const CURRENCY_SYMBOL: Record<string, string> = {
 function fmt(amount: number, currency: string): string {
   const sym = CURRENCY_SYMBOL[currency.toUpperCase()] ?? '';
   const isSuffix = ['kr', 'Fr'].includes(sym);
-  const num = Math.abs(amount).toLocaleString('fi-FI', {
+  const num = Math.abs(amount).toLocaleString(formatLocale(), {
     maximumFractionDigits: 2,
     minimumFractionDigits: 2,
   });

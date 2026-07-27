@@ -9,6 +9,7 @@
 // row and pulls live data via fetchHoldingDetail() based on ticker.
 
 import { useMemo, useState } from 'react';
+import { formatLocale } from '../../utils/formatters';
 import { useTranslation } from 'react-i18next';
 import AppHeader from '../../components/AppHeader';
 import RowActions from '../../components/RowActions';
@@ -27,7 +28,7 @@ const CURRENCY_SYMBOL: Record<string, string> = {
 function fmt(amount: number, currency: string): string {
   const sym = CURRENCY_SYMBOL[currency.toUpperCase()] ?? '';
   const isSuffix = ['kr', 'Fr'].includes(sym);
-  const num = amount.toLocaleString('fi-FI', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+  const num = amount.toLocaleString(formatLocale(), { maximumFractionDigits: 2, minimumFractionDigits: 2 });
   return isSuffix ? `${num} ${sym}` : sym ? `${sym}${num}` : `${num} ${currency}`;
 }
 

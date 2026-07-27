@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatLocale } from '../utils/formatters';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -194,7 +195,7 @@ export default function Settings() {
   };
 
   const lastSyncDisplay = lastSyncedAt
-    ? new Intl.DateTimeFormat('fi-FI', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }).format(new Date(lastSyncedAt))
+    ? new Intl.DateTimeFormat(formatLocale(), { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }).format(new Date(lastSyncedAt))
     : '—';
 
   return (

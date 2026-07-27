@@ -5,6 +5,7 @@
 // aggregates in sync via recomputeHoldingAggregates() on every CRUD call.
 
 import { useMemo, useState } from 'react';
+import { formatLocale } from '../../utils/formatters';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
@@ -17,7 +18,7 @@ import type { PortfolioLot } from '../../types/finance';
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'SEK', 'NOK', 'DKK', 'CHF', 'JPY'];
 
 function formatNumber(n: number, max = 4): string {
-  return n.toLocaleString('fi-FI', { maximumFractionDigits: max, minimumFractionDigits: 0 });
+  return n.toLocaleString(formatLocale(), { maximumFractionDigits: max, minimumFractionDigits: 0 });
 }
 
 export default function ManageLots() {

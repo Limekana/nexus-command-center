@@ -13,7 +13,7 @@
 // row below explains the colour scale and shows the visible total.
 
 import { useEffect, useMemo, useRef } from 'react';
-import { localDateKey } from '../utils/formatters';
+import { localDateKey, monthNames, formatLocale } from '../utils/formatters';
 
 export type HeatmapTint = 'primary' | 'success' | 'warning' | 'danger';
 
@@ -49,7 +49,7 @@ const LEVEL_OPACITY = [0, 0.28, 0.5, 0.75, 1.0];
 // blends into the card bg (#161B22) and looks broken.
 const EMPTY_FILL = '#262C34';
 
-const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 
 export default function HeatmapCalendar({
   data,
@@ -95,7 +95,7 @@ export default function HeatmapCalendar({
       const firstOfCol = colDays[0].date;
       const monthOfCol = firstOfCol.getMonth();
       if (monthOfCol !== lastMonthLabelled && firstOfCol.getDate() <= 7) {
-        markers.push({ colIndex: cols.length, label: MONTH_LABELS[monthOfCol] });
+        markers.push({ colIndex: cols.length, label: monthNames('short')[monthOfCol] });
         lastMonthLabelled = monthOfCol;
       }
       cols.push(colDays);
@@ -123,10 +123,10 @@ export default function HeatmapCalendar({
 
   const formatTotal = (n: number): string => {
     if (unit === '€' || unit === '$' || unit === '£') {
-      return `${unit}${n.toLocaleString('fi-FI', { maximumFractionDigits: 0 })}`;
+      return `${unit}${n.toLocaleString(formatLocale(), { maximumFractionDigits: 0 })}`;
     }
     const noun = unit ? `${unit}${n === 1 ? '' : 's'}` : '';
-    return `${n.toLocaleString('fi-FI')} ${noun}`.trim();
+    return `${n.toLocaleString(formatLocale())} ${noun}`.trim();
   };
 
   // Cell size keeps the whole 53-week grid roughly 700px wide — wider than

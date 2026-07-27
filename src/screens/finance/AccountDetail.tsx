@@ -16,6 +16,7 @@
 // display so newest sits on top with the final balance.
 
 import { useMemo } from 'react';
+import { formatLocale } from '../../utils/formatters';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
@@ -34,7 +35,7 @@ const CURRENCY_SYMBOL: Record<string, string> = {
 function fmt(amount: number, currency: string): string {
   const sym = CURRENCY_SYMBOL[currency.toUpperCase()] ?? '';
   const isSuffix = ['kr', 'Fr'].includes(sym);
-  const num = amount.toLocaleString('fi-FI', {
+  const num = amount.toLocaleString(formatLocale(), {
     maximumFractionDigits: 2,
     minimumFractionDigits: 2,
   });

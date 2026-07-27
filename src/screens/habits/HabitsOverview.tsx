@@ -13,6 +13,7 @@
 // uncluttered.
 
 import { useEffect, useMemo, useState } from 'react';
+import { formatLocale } from '../../utils/formatters';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
@@ -529,7 +530,7 @@ export default function HabitsOverview() {
                               ? 'border-glass-border text-text-muted active:border-primary/40'
                               : 'border-transparent text-text-muted/30'
                         }`}
-                        aria-label={`${done ? t('habits.logged') : t('habits.notLogged')} ${d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}`}
+                        aria-label={`${done ? t('habits.logged') : t('habits.notLogged')} ${d.toLocaleDateString(formatLocale(), { weekday: 'long', day: 'numeric', month: 'short' })}`}
                       >
                         <span className="text-[9px] uppercase tracking-wider">
                           {isToday ? t('days.todayShort') : dMini(d.getDay())}

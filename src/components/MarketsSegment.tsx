@@ -4,6 +4,7 @@
 // refresh and a stale indicator when a refresh falls back to cached data.
 
 import { useEffect } from 'react';
+import { formatLocale } from '../utils/formatters';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import SparkLine from './SparkLine';
@@ -284,7 +285,7 @@ function SkeletonRows() {
 
 // ── Formatting helpers ─────────────────────────────────────────────────────
 function fmtNum(n: number, decimals = 2): string {
-  return n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  return n.toLocaleString(formatLocale(), { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
 function minutesAgo(ts: number, t: TFunction): string {
@@ -297,5 +298,5 @@ function minutesAgo(ts: number, t: TFunction): string {
 
 function fmtEventDate(iso: string): string {
   const [y, m, d] = iso.split('-').map((p) => parseInt(p, 10));
-  return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return new Date(y, m - 1, d).toLocaleDateString(formatLocale(), { month: 'short', day: 'numeric' });
 }

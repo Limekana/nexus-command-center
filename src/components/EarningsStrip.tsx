@@ -7,6 +7,7 @@
 // Tapping a row opens the holding detail sheet (parent owns that state).
 
 import type { EarningsEvent } from '../api/stockDetail';
+import { formatLocale } from '../utils/formatters';
 
 interface Props {
   events: EarningsEvent[];
@@ -27,7 +28,7 @@ function relativeLabel(dateStr: string): string {
   if (d === 0) return 'today';
   if (d === 1) return 'tomorrow';
   if (d <= 7) {
-    const weekday = new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' });
+    const weekday = new Date(dateStr + 'T00:00:00').toLocaleDateString(formatLocale(), { weekday: 'short' });
     return weekday;
   }
   return `in ${d} days`;

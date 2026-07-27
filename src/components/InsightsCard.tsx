@@ -5,6 +5,7 @@
 //   - Each insight has a tone (info / warn / good) for color-coding.
 
 import { useMemo } from 'react';
+import { formatLocale } from '../utils/formatters';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { convertSync, normalizeCurrency } from '../api/fxRates';
@@ -22,7 +23,7 @@ const CURRENCY_SYMBOL: Record<string, string> = {
 function fmt(amount: number, currency: string): string {
   const sym = CURRENCY_SYMBOL[currency.toUpperCase()] ?? '';
   const isSuffix = ['kr', 'Fr'].includes(sym);
-  const num = amount.toLocaleString('fi-FI', { maximumFractionDigits: 0, minimumFractionDigits: 0 });
+  const num = amount.toLocaleString(formatLocale(), { maximumFractionDigits: 0, minimumFractionDigits: 0 });
   return isSuffix ? `${num} ${sym}` : sym ? `${sym}${num}` : `${num} ${currency}`;
 }
 

@@ -1,8 +1,9 @@
 import { useSyncStore } from '../store/useSyncStore';
+import { formatLocale } from '../utils/formatters';
 
 function timeOf(iso: string | null): string {
   if (!iso) return '—';
-  return new Intl.DateTimeFormat('fi-FI', { hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
+  return new Intl.DateTimeFormat(formatLocale(), { hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
 }
 
 export default function SyncStatusChip() {

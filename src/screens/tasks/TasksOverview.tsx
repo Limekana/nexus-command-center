@@ -8,7 +8,7 @@ import ShareModal from '../../components/ShareModal';
 import HeatmapCalendar from '../../components/HeatmapCalendar';
 import { useTaskStore, TaskFilter } from '../../store/useTaskStore';
 import { useSessionStore } from '../../store/useSessionStore';
-import { isOverdue, isToday, formatShortDate, localDateKey } from '../../utils/formatters';
+import { isOverdue, isToday, formatShortDate, localDateKey, formatLocale } from '../../utils/formatters';
 import { Task } from '../../types/tasks';
 import { listTaskShares, shareTaskByEmail, revokeTaskShare } from '../../lib/sharing';
 
@@ -268,5 +268,5 @@ function TaskItem({
 }
 
 function timeOf(iso: string): string {
-  return new Intl.DateTimeFormat('fi-FI', { hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
+  return new Intl.DateTimeFormat(formatLocale(), { hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
 }

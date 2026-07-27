@@ -7,6 +7,7 @@
 // glance — 365 cells per module, plus the totals at the top.
 
 import { useMemo, useState } from 'react';
+import { formatLocale } from '../utils/formatters';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AppHeader from '../components/AppHeader';
@@ -26,7 +27,7 @@ const TONE_STYLES = {
 
 function formatDateRange(start: Date, end: Date): string {
   const fmt = (d: Date) =>
-    new Intl.DateTimeFormat('fi-FI', { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
+    new Intl.DateTimeFormat(formatLocale(), { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
   return `${fmt(start)} → ${fmt(end)}`;
 }
 
@@ -71,7 +72,7 @@ export default function YearReview() {
   );
 
   const fmtMoney = (n: number) =>
-    new Intl.NumberFormat('fi-FI', {
+    new Intl.NumberFormat(formatLocale(), {
       style: 'currency',
       currency: baseCurrency,
       maximumFractionDigits: 0,
