@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Limecore Studio</title>
+<meta name="description" content="Nexus Command Center, LimeLog and StudyDesk — free, open-source, local-first personal tracking apps for Android.">
+<style>
+  :root { color-scheme: light dark; --fg:#1a1814; --muted:#6b6560; --bg:#f7f5f1; --card:#fff; --line:#e2dcd2; --accent:#3f7d4e; }
+  @media (prefers-color-scheme: dark) { :root { --fg:#e8e4dd; --muted:#9b948c; --bg:#14161a; --card:#1b1e23; --line:#2b2f36; --accent:#7fc08f; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+  .wrap { max-width:760px; margin:0 auto; padding:64px 20px 96px; }
+  h1 { font-size:34px; margin:0 0 8px; letter-spacing:-.01em; }
+  .tag { color:var(--muted); font-size:17px; margin:0 0 40px; }
+  .apps { display:grid; gap:14px; grid-template-columns:1fr; }
+  @media (min-width:640px) { .apps { grid-template-columns:1fr 1fr; } }
+  .app { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 20px; }
+  .app h2 { font-size:18px; margin:0 0 6px; }
+  .app p { margin:0 0 12px; color:var(--muted); font-size:15px; }
+  .app a { color:var(--accent); text-decoration:none; font-size:14px; font-weight:600; }
+  .app a:hover { text-decoration:underline; }
+  .principles { margin:44px 0 0; padding:20px 22px; background:var(--card); border:1px solid var(--line); border-radius:12px; }
+  .principles h2 { font-size:17px; margin:0 0 10px; }
+  .principles li { margin-bottom:6px; color:var(--fg); }
+  footer { margin-top:48px; padding-top:20px; border-top:1px solid var(--line); color:var(--muted); font-size:14px; }
+  footer a { color:var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Limecore Studio</h1>
+  <p class="tag">Free, open-source, local-first tracking apps for Android. No ads, no analytics, no accounts required.</p>
+
+  <div class="apps">
+    <div class="app">
+      <h2>Nexus Command Center</h2>
+      <p>Finance, habits, tasks and work quality in one life dashboard. The hub of the suite.</p>
+      <a href="https://github.com/Limekana/nexus-command-center" rel="noopener">Source →</a>
+    </div>
+    <div class="app">
+      <h2>LimeLog</h2>
+      <p>Periodised strength training. Programs, every set and rep, personal records and 1RM trends.</p>
+      <a href="https://github.com/Limekana/limelog" rel="noopener">Source →</a>
+    </div>
+    <div class="app">
+      <h2>StudyDesk</h2>
+      <p>Courses, assignments, exams, grades and focus sessions. Available on F-Droid.</p>
+      <a href="https://f-droid.org/packages/com.StudyDesk.app/" rel="noopener">Get it on F-Droid →</a>
+    </div>
+    <div class="app">
+      <h2>How they fit together</h2>
+      <p>One account across all three. Workouts and study sessions feed into your Life Score in Nexus.</p>
+      <a href="https://github.com/Limekana" rel="noopener">All repositories →</a>
+    </div>
+  </div>
+
+  <div class="principles">
+    <h2>How these apps work</h2>
+    <ul>
+      <li><strong>Local-first.</strong> Everything works offline. Cloud sync is optional and off until you sign in.</li>
+      <li><strong>No tracking.</strong> No advertising, no analytics SDKs, no third-party trackers of any kind.</li>
+      <li><strong>Your data is yours.</strong> Export it or delete it from inside the app, whenever you like.</li>
+      <li><strong>Open source.</strong> MIT licensed. Read exactly what the apps send, and when.</li>
+    </ul>
+  </div>
+
+  <footer>
+    Limecore Studio · Helsinki, Finland ·
+    <a href="mailto:l1m3core@gmail.com">l1m3core@gmail.com</a><br>
+    <a href="./legal/privacy.html">Privacy Policy</a> ·
+    <a href="./legal/terms.html">Terms of Service</a>
+  </footer>
+
+</div>
+</body>
+</html>
