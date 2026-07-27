@@ -23,6 +23,7 @@
 // key (sb_publishable_… or eyJ… anon JWT) is public-by-design and lives in
 // client code intentionally — that's how Supabase's RLS architecture works.
 
+import { readFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 
 // ── Patterns ──────────────────────────────────────────────────────────────
@@ -75,11 +76,19 @@ const SUPPRESS_RE = /(?:\/\/|#|--)\s*pragma:\s*allowlist\s+secret/;
 
 // ── Staged diff ───────────────────────────────────────────────────────────
 
+/** True when invoked as `check-secrets --all` (CI): scan every tracked file
+ *  rather than the staged set. Without this the script is a no-op outside a
+ *  commit — there is nothing staged in CI, so it would pass vacuously. */
+const SCAN_ALL = process.argv.includes('--all');
+
 function getStagedFiles() {
   try {
-    const out = execSync('git diff --cached --name-only --diff-filter=ACMR', {
-      encoding: 'utf8',
-    });
+    const out = execSync(
+      SCAN_ALL
+        ? 'git ls-files'
+        : 'git diff --cached --name-only --diff-filter=ACMR',
+      { encoding: 'utf8' },
+    );
     return out
       .split(/\r?\n/)
       .map((l) => l.trim())
@@ -92,6 +101,7 @@ function getStagedFiles() {
 
 function getStagedContent(file) {
   try {
+    if (SCAN_ALL) return readFileSync(file, 'utf8');
     return execSync(`git show :"${file.replaceAll('"', '\\"')}"`, {
       encoding: 'utf8',
       maxBuffer: 50 * 1024 * 1024,
@@ -194,7 +204,7 @@ if (findings.length === 0) {
 }
 
 console.error('');
-console.error('🚨 check-secrets: possible secret(s) detected in staged changes');
+console.error(`🚨 check-secrets: possible secret(s) detected in ${SCAN_ALL ? 'tracked files' : 'staged changes'}`);
 console.error('───────────────────────────────────────────────────────────────');
 for (const f of findings) {
   console.error(`  ${f.file}:${f.line}  [${f.kind}]`);

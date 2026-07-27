@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prepare": "git config core.hooksPath .githooks || true",
+    "check:secrets": "node scripts/check-secrets.mjs --all",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "cap:add:android": "cap add android",
