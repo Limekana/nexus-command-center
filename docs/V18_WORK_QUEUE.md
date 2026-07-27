@@ -211,7 +211,7 @@ all three apps**, so legal surfaces are suite-wide, not per-app.
 
 | # | Item | Why it matters |
 |---|---|---|
-| O-1 | **Enable GitHub Pages** on `nexus-command-center`: Settings → Pages → Source = `main`, folder `/docs` | Turns the built pages into live URLs. Everything below depends on it. |
+| O-1 | **Enable GitHub Pages** on `nexus-command-center`: Settings → Pages → Source = **`gh-pages` branch, `/ (root)`** | Turns the built pages into live URLs. Everything below depends on it. |
 | O-2 | **Set the three OAuth consent screen URLs** (see below) | Google's User Data Policy *requires* a privacy policy URL for public apps. 82% of sign-ins are Google. This is the only item that can switch the apps off. |
 | O-3 | **Configure custom SMTP** | 5 of 26 email signups unconfirmed after 2+ days. Supabase's built-in sender is rate-limited and documented as not for production. |
 | O-4 | **Accept the Supabase DPA** (Organisation settings) | Art. 28 requires a written processor agreement. Minutes of work. |
@@ -226,9 +226,28 @@ Privacy policy         https://limekana.github.io/nexus-command-center/legal/pri
 Terms of service       https://limekana.github.io/nexus-command-center/legal/terms.html
 ```
 
-If the landing page comes online later, repoint the home page field at it and
-move the two legal pages across — they are self-contained static HTML with no
-build step, no assets and no JS.
+**Why a `gh-pages` branch and not `main`/`docs`.** The pages are authored in
+`docs/` on the development branch, which is not merged, so Pages pointed at
+`main` would find nothing — that was the cause of the 404s. `gh-pages` carries
+the built copy at its root and needs no merge to `main`, which stays sacred.
+Re-publish after editing `docs/` by copying the three files onto that branch.
+
+### Where these should eventually live
+
+`limecore.vercel.app` is the personal/story site and stays as it is. A dedicated
+suite home is the better long-term host for these pages — same content, nicer
+URL, and it puts the three apps somewhere to point at.
+
+Deploying it needs a Vercel project that does not exist yet; the MCP integration
+returned `403 forbidden — you don't have permission to create a project`, so it
+has to be created from the dashboard. Once a `limecore-suite` project exists,
+the three files drop straight in (they are self-contained static HTML, no build
+step, no assets, no JS) with a `vercel.json` setting `cleanUrls: true` so the
+paths become `/legal/privacy` and `/legal/terms`.
+
+GitHub Pages is a perfectly good permanent answer if you would rather not. The
+only thing that matters is that whatever URL goes into the Google console keeps
+working — changing it later means re-verifying with Google.
 
 ### ⬜ Still to build
 
