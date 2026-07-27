@@ -41,6 +41,10 @@ const PROVIDER_PATTERNS = [
   { name: 'OpenAI key', re: /sk-(?:proj-)?[A-Za-z0-9_-]{40,}/g },
   { name: 'Anthropic key', re: /sk-ant-(?:api03-)?[A-Za-z0-9_-]{40,}/g },
   { name: 'Slack token', re: /xox[abprs]-[A-Za-z0-9-]{10,}/g },
+  // GitLab tokens. The fdroiddata MRs are on GitLab, so a PAT pasted into a
+  // note or a script is a live risk for this repo specifically.
+  { name: 'GitLab PAT', re: /glpat-[A-Za-z0-9_.-]{20,}/g },
+  { name: 'GitLab deploy/runner token', re: /gl(?:dt|rt|cbt|ptt)-[A-Za-z0-9_.-]{20,}/g },
   { name: 'Google API key', re: /AIza[0-9A-Za-z_-]{35}/g },
   // Supabase service-role JWT (NOT the anon/publishable key). Both start with
   // eyJ, so we can't reliably distinguish — but service_role keys generally
@@ -191,6 +195,16 @@ function isObviousPlaceholder(val) {
   if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val)) return true;
   // Version strings like `1.2.3-beta.4` — too short anyway, but be explicit.
   if (/^\d+\.\d+\.\d+/.test(val)) return true;
+  // Lowercase kebab-case identifiers — `limelog-body-metrics-prefs`, and every
+  // other localStorage / Preferences key in these apps. They trip the heuristic
+  // purely because the constant holding them is named *_KEY. A real credential
+  // is high-entropy: base64 secrets carry mixed case, hex secrets carry no
+  // hyphens, and UUIDs are already excluded above. An all-lowercase slug of
+  // dictionary-ish words is a name, not a value.
+  if (/^[a-z0-9]+(?:-[a-z0-9]+)+$/.test(val)) return true;
+  // Same for snake_case and dotted identifiers (`wt_exercise_prs`,
+  // `com.limecore.nexus.something`).
+  if (/^[a-z0-9]+(?:[_.][a-z0-9]+)+$/.test(val)) return true;
   return false;
 }
 
