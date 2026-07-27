@@ -664,7 +664,8 @@
       "autoUpdates": "{{name}} को अपने आप अपडेट करता है",
       "perMonth": "{{amount}} / माह",
       "deleteConfirm": "“{{name}}” मिटाएँ? इससे टैग किए लेन-देन का टैग हट जाएगा।",
-      "shareTitle": "“{{name}}” साझा करें"
+      "shareTitle": "“{{name}}” साझा करें",
+      "customIcon": "कस्टम आइकन"
     },
     "ov": {
       "addTransaction": "लेन-देन जोड़ें",

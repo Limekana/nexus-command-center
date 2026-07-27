@@ -530,7 +530,8 @@
       "autoUpdates": "Aktualisiert automatisch {{name}}",
       "perMonth": "{{amount}} / Monat",
       "deleteConfirm": "„{{name}}“ löschen? Zugeordnete Transaktionen verlieren die Markierung.",
-      "shareTitle": "„{{name}}“ teilen"
+      "shareTitle": "„{{name}}“ teilen",
+      "customIcon": "Eigenes Symbol"
     },
     "ov": {
       "addTransaction": "Transaktion hinzufügen",

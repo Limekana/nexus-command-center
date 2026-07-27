@@ -560,7 +560,8 @@
       "autoUpdates": "Auto-updates {{name}}",
       "perMonth": "{{amount}} / month",
       "deleteConfirm": "Delete “{{name}}”? Transactions tagged to it will be untagged.",
-      "shareTitle": "Share “{{name}}”"
+      "shareTitle": "Share “{{name}}”",
+      "customIcon": "Custom icon"
     },
     "ov": {
       "addTransaction": "Add transaction",

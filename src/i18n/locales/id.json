@@ -664,7 +664,8 @@
       "autoUpdates": "Memperbarui {{name}} otomatis",
       "perMonth": "{{amount}} / bulan",
       "deleteConfirm": "Hapus “{{name}}”? Transaksi yang ditandai dengannya akan kehilangan tanda.",
-      "shareTitle": "Bagikan “{{name}}”"
+      "shareTitle": "Bagikan “{{name}}”",
+      "customIcon": "Ikon khusus"
     },
     "ov": {
       "addTransaction": "Tambah transaksi",

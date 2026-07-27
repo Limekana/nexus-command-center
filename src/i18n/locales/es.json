@@ -530,7 +530,8 @@
       "autoUpdates": "Actualiza automáticamente {{name}}",
       "perMonth": "{{amount}} / mes",
       "deleteConfirm": "¿Eliminar “{{name}}”? Las transacciones etiquetadas perderán la etiqueta.",
-      "shareTitle": "Compartir “{{name}}”"
+      "shareTitle": "Compartir “{{name}}”",
+      "customIcon": "Icono personalizado"
     },
     "ov": {
       "addTransaction": "Añadir transacción",

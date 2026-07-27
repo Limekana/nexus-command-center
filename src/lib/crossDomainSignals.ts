@@ -379,6 +379,9 @@ const DOMAIN_TO_SUBSCORE: Record<DomainKey, keyof Pick<LifeScore, 'workouts' | '
 /** Weekly workout sessions that score 100. */
 export const WEEKLY_WORKOUT_TARGET = 3;
 
+/** Weekly study minutes that score 100. */
+export const WEEKLY_STUDY_TARGET_MINUTES = 240;
+
 /**
  * Fraction of the week that has elapsed, counting today as a whole day, so
  * Monday is 1/7 and Sunday is 7/7. Used to pace-adjust the fitness sub-score
@@ -451,7 +454,17 @@ export function lifeScoreForWeek(
     fit.sessionsCount >= WEEKLY_WORKOUT_TARGET
       ? 100
       : Math.min(100, (fit.sessionsCount / expectedSessions) * 100);
-  const studyScore = Math.min(100, (study.totalMinutes / 240) * 100);
+  // Same pacing treatment as workouts above. Scoring the in-progress week
+  // against the full 240-minute target made the study score read artificially
+  // low until Sunday — a user two days in with 70 minutes logged is on pace,
+  // not at 29%. Past weeks pass no paceFraction and keep scoring against the
+  // full target. The v1.8 braindump only named Fitness, so this was left then;
+  // the plumbing it needs already exists.
+  const expectedMinutes = WEEKLY_STUDY_TARGET_MINUTES * pace;
+  const studyScore =
+    study.totalMinutes >= WEEKLY_STUDY_TARGET_MINUTES
+      ? 100
+      : Math.min(100, (study.totalMinutes / expectedMinutes) * 100);
   const habitsScore = habits.hitRatio != null ? habits.hitRatio * 100 : 0;
   let budget = 50; // default mid when no budgets set
   if (fin.budgetAdherence != null) {

@@ -664,7 +664,8 @@
       "autoUpdates": "يحدّث {{name}} تلقائيًا",
       "perMonth": "{{amount}} / شهر",
       "deleteConfirm": "حذف «{{name}}»؟ ستفقد المعاملات الموسومة بها وسمها.",
-      "shareTitle": "مشاركة «{{name}}»"
+      "shareTitle": "مشاركة «{{name}}»",
+      "customIcon": "أيقونة مخصصة"
     },
     "ov": {
       "addTransaction": "إضافة معاملة",

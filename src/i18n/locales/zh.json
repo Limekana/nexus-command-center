@@ -530,7 +530,8 @@
       "autoUpdates": "自动更新 {{name}}",
       "perMonth": "{{amount}} / 月",
       "deleteConfirm": "删除“{{name}}”？标记到它的交易将取消标记。",
-      "shareTitle": "共享“{{name}}”"
+      "shareTitle": "共享“{{name}}”",
+      "customIcon": "自定义图标"
     },
     "ov": {
       "addTransaction": "添加交易",

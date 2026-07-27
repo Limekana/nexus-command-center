@@ -15,6 +15,9 @@ import {
   revokeBudgetCategoryShare,
 } from '../../lib/sharing';
 
+// Presets, not the whole set. A budget category the twelve don't cover used to
+// force a wrong icon; the picker now carries a free-text field beside them, the
+// same escape hatch the v1.8 assignment-type fix added in StudyDesk.
 const ICONS = ['🏠', '🍱', '🚆', '🎬', '📚', '💪', '🛒', '☕', '✈', '💡', '💊', '🎁'];
 
 export default function ManageBudgets() {
@@ -147,6 +150,15 @@ export default function ManageBudgets() {
                     {i}
                   </button>
                 ))}
+                {/* Escape hatch: any emoji or character the presets don't cover. */}
+                <input
+                  className="input w-16 h-9 text-center text-lg py-0"
+                  value={ICONS.includes(icon) ? '' : icon}
+                  onChange={(e) => setIcon([...e.target.value].slice(-2).join(''))}
+                  placeholder="＋"
+                  aria-label={t('fin.budg.customIcon')}
+                  maxLength={4}
+                />
               </div>
             </div>
             {/* v1.2 follow-up — BUG-6. Linked account picker. When set, every

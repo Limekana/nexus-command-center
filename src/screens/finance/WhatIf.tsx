@@ -23,7 +23,24 @@ import { convertSync, normalizeCurrency } from '../../api/fxRates';
 import { LIABILITY_TYPES } from '../../types/finance';
 import { project, yearReachingMilestone } from '../../lib/projection';
 
-const MILESTONES = [10_000, 50_000, 100_000, 250_000, 500_000, 1_000_000];
+// Milestones are derived from the user's current net worth rather than fixed,
+// because a fixed euro ladder is meaningless at other currency scales. In IDR
+// 1,000,000 is roughly €60, so every rung was already passed and the whole
+// feature rendered as noise; in INR the spacing was wrong for the opposite
+// reason. Powers of ten above the starting balance, at 1x/2.5x/5x within each
+// decade, give the same "next few meaningful targets" shape at any scale.
+function milestonesFor(startingBalance: number): number[] {
+  const base = Math.max(1000, Math.abs(startingBalance));
+  const decade = Math.pow(10, Math.floor(Math.log10(base)));
+  const out: number[] = [];
+  for (let d = decade; out.length < 6; d *= 10) {
+    for (const mult of [1, 2.5, 5]) {
+      const v = Math.round(d * mult);
+      if (v > base && out.length < 6) out.push(v);
+    }
+  }
+  return out;
+}
 
 const CONSERVATIVE_DEFAULT = 4;
 const OPTIMISTIC_DEFAULT = 7;
@@ -119,12 +136,12 @@ export default function WhatIf() {
   // Determine which milestones are actually reachable so we don't render
   // "€1M: never" for someone projecting a 5-year horizon — it just clutters.
   const milestoneRows = useMemo(() => {
-    return MILESTONES.map((target) => ({
+    return milestonesFor(startingBalance).map((target) => ({
       target,
       conservative: yearReachingMilestone(conservative.points, target, showInToday),
       optimistic: yearReachingMilestone(optimistic.points, target, showInToday),
     })).filter((row) => row.conservative != null || row.optimistic != null);
-  }, [conservative, optimistic, showInToday]);
+  }, [conservative, optimistic, showInToday, startingBalance]);
 
   const finalCons = showInToday ? conservative.finalReal : conservative.finalNominal;
   const finalOpt = showInToday ? optimistic.finalReal : optimistic.finalNominal;

@@ -530,7 +530,8 @@
       "autoUpdates": "Päivittää automaattisesti {{name}}",
       "perMonth": "{{amount}} / kk",
       "deleteConfirm": "Poistetaanko “{{name}}”? Siihen merkityt tapahtumat menettävät merkinnän.",
-      "shareTitle": "Jaa “{{name}}”"
+      "shareTitle": "Jaa “{{name}}”",
+      "customIcon": "Oma kuvake"
     },
     "ov": {
       "addTransaction": "Lisää tapahtuma",

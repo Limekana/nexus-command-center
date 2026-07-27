@@ -530,7 +530,8 @@
       "autoUpdates": "Met à jour {{name}}",
       "perMonth": "{{amount}} / mois",
       "deleteConfirm": "Supprimer “{{name}}” ? Les transactions associées seront désétiquetées.",
-      "shareTitle": "Partager “{{name}}”"
+      "shareTitle": "Partager “{{name}}”",
+      "customIcon": "Icône personnalisée"
     },
     "ov": {
       "addTransaction": "Ajouter une transaction",

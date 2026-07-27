@@ -664,7 +664,8 @@
       "autoUpdates": "Atualiza {{name}} automaticamente",
       "perMonth": "{{amount}} / mês",
       "deleteConfirm": "Excluir “{{name}}”? As transações marcadas com ela ficarão sem categoria.",
-      "shareTitle": "Compartilhar “{{name}}”"
+      "shareTitle": "Compartilhar “{{name}}”",
+      "customIcon": "Ícone personalizado"
     },
     "ov": {
       "addTransaction": "Adicionar transação",
