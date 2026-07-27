@@ -559,7 +559,8 @@
       "watchlist": "Liste de suivi",
       "watchlistSub": "Titres que vous suivez sans les détenir",
       "insights": "Analyses",
-      "insightsSub": "Signaux techniques + fondamentaux"
+      "insightsSub": "Signaux techniques + fondamentaux",
+      "holdingsPositions_many": "{{count}} positions · appuyez pour gérer"
     },
     "acctType": {
       "checking": "Compte courant",
@@ -615,7 +616,8 @@
       "fromName": "de {{name}}",
       "fromOther": "d’un autre compte",
       "toName": "vers {{name}}",
-      "toOther": "vers un autre compte"
+      "toOther": "vers un autre compte",
+      "unconvertable_many": "{{count}} transactions n’ont pas pu être converties en {{cur}} ; le solde peut être sous-estimé."
     },
     "assetClass": {
       "stock": "📈 Action",
@@ -644,7 +646,8 @@
       "empty": "Aucun élément suivi. Appuyez sur + Suivre pour suivre un ticker sans le détenir.",
       "targetAboveHit": "Objectif ≥ atteint",
       "targetBelowHit": "Objectif ≤ atteint",
-      "stopWatching": "Arrêter de suivre {{ticker}} ?"
+      "stopWatching": "Arrêter de suivre {{ticker}} ?",
+      "tickers_many": "{{count}} tickers"
     },
     "mh": {
       "title": "Gérer les positions",
@@ -704,7 +707,8 @@
       "noQuotes": "Aucune cotation — appuyez sur ↻ pour actualiser",
       "crypto": "Crypto",
       "loadingPrices": "Chargement des prix…",
-      "noPrices": "Aucun prix — appuyez sur ↻ pour actualiser"
+      "noPrices": "Aucun prix — appuyez sur ↻ pour actualiser",
+      "fetchErrors_many": "{{count}} erreurs de récupération"
     },
     "ml": {
       "purchases": "Achats",
@@ -756,7 +760,8 @@
       "computingSignals": "Calcul des signaux…",
       "emptyUniverse": "Aucune position ou ticker en liste de suivi. Ajoutez-en depuis le Portefeuille ou la Liste de suivi pour voir les notations ici.",
       "nothingIn": "Rien dans {{filter}}.",
-      "composite": "Composite {{score}}"
+      "composite": "Composite {{score}}",
+      "skipped_many": "{{count}} tickers ignorés"
     },
     "wi": {
       "title": "Et si ?",
@@ -845,7 +850,8 @@
       "delete": "Supprimer",
       "add": "Ajouter",
       "set": "Définir",
-      "amountIn": "Montant en {{cur}}"
+      "amountIn": "Montant en {{cur}}",
+      "unconvertable_many": "{{count}} éléments n’ont pas pu être convertis en {{cur}} (taux de change manquant)."
     }
   },
   "lifeProfile": {

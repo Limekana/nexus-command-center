@@ -559,7 +559,8 @@
       "watchlist": "Lista de seguimiento",
       "watchlistSub": "Valores que sigues pero no posees",
       "insights": "Análisis",
-      "insightsSub": "Señales técnicas + fundamentales"
+      "insightsSub": "Señales técnicas + fundamentales",
+      "holdingsPositions_many": "{{count}} posiciones · toca para gestionar"
     },
     "acctType": {
       "checking": "Cuenta corriente",
@@ -615,7 +616,8 @@
       "fromName": "de {{name}}",
       "fromOther": "de otra cuenta",
       "toName": "a {{name}}",
-      "toOther": "a otra cuenta"
+      "toOther": "a otra cuenta",
+      "unconvertable_many": "{{count}} transacciones no se pudieron convertir a {{cur}}; el saldo puede estar subestimado."
     },
     "assetClass": {
       "stock": "📈 Acción",
@@ -644,7 +646,8 @@
       "empty": "Aún no hay elementos. Toca + Seguir para seguir un ticker sin poseerlo.",
       "targetAboveHit": "Objetivo ≥ alcanzado",
       "targetBelowHit": "Objetivo ≤ alcanzado",
-      "stopWatching": "¿Dejar de seguir {{ticker}}?"
+      "stopWatching": "¿Dejar de seguir {{ticker}}?",
+      "tickers_many": "{{count}} tickers"
     },
     "mh": {
       "title": "Gestionar posiciones",
@@ -704,7 +707,8 @@
       "noQuotes": "Sin cotizaciones — toca ↻ para actualizar",
       "crypto": "Cripto",
       "loadingPrices": "Cargando precios…",
-      "noPrices": "Sin precios — toca ↻ para actualizar"
+      "noPrices": "Sin precios — toca ↻ para actualizar",
+      "fetchErrors_many": "{{count}} errores de obtención"
     },
     "ml": {
       "purchases": "Compras",
@@ -756,7 +760,8 @@
       "computingSignals": "Calculando señales…",
       "emptyUniverse": "Aún no hay posiciones ni tickers en seguimiento. Añade algunos desde Cartera o Lista de seguimiento para ver calificaciones aquí.",
       "nothingIn": "Nada en {{filter}}.",
-      "composite": "Compuesto {{score}}"
+      "composite": "Compuesto {{score}}",
+      "skipped_many": "{{count}} tickers omitidos"
     },
     "wi": {
       "title": "¿Y si?",
@@ -845,7 +850,8 @@
       "delete": "Eliminar",
       "add": "Añadir",
       "set": "Fijar",
-      "amountIn": "Importe en {{cur}}"
+      "amountIn": "Importe en {{cur}}",
+      "unconvertable_many": "{{count}} elementos no se pudieron convertir a {{cur}} (falta tipo de cambio)."
     }
   },
   "lifeProfile": {
