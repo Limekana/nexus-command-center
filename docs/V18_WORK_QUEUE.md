@@ -117,17 +117,52 @@ because 15 keys already existed fully translated and were simply never wired
 up, and NexusSyncCard reuses `auth.*`. A follow-up sweep found 19 more
 hardcoded strings in files that *did* already call `useTranslation`.
 
-## 3. NCC — after the other two
+## 3. NCC — ✅ done
 
-| # | Item | Value |
+Branch `claude/ncc-repos-setup-3kvqoj`, pushed.
+
+| # | Item | Status |
 |---|---|---|
-| NC-1 | **A2** hardcoded English `DAY_LABEL` / `MONTH_LABELS` (`days.short.*` already translated) | 🔴 cheapest |
-| NC-2 | **A1+A4** currency list: 8 Western currencies duplicated ×4, no INR/BRL/IDR/NGN/CNY; hardcoded `€` in 2 keys ×10 locales | 🔴 **[ACT-5]** |
-| NC-3 | **C1** CI backstop for the secret scanner | ✅ done this session |
-| NC-4 | **B1–B6** dead code: `src/theme/`, `bodyMetricsAnalysis.ts`, `Glass.tsx`, `utils/constants.ts`, `Claude Design resources/`, `growth.*` (280 strings) | 🟡 |
-| NC-5 | **B8** NCC→LimeLog write path — contract violation one caller from live | 🔴 |
-| NC-6 | **A3** `ConfirmDialog` replacing 9 native `confirm()` | 🟠 |
-| NC-7 | **A5/A6/A7/B7/C3** euro-scale milestones, closed icon set, study pacing bug, exports, pin TypeScript | 🟡 |
+| NC-1 | **A2** hardcoded day/month labels | ✅ `a0f8f1f` |
+| NC-2 | **A1+A4** currency list + hardcoded `€` **[ACT-5]** | ✅ `9e7e181` |
+| NC-3 | **C1** CI backstop for the secret scanner | ✅ earlier |
+| NC-4 | **B1–B5** dead code (128 KB) | ✅ `1fc045e` |
+| NC-5 | **B8** write path into LimeLog- and StudyDesk-owned tables | ✅ `784a13b` |
+| NC-6 | **A3** `ConfirmDialog` replacing 11 native `confirm()` | ✅ `767a630` |
+| NC-7 | **A5/A6/A7/C3** milestones, custom icons, study pacing, pin TS | ✅ `7cce0ce` |
+| NC-8 | **B6** `growth.*` namespace (280 strings) | ⬜ **your call** |
+| NC-9 | **B7** ~33 unnecessary `export` keywords | ⬜ open — cosmetic |
+
+Three of these were materially larger than the audit recorded:
+
+**NC-1 was not two English arrays.** ~30 sites hardcoded **`fi-FI`**, so every
+user in every language got Finnish number and date conventions — "1 234 567,89"
+with a space thousands separator, "26.7.2026" dates. Now routed through one
+`formatLocale()` that prefers the device's regional tag, which is what actually
+produces lakh grouping (`₹12,34,567.50`) for an Indian user rather than Western
+grouping. Three `en-CA`/`en-US` tags in `lib/portfolioEod.ts` are deliberately
+left: they feed string comparisons against `'EDT'`/`'Sat'` for US market hours,
+so they are machine idioms, not display.
+
+**NC-2 had more duplication than four lists.** There were also **eight** copies
+of a currency-symbol map and **nine** near-identical money formatters, all
+deciding symbol placement with `['kr','Fr'].includes(symbol)` — which breaks
+the moment the list widens, since złoty, koruna, forint, leu, hryvnia and đồng
+all trail the number. Symbols and names now come from `Intl`, so the picker
+reads naturally in all ten languages for zero translation cost.
+
+**NC-5 covered two contract violations, not one.** The audit flagged the
+workout write path; `useStudiesStore` had the identical defect against
+`study_sessions`. Both are gone, with the dispatch entries kept as explicit
+drops so a mutation already sitting in an upgrading user's outbox is discarded
+rather than retried against a table NCC must not write.
+
+**NC-8 is a decision, not a task.** `growth.*` (28 keys × 10 locales) plus
+`nav.growth` are dead by the same test as everything in NC-4 — no Growth
+screen, route or tab exists. But 112 of those strings were translated into
+hi/pt/id/ar earlier in this session and the registry lists the Growth hub as
+open rather than abandoned. Deleting code is reversible in a way that deleting
+translation work is not, so it needs your call. One line either way.
 
 ## 4. Cross-app, from the MR reports
 
