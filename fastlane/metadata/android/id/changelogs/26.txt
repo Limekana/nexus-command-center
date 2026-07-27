@@ -1,0 +1,1 @@
+Font kini disertakan bersama aplikasi, bukan diambil dari Google Fonts saat dijalankan. Antarmuka tampil dengan benar tanpa koneksi jaringan, dan tidak ada permintaan yang keluar dari perangkatmu untuk tipografi. Tidak ada perubahan perilaku lain dari 1.7.1.

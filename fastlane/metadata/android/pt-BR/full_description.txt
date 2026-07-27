@@ -1,0 +1,10 @@
+O Nexus Command Center é o centro da suíte Limecore — um painel de vida pessoal que reúne cinco áreas (Finanças, Treino, Estudos, Trabalho, Hábitos) em um único Life Score.
+
+Recursos:
+* Orçamentos, contas, patrimônio líquido, carteira e dados de mercado ao vivo
+* Importa treinos do LimeLog e sessões de estudo do StudyDesk
+* Rastreador de hábitos com sequências
+* Life Profiles e metas configuráveis
+* Revisões semanais e anuais com mapas de calor
+
+Local-first, com armazenamento no dispositivo; sincronização na nuvem opcional e vinculada à conta. Sem Google Play Services, sem Firebase — o login com Google é um fluxo OAuth web comum. Dados de mercado de terceiros (Finnhub, CoinGecko, Yahoo, BCE) e um recurso de IA opcional são chamadas HTTPS iniciadas por você.

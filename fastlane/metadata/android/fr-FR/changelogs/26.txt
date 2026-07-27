@@ -1,0 +1,1 @@
+Les polices sont désormais intégrées à l'application au lieu d'être chargées depuis Google Fonts à l'exécution. L'interface s'affiche correctement sans connexion réseau et aucune requête ne quitte votre appareil pour la typographie. Aucun autre changement de comportement par rapport à 1.7.1.

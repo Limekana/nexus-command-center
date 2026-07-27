@@ -9,4 +9,4 @@ Features:
 
 Local-first with on-device storage; optional account-gated cloud sync. No Google Play Services, no Firebase — Google sign-in is a plain web OAuth flow. Third-party market data (Finnhub, CoinGecko, Yahoo, ECB) and an optional AI feature are user-initiated HTTPS calls.
 
-Available in English, Finnish, French, German, Spanish and Chinese.
+Available in English, Finnish, French, German, Spanish, Chinese, Hindi, Portuguese, Indonesian and Arabic.
