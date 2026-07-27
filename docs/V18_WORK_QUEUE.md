@@ -190,6 +190,59 @@ device in each language rather than anything editable from the repo.
 
 ---
 
+## 5. Legal & compliance (added 2026-07-27)
+
+Background and sources in `studydesk/docs/LEGAL_REVIEW.md`. The suite shares
+**one Google Cloud project, one Supabase database and one account system across
+all three apps**, so legal surfaces are suite-wide, not per-app.
+
+### Done
+
+| # | Item | Status |
+|---|---|---|
+| L-1 | Suite privacy policy + ToS + home page (`docs/legal/`, `docs/index.html`) | ✅ built, needs Pages enabled |
+| L-2 | StudyDesk data export (Art. 20) | ✅ shipped |
+| L-3 | StudyDesk account deletion (Art. 17) + `delete-account` Edge Function | ✅ deployed |
+| L-4 | Age statement at signup (Art. 8) | ✅ shipped |
+| L-5 | Activation funnel columns + triggers + backfill | ✅ applied |
+| L-6 | fdroiddata `AuthorName` → Limecore Studio | ✅ MR !44072 open |
+
+### 🔴 Owner actions — nobody else can do these
+
+| # | Item | Why it matters |
+|---|---|---|
+| O-1 | **Enable GitHub Pages** on `nexus-command-center`: Settings → Pages → Source = `main`, folder `/docs` | Turns the built pages into live URLs. Everything below depends on it. |
+| O-2 | **Set the three OAuth consent screen URLs** (see below) | Google's User Data Policy *requires* a privacy policy URL for public apps. 82% of sign-ins are Google. This is the only item that can switch the apps off. |
+| O-3 | **Configure custom SMTP** | 5 of 26 email signups unconfirmed after 2+ days. Supabase's built-in sender is rate-limited and documented as not for production. |
+| O-4 | **Accept the Supabase DPA** (Organisation settings) | Art. 28 requires a written processor agreement. Minutes of work. |
+| O-5 | **Backups off the free plan** — Pro (~$25/mo) for PITR, or a scheduled `pg_dump` | Free plan is 7-day retention, no PITR, now covering 144 people's data. |
+| O-6 | **Enable leaked-password protection** (Auth → Passwords) | The only remaining security advisor on the project. One toggle. |
+
+Once Pages is on, paste these into the OAuth consent screen:
+
+```
+Application home page  https://limekana.github.io/nexus-command-center/
+Privacy policy         https://limekana.github.io/nexus-command-center/legal/privacy.html
+Terms of service       https://limekana.github.io/nexus-command-center/legal/terms.html
+```
+
+If the landing page comes online later, repoint the home page field at it and
+move the two legal pages across — they are self-contained static HTML with no
+build step, no assets and no JS.
+
+### ⬜ Still to build
+
+| # | Item | Notes |
+|---|---|---|
+| L-7 | **Retention purge for soft-deleted rows** | 10 subjects + 8 grades sit soft-deleted indefinitely. Needs a scheduled hard-delete (pg_cron) past a fixed window. **The policy was written to describe today's behaviour rather than promise a window that nothing enforces** — tighten the wording once this ships. |
+| L-8 | **Export + deletion in NCC and LimeLog** | Only StudyDesk has them. The Edge Function is app-agnostic and cascades across the whole database, so both apps need the two buttons, not new backend work. |
+| L-9 | **Record of processing (Art. 30)** | The <250-employee exemption falls away for non-occasional processing, which continuous sync is. One internal page; also keeps the policy honest. |
+| L-10 | **`audit_log` erasure gap (NCC)** | 132 rows of `budget_categories` / `tasks` snapshots with `changed_by ON DELETE SET NULL` — content survives account deletion, merely un-attributed. Real Art. 17 gap **for NCC only**; StudyDesk tables are not audited. |
+| L-11 | **Age statement in NCC and LimeLog** | Same one-liner as StudyDesk. Lower urgency — neither is aimed at schoolchildren the way a study planner is. |
+| L-12 | **In-app privacy links in NCC and LimeLog** | Point at the suite policy from Settings, as StudyDesk now does. |
+
+---
+
 ## Standing constraints (unchanged)
 
 - Never read, print or commit `.env`, secrets, the release keystore or
