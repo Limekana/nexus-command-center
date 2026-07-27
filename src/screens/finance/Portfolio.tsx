@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { formatMoney } from '../../lib/currencies';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
@@ -24,32 +25,16 @@ import type { QuoteResult } from '../../api/finnhub';
 import type { CryptoResult } from '../../api/coingecko';
 import type { CompanyProfile } from '../../api/companyProfile';
 
-const CURRENCY_SYMBOL: Record<string, string> = {
-  EUR: '€',
-  USD: '$',
-  GBP: '£',
-  SEK: 'kr',
-  NOK: 'kr',
-  DKK: 'kr',
-  CHF: 'Fr',
-  JPY: '¥',
-};
 
 function fmt(amount: number, currency: string): string {
-  const sym = CURRENCY_SYMBOL[currency.toUpperCase()] ?? '';
-  const isSuffix = ['kr', 'Fr'].includes(sym);
-  const num = amount.toLocaleString(formatLocale(), { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-  return isSuffix ? `${num} ${sym}` : sym ? `${sym}${num}` : `${num} ${currency}`;
+  return formatMoney(amount, currency, { locale: formatLocale() });
 }
 
 // Compact format for the row's value column — drops decimals on values ≥ 1000
 // so a 5-digit holding doesn't push the % change off the row on narrow screens.
 function fmtCompact(amount: number, currency: string): string {
-  const sym = CURRENCY_SYMBOL[currency.toUpperCase()] ?? '';
-  const isSuffix = ['kr', 'Fr'].includes(sym);
-  const fractionDigits = Math.abs(amount) >= 1000 ? 0 : 2;
-  const num = amount.toLocaleString(formatLocale(), { maximumFractionDigits: fractionDigits, minimumFractionDigits: fractionDigits });
-  return isSuffix ? `${num} ${sym}` : sym ? `${sym}${num}` : `${num} ${currency}`;
+  const d = Math.abs(amount) >= 1000 ? 0 : 2;
+  return formatMoney(amount, currency, { locale: formatLocale(), min: d, max: d });
 }
 
 type AllocationView = 'class' | 'sector' | 'currency';

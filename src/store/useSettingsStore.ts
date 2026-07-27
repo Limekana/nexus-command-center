@@ -4,8 +4,11 @@
 import { create } from 'zustand';
 import { Preferences } from '@capacitor/preferences';
 
-export const SUPPORTED_CURRENCIES = ['EUR', 'USD', 'GBP', 'SEK', 'NOK', 'DKK', 'CHF', 'JPY'] as const;
-export type BaseCurrency = (typeof SUPPORTED_CURRENCIES)[number];
+// Re-exported so existing importers keep working; the list itself lives in
+// lib/currencies.ts, which is now the only place it is defined.
+import { SUPPORTED_CURRENCIES, isSupportedCurrency, type BaseCurrency } from '../lib/currencies';
+export { SUPPORTED_CURRENCIES, isSupportedCurrency };
+export type { BaseCurrency };
 
 const CURRENCY_KEY = 'settings.baseCurrency';
 const REMINDER_KEY = 'settings.weeklyReminder';

@@ -647,7 +647,7 @@
       "editCat": "تعديل الفئة",
       "newCat": "فئة جديدة",
       "catName": "اسم الفئة",
-      "monthlyLimit": "الحد الشهري (€)",
+      "monthlyLimit": "الحد الشهري ({{symbol}})",
       "icon": "الأيقونة",
       "linkedAccount": "حساب مرتبط (اختياري)",
       "none": "— لا شيء —",
@@ -657,7 +657,7 @@
       "empty": "لا فئات بعد — اضغط + جديدة لإضافة واحدة",
       "shared": "مشتركة",
       "autoUpdates": "يحدّث {{name}} تلقائيًا",
-      "perMonth": "€{{amount}} / شهر",
+      "perMonth": "{{amount}} / شهر",
       "deleteConfirm": "حذف «{{name}}»؟ ستفقد المعاملات الموسومة بها وسمها.",
       "shareTitle": "مشاركة «{{name}}»"
     },

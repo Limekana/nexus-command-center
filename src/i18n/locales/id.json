@@ -647,7 +647,7 @@
       "editCat": "Ubah kategori",
       "newCat": "Kategori baru",
       "catName": "Nama kategori",
-      "monthlyLimit": "Batas bulanan (€)",
+      "monthlyLimit": "Batas bulanan ({{symbol}})",
       "icon": "Ikon",
       "linkedAccount": "Akun terkait (opsional)",
       "none": "— Tidak ada —",
@@ -657,7 +657,7 @@
       "empty": "Belum ada kategori — ketuk + Baru untuk menambah",
       "shared": "Dibagikan",
       "autoUpdates": "Memperbarui {{name}} otomatis",
-      "perMonth": "€{{amount}} / bulan",
+      "perMonth": "{{amount}} / bulan",
       "deleteConfirm": "Hapus “{{name}}”? Transaksi yang ditandai dengannya akan kehilangan tanda.",
       "shareTitle": "Bagikan “{{name}}”"
     },

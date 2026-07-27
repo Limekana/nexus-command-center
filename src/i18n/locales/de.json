@@ -513,7 +513,7 @@
       "editCat": "Kategorie bearbeiten",
       "newCat": "Neue Kategorie",
       "catName": "Kategoriename",
-      "monthlyLimit": "Monatslimit (€)",
+      "monthlyLimit": "Monatslimit ({{symbol}})",
       "icon": "Symbol",
       "linkedAccount": "Verknüpftes Konto (optional)",
       "none": "— Keins —",
@@ -523,7 +523,7 @@
       "empty": "Noch keine Kategorien — tippe auf + Neu zum Hinzufügen",
       "shared": "Geteilt",
       "autoUpdates": "Aktualisiert automatisch {{name}}",
-      "perMonth": "{{amount}} € / Monat",
+      "perMonth": "{{amount}} / Monat",
       "deleteConfirm": "„{{name}}“ löschen? Zugeordnete Transaktionen verlieren die Markierung.",
       "shareTitle": "„{{name}}“ teilen"
     },

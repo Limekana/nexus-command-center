@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { formatMoney } from '../../lib/currencies';
 import { formatLocale } from '../../utils/formatters';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -32,24 +33,15 @@ import type { SavingsGoal, ManualAsset } from '../../types/finance';
  *     only used for the available-cash banner.
  */
 
-const CURRENCY_SYMBOL: Record<string, string> = {
-  EUR: '€', USD: '$', GBP: '£', SEK: 'kr', NOK: 'kr', DKK: 'kr', CHF: 'Fr', JPY: '¥',
-};
 
 function fmt(amount: number, currency: string): string {
-  const sym = CURRENCY_SYMBOL[currency.toUpperCase()] ?? '';
-  const isSuffix = ['kr', 'Fr'].includes(sym);
-  const num = amount.toLocaleString(formatLocale(), { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-  return isSuffix ? `${num} ${sym}` : sym ? `${sym}${num}` : `${num} ${currency}`;
+  return formatMoney(amount, currency, { locale: formatLocale() });
 }
 
 function fmtCompact(amount: number, currency: string): string {
   // Drop decimals on values ≥1000 so progress rows stay tight on narrow screens.
-  const sym = CURRENCY_SYMBOL[currency.toUpperCase()] ?? '';
-  const isSuffix = ['kr', 'Fr'].includes(sym);
-  const fractionDigits = Math.abs(amount) >= 1000 ? 0 : 2;
-  const num = amount.toLocaleString(formatLocale(), { maximumFractionDigits: fractionDigits, minimumFractionDigits: fractionDigits });
-  return isSuffix ? `${num} ${sym}` : sym ? `${sym}${num}` : `${num} ${currency}`;
+  const d = Math.abs(amount) >= 1000 ? 0 : 2;
+  return formatMoney(amount, currency, { locale: formatLocale(), min: d, max: d });
 }
 
 export default function SavingsGoals() {

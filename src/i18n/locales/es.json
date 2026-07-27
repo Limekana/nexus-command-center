@@ -513,7 +513,7 @@
       "editCat": "Editar categoría",
       "newCat": "Nueva categoría",
       "catName": "Nombre de la categoría",
-      "monthlyLimit": "Límite mensual (€)",
+      "monthlyLimit": "Límite mensual ({{symbol}})",
       "icon": "Icono",
       "linkedAccount": "Cuenta vinculada (opcional)",
       "none": "— Ninguna —",
@@ -523,7 +523,7 @@
       "empty": "Aún no hay categorías — toca + Nueva para añadir una",
       "shared": "Compartida",
       "autoUpdates": "Actualiza automáticamente {{name}}",
-      "perMonth": "{{amount}} € / mes",
+      "perMonth": "{{amount}} / mes",
       "deleteConfirm": "¿Eliminar “{{name}}”? Las transacciones etiquetadas perderán la etiqueta.",
       "shareTitle": "Compartir “{{name}}”"
     },

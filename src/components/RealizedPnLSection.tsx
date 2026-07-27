@@ -6,26 +6,18 @@
 // straight from useFinanceStore; renders nothing until the first sale exists.
 
 import { useMemo, useState } from 'react';
+import { formatMoney } from '../lib/currencies';
 import { formatLocale } from '../utils/formatters';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { convertSync } from '../api/fxRates';
 import { lotRemaining } from '../lib/stockSaleFifo';
 
-const CURRENCY_SYMBOL: Record<string, string> = {
-  EUR: '€', USD: '$', GBP: '£', SEK: 'kr', NOK: 'kr', DKK: 'kr', CHF: 'Fr', JPY: '¥',
-};
 
 /** Absolute-value money formatter — callers prefix the sign so the colour and
  *  the +/− glyph stay in lockstep. */
 function fmt(amount: number, currency: string): string {
-  const sym = CURRENCY_SYMBOL[currency.toUpperCase()] ?? '';
-  const isSuffix = ['kr', 'Fr'].includes(sym);
-  const num = Math.abs(amount).toLocaleString(formatLocale(), {
-    maximumFractionDigits: 2,
-    minimumFractionDigits: 2,
-  });
-  return isSuffix ? `${num} ${sym}` : sym ? `${sym}${num}` : `${num} ${currency}`;
+  return formatMoney(amount, currency, { locale: formatLocale(), signed: false });
 }
 
 export default function RealizedPnLSection() {

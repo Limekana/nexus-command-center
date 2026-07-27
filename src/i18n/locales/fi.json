@@ -513,7 +513,7 @@
       "editCat": "Muokkaa kategoriaa",
       "newCat": "Uusi kategoria",
       "catName": "Kategorian nimi",
-      "monthlyLimit": "Kuukausiraja (€)",
+      "monthlyLimit": "Kuukausiraja ({{symbol}})",
       "icon": "Kuvake",
       "linkedAccount": "Linkitetty tili (valinnainen)",
       "none": "— Ei mitään —",
@@ -523,7 +523,7 @@
       "empty": "Ei vielä kategorioita — lisää napauttamalla + Uusi",
       "shared": "Jaettu",
       "autoUpdates": "Päivittää automaattisesti {{name}}",
-      "perMonth": "{{amount}} € / kk",
+      "perMonth": "{{amount}} / kk",
       "deleteConfirm": "Poistetaanko “{{name}}”? Siihen merkityt tapahtumat menettävät merkinnän.",
       "shareTitle": "Jaa “{{name}}”"
     },

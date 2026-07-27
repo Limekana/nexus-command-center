@@ -513,7 +513,7 @@
       "editCat": "编辑类别",
       "newCat": "新建类别",
       "catName": "类别名称",
-      "monthlyLimit": "每月上限（€）",
+      "monthlyLimit": "每月上限（{{symbol}}）",
       "icon": "图标",
       "linkedAccount": "关联账户（可选）",
       "none": "— 无 —",
@@ -523,7 +523,7 @@
       "empty": "还没有类别 — 点击 + 新建添加",
       "shared": "已共享",
       "autoUpdates": "自动更新 {{name}}",
-      "perMonth": "€{{amount}} / 月",
+      "perMonth": "{{amount}} / 月",
       "deleteConfirm": "删除“{{name}}”？标记到它的交易将取消标记。",
       "shareTitle": "共享“{{name}}”"
     },

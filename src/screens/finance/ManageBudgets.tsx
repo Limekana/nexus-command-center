@@ -5,6 +5,9 @@ import RowActions from '../../components/RowActions';
 import ShareModal from '../../components/ShareModal';
 import { useFinanceStore } from '../../store/useFinanceStore';
 import { useSessionStore } from '../../store/useSessionStore';
+import { useSettingsStore } from '../../store/useSettingsStore';
+import { currencySymbol, formatMoney } from '../../lib/currencies';
+import { formatLocale } from '../../utils/formatters';
 import { BudgetCategory } from '../../types/finance';
 import {
   listBudgetCategoryShares,
@@ -16,6 +19,7 @@ const ICONS = ['🏠', '🍱', '🚆', '🎬', '📚', '💪', '🛒', '☕', '�
 
 export default function ManageBudgets() {
   const { t } = useTranslation();
+  const baseCurrency = useSettingsStore((s) => s.baseCurrency);
   const categories = useFinanceStore((s) => s.budgetCategories);
   const addCategory = useFinanceStore((s) => s.addBudgetCategory);
   const updateCategory = useFinanceStore((s) => s.updateBudgetCategory);
@@ -124,7 +128,7 @@ export default function ManageBudgets() {
             />
             <input
               className="input"
-              placeholder={t('fin.budg.monthlyLimit')}
+              placeholder={t('fin.budg.monthlyLimit', { symbol: currencySymbol(baseCurrency, formatLocale()) })}
               inputMode="decimal"
               value={limit}
               onChange={(e) => setLimit(e.target.value)}
@@ -216,7 +220,7 @@ export default function ManageBudgets() {
                       </span>
                     )}
                   </div>
-                  <div className="text-[10px] text-text-muted">{t('fin.budg.perMonth', { amount: c.monthlyLimit.toFixed(2) })}</div>
+                  <div className="text-[10px] text-text-muted">{t('fin.budg.perMonth', { amount: formatMoney(c.monthlyLimit, baseCurrency, { locale: formatLocale() }) })}</div>
                 </div>
                 <RowActions
                   onShare={!sharedFromOther ? () => setSharing(c) : undefined}

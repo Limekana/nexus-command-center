@@ -13,6 +13,7 @@
 // reserve on the Savings screen; this card mirrors it.
 
 import { useMemo, useState } from 'react';
+import { currencyOptions, formatMoney } from '../../lib/currencies';
 import { formatLocale } from '../../utils/formatters';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -29,16 +30,10 @@ import { LIABILITY_TYPES } from '../../types/finance';
 import { computeAccountBalance } from '../../lib/accountBalance';
 import { portfolioCashBalance } from '../../lib/portfolioCash';
 
-const CURRENCY_SYMBOL: Record<string, string> = {
-  EUR: '€', USD: '$', GBP: '£', SEK: 'kr', NOK: 'kr', DKK: 'kr', CHF: 'Fr', JPY: '¥',
-};
-const CURRENCIES = ['EUR', 'USD', 'GBP', 'SEK', 'NOK', 'DKK', 'CHF', 'JPY'];
+
 
 function fmt(amount: number, currency: string): string {
-  const sym = CURRENCY_SYMBOL[currency.toUpperCase()] ?? '';
-  const isSuffix = ['kr', 'Fr'].includes(sym);
-  const num = amount.toLocaleString(formatLocale(), { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-  return isSuffix ? `${num} ${sym}` : sym ? `${sym}${num}` : `${num} ${currency}`;
+  return formatMoney(amount, currency, { locale: formatLocale() });
 }
 
 // v1.2 follow-up — CTO Account refactor. Map covers the full AccountType
@@ -409,8 +404,8 @@ export default function NetWorth() {
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
                 >
-                  {CURRENCIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
+                  {currencyOptions(formatLocale()).map((c) => (
+                    <option key={c.code} value={c.code}>{c.label}</option>
                   ))}
                 </select>
               </div>

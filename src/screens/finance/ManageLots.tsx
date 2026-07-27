@@ -5,6 +5,7 @@
 // aggregates in sync via recomputeHoldingAggregates() on every CRUD call.
 
 import { useMemo, useState } from 'react';
+import { currencyOptions } from '../../lib/currencies';
 import { formatLocale } from '../../utils/formatters';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -15,7 +16,7 @@ import { computeSale, totalRemainingShares, saleCostBasisInCurrency } from '../.
 import { convertSync } from '../../api/fxRates';
 import type { PortfolioLot } from '../../types/finance';
 
-const CURRENCIES = ['EUR', 'USD', 'GBP', 'SEK', 'NOK', 'DKK', 'CHF', 'JPY'];
+
 
 function formatNumber(n: number, max = 4): string {
   return n.toLocaleString(formatLocale(), { maximumFractionDigits: max, minimumFractionDigits: 0 });
@@ -299,8 +300,8 @@ export default function ManageLots() {
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
               >
-                {CURRENCIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                {currencyOptions(formatLocale()).map((c) => (
+                  <option key={c.code} value={c.code}>{c.label}</option>
                 ))}
               </select>
             </div>
@@ -358,8 +359,8 @@ export default function ManageLots() {
                 value={sellCurrency}
                 onChange={(e) => setSellCurrency(e.target.value)}
               >
-                {CURRENCIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                {currencyOptions(formatLocale()).map((c) => (
+                  <option key={c.code} value={c.code}>{c.label}</option>
                 ))}
               </select>
             </div>

@@ -16,6 +16,7 @@
 // display so newest sits on top with the final balance.
 
 import { useMemo } from 'react';
+import { formatMoney } from '../../lib/currencies';
 import { formatLocale } from '../../utils/formatters';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -28,18 +29,9 @@ import { convertSync } from '../../api/fxRates';
 import type { Transaction } from '../../types/finance';
 import { LIABILITY_TYPES } from '../../types/finance';
 
-const CURRENCY_SYMBOL: Record<string, string> = {
-  EUR: '€', USD: '$', GBP: '£', SEK: 'kr', NOK: 'kr', DKK: 'kr', CHF: 'Fr', JPY: '¥',
-};
 
 function fmt(amount: number, currency: string): string {
-  const sym = CURRENCY_SYMBOL[currency.toUpperCase()] ?? '';
-  const isSuffix = ['kr', 'Fr'].includes(sym);
-  const num = amount.toLocaleString(formatLocale(), {
-    maximumFractionDigits: 2,
-    minimumFractionDigits: 2,
-  });
-  return isSuffix ? `${num} ${sym}` : sym ? `${sym}${num}` : `${num} ${currency}`;
+  return formatMoney(amount, currency, { locale: formatLocale() });
 }
 
 interface RowEntry {

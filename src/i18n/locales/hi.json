@@ -647,7 +647,7 @@
       "editCat": "श्रेणी बदलें",
       "newCat": "नई श्रेणी",
       "catName": "श्रेणी का नाम",
-      "monthlyLimit": "मासिक सीमा (€)",
+      "monthlyLimit": "मासिक सीमा ({{symbol}})",
       "icon": "आइकन",
       "linkedAccount": "जुड़ा खाता (वैकल्पिक)",
       "none": "— कोई नहीं —",
@@ -657,7 +657,7 @@
       "empty": "अभी कोई श्रेणी नहीं — जोड़ने के लिए + नई दबाएँ",
       "shared": "साझा",
       "autoUpdates": "{{name}} को अपने आप अपडेट करता है",
-      "perMonth": "€{{amount}} / माह",
+      "perMonth": "{{amount}} / माह",
       "deleteConfirm": "“{{name}}” मिटाएँ? इससे टैग किए लेन-देन का टैग हट जाएगा।",
       "shareTitle": "“{{name}}” साझा करें"
     },

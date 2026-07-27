@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { currencyOptions } from '../lib/currencies';
 import { formatLocale } from '../utils/formatters';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
@@ -271,7 +272,7 @@ export default function Settings() {
               <div className="text-[10px] text-text-muted">{t('settings.autoLockSub')}</div>
             </div>
             <select
-              className="input max-w-[120px] py-2"
+              className="input max-w-[220px] py-2"
               value={autoLock}
               onChange={(e) => setAutoLock(Number(e.target.value))}
             >
@@ -357,9 +358,9 @@ export default function Settings() {
               value={baseCurrency}
               onChange={(e) => setBaseCurrency(e.target.value as BaseCurrency)}
             >
-              {SUPPORTED_CURRENCIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
+              {currencyOptions(formatLocale()).map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.label}
                 </option>
               ))}
             </select>

@@ -543,7 +543,7 @@
       "editCat": "Edit Category",
       "newCat": "New Category",
       "catName": "Category name",
-      "monthlyLimit": "Monthly limit (€)",
+      "monthlyLimit": "Monthly limit ({{symbol}})",
       "icon": "Icon",
       "linkedAccount": "Linked account (optional)",
       "none": "— None —",
@@ -553,7 +553,7 @@
       "empty": "No categories yet — tap + New to add one",
       "shared": "Shared",
       "autoUpdates": "Auto-updates {{name}}",
-      "perMonth": "€{{amount}} / month",
+      "perMonth": "{{amount}} / month",
       "deleteConfirm": "Delete “{{name}}”? Transactions tagged to it will be untagged.",
       "shareTitle": "Share “{{name}}”"
     },
