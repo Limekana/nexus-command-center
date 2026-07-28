@@ -342,6 +342,48 @@ Two directions to try, in this order:
 Try (1) first and look at it before spending money on (2). Note the labels must
 survive Finnish and German, which are the longest of the ten.
 
+### SD-F4 🟠 Custom grade scale alongside US and IB
+
+Today `gradeMode` is `'us' | 'ib'` only. A student on the Finnish 4–10 scale has
+no correct option — and the same is true across most of Europe.
+
+**The good news, checked:** this is much smaller than it sounds.
+
+- `calculateGPA(courses, 'ib')` is a **straight weighted mean** (`lib/gpa.js:29`).
+  That maths is already correct for any "higher is better" numeric scale,
+  Finnish 4–10 included. There is no new formula to write for the common case.
+- `grades.grade` is `numeric` in Postgres and stores the raw value, so the scale
+  is purely interpretation. **No database migration is needed.**
+- Nothing in the grades or stats views hardcodes a maximum of 7 or 100 — checked.
+
+**The gotchas, in order of how easy they are to miss:**
+
+1. `App.jsx:309` — `case "SET_GRADE_MODE": return {...state, gradeMode: action.mode==="us"?"us":"ib"}`.
+   That ternary **silently coerces any unrecognised mode to `'ib'`**. A third
+   mode will vanish without error until this line changes. Start here.
+2. `gradeMode` is persisted to `localStorage` only (`App.jsx:808`) and
+   deliberately excluded from sync as a device-level display toggle. A *custom
+   scale definition* is not a display toggle — it is configuration a user would
+   expect on their other device. The `user_preferences` table already exists and
+   is synced; that is where the scale belongs, with `gradeMode` itself possibly
+   moving too.
+3. `RESET_AFTER_SIGNOUT` (`:325`) preserves `gradeMode` deliberately. Whatever
+   holds the custom scale needs the same treatment or a guest loses it at
+   sign-out.
+
+**What to store:** `{ min, max, passMark, direction }`. The first three are
+obvious; `direction` is the one worth adding while you are in there, because
+several European scales run the other way — German and Czech 1–5/1–6 have 1 as
+best. Supporting it is one comparison, and skipping it means revisiting this
+whole item the first time a German user asks.
+
+Suggested default when "Custom" is picked: 4–10, pass at 5, higher-is-better —
+it is the case that prompted this, and it makes the feature self-explanatory.
+
+Worth noting for the disclaimer in the terms: the ToS already says the
+institution's official calculation is the one that counts, which covers a
+user configuring a scale that does not match their school's weighting rules.
+
 ### SD-F3 🟡 Guest avatar is a bare dot
 
 `src/App.jsx:24-30` — `avatarInitials()` returns `"·"` when there is no session,
