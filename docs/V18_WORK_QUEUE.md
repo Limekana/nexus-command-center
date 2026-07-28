@@ -292,6 +292,71 @@ with something else.
 
 ---
 
+## 6. StudyDesk — user feedback (added 2026-07-27)
+
+From Emil's brother, testing on a real device. Bottom of the queue by request.
+Root causes traced so these are actionable rather than reports.
+
+### SD-F1 🔴 "Skip" on the onboarding notification step still fires the permission prompt
+
+**This is a bug, not polish, and the cause is exact.** `src/App.jsx:1365-1370` —
+the two buttons on onboarding step 3 are wired to the *identical* handler:
+
+```jsx
+<button …onClick={()=>onComplete(result())}>{t('sdob.enableReminders')}</button>
+<button …onClick={()=>onComplete(result())}>{t('sdob.maybeLater')}</button>
+```
+
+Nothing distinguishes them. `handleOnboardingComplete` (`:892`) sets
+`onboarded = true`, and the effect at `:813` fires on that flag and calls
+`scheduleNotifications(...)`, which asks the OS for permission. So "Maybe later"
+takes exactly the same path as "Enable reminders" — the user's choice is
+discarded before it reaches anything.
+
+**Fix:** pass the intent through — `onComplete(result(), { notifications: bool })`
+— persist it, and gate the effect on it. Then add a Settings toggle so anyone who
+declined can turn reminders on later, since right now declining is
+irreversible without a reinstall.
+
+Worth doing early despite sitting at the bottom of the queue: an unexpected
+permission prompt during onboarding is exactly the kind of thing that makes
+someone back out of an app, and the funnel says 80% of signups never create a
+subject. This is a candidate explanation, and it is cheap to eliminate.
+
+### SD-F2 🟡 Bottom tab icons look poor
+
+`src/App.jsx:1090-1094` — the tabs use single glyphs (`◎`, `◈`, `⌗`) rendered at
+`.mobile-tab-icon` (`:391`). They are geometric Unicode symbols rather than an
+icon set, so they carry no meaning and render inconsistently across Android
+font stacks.
+
+Two directions to try, in this order:
+
+1. **Drop the icons, enlarge the labels.** Cheapest, and the labels are already
+   translated into ten languages. Also sidesteps the reason the glyphs look
+   wrong, which is that they are not really icons.
+2. **Use a real icon set.** Must be a bundled SVG set, not a webfont, and must
+   ship in-repo — F-Droid builds have no network, and a CDN font would break the
+   reproducible build.
+
+Try (1) first and look at it before spending money on (2). Note the labels must
+survive Finnish and German, which are the longest of the ten.
+
+### SD-F3 🟡 Guest avatar is a bare dot
+
+`src/App.jsx:24-30` — `avatarInitials()` returns `"·"` when there is no session,
+so guests get a single interpunct in the top-right circle.
+
+Suggestion is an anonymous-profile silhouette with some character to it rather
+than the Instagram default. Since StudyDesk's identity is the cream-paper
+aesthetic, an inline SVG in the existing palette would fit and costs nothing at
+runtime. Keep it inline — no asset fetch, no new dependency.
+
+Small, but it is the first thing a guest sees on every screen, and roughly half
+the user base never signs in.
+
+---
+
 ## Standing constraints (unchanged)
 
 - Never read, print or commit `.env`, secrets, the release keystore or
