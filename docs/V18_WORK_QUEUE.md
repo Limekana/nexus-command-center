@@ -249,6 +249,36 @@ GitHub Pages is a perfectly good permanent answer if you would rather not. The
 only thing that matters is that whatever URL goes into the Google console keeps
 working — changing it later means re-verifying with Google.
 
+### Latent config — the "Testing vs Production" class
+
+Things that are invisible until the day they matter, found by sweeping the
+consoles rather than the code. Ordered by consequence.
+
+| # | Item | Consequence if ignored |
+|---|---|---|
+| C-1 | 🔴 **Back up the release keystore, off-machine.** | fdroiddata pins `AllowedAPKSigningKeys` to one fingerprint (`27e17d1f…`). Lose the keystore and **StudyDesk can never be updated again** — users would have to uninstall and reinstall from a new key, losing all local data. Irreversible, and it will apply to NCC and LimeLog the moment their MRs merge. Config in all three repos is correct (gitignored, never committed); what cannot be verified from here is whether a copy exists anywhere else. |
+| C-2 | 🔴 **Check Supabase Site URL and the Redirect URL allowlist.** | Two separate failure modes. A wrong Site URL sends email confirmation links to the wrong place — a second candidate cause for the 5-of-26 unconfirmed signups, independent of SMTP. An over-broad allowlist (wildcards) lets an attacker redirect an OAuth token to a host they control. |
+| C-3 | 🟠 **Enable GitHub secret scanning + push protection** on all three repos. | Free on public repos, one toggle each. Complements the pre-commit scanner by working server-side, so it still catches a leak from a clone that never ran `npm install` and therefore never got the hook. |
+| C-4 | 🟠 **Branch-protect `main`, require CI to pass.** | "`main` is sacred" is currently a convention in a document. Protection makes it structural, and requiring the CI check turns the mandatory build gate into something that cannot be skipped by hand — which is how two releases previously shipped broken. |
+| C-5 | 🟡 **Review the Google OAuth authorised redirect URIs.** | Same class as C-2, worth an eyeball now the app is in Production. |
+| C-6 | 🟡 **Free-tier projects pause after ~7 days of inactivity.** | Not a live risk while signups continue, but worth knowing the mechanism exists before it surprises you during a quiet spell. |
+
+**On the Testing → Production toggle just flipped:** correct to do, but worth
+being precise about what it did and did not change, so it does not get credited
+with something else.
+
+- **It did not fix a retention problem.** Testing-status projects issue
+  refresh tokens that expire in 7 days — *unless the only scopes requested are a
+  subset of name, email address and user profile*. None of the three apps passes
+  a `scopes` parameter, so all of them use Supabase's default
+  `email profile openid` and sat inside that exemption. The session data agrees:
+  live sessions of 28, 27.6, 15.6 and 13.8 days, with no cluster at 7.
+- **What it did remove** is the 100-test-user ceiling, which was a real future
+  wall to walk into.
+- **No Google verification is required**, precisely because the scopes are
+  non-sensitive. Publishing is the whole step; there is no review queue to wait
+  in.
+
 ### ⬜ Still to build
 
 | # | Item | Notes |
