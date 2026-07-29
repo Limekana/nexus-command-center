@@ -13,6 +13,7 @@
 
 import { supabase } from './supabase';
 import { type LifeProfile, type DomainKey } from './lifeProfile';
+import { useSettingsStore } from '../store/useSettingsStore';
 
 export interface NarrativeInput {
   /** Composite life score, 0–100. */
@@ -69,6 +70,10 @@ Write the summary now:`;
  * trimmed text, or null on any failure (so the caller hides the card).
  */
 export async function generateLifeNarrative(input: NarrativeInput): Promise<string | null> {
+  // The opt-out gate, checked here rather than only at the call site: this is
+  // the single point where anything leaves the device for Gemini, so a future
+  // caller cannot bypass the user's choice by forgetting to check the flag.
+  if (!useSettingsStore.getState().aiEnabled) return null;
   try {
     const { data, error } = await supabase.functions.invoke<{ text?: string; error?: string }>(
       'ai-generate',

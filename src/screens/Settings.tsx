@@ -70,6 +70,8 @@ export default function Settings() {
   const setNotifPortfolioEodEnabled = useSettingsStore((s) => s.setNotifPortfolioEodEnabled);
   const notifNewsEnabled = useSettingsStore((s) => s.notifNewsEnabled);
   const setNotifNewsEnabled = useSettingsStore((s) => s.setNotifNewsEnabled);
+  const aiEnabled = useSettingsStore((s) => s.aiEnabled);
+  const setAiEnabled = useSettingsStore((s) => s.setAiEnabled);
   const notifMacroKeywordsEnabled = useSettingsStore((s) => s.notifMacroKeywordsEnabled);
   const setNotifMacroKeywordsEnabled = useSettingsStore((s) => s.setNotifMacroKeywordsEnabled);
   const [notifAvailable, setNotifAvailable] = useState(false);
@@ -367,6 +369,30 @@ export default function Settings() {
               ))}
             </select>
           </div>
+        </Section>
+
+        <Section title={t('settings.privacy')}>
+          {/* Master switch for the cloud AI features. Off by default: the Life
+              narrative previously generated on arrival at the tab, so "opt-in"
+              was only true of the other two apps in the suite. */}
+          <Toggle
+            label={t('settings.aiFeatures')}
+            sub={aiEnabled ? t('settings.aiFeaturesOnSub') : t('settings.aiFeaturesOffSub')}
+            value={aiEnabled}
+            onChange={setAiEnabled}
+          />
+          <a
+            className="py-2 flex items-center justify-between gap-3 active:opacity-80"
+            href="https://limekana.github.io/nexus-command-center/legal/privacy.html"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <div className="min-w-0">
+              <div className="text-sm">{t('settings.privacyPolicy')}</div>
+              <div className="text-[10px] text-text-muted">{t('settings.privacyPolicySub')}</div>
+            </div>
+            <span className="text-primary text-lg flex-shrink-0">›</span>
+          </a>
         </Section>
 
         <Section title={t('settings.lifeProfile')}>

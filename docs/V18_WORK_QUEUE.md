@@ -217,6 +217,7 @@ all three apps**, so legal surfaces are suite-wide, not per-app.
 | O-4 | **Accept the Supabase DPA** (Organisation settings) | Art. 28 requires a written processor agreement. Minutes of work. |
 | O-5 | **Backups off the free plan** — Pro (~$25/mo) for PITR, or a scheduled `pg_dump` | Free plan is 7-day retention, no PITR, now covering 144 people's data. |
 | O-6 | **Enable leaked-password protection** (Auth → Passwords) | The only remaining security advisor on the project. One toggle. |
+| O-7 | **Check the Gemini API tier** at [aistudio.google.com/apikey](https://aistudio.google.com/apikey) — and enable billing if it is on Free | On the **free tier Google may use the submitted content to improve its products**; the paid tier excludes that contractually. A processor using data for its own purposes is a controller, which is a GDPR problem the policy does not disclose and cannot honestly disclose away. Cost is not the reason to switch: at ~$0.0003/call the whole user base runs to roughly **$1–2/month**. Once you confirm paid tier, the policy can carry a "Google does not use it for training" sentence — until then it deliberately does not. |
 
 Once Pages is on, paste these into the OAuth consent screen:
 
@@ -288,7 +289,35 @@ with something else.
 | L-9 | **Record of processing (Art. 30)** | The <250-employee exemption falls away for non-occasional processing, which continuous sync is. One internal page; also keeps the policy honest. |
 | L-10 | **`audit_log` erasure gap (NCC)** | 132 rows of `budget_categories` / `tasks` snapshots with `changed_by ON DELETE SET NULL` — content survives account deletion, merely un-attributed. Real Art. 17 gap **for NCC only**; StudyDesk tables are not audited. |
 | L-11 | **Age statement in NCC and LimeLog** | Same one-liner as StudyDesk. Lower urgency — neither is aimed at schoolchildren the way a study planner is. |
-| L-12 | **In-app privacy links in NCC and LimeLog** | Point at the suite policy from Settings, as StudyDesk now does. |
+| L-12 | **In-app privacy links in NCC and LimeLog** | ✅ done — Settings → Privacy & AI links to the suite policy in both. |
+
+### L-13 ✅ The policy said things the software did not do (2026-07-29)
+
+Triggered by asking a simple question — *what do the AI features run on, and is
+it free* — which turned out to have a different answer than the docs implied.
+**All three apps have an AI feature**, not just StudyDesk. All three route
+through one Supabase Edge Function (`ai-generate`, project `hkktorzh…`) to
+`gemini-2.5-flash` on the Gemini Developer API, with the key held server-side.
+
+Auditing the policy against the code then found five more claims that did not
+match, in rough order of seriousness:
+
+| # | Claim | Reality | Fix |
+|---|---|---|---|
+| 1 | "AI features run only when you write a note and press the button" | NCC's Life narrative **generated itself** on arrival at the Life tab, whenever the cached score had drifted ≥5. No button anywhere in the path, and the feature was not mentioned in the policy at all. | Real opt-in switch in all three apps, **default off**, gated at the network choke point as well as the render site. Policy rewritten around the switch. |
+| 2 | "Two processors, and nobody else" | NCC calls **ten** third-party hosts — CoinGecko, Yahoo Finance ×3, Finnhub, `open.er-api.com`, ECB, Federal Reserve, NYSE, CNN's market-indicator feed. | Named them all in a new processors subsection, stating what they do and do not see. |
+| 3 | "Export my data / Delete my account — **both are in Settings**" | Only StudyDesk has them (L-8). A suite-wide policy promised Art. 17/20 buttons in two apps that do not have any. | Stated plainly which app has them, and that one account means StudyDesk's buttons cover all three. L-8 still open. |
+| 4 | Guest mode: "written to your device and **nowhere else**" | True of everything the user enters, but NCC fetches prices and FX as a guest. | Kept the strong claim for user-entered data, added the caveat for public market requests. |
+| 5 | LimeLog data table listed no AI fields | `ai_debrief_raw` and four more sync to Supabase (`nexusSync.ts:108`). | Added the row. |
+
+Also worth knowing and **not** fixable in the policy: on the Gemini **free
+tier Google may use submitted content to improve its products**. See O-7 — this
+is a billing-console question, not a wording question, and the policy stays
+silent on training rather than claiming something unverified.
+
+**The opt-out defaults to off in all three apps**, including for existing users,
+and StudyDesk deliberately does not preserve it across sign-out — carrying one
+person's consent to the next person on the same device is not consent.
 
 ---
 

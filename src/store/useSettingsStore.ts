@@ -45,6 +45,14 @@ const SAVINGS_BUFFER_KEY = 'settings.savings.bufferAmount';
 // users see the same rating they were already looking at.
 const INSIGHTS_TAB_KEY = 'settings.insights.tab';
 export type InsightsTab = 'technical' | 'fundamental';
+// v1.8 — master switch for the cloud AI features. Off by default, and that
+// default is deliberate: the Life-tab narrative used to generate itself the
+// moment the tab had a ready report, with no user action anywhere in the path.
+// The privacy policy told users the AI was opt-in and only ran on a button
+// press, which was true of StudyDesk's and LimeLog's debriefs but not of this.
+// Rather than reword the promise, this makes it true — nothing reaches Gemini
+// until the user turns this on.
+const AI_ENABLED_KEY = 'settings.ai.enabled';
 
 interface SettingsStore {
   baseCurrency: BaseCurrency;
@@ -64,6 +72,9 @@ interface SettingsStore {
    *  Insights screen content and which composite the RatingPill on
    *  portfolio + watchlist rows displays. */
   insightsTab: InsightsTab;
+  /** v1.8 — whether the cloud AI features may run. Gates the Life-tab
+   *  narrative; when false nothing is sent to the `ai-generate` function. */
+  aiEnabled: boolean;
   loaded: boolean;
   load: () => Promise<void>;
   setBaseCurrency: (c: BaseCurrency) => Promise<void>;
@@ -77,6 +88,7 @@ interface SettingsStore {
   setNotifIntroSeen: (seen: boolean) => Promise<void>;
   setSavingsBufferAmount: (amount: number) => Promise<void>;
   setInsightsTab: (tab: InsightsTab) => Promise<void>;
+  setAiEnabled: (on: boolean) => Promise<void>;
 }
 
 async function readPref(key: string): Promise<string | null> {
@@ -121,6 +133,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   notifIntroSeen: false,
   savingsBufferAmount: 0,
   insightsTab: 'technical',
+  aiEnabled: false,
   loaded: false,
 
   async load() {
@@ -136,6 +149,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
       notifIntroSeen,
       savingsBuffer,
       insightsTab,
+      aiEnabled,
     ] = await Promise.all([
       readPref(CURRENCY_KEY),
       readPref(REMINDER_KEY),
@@ -148,6 +162,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
       readBoolPref(NOTIF_INTRO_SEEN_KEY),
       readPref(SAVINGS_BUFFER_KEY),
       readPref(INSIGHTS_TAB_KEY),
+      readBoolPref(AI_ENABLED_KEY),
     ]);
     set({
       baseCurrency:
@@ -164,6 +179,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
       notifIntroSeen,
       savingsBufferAmount: savingsBuffer ? Math.max(0, parseFloat(savingsBuffer) || 0) : 0,
       insightsTab: insightsTab === 'fundamental' ? 'fundamental' : 'technical',
+      aiEnabled,
       loaded: true,
     });
   },
@@ -222,5 +238,10 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   async setInsightsTab(tab) {
     await writePref(INSIGHTS_TAB_KEY, tab);
     set({ insightsTab: tab });
+  },
+
+  async setAiEnabled(on) {
+    await writePref(AI_ENABLED_KEY, on ? '1' : '0');
+    set({ aiEnabled: on });
   },
 }));

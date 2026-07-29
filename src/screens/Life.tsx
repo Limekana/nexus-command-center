@@ -27,6 +27,7 @@ import { useTaskStore } from '../store/useTaskStore';
 import { useGoalsStore } from '../store/useGoalsStore';
 import { useWorkQualityStore } from '../store/useWorkQualityStore';
 import { useLifeProfileStore } from '../store/useLifeProfileStore';
+import { useSettingsStore } from '../store/useSettingsStore';
 import {
   buildCrossDomainReport,
   bucketHabitsByWeek,
@@ -95,6 +96,7 @@ export default function Life() {
   const loadWork = useWorkQualityStore((s) => s.load);
   const workLoaded = useWorkQualityStore((s) => s.loaded);
   const profile = useLifeProfileStore((s) => s.profile);
+  const aiEnabled = useSettingsStore((s) => s.aiEnabled);
   const loadProfile = useLifeProfileStore((s) => s.load);
 
   useEffect(() => {
@@ -229,7 +231,9 @@ export default function Life() {
         </section>
 
         {/* ─── AI NARRATIVE ─────────────────────────────────────────── */}
-        {report.ready && thisWeek && (
+        {/* Gated on the Settings opt-in. Off by default — this card used to
+            generate itself on arrival, which is not what "opt-in" means. */}
+        {aiEnabled && report.ready && thisWeek && (
           <LifeNarrativeCard
             input={{
               lifeScore: thisWeek.score,
