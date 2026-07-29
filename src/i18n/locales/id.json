@@ -258,6 +258,7 @@
     "aiFeatures": "Fitur AI",
     "aiFeaturesOnSub": "Aktif — skor mingguan Anda dikirim ke Google Gemini untuk menulis ringkasan Life.",
     "aiFeaturesOffSub": "Nonaktif — tidak ada yang dikirim ke Google. Ringkasan Life disembunyikan.",
+    "aiTrainingNote": "Google menjalankannya di tingkat gratis, jadi apa yang Anda kirim dapat dipakai untuk melatih model mereka berikutnya. Biarkan nonaktif jika itu tidak cocok bagi Anda.",
     "privacyPolicy": "Kebijakan privasi",
     "privacyPolicySub": "Apa yang kami simpan dan siapa lagi yang melihatnya",
     "baseCurrency": "Mata uang dasar",

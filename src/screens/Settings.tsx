@@ -381,6 +381,11 @@ export default function Settings() {
             value={aiEnabled}
             onChange={setAiEnabled}
           />
+          {/* Free-tier disclosure. Consent has to be informed where it is
+              given, so this sits on the switch and not only in the policy. */}
+          <div className="text-[10px] text-text-muted px-1 pb-1 leading-relaxed">
+            {t('settings.aiTrainingNote')}
+          </div>
           <a
             className="py-2 flex items-center justify-between gap-3 active:opacity-80"
             href="https://limekana.github.io/nexus-command-center/legal/privacy.html"

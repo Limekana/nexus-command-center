@@ -171,6 +171,7 @@
     "aiFeatures": "Funciones de IA",
     "aiFeaturesOnSub": "Activado: tus puntuaciones semanales se envían a Google Gemini para redactar el resumen de Life.",
     "aiFeaturesOffSub": "Desactivado: no se envía nada a Google. El resumen de Life está oculto.",
+    "aiTrainingNote": "Google lo ejecuta en su nivel gratuito, así que lo que envíes puede usarse para entrenar sus futuros modelos. Déjalo desactivado si no te convence.",
     "privacyPolicy": "Política de privacidad",
     "privacyPolicySub": "Qué guardamos y quién más lo ve",
     "baseCurrency": "Moneda base",

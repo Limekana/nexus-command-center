@@ -201,6 +201,7 @@
     "aiFeatures": "AI features",
     "aiFeaturesOnSub": "On — your weekly scores are sent to Google Gemini to write the Life summary.",
     "aiFeaturesOffSub": "Off — nothing is sent to Google. The Life summary is hidden.",
+    "aiTrainingNote": "Google runs this on their free tier, which means what you send may be used to train their future models. Leave it off if that is not for you.",
     "privacyPolicy": "Privacy policy",
     "privacyPolicySub": "What we store, and who else sees it",
     "baseCurrency": "Base Currency",

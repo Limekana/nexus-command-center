@@ -171,6 +171,7 @@
     "aiFeatures": "KI-Funktionen",
     "aiFeaturesOnSub": "An — deine Wochenwerte werden an Google Gemini gesendet, um die Life-Zusammenfassung zu schreiben.",
     "aiFeaturesOffSub": "Aus — es wird nichts an Google gesendet. Die Life-Zusammenfassung ist ausgeblendet.",
+    "aiTrainingNote": "Google betreibt das über den kostenlosen Tarif — was du sendest, kann zum Training künftiger Modelle verwendet werden. Lass es aus, wenn das nichts für dich ist.",
     "privacyPolicy": "Datenschutzerklärung",
     "privacyPolicySub": "Was wir speichern und wer es sonst sieht",
     "baseCurrency": "Basiswährung",

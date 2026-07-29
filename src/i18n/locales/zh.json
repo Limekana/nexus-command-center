@@ -171,6 +171,7 @@
     "aiFeatures": "AI 功能",
     "aiFeaturesOnSub": "已开启 — 你的每周评分会发送至 Google Gemini 以生成 Life 摘要。",
     "aiFeaturesOffSub": "已关闭 — 不会向 Google 发送任何内容，Life 摘要已隐藏。",
+    "aiTrainingNote": "Google 通过免费方案运行此功能，因此你发送的内容可能被用于训练其未来的模型。若不能接受，请保持关闭。",
     "privacyPolicy": "隐私政策",
     "privacyPolicySub": "我们存储哪些数据，以及谁能看到",
     "baseCurrency": "基准货币",

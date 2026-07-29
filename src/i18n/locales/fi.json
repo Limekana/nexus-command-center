@@ -171,6 +171,7 @@
     "aiFeatures": "Tekoälytoiminnot",
     "aiFeaturesOnSub": "Päällä — viikkopisteesi lähetetään Google Geminille Life-yhteenvedon kirjoittamista varten.",
     "aiFeaturesOffSub": "Pois — Googlelle ei lähetetä mitään. Life-yhteenveto on piilotettu.",
+    "aiTrainingNote": "Google ajaa tämän ilmaisella tasolla, joten lähettämääsi voidaan käyttää heidän tulevien mallien kouluttamiseen. Jätä pois päältä, jos se ei sovi sinulle.",
     "privacyPolicy": "Tietosuojaseloste",
     "privacyPolicySub": "Mitä tallennamme ja kuka muu sen näkee",
     "baseCurrency": "Perusvaluutta",
