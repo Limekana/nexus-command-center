@@ -34,7 +34,7 @@
 <header>
   <div class="brand">Limecore Studio</div>
   <h1>Privacy Policy</h1>
-  <div class="updated">Last updated 27 July 2026 · covers Nexus Command Center, LimeLog and StudyDesk</div>
+  <div class="updated">Last updated 29 July 2026 · covers Nexus Command Center, LimeLog and StudyDesk</div>
 </header>
 
 <p class="lede">
@@ -50,7 +50,8 @@
     <li><strong>Without an account, nothing leaves your device.</strong> All three apps work fully offline as a guest.</li>
     <li><strong>With an account, your data syncs</strong> so you can use more than one device and survive changing phone.</li>
     <li><strong>No advertising, no tracking, no analytics SDKs.</strong> We do not know which screens you opened or for how long.</li>
-    <li>You can <strong>export everything</strong> and <strong>delete your account and all its data</strong> from inside the apps, without asking us.</li>
+    <li><strong>The AI features are off until you switch them on</strong> in Settings, in every app. If you do switch them on, what you send <strong>may be used by Google to train its models</strong> — we run on their free tier. Details below.</li>
+    <li>You can <strong>export everything</strong> and <strong>delete your account and all its data</strong> from inside any of the three apps, without asking us.</li>
     <li>One account works across all three apps. Deleting it deletes everything, in all three.</li>
   </ul>
 </div>
@@ -68,9 +69,16 @@
 
 <h2>Guest mode</h2>
 <p>
-  Every app can be used without an account. In guest mode your data is written to
-  your device's local storage and nowhere else. We never receive it, cannot read
-  it, and cannot recover it for you. Uninstalling the app deletes it.
+  Every app can be used without an account. In guest mode <strong>everything you
+  enter</strong> — your finances, training, coursework, tasks and habits — is
+  written to your device's local storage and nowhere else. We never receive it,
+  cannot read it, and cannot recover it for you. Uninstalling the app deletes it.
+</p>
+<p>
+  One honest caveat: Nexus Command Center still fetches <em>public</em> market
+  prices and exchange rates while you are a guest, because a price chart with no
+  prices is not much use. Those requests carry a ticker symbol, never anything
+  you entered. See <a href="#processors">Who else sees your data</a>.
 </p>
 
 <h2>What is stored when you sign in</h2>
@@ -107,6 +115,7 @@
   <tr><th>Training</th><td>Programs and phases, sessions, every set with its weight, reps and effort rating, personal records, and session notes.</td></tr>
   <tr><th>Body metrics</th><td>Bodyweight and any measurements you choose to record, plus vertical-jump entries.</td></tr>
   <tr><th>Progress photos</th><td><strong>Stored only on your device.</strong> Photos are never uploaded and never reach our database.</td></tr>
+  <tr><th>AI debrief <em>(only if switched on)</em></th><td>The note you typed, plus what the model extracted: an effort rating, any body parts you mentioned as sore, a mood, and a one-line summary.</td></tr>
 </table>
 <div class="box">
   <strong>About body data.</strong> Bodyweight and body measurements can reveal
@@ -131,8 +140,9 @@
   history, no usage analytics. The apps request no permissions for any of it.
 </p>
 
-<h2>Who else sees your data</h2>
-<p>Two processors, and nobody else. We do not sell or share your data, ever, with anyone, for any purpose.</p>
+<h2 id="processors">Who else sees your data</h2>
+<p>We do not sell or share your data, ever, with anyone, for any purpose. The
+services below are the only ones that receive anything at all.</p>
 
 <h3>Supabase</h3>
 <p>Hosts the database and handles sign-in. Data is stored in the EU.</p>
@@ -145,27 +155,77 @@
   <li><strong>"Continue with Google" sign-in.</strong> Google tells us your email
   address, name and profile picture. Your Google account itself is governed by
   <a href="https://policies.google.com/privacy" rel="noopener">Google's privacy policy</a>.</li>
-  <li><strong>The optional AI features.</strong> StudyDesk's study debrief and
-  LimeLog's workout debrief send the note <em>you typed</em> to Google's Gemini
-  model, which extracts structured fields from it. This may be processed outside
-  the EEA, under the Standard Contractual Clauses Google offers for international
-  transfers.</li>
+  <li><strong>The AI features</strong>, described in full below.</li>
 </ul>
+
+<h3>Market data providers (Nexus Command Center only)</h3>
+<p>
+  To show prices, exchange rates and market indicators, Nexus Command Center
+  requests public data from CoinGecko, Yahoo Finance, Finnhub,
+  <code>open.er-api.com</code>, the European Central Bank, the US Federal
+  Reserve, NYSE and CNN's market-indicator feed.
+</p>
+<p>
+  These requests carry a ticker symbol or a currency pair and nothing else — no
+  account, no name, no email, no holdings, no amounts. They cannot see what you
+  own or how much. They do, like any web request, see the IP address it came
+  from. <strong>They happen whether or not you have an account</strong>, because
+  prices are the same for everyone. The other two apps make no such requests.
+</p>
+
+<h2>The AI features</h2>
+<p>
+  Each app has one optional feature that sends something to Google's
+  <strong>Gemini</strong> model. <strong>All three are off until you switch them
+  on in Settings</strong>, and they stay off after a fresh install, after a
+  reinstall, and for anyone who signs in on a device where someone else turned
+  them on.
+</p>
+<table>
+  <tr><th>StudyDesk — study debrief</th><td>Sends <em>the note you type</em> after a study session. Gemini returns the topic, a 1–5 comprehension rating, anything you flagged as confusing, and a one-line summary.</td></tr>
+  <tr><th>LimeLog — workout debrief</th><td>Sends <em>the note you type</em> after a session. Gemini returns an effort rating, any body parts you mentioned as sore, a mood, and a one-line summary.</td></tr>
+  <tr><th>Nexus Command Center — weekly summary</th><td>Sends your <em>domain scores only</em> — five numbers between 0 and 100, plus the pattern headlines already shown on the Life tab. It never sends transactions, amounts, account names, task text or habit names. Gemini returns two or three sentences.</td></tr>
+</table>
 <div class="box">
-  <strong>The AI features are opt-in and stay off unless you use them.</strong>
-  They run only when you write a note and press the button. If you never use them,
-  nothing is ever sent to Gemini, and every other feature works identically.
-  Please do not put anything in those notes you would not want processed by a
-  third party.
+  <strong>Turning the switch on is how you consent, and turning it off is how you
+  withdraw.</strong> While it is off, nothing whatsoever is sent to Gemini and
+  every other feature works identically. While it is on, please do not write
+  anything in those notes you would not want processed by a third party.
+  <br><br>
+  What is sent may be processed outside the EEA, under the Standard Contractual
+  Clauses Google offers for international transfers. We do not send your email
+  address, your name or your account ID along with it.
+</div>
+<div class="box">
+  <strong>Read this before you switch it on.</strong> These apps use Google's
+  <em>free</em> Gemini tier, and on that tier
+  <strong>Google may use what is sent to improve its products, including
+  training future versions of its models</strong>. That is the trade-off for the
+  feature costing nothing to run, and we would rather say so plainly than bury
+  it.
+  <p>
+    In practice this means: anything you type into a study or workout debrief
+    could end up as training data at Google. The Nexus Command Center summary
+    sends only five 0–100 scores and the headlines already on your screen, so
+    there is nothing personal in it to train on — but the two debriefs send
+    exactly the words you wrote.
+  </p>
+  <p>
+    <strong>If that is not acceptable to you, leave the switch off.</strong>
+    Nothing else in any of the apps changes, and no feature other than these
+    three is affected. If we ever move to Google's paid tier — where this use is
+    contractually excluded — we will update this page and say so in the apps.
+  </p>
 </div>
 
 <h2>Why we are allowed to store it</h2>
 <ul>
   <li><strong>To provide the app you asked for</strong> (GDPR Art. 6(1)(b)) — your
   finances, training, coursework, tasks and habits. Without them there is no app.</li>
-  <li><strong>Your consent</strong> (Art. 6(1)(a)) — the optional AI debriefs. You
-  give it by using the feature and withdraw it by not using it and deleting the
-  notes you already sent.</li>
+  <li><strong>Your consent</strong> (Art. 6(1)(a)) — the AI features. You give it
+  by switching them on in Settings, and withdraw it by switching them off. To
+  remove what was already sent, delete the sessions those notes belong to, or
+  delete your account.</li>
 </ul>
 
 <h2>Age</h2>
@@ -187,7 +247,10 @@
   remove old data.</li>
   <li>When you delete an item in an app, it is marked deleted and hidden
   immediately, and the marker is kept so the deletion reaches your other devices.
-  Those markers are removed from the database when you delete your account.</li>
+  <strong>Those markers, and the deleted content with them, are erased
+  automatically 90 days later</strong> — or straight away if you delete your
+  account. The 90 days exist so the deletion still reaches a device you have not
+  opened in a while; without the marker, that device would put the item back.</li>
   <li>When you <strong>delete your account</strong>, everything is erased
   immediately and irreversibly, across all three apps. There is no recovery
   window. Encrypted infrastructure backups roll off within 7 days.</li>
@@ -201,10 +264,21 @@
 <p>Two of those are buttons rather than requests, so you never have to wait for us:</p>
 <ul>
   <li><strong>Export my data</strong> — downloads everything we hold, as JSON.</li>
-  <li><strong>Delete my account</strong> — erases the account and all its data.</li>
+  <li><strong>Delete my account</strong> — erases the account and all its data,
+  across all three apps.</li>
 </ul>
 <p>
-  Both are in Settings. For anything else, email
+  <strong>Both are in Settings, in all three apps.</strong> Because the three
+  share one account, either button works from whichever app you happen to have
+  open and covers your data in all of them — deleting from LimeLog erases your
+  StudyDesk coursework too, and the confirmation says so before you commit.
+</p>
+<p>
+  Export also works as a guest. A guest's data never left the device, but it is
+  still yours to take a copy of.
+</p>
+<p>
+  For anything else, email
   <a href="mailto:l1m3core@gmail.com">l1m3core@gmail.com</a>.
 </p>
 <p>
