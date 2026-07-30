@@ -100,16 +100,20 @@ address with each request. No user-identifying data accompanies it.
 | Data | Retention |
 |---|---|
 | Everything in §3 | Until the user deletes it. Accounts are never expired and old data is never quietly removed. |
-| Deleted items | Marked deleted and hidden immediately; the marker is retained so the deletion propagates to the user's other devices, and is removed when the account is deleted. |
+| Deleted items | Marked deleted and hidden immediately; the marker is retained so the deletion propagates to the user's other devices, then **hard-deleted 90 days later** by the `purge-soft-deleted` pg_cron job (weekly, Sun 03:15 UTC). Removed sooner if the account is deleted. |
 | On account deletion | Erased immediately and irreversibly across all three apps, by `ON DELETE CASCADE` from `auth.users`. No recovery window. |
 | `audit_log` | Now cascades on account deletion, and a `BEFORE DELETE` trigger also removes rows attributable through the JSONB payload. Applied 29 July 2026 — before that, deletion nulled one of two pointers and the content survived. |
 | Infrastructure backups | Roll off within 7 days. |
 
-> ⚠️ **Known gap:** soft-deleted rows are retained indefinitely rather than
-> hard-deleted past a fixed window. A scheduled purge is specified but not built.
-> Tracked as **L-7**. The privacy policy was deliberately written to describe
-> this behaviour rather than promise a window nothing enforces; tighten the
-> wording when the purge ships.
+**Closed 29 July 2026 (L-7).** `public.purge_soft_deleted()` runs weekly and
+hard-deletes tombstones older than 90 days. The window is 90 rather than 30
+because the tombstone *is* the deletion signal: remove it before a second device
+syncs and that device pushes the item back. Each parent delete is guarded by a
+`NOT EXISTS` over its live children, because `grades.subject_id` cascades from
+`subjects` and three further FKs set null — without the guard, one half-synced
+device could have cost a user live coursework. `archived_at` is never touched;
+archiving is "keep but hide", not a deletion. The privacy policy now states the
+90-day window, which it could not honestly do before.
 
 ## 7. Technical and organisational measures
 

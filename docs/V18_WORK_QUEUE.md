@@ -370,7 +370,37 @@ with something else.
 
 | # | Item | Notes |
 |---|---|---|
-| L-7 | **Retention purge for soft-deleted rows** | 10 subjects + 8 grades sit soft-deleted indefinitely. Needs a scheduled hard-delete (pg_cron) past a fixed window. **The policy was written to describe today's behaviour rather than promise a window that nothing enforces** — tighten the wording once this ships. |
+| L-7 | **Retention purge for soft-deleted rows** | ✅ **applied 2026-07-29 with sign-off** — `supabase/migrations/20260729_retention_purge.sql`. pg_cron job `purge-soft-deleted`, weekly Sun 03:15 UTC, 90-day window. Policy wording tightened to state the window, which it could not honestly do before. |
+
+#### L-7 — two things that changed the design
+
+**The blast radius is not the tombstone row.** Checked against the live catalog
+before writing anything: `grades.subject_id → subjects` is **ON DELETE CASCADE**,
+and `study_sessions.subject_id`, `readings.subject_id`,
+`transactions.category_id` and `transactions.account_id` are **SET NULL**. So
+purging one soft-deleted subject would cascade-delete its grades — *including
+live ones* — and strip the subject off live study sessions and readings.
+
+Today that is harmless: live children under a tombstoned parent currently count
+**0** across every one of those relationships, because the clients soft-delete
+children alongside the parent. But that is client behaviour, not a structural
+guarantee, and one half-synced device would be enough. **Every parent delete is
+therefore guarded by a `NOT EXISTS` over its live children** — a guarded parent
+keeps its tombstone and surfaces in `soft_deleted_pending()` instead of silently
+taking live coursework with it.
+
+**90 days, not 30, and the choice is load-bearing twice over.** The tombstone
+*is* the deletion signal, so removing it before a user's second device syncs
+means that device sees no row, treats its local copy as new, and pushes the
+deleted item back. 90 days outlives a realistic gap between opening two devices.
+It also made the install a no-op: measured, a 90-day window purges **0 rows**
+today while a 30-day window would have purged **13**. Installing the mechanism
+and mass-deleting on the same day are separate risks, and this separated them.
+
+`archived_at` on `subjects` and `habits` is deliberately untouched — archiving
+is "keep but hide", a state the user can undo, not a deletion. Both functions
+had `EXECUTE` revoked from `anon`/`authenticated` at creation, applying the
+lesson the advisor taught during L-10 rather than waiting to be told again.
 | L-8 | **Export + deletion in NCC and LimeLog** | ✅ done 2026-07-29. Both apps now carry the two buttons in Settings → Your data, calling the same app-agnostic `delete-account` Edge Function, so deleting from any app erases all three (the second confirmation names the other two). Ported from StudyDesk's `lib/dataRights.js`. Two deliberate differences: **NCC enumerates `db.tables`** rather than listing them, so a table added later cannot silently drop out of an Art. 20 export (`apiCache` and `insightsScores` excluded, with the reason stated in the file itself); **LimeLog wipes by key prefix** (`wt_`, `limelog-`) rather than by name, because `nexusStore.signOut`'s explicit six-key list is right for sign-out but would leave data behind on an erasure request. LimeLog lists progress-photo *dates* but does not embed the images — thirty base64 JPEGs would make the file unopenable, and the user already has the photos. The two new confirmations use native `confirm()`; fold them into **LL-7**. |
 | L-9 | **Record of processing (Art. 30)** | ✅ done 2026-07-29 — [`docs/RECORD_OF_PROCESSING.md`](./RECORD_OF_PROCESSING.md). Kept **internal**: Art. 30 requires the record to exist and to be produced for the supervisory authority on request, not published, and §7 lists the security measures — a reason not to publish it. Written against the live schema and console rather than from memory. |
 
