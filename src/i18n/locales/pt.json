@@ -322,7 +322,19 @@
     "wipeLocalSub": "Recomendado em aparelhos compartilhados ou emprestados.",
     "tagFree": "Grátis",
     "tagFreeFallback": "Grátis · alternativa",
-    "tagSamsung": "Samsung Android"
+    "tagSamsung": "Samsung Android",
+    "yourData": "Seus dados",
+    "yourDataNote": "Leve uma cópia de tudo ou apague. Uma conta cobre o Nexus Command Center, o LimeLog e o StudyDesk.",
+    "exportData": "Exportar meus dados",
+    "exporting": "Preparando…",
+    "exportDone": "{{name}} salvo",
+    "exportFailed": "Falha na exportação: {{msg}}",
+    "deleteAccount": "Excluir minha conta",
+    "deletingAccount": "Excluindo…",
+    "deleteAccountNote": "Apaga sua conta e todos os dados dela, nos três aplicativos, de forma imediata e irreversível. Não há período de recuperação.",
+    "deleteAccountConfirm1": "Excluir sua conta e tudo o que há nela? Isso não pode ser desfeito.",
+    "deleteAccountConfirm2": "Última verificação — isso também apaga seus dados do LimeLog e do StudyDesk. Continuar?",
+    "deleteAccountFailed": "Falha na exclusão: {{msg}}"
   },
   "lock": {
     "secureAccess": "Acesso seguro",

@@ -72,6 +72,7 @@ Branch `feature/v1.8-act2-act4-auth-gate`, pushed.
 | SD-5 | **A5** custom course colour (closed set of 8) | ⬜ open |
 | SD-6 | **A3** extract modals from 2,112-line `App.jsx` | ⬜ open |
 | SD-7 | **A6/B1/B2** one native `confirm()`, unnecessary exports, `postcss.config.cjs` | ⬜ open |
+| SD-F1 | **Onboarding "Maybe later" still fired the permission prompt** | ✅ done 2026-07-29 — see §6 |
 
 SD-2 was the headline: the Arabic RTL screenshot from earlier in the session
 shows "Sunday 26 July" in English across an otherwise fully-Arabic screen. All
@@ -217,7 +218,7 @@ all three apps**, so legal surfaces are suite-wide, not per-app.
 | O-4 | **Accept the Supabase DPA** (Organisation settings) | Art. 28 requires a written processor agreement. Minutes of work. |
 | O-5 | **Backups off the free plan** — Pro (~$25/mo) for PITR, or a scheduled `pg_dump` | Free plan is 7-day retention, no PITR, now covering 144 people's data. |
 | O-6 | **Enable leaked-password protection** (Auth → Passwords) | The only remaining security advisor on the project. One toggle. |
-| O-7 | **Check the Gemini API tier** at [aistudio.google.com/apikey](https://aistudio.google.com/apikey) — and enable billing if it is on Free | On the **free tier Google may use the submitted content to improve its products**; the paid tier excludes that contractually. A processor using data for its own purposes is a controller, which is a GDPR problem the policy does not disclose and cannot honestly disclose away. Cost is not the reason to switch: at ~$0.0003/call the whole user base runs to roughly **$1–2/month**. Once you confirm paid tier, the policy can carry a "Google does not use it for training" sentence — until then it deliberately does not. |
+| O-7 | ~~Check the Gemini API tier / enable billing~~ — **decided 2026-07-29: staying on the free tier until the apps earn something** | On the free tier **Google may use submitted content to improve its products, including training future models**. Disclosed rather than fixed: short version at the top of the policy, a dedicated box in the AI section, and a line under the switch in all three apps (`aiTrainingNote`, ten locales). Cost was never the issue — at ~$0.0003/call the whole user base is roughly **$1–2/month**. Revisit if the apps start earning: the paid tier excludes this use contractually, and the policy already promises we will say so if that changes. |
 
 Once Pages is on, paste these into the OAuth consent screen:
 
@@ -285,7 +286,7 @@ with something else.
 | # | Item | Notes |
 |---|---|---|
 | L-7 | **Retention purge for soft-deleted rows** | 10 subjects + 8 grades sit soft-deleted indefinitely. Needs a scheduled hard-delete (pg_cron) past a fixed window. **The policy was written to describe today's behaviour rather than promise a window that nothing enforces** — tighten the wording once this ships. |
-| L-8 | **Export + deletion in NCC and LimeLog** | Only StudyDesk has them. The Edge Function is app-agnostic and cascades across the whole database, so both apps need the two buttons, not new backend work. |
+| L-8 | **Export + deletion in NCC and LimeLog** | ✅ done 2026-07-29. Both apps now carry the two buttons in Settings → Your data, calling the same app-agnostic `delete-account` Edge Function, so deleting from any app erases all three (the second confirmation names the other two). Ported from StudyDesk's `lib/dataRights.js`. Two deliberate differences: **NCC enumerates `db.tables`** rather than listing them, so a table added later cannot silently drop out of an Art. 20 export (`apiCache` and `insightsScores` excluded, with the reason stated in the file itself); **LimeLog wipes by key prefix** (`wt_`, `limelog-`) rather than by name, because `nexusStore.signOut`'s explicit six-key list is right for sign-out but would leave data behind on an erasure request. LimeLog lists progress-photo *dates* but does not embed the images — thirty base64 JPEGs would make the file unopenable, and the user already has the photos. The two new confirmations use native `confirm()`; fold them into **LL-7**. |
 | L-9 | **Record of processing (Art. 30)** | The <250-employee exemption falls away for non-occasional processing, which continuous sync is. One internal page; also keeps the policy honest. |
 | L-10 | **`audit_log` erasure gap (NCC)** | 132 rows of `budget_categories` / `tasks` snapshots with `changed_by ON DELETE SET NULL` — content survives account deletion, merely un-attributed. Real Art. 17 gap **for NCC only**; StudyDesk tables are not audited. |
 | L-11 | **Age statement in NCC and LimeLog** | Same one-liner as StudyDesk. Lower urgency — neither is aimed at schoolchildren the way a study planner is. |
@@ -326,7 +327,29 @@ person's consent to the next person on the same device is not consent.
 From Emil's brother, testing on a real device. Bottom of the queue by request.
 Root causes traced so these are actionable rather than reports.
 
-### SD-F1 🔴 "Skip" on the onboarding notification step still fires the permission prompt
+### SD-F1 ✅ "Skip" on the onboarding notification step still fires the permission prompt
+
+**Fixed 2026-07-29.** The diagnosis below was exact and needed no revision. The
+intent now travels with the completion — `onComplete(result(), { notifications:
+bool })` → `state.notifEnabled` → the scheduling effect is gated on it — plus a
+Settings → Reminders row, because declining was otherwise irreversible short of
+a reinstall.
+
+Two things the write-up did not anticipate:
+
+- **Turning reminders off has to cancel what is already scheduled**, or alarms
+  from a previous session keep arriving. That needed a second function:
+  `cancelAllNotifications` deliberately does *not* share a path with
+  `scheduleNotifications`, because the scheduling path calls
+  `requestPermissions()` and the off path must never prompt. Reusing one
+  function with a flag would have reintroduced the original bug in a new place.
+- **The migration was the risky part.** The preference key is absent for every
+  existing install, and those users have already been through the prompt, so
+  absent-but-onboarded reads as ON and only an explicit "Maybe later" writes a
+  `"0"`. A blanket `false` default would have silently stopped reminders for the
+  entire existing user base — a worse regression than the bug being fixed.
+
+Original diagnosis, kept for the record:
 
 **This is a bug, not polish, and the cause is exact.** `src/App.jsx:1365-1370` —
 the two buttons on onboarding step 3 are wired to the *identical* handler:

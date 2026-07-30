@@ -17,6 +17,7 @@ import { useSyncStore } from '../store/useSyncStore';
 import { useSessionStore, userDisplayName } from '../store/useSessionStore';
 import { useSettingsStore, SUPPORTED_CURRENCIES, BaseCurrency } from '../store/useSettingsStore';
 import { clearAllLocalData } from '../db/database';
+import { downloadExport, deleteAccount } from '../lib/dataRights';
 import { getApiKey, setApiKey, clearApiKey, maskKey } from '../api/keys';
 import { allBudgetStats, type BudgetStats } from '../api/cache';
 import { biometricCapability } from '../utils/biometric';
@@ -96,6 +97,9 @@ export default function Settings() {
   const [bioReason, setBioReason] = useState('');
   const [signOutOpen, setSignOutOpen] = useState(false);
   const [signOutBusy, setSignOutBusy] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [dataMsg, setDataMsg] = useState<string | null>(null);
 
   useEffect(() => {
     // Read both slots separately (getApiKey('finnhub') without the slot name
@@ -177,6 +181,43 @@ export default function Settings() {
       location.reload();
     } finally {
       setSignOutBusy(false);
+    }
+  };
+
+  // ── GDPR Art. 20 — portability ────────────────────────────────────────────
+  const onExport = async () => {
+    setDataMsg(null);
+    setExporting(true);
+    try {
+      const name = await downloadExport(user ? { id: user.id, email: user.email } : null);
+      setDataMsg(t('settings.exportDone', { name }));
+    } catch (e) {
+      setDataMsg(t('settings.exportFailed', { msg: (e as Error).message }));
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // ── GDPR Art. 17 — erasure ────────────────────────────────────────────────
+  // Two confirmations, because this is irreversible, there is no recovery
+  // window, and one account spans all three apps — so this erases LimeLog and
+  // StudyDesk data too, which the second confirmation says explicitly.
+  const onDeleteAccount = async () => {
+    if (!(await confirm({ message: t('settings.deleteAccountConfirm1') }))) return;
+    if (!(await confirm({ message: t('settings.deleteAccountConfirm2') }))) return;
+    setDataMsg(null);
+    setDeleting(true);
+    try {
+      await deleteAccount({
+        clearLocal: async () => {
+          await clearAllLocalData();
+          localStorage.clear();
+        },
+      });
+      location.reload();
+    } catch (e) {
+      setDataMsg(t('settings.deleteAccountFailed', { msg: (e as Error).message }));
+      setDeleting(false);
     }
   };
 
@@ -398,6 +439,29 @@ export default function Settings() {
             </div>
             <span className="text-primary text-lg flex-shrink-0">›</span>
           </a>
+        </Section>
+
+        {/* ── Your data — GDPR Art. 17 / 20 ──────────────────────────────
+             Buttons rather than a "write to us" address: a right the user has
+             to request is a right most of them never exercise. */}
+        <Section title={t('settings.yourData')}>
+          <div className="text-[10px] text-text-muted px-1 pb-2 leading-relaxed">
+            {t('settings.yourDataNote')}
+          </div>
+          <button className="btn-ghost w-full" onClick={onExport} disabled={exporting}>
+            {exporting ? t('settings.exporting') : t('settings.exportData')}
+          </button>
+          <button
+            className="btn-ghost w-full mt-2 text-danger border-danger/40"
+            onClick={onDeleteAccount}
+            disabled={deleting}
+          >
+            {deleting ? t('settings.deletingAccount') : t('settings.deleteAccount')}
+          </button>
+          <div className="text-[10px] text-text-muted px-1 pt-2 leading-relaxed">
+            {t('settings.deleteAccountNote')}
+          </div>
+          {dataMsg && <div className="text-[10px] text-warning mt-1 px-1">{dataMsg}</div>}
         </Section>
 
         <Section title={t('settings.lifeProfile')}>
