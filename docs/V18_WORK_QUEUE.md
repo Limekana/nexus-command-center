@@ -297,7 +297,7 @@ all three apps**, so legal surfaces are suite-wide, not per-app.
 
 | # | Item | Why it matters |
 |---|---|---|
-| O-1 | ~~Enable GitHub Pages~~ | ✅ done 2026-07-29 — all three URLs return 200. ⚠️ **But `gh-pages` still carries the 27 July copy**: the live policy is missing the training disclosure, the 90-day window, the named market-data processors and the export/delete correction. Re-publish — commands in [`SESSION_HANDOFF_2026-07-29.md`](./SESSION_HANDOFF_2026-07-29.md). |
+| O-1 | ~~Enable GitHub Pages~~ | ✅ **fully done 2026-07-29** — Pages enabled, and `gh-pages` re-published with the 29 July policy. Verified live: served page matches `docs/legal/privacy.html` byte for byte and carries the training disclosure, the 90-day window, the named processors and the export/delete correction. Remember `gh-pages` is a *built copy* — editing `docs/` alone changes nothing users can read. |
 | O-2 | ~~Set the three OAuth consent screen URLs~~ | ✅ done 2026-07-29. Measured since: **138 of 172 accounts (80%) arrive via Google**, so this was the right one to close first. It also raises the stakes on O-1's stale publish — that URL is what Google now points at. |
 | O-3 | **Configure custom SMTP** | 5 of 26 email signups unconfirmed after 2+ days. Supabase's built-in sender is rate-limited and documented as not for production. |
 | O-4 | **Accept the Supabase DPA** (Organisation settings) | Art. 28 requires a written processor agreement. Minutes of work. |

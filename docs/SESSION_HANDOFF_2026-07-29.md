@@ -12,39 +12,28 @@ All three build. LimeLog and StudyDesk lint at `--max-warnings 0`.
 
 ---
 
-## 🔴 Read this first — one thing that looks done but is not
+## ✅ Published — the policy is live and current
 
-**GitHub Pages is serving the 27 July copy of the privacy policy.**
+`gh-pages` was serving the 27 July copy; re-published 29 July at your go-ahead.
+Verified live rather than assumed: the served page now matches
+`docs/legal/privacy.html` byte for byte, is dated 29 July, and carries the
+training disclosure, the 90-day window, the named market-data processors and the
+export/delete correction. The old sentence *"The AI features are opt-in and stay
+off unless you use them"* is gone.
 
-O-1 is genuinely done — Pages is enabled and all three URLs return 200. But
-`gh-pages` carries a *built copy* of `docs/`, and it was never re-published after
-today's edits. Verified against the live page:
+Only `legal/privacy.html` differed — `index.html`, `terms.html` and `.nojekyll`
+were already current and were left alone. All three URLs return 200.
 
-| | Live now | In the repo |
-|---|---|---|
-| Dated | 27 July 2026 | 29 July 2026 |
-| Free-tier training disclosure | **missing** | present, in 2 places |
-| 90-day retention window | missing | present |
-| Market-data processors named | missing | present |
-| Export/delete correction | missing | present |
-| Size | 11,924 bytes | 16,453 bytes |
-
-This matters more now that **O-2 is done**: Google's OAuth consent screen points
-at that URL, and the disclosure you asked for — that enabling AI means the text
-may train Google's models — is not on the page anyone can read.
-
-Not pushed by me, because deploying user-facing legal text is on the
-stop-and-confirm list. To publish:
+**Note for next time:** `gh-pages` holds a *built copy* of `docs/`, so editing
+`docs/` on a branch changes nothing that users can read. Re-publish with:
 
 ```bash
 git fetch origin gh-pages && git worktree add /tmp/ghp gh-pages
-cp docs/index.html /tmp/ghp/index.html
 cp docs/legal/privacy.html docs/legal/terms.html /tmp/ghp/legal/
-cd /tmp/ghp && git add -A && git commit -m "Publish 29 July policy" && git push origin gh-pages
+cp docs/index.html /tmp/ghp/index.html
+cd /tmp/ghp && git add -A && git commit -m "Publish" && git push origin gh-pages
 cd - && git worktree remove /tmp/ghp
 ```
-
-Then re-check: the page should say *"Last updated 29 July 2026"*.
 
 ---
 
