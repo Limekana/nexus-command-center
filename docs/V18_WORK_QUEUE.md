@@ -71,7 +71,7 @@ Branch `feature/v1.8-act2-act4-auth-gate`, pushed.
 | SD-4 | **A4** clear 6 lint warnings, add `--max-warnings 0` | ✅ `236d201` |
 | SD-5 | **A5** custom course colour (closed set of 8) | ⬜ open |
 | SD-6 | **A3** extract modals from 2,112-line `App.jsx` | ⬜ open |
-| SD-7 | **A6/B1/B2** one native `confirm()`, unnecessary exports, `postcss.config.cjs` | 🟡 `confirm()` ✅ (**three** sites, not one — two are the L-8 deletion pair) · `postcss.config.cjs` ✅ deleted (it was `module.exports = {}` with no postcss/tailwind/autoprefixer in the tree) · unnecessary exports still open |
+| SD-7 | **A6/B1/B2** one native `confirm()`, unnecessary exports, `postcss.config.cjs` | ✅ done 2026-07-29 — `confirm()` (**three** sites, not one) · `postcss.config.cjs` deleted (`module.exports = {}`, no postcss/tailwind/autoprefixer in the tree) · 11 exports; StudyDesk is now at **zero** unused exports |
 | SD-F1 | **Onboarding "Maybe later" still fired the permission prompt** | ✅ done 2026-07-29 — see §6 |
 
 SD-2 was the headline: the Arabic RTL screenshot from earlier in the session
@@ -97,7 +97,7 @@ Branch `feature/v1.8-act2-auth-i18n`, pushed.
 | LL-4 | **A4** `en-GB` dates, English `DAY_NAMES`/`DAY_LABELS` | ✅ `a555416` |
 | LL-5 | **B1+B2+A5** delete `ExerciseBlock`, drop 3 deps, unify converters | ✅ `0841e5f` |
 | LL-6 | **A1** translate the workout logger | ✅ `9e1d6cd` |
-| LL-7 | **A6/A7/B3** 5 native `confirm()`, closed enums, unnecessary exports | 🟡 `confirm()` part ✅ done 2026-07-29 — **six** sites, not five (L-8 added two). Closed enums + unnecessary exports still open. |
+| LL-7 | **A6/A7/B3** 5 native `confirm()`, closed enums, unnecessary exports | 🟡 `confirm()` ✅ (**six** sites, L-8 added two) · exports ✅ (17 symbols) · **closed enums still open** |
 
 **LL-7 notes.** `ConfirmDialog` ported from NCC's NC-6. Two wrinkles worth
 recording:
@@ -148,7 +148,7 @@ Branch `claude/ncc-repos-setup-3kvqoj`, pushed.
 | NC-6 | **A3** `ConfirmDialog` replacing 11 native `confirm()` | ✅ `767a630` |
 | NC-7 | **A5/A6/A7/C3** milestones, custom icons, study pacing, pin TS | ✅ `7cce0ce` |
 | NC-8 | **B6** `growth.*` namespace (280 strings) | ✅ **deleted 2026-07-29 on your call** — 290 strings (28 × 10 locales + `nav.growth` × 10). Zero code references confirmed first. Recoverable from git if the Growth hub is ever revived. |
-| NC-9 | **B7** ~33 unnecessary `export` keywords | ⬜ open — cosmetic |
+| NC-9 | **B7** ~33 unnecessary `export` keywords | ✅ done 2026-07-29 — **123** across 52 files, not ~33. And it stopped being cosmetic: see below. |
 
 Three of these were materially larger than the audit recorded:
 
@@ -173,6 +173,42 @@ workout write path; `useStudiesStore` had the identical defect against
 `study_sessions`. Both are gone, with the dispatch entries kept as explicit
 drops so a mutation already sitting in an upgrading user's outbox is discarded
 rather than retried against a table NCC must not write.
+
+#### NC-9 turned out not to be cosmetic
+
+The sweep found **`formatShortDate` still hardcoded to `'fi-FI'` and live in
+three screens** — transaction dates on the Finance overview, task due-date
+pills, and the cash-flow forecast. NC-1 routed ~30 sites through
+`formatLocale()` and missed this one, so the exact defect NC-1 existed to fix
+survived in those places. Fixed; **no `'fi-FI'` remains anywhere in `src/`
+outside a comment**.
+
+Its three neighbours had no callers at all — `formatDate`, `formatTime`,
+`formatPercent` — and were **deleted rather than left un-exported**, because two
+of them were also hardcoded to `'fi-FI'`. Leaving them would have been a loaded
+trap: the next person needing a date formatter reaches for one and reintroduces
+the whole thing.
+
+**Method for the mass edit**, since 123 lines is a lot to eyeball: enumerate
+every named export, then classify on two axes — referenced outside its file, and
+referenced inside it. Only *zero external, ≥1 internal* symbols were touched,
+which is provably nothing but a redundant keyword. No `export *` barrels exist
+to hide a usage, namespace imports are covered (`outbox.subscribe` still
+contains `subscribe` as a word), and NCC's build is `tsc + vite`, so a broken
+import anywhere fails the gate. Final diff: 138 insertions, 138 deletions.
+
+**Deliberately not touched — 18 NCC symbols with no references anywhere:**
+`setDailyBudget`, `getCachedRates`, `finnhubKeyCount`, `markAllSynced`,
+`computeAllAccountBalances`, `totalAccountNetWorthBase`, `isLiabilityAccount`,
+`weekKey`, `lastSweepTimestamps`, `KEYSTORE_ALIAS_DEXIE`, `DOMAIN_LABELS`,
+`readRatingHistory`, `DANGER`, `notificationBody`, `getSyncDiagnostics`,
+`gradeToLetter`, `ibBand`, `gradeScaleLabel`. Plus five in LimeLog
+(`getTrainingGoal`, `outbox.subscribe`, `todayIso`, `DAY_NAMES`,
+`cancelWorkoutReminders`).
+
+That is dead code, not over-exporting — a different decision. **NC-4's dead-code
+pass already ran over this tree**, so these either escaped it or were kept on
+purpose, and guessing which is not my call. ⬜ **Open: delete or keep?**
 
 **NC-8 was a decision, not a task — decided 2026-07-29: delete.** `growth.*`
 (28 keys × 10 locales) plus `nav.growth` were dead by the same test as
@@ -480,7 +516,42 @@ Two directions to try, in this order:
 Try (1) first and look at it before spending money on (2). Note the labels must
 survive Finnish and German, which are the longest of the ten.
 
-### SD-F4 🟠 Custom grade scale alongside US and IB
+### SD-F4 ✅ Custom grade scale alongside US and IB
+
+**Shipped 2026-07-29.** The write-up's groundwork all checked out: the weighted
+mean was already correct, no migration was needed, and nothing hardcoded a
+maximum. Gotcha 1 was the load-bearing one exactly as described.
+
+Three things it did not anticipate:
+
+- **Every other mode check was `mode === 'ib' ? … : …`**, in four files. Left
+  alone, `'custom'` would have fallen through to the *US 4.0-points* branch —
+  the one place the maths is genuinely wrong for it. All inverted to test for
+  `'us'`, so anything that is not explicitly the US ladder gets the weighted
+  mean. That is the safe default for a scale the app does not know.
+- **The grade input had no bounds at all** — `step="0.01"` and nothing else, so
+  `9999` was accepted on the IB scale. Every mode now supplies `min`/`max`,
+  which is a real fix for IB and US too, not just custom.
+- **`passMark` and `direction` would have been write-only.** Both are now shown
+  in a summary line (`4–10 · pass 5 · 10 best`), so no stored field is
+  invisible. A pass/fail marker per grade row is the obvious follow-up and the
+  one place `direction` will change an outcome.
+
+`normalizeScale` is deliberately total — callers are render paths, so a
+half-typed value in Settings must not blank the Grades screen. It swaps a
+backwards range rather than rejecting it, nudges a degenerate one, and falls
+back field by field so clearing `max` does not also reset `min`. Settings keeps a
+raw string draft for the same reason. Verified against backwards, degenerate,
+out-of-range, string, garbage and empty input, plus German lower-is-better and
+Finnish higher-is-better.
+
+**Scoped deliberately:** the scale is device-local, like `gradeMode`. Gotcha 2
+argued it belongs in the synced `user_preferences`, and that is right — but that
+table has no column for it, so syncing needs a schema change. Left as a
+follow-up rather than assumed; the Settings note says plainly that it does not
+sync.
+
+Original write-up:
 
 Today `gradeMode` is `'us' | 'ib'` only. A student on the Finnish 4–10 scale has
 no correct option — and the same is true across most of Europe.
