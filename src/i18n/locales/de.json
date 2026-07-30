@@ -35,8 +35,7 @@
     "home": "Start",
     "finance": "Finanzen",
     "life": "Leben",
-    "tasks": "Aufgaben",
-    "growth": "Wachstum"
+    "tasks": "Aufgaben"
   },
   "life": {
     "notCountedYet": "Noch nicht gezählt",
@@ -950,36 +949,6 @@
     "created": "Erstellt",
     "footerRolling": "Dies ist ein {{word}} 12-Monats-Fenster — schiebe den Anker Monat für Monat zurück, um jeden 12-Monats-Ausschnitt deiner Historie zu sehen.",
     "rollingWord": "rollendes"
-  },
-  "growth": {
-    "title": "Wachstum",
-    "habits": "Gewohnheiten",
-    "reading": "Lesen",
-    "doneOfTotal": "{{done}}/{{total}} heute",
-    "noHabitsToday": "Nichts heute",
-    "habitsEmpty": "Noch keine Gewohnheiten — leg eine an und starte eine Serie.",
-    "openHabits": "Gewohnheiten öffnen",
-    "openReading": "Lesen öffnen",
-    "add": "Hinzufügen",
-    "addBook": "Buch hinzufügen",
-    "editBook": "Buch bearbeiten",
-    "readingNone": "Noch keine Bücher",
-    "readingCounts": "{{reading}} aktiv · {{want}} geplant · {{finished}} fertig",
-    "readingEmpty": "Füge ein Buch hinzu, um dein Lesen zu verfolgen.",
-    "readingEmptyTitle": "Deine Leseliste ist leer",
-    "bookTitle": "Titel",
-    "bookTitlePlaceholder": "Buchtitel",
-    "author": "Autor",
-    "authorPlaceholder": "Optional",
-    "status": "Status",
-    "currentPage": "Aktuelle Seite",
-    "totalPages": "Seiten gesamt",
-    "save": "Speichern",
-    "delete": "Löschen",
-    "deleteConfirm": "Dieses Buch von deiner Leseliste entfernen?",
-    "statusWant": "Möchte lesen",
-    "statusReading": "Lese gerade",
-    "statusFinished": "Gelesen"
   },
   "markets": {
     "updated": "Aktualisiert {{time}}",

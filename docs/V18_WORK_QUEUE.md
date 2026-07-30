@@ -147,7 +147,7 @@ Branch `claude/ncc-repos-setup-3kvqoj`, pushed.
 | NC-5 | **B8** write path into LimeLog- and StudyDesk-owned tables | ✅ `784a13b` |
 | NC-6 | **A3** `ConfirmDialog` replacing 11 native `confirm()` | ✅ `767a630` |
 | NC-7 | **A5/A6/A7/C3** milestones, custom icons, study pacing, pin TS | ✅ `7cce0ce` |
-| NC-8 | **B6** `growth.*` namespace (280 strings) | ⬜ **your call** |
+| NC-8 | **B6** `growth.*` namespace (280 strings) | ✅ **deleted 2026-07-29 on your call** — 290 strings (28 × 10 locales + `nav.growth` × 10). Zero code references confirmed first. Recoverable from git if the Growth hub is ever revived. |
 | NC-9 | **B7** ~33 unnecessary `export` keywords | ⬜ open — cosmetic |
 
 Three of these were materially larger than the audit recorded:
@@ -174,12 +174,18 @@ workout write path; `useStudiesStore` had the identical defect against
 drops so a mutation already sitting in an upgrading user's outbox is discarded
 rather than retried against a table NCC must not write.
 
-**NC-8 is a decision, not a task.** `growth.*` (28 keys × 10 locales) plus
-`nav.growth` are dead by the same test as everything in NC-4 — no Growth
-screen, route or tab exists. But 112 of those strings were translated into
-hi/pt/id/ar earlier in this session and the registry lists the Growth hub as
-open rather than abandoned. Deleting code is reversible in a way that deleting
-translation work is not, so it needs your call. One line either way.
+**NC-8 was a decision, not a task — decided 2026-07-29: delete.** `growth.*`
+(28 keys × 10 locales) plus `nav.growth` were dead by the same test as
+everything in NC-4: no Growth screen, route or tab exists. Re-confirmed zero
+references before removing — nothing matched `'growth.`, `nav.growth` or a
+`growth:` key anywhere in non-JSON source. The remaining hits were
+`revenueGrowth` and `fin.wi.growthAbove`, different namespaces entirely.
+
+**290 strings removed** (28 × 10 + `nav.growth` × 10). The reservation recorded
+above was that deleting translation work is less reversible than deleting code.
+That was overstated: it is all in git history, and reviving the Growth hub would
+mean rewriting the English copy first, at which point the old translations would
+be stale rather than useful.
 
 ## 4. Cross-app, from the MR reports
 
@@ -304,7 +310,7 @@ with something else.
 | L-7 | **Retention purge for soft-deleted rows** | 10 subjects + 8 grades sit soft-deleted indefinitely. Needs a scheduled hard-delete (pg_cron) past a fixed window. **The policy was written to describe today's behaviour rather than promise a window that nothing enforces** — tighten the wording once this ships. |
 | L-8 | **Export + deletion in NCC and LimeLog** | ✅ done 2026-07-29. Both apps now carry the two buttons in Settings → Your data, calling the same app-agnostic `delete-account` Edge Function, so deleting from any app erases all three (the second confirmation names the other two). Ported from StudyDesk's `lib/dataRights.js`. Two deliberate differences: **NCC enumerates `db.tables`** rather than listing them, so a table added later cannot silently drop out of an Art. 20 export (`apiCache` and `insightsScores` excluded, with the reason stated in the file itself); **LimeLog wipes by key prefix** (`wt_`, `limelog-`) rather than by name, because `nexusStore.signOut`'s explicit six-key list is right for sign-out but would leave data behind on an erasure request. LimeLog lists progress-photo *dates* but does not embed the images — thirty base64 JPEGs would make the file unopenable, and the user already has the photos. The two new confirmations use native `confirm()`; fold them into **LL-7**. |
 | L-9 | **Record of processing (Art. 30)** | The <250-employee exemption falls away for non-occasional processing, which continuous sync is. One internal page; also keeps the policy honest. |
-| L-10 | **`audit_log` erasure gap (NCC)** | 🟡 **migration written, awaiting your sign-off** — `supabase/migrations/20260729_audit_log_erasure.sql`. Not applied: schema changes are gated. See the analysis below, which revises the diagnosis. |
+| L-10 | **`audit_log` erasure gap (NCC)** | ✅ **applied 2026-07-29 with sign-off** — `supabase/migrations/20260729_audit_log_erasure.sql`. FK now `CASCADE`, trigger live and enabled, 140 rows unchanged. See the analysis below. |
 
 #### L-10 — the diagnosis was understated (checked against the live catalog)
 
@@ -351,9 +357,24 @@ The trigger condition is deliberately identical to the RLS policy, which buys a
 property worth stating: *anything a user can read about themselves is exactly
 what erasure removes.*
 
-⚠️ **Do not verify by deleting a real account** (SEC-1 — production, real
-accounts). Verify on a Supabase branch, or by reading `pg_constraint` /
-`pg_trigger` as the migration's footer shows.
+**Applied 2026-07-29.** Catalog verification all green: `confdeltype` `'n'` →
+`'c'`, trigger `tgenabled = 'O'` as BEFORE ROW DELETE on `auth.users`, 140 rows
+unchanged.
+
+**One thing the plan missed, caught by the security advisor after applying.**
+Creating the trigger function in `public` made PostgREST expose it at
+`/rest/v1/rpc/erase_audit_log_for_user`, callable by `anon` and `authenticated`
+as `SECURITY DEFINER` — two new WARN advisories. Calling it directly would fail
+anyway (*"trigger functions can only be called as triggers"*), so it was hygiene
+rather than a live hole, but a `SECURITY DEFINER` function has no business being
+reachable from the public API. Fixed with a follow-up migration revoking
+`EXECUTE` from `public`, `anon` and `authenticated`; safe for the trigger,
+because PostgreSQL checks that privilege at `CREATE TRIGGER` time rather than on
+each fire. The advisor is back to its single pre-existing warning (O-6).
+
+⚠️ **Not verified behaviourally, deliberately.** Proving the trigger fires means
+deleting an account, and every account here belongs to a real person (SEC-1). If
+that proof is ever wanted, take it on a Supabase branch — never on this project.
 | L-11 | **Age statement in NCC and LimeLog** | ✅ done 2026-07-29. `auth.ageNote` + `auth.privacyLink` copied from StudyDesk's existing ten translations rather than re-translated, so the wording is identical across the suite. NCC: below the signup form (`screens/auth/Signup.tsx`). LimeLog: under the guest button in `FirstLaunchAuth`, which puts it next to the no-account option it points at. |
 | L-12 | **In-app privacy links in NCC and LimeLog** | ✅ done — Settings → Privacy & AI links to the suite policy in both. |
 

@@ -35,8 +35,7 @@
     "home": "Accueil",
     "finance": "Finances",
     "life": "Vie",
-    "tasks": "Tâches",
-    "growth": "Progrès"
+    "tasks": "Tâches"
   },
   "life": {
     "notCountedYet": "Pas encore compté",
@@ -956,36 +955,6 @@
     "created": "Créées",
     "footerRolling": "Ceci est une fenêtre {{word}} de 12 mois — reculez l’ancre mois par mois pour voir n’importe quelle tranche de 12 mois de votre historique.",
     "rollingWord": "glissante"
-  },
-  "growth": {
-    "title": "Progrès",
-    "habits": "Habitudes",
-    "reading": "Lecture",
-    "doneOfTotal": "{{done}}/{{total}} aujourd'hui",
-    "noHabitsToday": "Rien aujourd'hui",
-    "habitsEmpty": "Aucune habitude — créez-en une pour lancer une série.",
-    "openHabits": "Ouvrir les habitudes",
-    "openReading": "Ouvrir la lecture",
-    "add": "Ajouter",
-    "addBook": "Ajouter un livre",
-    "editBook": "Modifier le livre",
-    "readingNone": "Aucun livre",
-    "readingCounts": "{{reading}} en cours · {{want}} à lire · {{finished}} terminés",
-    "readingEmpty": "Ajoutez un livre pour suivre vos lectures.",
-    "readingEmptyTitle": "Votre liste de lecture est vide",
-    "bookTitle": "Titre",
-    "bookTitlePlaceholder": "Titre du livre",
-    "author": "Auteur",
-    "authorPlaceholder": "Facultatif",
-    "status": "Statut",
-    "currentPage": "Page actuelle",
-    "totalPages": "Pages au total",
-    "save": "Enregistrer",
-    "delete": "Supprimer",
-    "deleteConfirm": "Retirer ce livre de votre liste de lecture ?",
-    "statusWant": "À lire",
-    "statusReading": "En cours",
-    "statusFinished": "Terminé"
   },
   "markets": {
     "updated": "Mis à jour {{time}}",

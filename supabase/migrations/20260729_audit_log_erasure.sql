@@ -1,8 +1,11 @@
 -- L-10 — close the audit_log erasure gap (GDPR Art. 17).
 --
--- NOT YET APPLIED. Schema changes on the shared production project require
--- explicit sign-off; this file is the reviewed proposal, not a record of a
--- change that happened.
+-- APPLIED 2026-07-29 to project hkktorzhaqnfqsnlstda, with sign-off, as
+-- migrations `audit_log_erasure` and `audit_log_erasure_revoke_rpc`.
+--
+-- Verified by catalog read (see the footer). NOT verified behaviourally: doing
+-- that means deleting an account, and every account on this project is a real
+-- person's (SEC-1). 140 audit rows before and after, unchanged.
 --
 -- ── The defect ────────────────────────────────────────────────────────────────
 --
@@ -89,16 +92,43 @@ create trigger erase_audit_log_before_user_delete
   for each row
   execute function public.erase_audit_log_for_user();
 
+-- 3. Applied as a follow-up after the security advisor flagged it, and folded
+--    in here so the file is reproducible from scratch.
+--
+--    Creating the function in `public` made PostgREST expose it at
+--    /rest/v1/rpc/erase_audit_log_for_user, callable by anon and authenticated
+--    as SECURITY DEFINER. Calling it directly would fail anyway ("trigger
+--    functions can only be called as triggers"), so this was hygiene rather
+--    than a live hole — but a SECURITY DEFINER function has no business being
+--    reachable from the public API, and the advisor was right to say so.
+--
+--    Safe for the trigger: PostgreSQL checks EXECUTE on a trigger function at
+--    CREATE TRIGGER time, not on each fire, and the deletion path runs as the
+--    service role regardless.
+revoke execute on function public.erase_audit_log_for_user() from public;
+revoke execute on function public.erase_audit_log_for_user() from anon;
+revoke execute on function public.erase_audit_log_for_user() from authenticated;
+
 commit;
 
--- ── Verification, to run after applying ──────────────────────────────────────
+-- ── Verification — run 2026-07-29, all green ─────────────────────────────────
 --
---   -- expect 'c' (cascade), not 'n' (set null)
---   select confdeltype from pg_constraint where conname = 'audit_log_changed_by_fkey';
+--   select confdeltype from pg_constraint
+--    where conname = 'audit_log_changed_by_fkey';           -- 'c'    ✓ (was 'n')
 --
---   -- expect one row
---   select tgname from pg_trigger where tgname = 'erase_audit_log_before_user_delete';
+--   select tgenabled, tgtype from pg_trigger
+--    where tgname = 'erase_audit_log_before_user_delete';   -- 'O', BEFORE ROW DELETE ✓
 --
--- Do NOT verify by deleting a real account: the project is production with real
--- accounts (SEC-1). Verify on a Supabase branch, or by reading the catalog as
--- above.
+--   select has_function_privilege('anon', oid, 'EXECUTE'),
+--          has_function_privilege('authenticated', oid, 'EXECUTE')
+--     from pg_proc where proname = 'erase_audit_log_for_user';  -- false, false ✓
+--
+--   select count(*) from public.audit_log;                  -- 140, unchanged ✓
+--
+-- The security advisor is back to its one pre-existing warning (leaked-password
+-- protection, which is owner action O-6).
+--
+-- NOT verified behaviourally, and deliberately so: proving the trigger fires
+-- means deleting an account, and every account on this project belongs to a
+-- real person (SEC-1). If you ever want that proof, take it on a Supabase
+-- branch, never here.

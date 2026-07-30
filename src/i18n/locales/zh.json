@@ -35,8 +35,7 @@
     "home": "主页",
     "finance": "财务",
     "life": "生活",
-    "tasks": "任务",
-    "growth": "成长"
+    "tasks": "任务"
   },
   "life": {
     "notCountedYet": "尚未计入",
@@ -950,36 +949,6 @@
     "created": "已创建",
     "footerRolling": "这是一个{{word}} 12 个月的窗口 — 逐月向后移动锚点即可查看历史中任意 12 个月的切片。",
     "rollingWord": "滚动"
-  },
-  "growth": {
-    "title": "成长",
-    "habits": "习惯",
-    "reading": "阅读",
-    "doneOfTotal": "今日 {{done}}/{{total}}",
-    "noHabitsToday": "今天没有",
-    "habitsEmpty": "还没有习惯——创建一个开启连续记录。",
-    "openHabits": "打开习惯",
-    "openReading": "打开阅读",
-    "add": "添加",
-    "addBook": "添加书籍",
-    "editBook": "编辑书籍",
-    "readingNone": "还没有书籍",
-    "readingCounts": "{{reading}} 在读 · {{want}} 想读 · {{finished}} 已读",
-    "readingEmpty": "添加一本书开始记录你的阅读。",
-    "readingEmptyTitle": "你的阅读清单是空的",
-    "bookTitle": "书名",
-    "bookTitlePlaceholder": "书名",
-    "author": "作者",
-    "authorPlaceholder": "可选",
-    "status": "状态",
-    "currentPage": "当前页",
-    "totalPages": "总页数",
-    "save": "保存",
-    "delete": "删除",
-    "deleteConfirm": "从阅读清单中移除这本书？",
-    "statusWant": "想读",
-    "statusReading": "在读",
-    "statusFinished": "已读"
   },
   "markets": {
     "updated": "更新于 {{time}}",
