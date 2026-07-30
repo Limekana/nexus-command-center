@@ -97,7 +97,7 @@ Branch `feature/v1.8-act2-auth-i18n`, pushed.
 | LL-4 | **A4** `en-GB` dates, English `DAY_NAMES`/`DAY_LABELS` | ✅ `a555416` |
 | LL-5 | **B1+B2+A5** delete `ExerciseBlock`, drop 3 deps, unify converters | ✅ `0841e5f` |
 | LL-6 | **A1** translate the workout logger | ✅ `9e1d6cd` |
-| LL-7 | **A6/A7/B3** 5 native `confirm()`, closed enums, unnecessary exports | 🟡 `confirm()` ✅ (**six** sites, L-8 added two) · exports ✅ (17 symbols) · **closed enums still open** |
+| LL-7 | **A6/A7/B3** 5 native `confirm()`, closed enums, unnecessary exports | ✅ **all done 2026-07-29** — `confirm()` (**six** sites, L-8 added two) · exports (17, plus 5 dead deleted) · A7 closed enums |
 
 **LL-7 notes.** `ConfirmDialog` ported from NCC's NC-6. Two wrinkles worth
 recording:
@@ -208,7 +208,34 @@ import anywhere fails the gate. Final diff: 138 insertions, 138 deletions.
 
 That is dead code, not over-exporting — a different decision. **NC-4's dead-code
 pass already ran over this tree**, so these either escaped it or were kept on
-purpose, and guessing which is not my call. ⬜ **Open: delete or keep?**
+purpose. ✅ **Deleted 2026-07-29 on your call** — 187 lines from NCC, 5
+declarations from LimeLog, zero insertions. **All three apps are now at zero
+unused exports.**
+
+Two things worth keeping from that pass:
+
+- Several dead functions carried comments asserting they were live.
+  `computeAllAccountBalances` documented itself as *"Used by Net Worth + the
+  account list view"* and neither calls it. A confident comment on unreachable
+  code is worse than none — it sends the next reader hunting for a caller that
+  does not exist.
+- Deleting LimeLog's `outbox.subscribe` orphaned the machinery behind it:
+  `CHANGE_EVENT` was still dispatched from two places with nothing listening, so
+  the constant and both dispatches went too. That one was **not** dead by
+  accident — it is a working pub/sub API that lost its last consumer. StudyDesk
+  still drives a live outbox indicator through the same call in `SettingsView`;
+  LimeLog just never wired one up. If that indicator is ever wanted here, the
+  deletion commit is where to look.
+
+#### A7 — the enum widening needed three fixes the audit did not mention
+
+`patternLabel` called ``t(`library.pattern.${p}`)`` with no fallback, so a custom
+value would have rendered as the raw key `library.pattern.sandbag`; the filter
+dropdowns listed only the eight built-ins, making a custom-filed exercise
+unreachable through them; and an empty free-text box needed to fall back to
+`accessory`/`other` rather than store `''`, which renders as a bare separator
+dot. Also: `string & {}` trips `ban-types` at `--max-warnings 0`, so the
+widening is spelled `string & Record<never, never>`.
 
 **NC-8 was a decision, not a task — decided 2026-07-29: delete.** `growth.*`
 (28 keys × 10 locales) plus `nav.growth` were dead by the same test as
