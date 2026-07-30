@@ -97,7 +97,23 @@ Branch `feature/v1.8-act2-auth-i18n`, pushed.
 | LL-4 | **A4** `en-GB` dates, English `DAY_NAMES`/`DAY_LABELS` | ✅ `a555416` |
 | LL-5 | **B1+B2+A5** delete `ExerciseBlock`, drop 3 deps, unify converters | ✅ `0841e5f` |
 | LL-6 | **A1** translate the workout logger | ✅ `9e1d6cd` |
-| LL-7 | **A6/A7/B3** 5 native `confirm()`, closed enums, unnecessary exports | ⬜ open |
+| LL-7 | **A6/A7/B3** 5 native `confirm()`, closed enums, unnecessary exports | 🟡 `confirm()` part ✅ done 2026-07-29 — **six** sites, not five (L-8 added two). Closed enums + unnecessary exports still open. |
+
+**LL-7 notes.** `ConfirmDialog` ported from NCC's NC-6. Two wrinkles worth
+recording:
+
+- The hook and context had to move to `confirmContext.ts`, because
+  `react-refresh/only-export-components` fires on a module exporting both a
+  component and a hook, and **LimeLog lints at `--max-warnings 0` while NCC's
+  build gate does not run lint at all** — so NCC's copy never tripped it.
+- Three hardcoded English strings turned up in the files being edited, none of
+  them in the A1 sweep: TodayPage's stall-flag banner and deload suggestion, and
+  OneRMChart's empty state. The stall banner pluralised with
+  `length > 1 ? 's' : ''` — wrong even in English at 0. Now an i18next count
+  plural with a form for **every CLDR category each locale actually has** (six
+  for Arabic, plus the `many` that fr/es/pt carry), verified against
+  `Intl.PluralRules` for all ten. Same exposure as X-5: a missing form falls back
+  to English, not to `_other`.
 
 **LL-1 was worse than the audit recorded.** The audit said the two estimators
 shared the same formula and differed only on the rep cap. They also use
