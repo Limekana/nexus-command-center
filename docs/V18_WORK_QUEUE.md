@@ -288,7 +288,56 @@ with something else.
 | L-7 | **Retention purge for soft-deleted rows** | 10 subjects + 8 grades sit soft-deleted indefinitely. Needs a scheduled hard-delete (pg_cron) past a fixed window. **The policy was written to describe today's behaviour rather than promise a window that nothing enforces** — tighten the wording once this ships. |
 | L-8 | **Export + deletion in NCC and LimeLog** | ✅ done 2026-07-29. Both apps now carry the two buttons in Settings → Your data, calling the same app-agnostic `delete-account` Edge Function, so deleting from any app erases all three (the second confirmation names the other two). Ported from StudyDesk's `lib/dataRights.js`. Two deliberate differences: **NCC enumerates `db.tables`** rather than listing them, so a table added later cannot silently drop out of an Art. 20 export (`apiCache` and `insightsScores` excluded, with the reason stated in the file itself); **LimeLog wipes by key prefix** (`wt_`, `limelog-`) rather than by name, because `nexusStore.signOut`'s explicit six-key list is right for sign-out but would leave data behind on an erasure request. LimeLog lists progress-photo *dates* but does not embed the images — thirty base64 JPEGs would make the file unopenable, and the user already has the photos. The two new confirmations use native `confirm()`; fold them into **LL-7**. |
 | L-9 | **Record of processing (Art. 30)** | The <250-employee exemption falls away for non-occasional processing, which continuous sync is. One internal page; also keeps the policy honest. |
-| L-10 | **`audit_log` erasure gap (NCC)** | 132 rows of `budget_categories` / `tasks` snapshots with `changed_by ON DELETE SET NULL` — content survives account deletion, merely un-attributed. Real Art. 17 gap **for NCC only**; StudyDesk tables are not audited. |
+| L-10 | **`audit_log` erasure gap (NCC)** | 🟡 **migration written, awaiting your sign-off** — `supabase/migrations/20260729_audit_log_erasure.sql`. Not applied: schema changes are gated. See the analysis below, which revises the diagnosis. |
+
+#### L-10 — the diagnosis was understated (checked against the live catalog)
+
+Recorded as "content survives, merely un-attributed". Verified `confdeltype = 'n'`
+on `audit_log_changed_by_fkey`, so the FK part is right — but the audit trigger
+snapshots **whole rows**, so the payload carries its own copy of the owner:
+
+| | |
+|---|---|
+| rows | **140** (97 task UPDATEs, 21 task INSERTs, 14+6+1 budget, 1 task DELETE) |
+| with `new_values->>'user_id'` | **138** |
+| with `old_values->>'user_id'` | 113 |
+| containing a task title | **119** |
+| containing a budget category name | 21 |
+| currently orphaned | **0** — nobody has deleted an account yet |
+
+So nulling `changed_by` removes **one of two** pointers. The row stays fully
+attributable to the deleted user, and nothing is anonymised. The table's own RLS
+policy proves it, because it already reads through the payload as a second path:
+`changed_by = auth.uid() OR coalesce(new_values->>'user_id', old_values->>'user_id')::uuid = auth.uid()`.
+
+**The gap is latent, not realised** — 0 orphaned rows means no user has been
+harmed yet. It fires on the first account deletion, which the L-8 buttons
+shipped today now make one tap away in all three apps. That moves this up the
+list rather than down it.
+
+**Fix shape, and why.** The `delete-account` function deliberately holds no list
+of tables and says why: *"an explicit delete list is a thing you forget to
+update, and the failure is silent."* That principle is right, and `audit_log` is
+the proof of it — the gap exists precisely because this one table opted out of
+the cascade the function trusts. So the fix goes in the database, not in a new
+delete list in the function. Two statements, because there are two attribution
+paths and an FK can only see one:
+
+1. `changed_by` → `ON DELETE CASCADE`, so it works via any deletion route (Edge
+   Function, dashboard, raw SQL).
+2. A `BEFORE DELETE` trigger on `auth.users` for the payload path — needed
+   because a **shared** budget or task can be edited by someone other than its
+   owner (`changed_by` = editor, payload `user_id` = owner). **0 such rows
+   today**, but sharing is shipped, so it is a hole waiting rather than a
+   hypothesis.
+
+The trigger condition is deliberately identical to the RLS policy, which buys a
+property worth stating: *anything a user can read about themselves is exactly
+what erasure removes.*
+
+⚠️ **Do not verify by deleting a real account** (SEC-1 — production, real
+accounts). Verify on a Supabase branch, or by reading `pg_constraint` /
+`pg_trigger` as the migration's footer shows.
 | L-11 | **Age statement in NCC and LimeLog** | ✅ done 2026-07-29. `auth.ageNote` + `auth.privacyLink` copied from StudyDesk's existing ten translations rather than re-translated, so the wording is identical across the suite. NCC: below the signup form (`screens/auth/Signup.tsx`). LimeLog: under the guest button in `FirstLaunchAuth`, which puts it next to the no-account option it points at. |
 | L-12 | **In-app privacy links in NCC and LimeLog** | ✅ done — Settings → Privacy & AI links to the suite policy in both. |
 
