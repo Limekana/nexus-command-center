@@ -27,7 +27,7 @@
 import { ReactNode } from 'react';
 import { PRIMARY, SUCCESS, TRACK_DEFAULT, TRACK_REST } from '../lib/themeColors';
 
-export type HabitRingState = 'rest' | 'idle' | 'partial' | 'done';
+type HabitRingState = 'rest' | 'idle' | 'partial' | 'done';
 
 interface HabitRingProps {
   /** 0..1, clamped internally. */

@@ -25,7 +25,7 @@ import { convertSync } from '../api/fxRates';
 import type { Account, Transaction } from '../types/finance';
 import { LIABILITY_ACCOUNT_TYPES } from '../types/finance';
 
-export interface AccountBalanceResult {
+interface AccountBalanceResult {
   /** Final balance in the account's own currency. */
   balance: number;
   /** Starting balance (echoed back for convenience — the running-balance

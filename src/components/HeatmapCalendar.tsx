@@ -15,7 +15,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { localDateKey, monthNames, formatLocale } from '../utils/formatters';
 
-export type HeatmapTint = 'primary' | 'success' | 'warning' | 'danger';
+type HeatmapTint = 'primary' | 'success' | 'warning' | 'danger';
 
 interface HeatmapCalendarProps {
   // 'YYYY-MM-DD' → count. Missing keys render as zero.

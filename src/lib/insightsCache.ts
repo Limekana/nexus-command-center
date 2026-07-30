@@ -30,12 +30,12 @@
 
 // ── Tier durations ────────────────────────────────────────────────────────
 
-export const TIER_WEEKLY_MS = 7 * 24 * 60 * 60 * 1000;
-export const TIER_DAILY_MS  = 24 * 60 * 60 * 1000;
+const TIER_WEEKLY_MS = 7 * 24 * 60 * 60 * 1000;
+const TIER_DAILY_MS  = 24 * 60 * 60 * 1000;
 /** "On open" isn't strictly a Dexie cache value — quotes refresh via the
  *  existing portfolio refresh flow (60s soft floor + 20min resume tick).
  *  Exposed here for documentation symmetry. */
-export const TIER_ONOPEN_MS = 60 * 1000;
+const TIER_ONOPEN_MS = 60 * 1000;
 
 // ── Sweep timestamps (localStorage) ───────────────────────────────────────
 //
@@ -128,7 +128,7 @@ import { db, type InsightScoreRow } from '../db/database';
 import type { CompositeRating, CompositeBreakdown, InsightTier } from './insightsScore';
 import type { FundamentalRating, FundamentalBreakdown } from './fundamentalsScore';
 
-export type InsightKind = 'technical' | 'fundamental';
+type InsightKind = 'technical' | 'fundamental';
 
 /** Upsert one rating to disk. Fire-and-forget — failures log but don't
  *  block the compute pipeline. Idempotent via put() on the synthesised PK. */

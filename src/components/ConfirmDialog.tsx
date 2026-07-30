@@ -19,7 +19,7 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
-export interface ConfirmOptions {
+interface ConfirmOptions {
   message: string;
   /** Optional heading above the message. */
   title?: string;

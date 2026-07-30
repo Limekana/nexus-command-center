@@ -7,7 +7,7 @@ export type GradeMode = 'us' | 'ib';
 // (assessment weight inside the subject — e.g. final exam = 50%).
 // Returns null when the subject has no grades, so callers can skip subjects
 // without grades instead of treating them as zero.
-export function subjectScore(grades: Grade[]): number | null {
+function subjectScore(grades: Grade[]): number | null {
   if (grades.length === 0) return null;
   const totalWeight = grades.reduce((s, g) => s + (g.weight || 0), 0);
   if (totalWeight === 0) {
@@ -52,7 +52,7 @@ export function calculateGPA(
   return Math.round((weightedSum / totalCredits) * 100) / 100;
 }
 
-export function gradeToPoints(grade: number): number {
+function gradeToPoints(grade: number): number {
   if (grade >= 93) return 4.0;
   if (grade >= 90) return 3.7;
   if (grade >= 87) return 3.3;

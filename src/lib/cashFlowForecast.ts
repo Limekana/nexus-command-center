@@ -15,7 +15,7 @@ import type { Transaction } from '../types/finance';
 
 const DAY_MS = 86_400_000;
 
-export interface RecurringItem {
+interface RecurringItem {
   /** Stable grouping key (`<type>:<categoryId | desc:...>`). */
   key: string;
   /** Display label — category name (with icon) or the transaction description. */
@@ -33,7 +33,7 @@ export interface RecurringItem {
   occurrences: number;
 }
 
-export interface CashFlowProjection {
+interface CashFlowProjection {
   projectedIncome: number;
   projectedExpenses: number;
   netCashFlow: number;

@@ -65,7 +65,7 @@ export function currencySymbol(code: string, locale = 'en'): string {
 /** Localised currency name for the picker — "Indian Rupee", "भारतीय रुपया".
  *  Intl.DisplayNames covers every locale the app ships, so the picker reads
  *  naturally in all ten without a single translated string. */
-export function currencyName(code: string, locale = 'en'): string {
+function currencyName(code: string, locale = 'en'): string {
   try {
     return new Intl.DisplayNames([locale], { type: 'currency' }).of(code) ?? code;
   } catch {

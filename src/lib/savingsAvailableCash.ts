@@ -31,7 +31,7 @@ import type { ManualAsset, SavingsGoal } from '../types/finance';
 
 const LIQUID_TYPES = new Set(['cash', 'savings']);
 
-export interface AvailableCashResult {
+interface AvailableCashResult {
   /** Total cash+savings in baseCurrency. */
   liquidBase: number;
   /** Total allocated across non-buffer goals in baseCurrency. */

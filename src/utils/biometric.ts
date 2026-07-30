@@ -4,7 +4,7 @@
 
 import { Capacitor } from '@capacitor/core';
 
-export interface BiometricCapability {
+interface BiometricCapability {
   available: boolean;
   reason: string;
 }

@@ -17,8 +17,8 @@ import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
  * for signal/rating use (Strong Sell pill is danger, Strong Buy is success).
  * Default tone is neutral; cyan accent only when `on` is true.
  */
-export type PillTone = 'neutral' | 'danger' | 'success' | 'warning';
-export type PillSize = 'sm' | 'md' | 'lg';
+type PillTone = 'neutral' | 'danger' | 'success' | 'warning';
+type PillSize = 'sm' | 'md' | 'lg';
 
 interface PillProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   on?: boolean;

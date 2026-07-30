@@ -16,7 +16,7 @@
 
 import { Preferences } from '@capacitor/preferences';
 
-export type ApiKeyName = 'finnhub' | 'finnhub2';
+type ApiKeyName = 'finnhub' | 'finnhub2';
 
 const PREFIX = 'apikey_';
 

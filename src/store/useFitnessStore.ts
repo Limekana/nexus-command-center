@@ -115,7 +115,7 @@ async function buildWeeklyWithHistory(
   });
 }
 
-export type HealthSource = 'manual' | 'health-connect';
+type HealthSource = 'manual' | 'health-connect';
 
 interface FitnessStore {
   sessions: (WorkoutSession & { sets: WorkoutSet[] })[];

@@ -82,7 +82,7 @@ function mode<T>(items: T[]): T | undefined {
 
 // ── Transactions ───────────────────────────────────────────────────────────
 
-export async function detectTransactionTemplates(): Promise<TransactionTemplate[]> {
+async function detectTransactionTemplates(): Promise<TransactionTemplate[]> {
   const cutoff = daysAgo(TX_WINDOW_DAYS).toISOString().slice(0, 10);
   const all = await db.transactions.where('date').aboveOrEqual(cutoff).toArray();
 
@@ -142,7 +142,7 @@ export async function detectTransactionTemplates(): Promise<TransactionTemplate[
 
 // ── Workouts ──────────────────────────────────────────────────────────────
 
-export async function detectWorkoutTemplates(): Promise<WorkoutTemplate[]> {
+async function detectWorkoutTemplates(): Promise<WorkoutTemplate[]> {
   const cutoff = daysAgo(WORKOUT_WINDOW_DAYS).toISOString().slice(0, 10);
   const sessions = await db.workoutSessions.where('date').aboveOrEqual(cutoff).toArray();
   const sessionIds = sessions.map((s) => s.id);
@@ -210,7 +210,7 @@ export async function detectWorkoutTemplates(): Promise<WorkoutTemplate[]> {
 
 // ── Tasks ─────────────────────────────────────────────────────────────────
 
-export async function detectTaskTemplates(): Promise<TaskTemplate[]> {
+async function detectTaskTemplates(): Promise<TaskTemplate[]> {
   const cutoff = daysAgo(TASK_WINDOW_DAYS).toISOString();
   const all = await db.tasks.where('createdAt').aboveOrEqual(cutoff).toArray();
 

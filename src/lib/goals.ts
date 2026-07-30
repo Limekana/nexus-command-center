@@ -29,7 +29,7 @@ export interface DataSources {
   currentGpa: number | null;
 }
 
-export interface GoalProgress {
+interface GoalProgress {
   currentValue: number;
   // % of target [0, 100+]. >100 means goal exceeded — UI still clamps the
   // bar but lets the number text say "118%".

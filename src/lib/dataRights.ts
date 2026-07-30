@@ -23,7 +23,7 @@ const EXCLUDED: Record<string, string> = {
   insightsScores: 'Derived scores recomputed from the data below.',
 };
 
-export interface ExportPayload {
+interface ExportPayload {
   schemaVersion: number;
   exportedAt: string;
   application: string;
@@ -46,7 +46,7 @@ export interface ExportPayload {
  * Soft-deleted rows are included. They still exist in the database, so omitting
  * them would make the export a misleading account of what we hold.
  */
-export async function buildExport(user: { id: string; email?: string } | null): Promise<ExportPayload> {
+async function buildExport(user: { id: string; email?: string } | null): Promise<ExportPayload> {
   const data: Record<string, unknown[]> = {};
   const counts: Record<string, number> = {};
 

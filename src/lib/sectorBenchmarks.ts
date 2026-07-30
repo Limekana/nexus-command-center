@@ -16,7 +16,7 @@
 // doesn't match a key, we fall through to `default` and the comparison
 // signals report `available: false`.
 
-export interface SectorBench {
+interface SectorBench {
   /** Median trailing P/E for the sector. */
   pe: number;
   /** Median P/S for the sector. */

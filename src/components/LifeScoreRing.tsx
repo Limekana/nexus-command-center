@@ -25,7 +25,7 @@ export interface RingSegment {
   color: string;
 }
 
-export interface LifeScoreRingProps {
+interface LifeScoreRingProps {
   /** Legacy quadrant inputs (ignored when `segments` is provided). */
   workouts?: number;
   study?: number;

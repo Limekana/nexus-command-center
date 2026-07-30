@@ -53,22 +53,22 @@ export function localDateKey(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-export function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat('fi-FI', {
-    day: '2-digit', month: 'short', year: 'numeric',
-  }).format(new Date(iso));
-}
-
+/** Short date — "26 Jul", "26 heinäk.", "२६ जुल".
+ *
+ *  NC-1 routed ~30 hardcoded `fi-FI` sites through formatLocale() and missed
+ *  this one, which is live in three screens: transaction dates on the Finance
+ *  overview, task due-date pills, and the cash-flow forecast. So the bug NC-1
+ *  set out to fix — every user in every language getting Finnish date
+ *  conventions — survived in exactly those places.
+ *
+ *  Its three neighbours (`formatDate`, `formatTime`, `formatPercent`) had no
+ *  callers at all and were deleted rather than fixed. Two of them were also
+ *  hardcoded to `fi-FI`, so leaving them would have left a loaded trap: the
+ *  next person needing a date formatter would have reached for one and
+ *  reintroduced the whole defect. */
 export function formatShortDate(iso: string): string {
-  return new Intl.DateTimeFormat('fi-FI', { day: '2-digit', month: 'short' }).format(new Date(iso));
-}
-
-export function formatTime(iso: string): string {
-  return new Intl.DateTimeFormat('fi-FI', { hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
-}
-
-export function formatPercent(value: number, decimals = 1): string {
-  return `${value >= 0 ? '+' : ''}${value.toFixed(decimals)}%`;
+  return new Intl.DateTimeFormat(formatLocale(), { day: '2-digit', month: 'short' })
+    .format(new Date(iso));
 }
 
 export function formatCacheAge(minutes: number): string {

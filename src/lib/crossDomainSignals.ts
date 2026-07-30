@@ -62,14 +62,14 @@ export function lastNWeeks(n: number, today: Date = new Date()): Date[] {
 
 // ─── Weekly aggregates per domain ───────────────────────────────────────
 
-export interface WeeklyFitness {
+interface WeeklyFitness {
   weekStart: string;       // YYYY-MM-DD Monday
   sessionsCount: number;
   totalSetCount: number;
   trainingDays: Set<string>; // YYYY-MM-DD of days that had a workout
 }
 
-export interface WeeklyStudy {
+interface WeeklyStudy {
   weekStart: string;
   totalMinutes: number;
   sessionCount: number;
@@ -79,7 +79,7 @@ export interface WeeklyStudy {
   minutesOnRestDays: number;
 }
 
-export interface WeeklyFinance {
+interface WeeklyFinance {
   weekStart: string;
   /** Sum of expenses across the week. Income is excluded — we're comparing
    *  spending patterns, not net cashflow. */
@@ -90,7 +90,7 @@ export interface WeeklyFinance {
   budgetAdherence: number | null;
 }
 
-export interface WeeklyHabits {
+interface WeeklyHabits {
   weekStart: string;
   /** Total eligible (habit, date) pairs in the week. */
   eligibleCount: number;
@@ -106,7 +106,7 @@ function inWeek(date: Date, weekStart: Date): boolean {
   return date >= weekStart && date < end;
 }
 
-export function bucketFitnessByWeek(
+function bucketFitnessByWeek(
   sessions: WorkoutSession[],
   weeks: Date[],
 ): WeeklyFitness[] {
@@ -122,7 +122,7 @@ export function bucketFitnessByWeek(
   });
 }
 
-export function bucketStudyByWeek(
+function bucketStudyByWeek(
   sessions: StudySession[],
   weeks: Date[],
   fitnessWeeks: WeeklyFitness[],
@@ -147,7 +147,7 @@ export function bucketStudyByWeek(
   });
 }
 
-export function bucketFinanceByWeek(
+function bucketFinanceByWeek(
   txns: Transaction[],
   budgets: BudgetCategory[],
   weeks: Date[],
@@ -236,7 +236,7 @@ const MIN_WEEKS = 4;
 /** Fitness × Studies. Compare avg study minutes on workout days vs rest
  *  days across the last MIN_WEEKS weeks. Surface only if the delta is
  *  meaningful (≥15%). */
-export function fitnessStudyInsight(
+function fitnessStudyInsight(
   studyWeeks: WeeklyStudy[],
 ): Insight | null {
   const recent = studyWeeks.slice(0, MIN_WEEKS);
@@ -268,7 +268,7 @@ export function fitnessStudyInsight(
 
 /** Fitness × Finance. Spending in high-training weeks (3+ sessions) vs
  *  low-training weeks (≤1 session). */
-export function fitnessFinanceInsight(
+function fitnessFinanceInsight(
   fitnessWeeks: WeeklyFitness[],
   financeWeeks: WeeklyFinance[],
 ): Insight | null {
@@ -305,7 +305,7 @@ export function fitnessFinanceInsight(
 /** Habits × Fitness/Study output. Compare study minutes + workout sessions
  *  in weeks with high habit-hit ratio vs low. Threshold = top vs bottom
  *  half of the 4-week window. */
-export function habitsOutputInsight(
+function habitsOutputInsight(
   habitWeeks: WeeklyHabits[],
   studyWeeks: WeeklyStudy[],
   fitnessWeeks: WeeklyFitness[],
@@ -377,10 +377,10 @@ const DOMAIN_TO_SUBSCORE: Record<DomainKey, keyof Pick<LifeScore, 'workouts' | '
 };
 
 /** Weekly workout sessions that score 100. */
-export const WEEKLY_WORKOUT_TARGET = 3;
+const WEEKLY_WORKOUT_TARGET = 3;
 
 /** Weekly study minutes that score 100. */
-export const WEEKLY_STUDY_TARGET_MINUTES = 240;
+const WEEKLY_STUDY_TARGET_MINUTES = 240;
 
 /**
  * Fraction of the week that has elapsed, counting today as a whole day, so
@@ -390,7 +390,7 @@ export const WEEKLY_STUDY_TARGET_MINUTES = 240;
  * Clamped to [1/7, 1]: never zero (which would divide by zero on Monday) and
  * never past a full week if the caller passes an already-closed week.
  */
-export function weekElapsedFraction(today: Date = new Date()): number {
+function weekElapsedFraction(today: Date = new Date()): number {
   const dow = today.getDay(); // 0 Sun .. 6 Sat
   const dayIndex = dow === 0 ? 7 : dow; // Mon=1 .. Sun=7, matching startOfWeek
   return Math.min(1, Math.max(1 / 7, dayIndex / 7));
@@ -420,7 +420,7 @@ export function weekElapsedFraction(today: Date = new Date()): number {
  *     and tanked the composite, which read as a bug for users who, e.g., only
  *     track finances.)
  */
-export function lifeScoreForWeek(
+function lifeScoreForWeek(
   fit: WeeklyFitness,
   study: WeeklyStudy,
   fin: WeeklyFinance,
@@ -522,7 +522,7 @@ export function lifeScoreForWeek(
 
 // ─── Orchestrator — pull everything together ────────────────────────────
 
-export interface CrossDomainReport {
+interface CrossDomainReport {
   /** True when there's enough data (≥4 weeks) to surface any observation. */
   ready: boolean;
   /** All weekly buckets for both the dashboard rotator + /life screen. */

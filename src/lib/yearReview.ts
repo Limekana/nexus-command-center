@@ -33,7 +33,7 @@ function topN<K>(map: Map<K, number>, n: number): Array<{ key: K; value: number 
 // Result shape
 // ───────────────────────────────────────────────────────────────────────────
 
-export interface YearReviewData {
+interface YearReviewData {
   rangeStart: Date;
   rangeEnd: Date;
 

@@ -213,7 +213,7 @@ function getLockoutSecondsForAttempts(attempts: number): number {
 
 // ── Store ─────────────────────────────────────────────────────────────────
 
-export interface VerifyResult {
+interface VerifyResult {
   ok: boolean;
   // Present when verification was refused (or just rejected) due to lockout.
   // `remainingSeconds` is the wall-clock seconds the UI should show.

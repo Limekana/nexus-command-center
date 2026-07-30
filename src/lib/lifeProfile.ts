@@ -41,7 +41,7 @@ export const STUDENT_PROFILE: LifeProfile = {
   domains: { finance: 25, fitness: 25, studies: 25, work: 0, habits: 25 },
 };
 
-export const PROFESSIONAL_PROFILE: LifeProfile = {
+const PROFESSIONAL_PROFILE: LifeProfile = {
   preset: 'professional',
   domains: { finance: 25, fitness: 25, studies: 0, work: 25, habits: 25 },
 };
@@ -58,7 +58,7 @@ export function totalWeight(p: LifeProfile): number {
   return DOMAIN_KEYS.reduce((sum, k) => sum + (p.domains[k] ?? 0), 0);
 }
 
-export interface ProfileValidation {
+interface ProfileValidation {
   valid: boolean;
   error?: string;
 }

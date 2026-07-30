@@ -648,7 +648,7 @@ export interface PullResult {
 //   - Diagnostic console logs survive into release builds so `adb logcat`
 //     can confirm row counts on device.
 
-export interface StudiesHydrationResult {
+interface StudiesHydrationResult {
   subjects: number;
   grades: number;
   studySessions: number;
@@ -806,7 +806,7 @@ export async function hydrateStudiesFromCloud(
 // authoritative from the first paint. The user's habit count is small (we
 // can comfortably grab all completions) — for power users with multi-year
 // history we may need a date-window filter later.
-export interface HabitsHydrationResult {
+interface HabitsHydrationResult {
   habits: number;
   completions: number;
   errors: string[];
@@ -883,7 +883,7 @@ export async function hydrateHabitsFromCloud(
 // section has data from the first paint, then the realtime channel (already
 // subscribed to body_metrics since v1.2.1) handles deltas. Closes the
 // AUDIT-FSG-5b residual — pullAll previously had nowhere to land these rows.
-export interface BodyMetricsHydrationResult {
+interface BodyMetricsHydrationResult {
   bodyMetrics: number;
   errors: string[];
 }
@@ -931,7 +931,7 @@ export async function hydrateBodyMetricsFromCloud(
 // authenticated-client + RLS posture as the others. Bad/garbage rows degrade
 // gracefully (a missing rating is coerced to a safe number; the whole batch
 // isn't dropped on one bad row since map throwing would, so we guard fields).
-export interface WorkQualityHydrationResult {
+interface WorkQualityHydrationResult {
   workQualityLogs: number;
   errors: string[];
 }
@@ -970,7 +970,7 @@ export async function hydrateWorkQualityFromCloud(
   return { workQualityLogs: count, errors };
 }
 
-export interface StockSalesHydrationResult {
+interface StockSalesHydrationResult {
   stockSales: number;
   errors: string[];
 }
@@ -979,7 +979,7 @@ export interface StockSalesHydrationResult {
 // authenticated-client + RLS posture as the other hydrators; bad/garbage rows
 // degrade gracefully (lot_allocations falls back to []). No deleted_at filter
 // — stock_sales is hard-delete (the table has no such column).
-export async function hydrateStockSalesFromCloud(
+async function hydrateStockSalesFromCloud(
   userId: string,
 ): Promise<StockSalesHydrationResult> {
   const errors: string[] = [];
@@ -1016,14 +1016,14 @@ export async function hydrateStockSalesFromCloud(
   return { stockSales: count, errors };
 }
 
-export interface PortfolioCashHydrationResult {
+interface PortfolioCashHydrationResult {
   portfolioCashEntries: number;
   errors: string[];
 }
 
 // v1.3.2 — pull the user's portfolio cash ledger into Dexie. Same RLS posture
 // as the other hydrators. Hard-delete table (no deleted_at filter).
-export async function hydratePortfolioCashFromCloud(
+async function hydratePortfolioCashFromCloud(
   userId: string,
 ): Promise<PortfolioCashHydrationResult> {
   const errors: string[] = [];
