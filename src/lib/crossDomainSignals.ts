@@ -43,11 +43,6 @@ export function startOfWeek(d: Date): Date {
   return out;
 }
 
-/** Stable key for a week — YYYY-MM-DD of the Monday. */
-export function weekKey(d: Date): string {
-  return dateKey(startOfWeek(d));
-}
-
 /** Generate the last N week-start dates (most recent first). */
 export function lastNWeeks(n: number, today: Date = new Date()): Date[] {
   const out: Date[] = [];

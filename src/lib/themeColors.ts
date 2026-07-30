@@ -17,9 +17,6 @@ export const PRIMARY = '#00D4FF';
 /** Success green. Same as tailwind colors.success + --success in index.css. */
 export const SUCCESS = '#3FB950';
 
-/** Danger red. Same as tailwind colors.danger + --danger in index.css. */
-export const DANGER = '#F85149';
-
 /** Warning amber. Same as tailwind colors.warning + --warning in index.css. */
 export const WARNING = '#D29922';
 

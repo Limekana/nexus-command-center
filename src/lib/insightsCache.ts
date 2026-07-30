@@ -95,18 +95,6 @@ export function markWeeklyFundamentalSweep(): void {
   writeTimestamp(FUNDAMENTAL_SWEEP_KEY);
 }
 
-/** Telemetry — surfaced in the diagnostic panel + the Insights screen header
- *  so the user can see "your last sweep was X hours ago". */
-export function lastSweepTimestamps(): {
-  technical: string | null;
-  fundamental: string | null;
-} {
-  return {
-    technical: localStorage.getItem(TECHNICAL_SWEEP_KEY),
-    fundamental: localStorage.getItem(FUNDAMENTAL_SWEEP_KEY),
-  };
-}
-
 // ── BUG-9 — Composite-rating disk persistence ────────────────────────────
 //
 // The tier guards above tell the recompute pipeline "you don't need to

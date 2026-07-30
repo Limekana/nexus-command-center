@@ -25,8 +25,6 @@ interface LimecoreKeystoreApi {
 const LimecoreKeystore = registerPlugin<LimecoreKeystoreApi>('LimecoreKeystore');
 
 export const KEYSTORE_ALIAS_PIN = 'auth.pin';
-export const KEYSTORE_ALIAS_DEXIE = 'dexie.key';
-
 /** True if we're on a platform where the plugin can actually do work.
  *  Returns false on web (the plugin is registered but the methods will
  *  throw). Caller should branch on this before attempting encryption. */

@@ -28,14 +28,6 @@ export const MIN_ENABLED_DOMAINS = 2;
 /** …and no enabled domain may drop below this weight. */
 export const MIN_DOMAIN_WEIGHT = 5;
 
-export const DOMAIN_LABELS: Record<DomainKey, string> = {
-  finance: 'Finance',
-  fitness: 'Fitness',
-  studies: 'Studies',
-  work: 'Work',
-  habits: 'Habits',
-};
-
 export const STUDENT_PROFILE: LifeProfile = {
   preset: 'student',
   domains: { finance: 25, fitness: 25, studies: 25, work: 0, habits: 25 },

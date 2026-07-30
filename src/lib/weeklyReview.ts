@@ -372,18 +372,3 @@ export function buildWeeklyReview(args: {
 // Notification payload formatter
 // ───────────────────────────────────────────────────────────────────────────
 
-/**
- * One-line summary used in the Sunday push body. Picks the most "newsworthy"
- * metric across modules so the user sees something specific, not "your
- * weekly review is ready" — which is generic and dismissable.
- */
-export function notificationBody(d: WeeklyReviewData): string {
-  const bits: string[] = [];
-  if (d.fitness.workoutCount > 0) bits.push(`${d.fitness.workoutCount} workouts`);
-  if (d.tasks.completed > 0) bits.push(`${d.tasks.completed} tasks done`);
-  if (d.studies.studyMinutes >= 60) {
-    bits.push(`${Math.round(d.studies.studyMinutes / 60)}h studied`);
-  }
-  if (bits.length === 0) return 'Tap to open this week’s review.';
-  return bits.slice(0, 3).join(' · ');
-}

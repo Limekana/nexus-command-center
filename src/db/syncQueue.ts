@@ -29,12 +29,3 @@ export async function listPending(): Promise<SyncQueueItem[]> {
   return all.filter((q) => !q.syncedAt);
 }
 
-export async function markAllSynced(): Promise<void> {
-  const pending = await listPending();
-  const now = new Date().toISOString();
-  await db.transaction('rw', db.syncQueue, async () => {
-    for (const item of pending) {
-      await db.syncQueue.update(item.id, { syncedAt: now });
-    }
-  });
-}

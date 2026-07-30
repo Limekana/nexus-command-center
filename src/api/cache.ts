@@ -90,10 +90,6 @@ const dailyBudget: Record<string, number> = {
   coingecko: 200,
 };
 
-export function setDailyBudget(provider: string, n: number): void {
-  dailyBudget[provider] = n;
-}
-
 function todayKey(): string {
   // Local date so the budget resets at the user's local midnight, not UTC.
   const d = new Date();

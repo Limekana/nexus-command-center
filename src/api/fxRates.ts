@@ -105,7 +105,3 @@ export function convertSync(
   return isFinite(result) ? result : null;
 }
 
-export async function getCachedRates(): Promise<Record<string, number> | null> {
-  const p = await ensureFxRates();
-  return p?.rates ?? null;
-}
