@@ -372,7 +372,18 @@ with something else.
 |---|---|---|
 | L-7 | **Retention purge for soft-deleted rows** | 10 subjects + 8 grades sit soft-deleted indefinitely. Needs a scheduled hard-delete (pg_cron) past a fixed window. **The policy was written to describe today's behaviour rather than promise a window that nothing enforces** — tighten the wording once this ships. |
 | L-8 | **Export + deletion in NCC and LimeLog** | ✅ done 2026-07-29. Both apps now carry the two buttons in Settings → Your data, calling the same app-agnostic `delete-account` Edge Function, so deleting from any app erases all three (the second confirmation names the other two). Ported from StudyDesk's `lib/dataRights.js`. Two deliberate differences: **NCC enumerates `db.tables`** rather than listing them, so a table added later cannot silently drop out of an Art. 20 export (`apiCache` and `insightsScores` excluded, with the reason stated in the file itself); **LimeLog wipes by key prefix** (`wt_`, `limelog-`) rather than by name, because `nexusStore.signOut`'s explicit six-key list is right for sign-out but would leave data behind on an erasure request. LimeLog lists progress-photo *dates* but does not embed the images — thirty base64 JPEGs would make the file unopenable, and the user already has the photos. The two new confirmations use native `confirm()`; fold them into **LL-7**. |
-| L-9 | **Record of processing (Art. 30)** | The <250-employee exemption falls away for non-occasional processing, which continuous sync is. One internal page; also keeps the policy honest. |
+| L-9 | **Record of processing (Art. 30)** | ✅ done 2026-07-29 — [`docs/RECORD_OF_PROCESSING.md`](./RECORD_OF_PROCESSING.md). Kept **internal**: Art. 30 requires the record to exist and to be produced for the supervisory authority on request, not published, and §7 lists the security measures — a reason not to publish it. Written against the live schema and console rather than from memory. |
+
+**L-9 turned up two facts worth surfacing.** The user base is **172 accounts**,
+not the 144 recorded earlier in this session — **138 of them (80%) via Google**,
+7 unconfirmed, first signup 11 May 2026. And the database is **27 tables, every
+one with RLS enabled** (read from `pg_class`, not assumed).
+
+The record documents three known gaps rather than papering over them: the
+free-tier Gemini training clause (O-7, a deliberate decision), the unbuilt
+retention purge (L-7), and the six outstanding console items. That is the point
+of the exercise — a record that only lists what is already correct is not much
+of a record.
 | L-10 | **`audit_log` erasure gap (NCC)** | ✅ **applied 2026-07-29 with sign-off** — `supabase/migrations/20260729_audit_log_erasure.sql`. FK now `CASCADE`, trigger live and enabled, 140 rows unchanged. See the analysis below. |
 
 #### L-10 — the diagnosis was understated (checked against the live catalog)
