@@ -22,7 +22,7 @@
 
 import { registerPlugin, type PluginListenerHandle } from '@capacitor/core';
 
-export interface PermissionResult {
+interface PermissionResult {
   granted: boolean;
 }
 
@@ -51,7 +51,7 @@ export interface NotificationAction {
   extra?: Record<string, unknown>;
 }
 
-export interface ScheduleSpec {
+interface ScheduleSpec {
   // Stable numeric ID. Re-scheduling with the same ID overwrites the
   // previous alarm (via PendingIntent.FLAG_UPDATE_CURRENT on the native
   // side).
@@ -73,21 +73,21 @@ export interface ScheduleSpec {
   actions?: NotificationAction[];
 }
 
-export interface ScheduleResult {
+interface ScheduleResult {
   id: number;
   /** Actual fire time after past-time flooring (ms epoch). */
   at: number;
 }
 
-export interface CancelSpec {
+interface CancelSpec {
   ids: number[];
 }
 
-export interface PendingResult {
+interface PendingResult {
   ids: number[];
 }
 
-export interface NotificationTapEvent {
+interface NotificationTapEvent {
   route: string;
 }
 
@@ -95,7 +95,7 @@ export interface NotificationTapEvent {
  *  notification body itself — that's `notificationTap`). The source
  *  notification auto-dismisses on the native side before this event
  *  reaches JS. */
-export interface NotificationActionEvent {
+interface NotificationActionEvent {
   /** Matches the `id` field of the action that was tapped. */
   actionId: string;
   /** Route from the action's `route` field. Empty string if unset. */
@@ -107,13 +107,13 @@ export interface NotificationActionEvent {
 
 /** Result of consumePendingTap — see plugin docstring. Empty route means
  *  the buffer was clean. v1.3.1 BUG-14 cold-start drain. */
-export interface PendingTapResult {
+interface PendingTapResult {
   route: string;
 }
 
 /** Result of consumePendingAction — see plugin docstring. Empty actionId
  *  means the buffer was clean. v1.3.1 BUG-14 cold-start drain. */
-export interface PendingActionResult {
+interface PendingActionResult {
   actionId: string;
   route: string;
   extraJson: string;

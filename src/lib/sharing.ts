@@ -27,7 +27,7 @@ export interface ShareRow {
 // =============================================================================
 // Public profile hydration
 // =============================================================================
-export async function getPublicProfiles(
+async function getPublicProfiles(
   userIds: string[]
 ): Promise<Record<string, { full_name: string | null; avatar_url: string | null }>> {
   if (userIds.length === 0) return {};

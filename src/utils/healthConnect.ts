@@ -3,7 +3,7 @@
 
 import { Capacitor } from '@capacitor/core';
 
-export interface HealthCapability {
+interface HealthCapability {
   available: boolean;
   reason: string;
   needsInstall?: boolean;

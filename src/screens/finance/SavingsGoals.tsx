@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useConfirm } from '../../components/ConfirmDialog';
+import { formatMoney } from '../../lib/currencies';
+import { formatLocale } from '../../utils/formatters';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
@@ -31,28 +34,20 @@ import type { SavingsGoal, ManualAsset } from '../../types/finance';
  *     only used for the available-cash banner.
  */
 
-const CURRENCY_SYMBOL: Record<string, string> = {
-  EUR: '€', USD: '$', GBP: '£', SEK: 'kr', NOK: 'kr', DKK: 'kr', CHF: 'Fr', JPY: '¥',
-};
 
 function fmt(amount: number, currency: string): string {
-  const sym = CURRENCY_SYMBOL[currency.toUpperCase()] ?? '';
-  const isSuffix = ['kr', 'Fr'].includes(sym);
-  const num = amount.toLocaleString('fi-FI', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-  return isSuffix ? `${num} ${sym}` : sym ? `${sym}${num}` : `${num} ${currency}`;
+  return formatMoney(amount, currency, { locale: formatLocale() });
 }
 
 function fmtCompact(amount: number, currency: string): string {
   // Drop decimals on values ≥1000 so progress rows stay tight on narrow screens.
-  const sym = CURRENCY_SYMBOL[currency.toUpperCase()] ?? '';
-  const isSuffix = ['kr', 'Fr'].includes(sym);
-  const fractionDigits = Math.abs(amount) >= 1000 ? 0 : 2;
-  const num = amount.toLocaleString('fi-FI', { maximumFractionDigits: fractionDigits, minimumFractionDigits: fractionDigits });
-  return isSuffix ? `${num} ${sym}` : sym ? `${sym}${num}` : `${num} ${currency}`;
+  const d = Math.abs(amount) >= 1000 ? 0 : 2;
+  return formatMoney(amount, currency, { locale: formatLocale(), min: d, max: d });
 }
 
 export default function SavingsGoals() {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const navigate = useNavigate();
   const goals = useSavingsGoalsStore((s) => s.goals);
   const loaded = useSavingsGoalsStore((s) => s.loaded);
@@ -234,7 +229,7 @@ export default function SavingsGoals() {
               size="sm"
               onClick={openInvest}
               disabled={liquidAssets.length === 0}
-              icon="→"
+              icon={<span className="rtl-mirror">→</span>}
             >
               {t('fin.sg.invest')}
             </Pill>
@@ -309,9 +304,12 @@ export default function SavingsGoals() {
                 onSet={(amount) => void setAllocated(g.id, amount)}
                 onEdit={() => openEdit(g)}
                 onDelete={() => {
-                  if (window.confirm(t('fin.sg.deleteConfirm', { title: g.title, amount: fmtCompact(g.allocatedAmount, g.currency) }))) {
-                    void deleteGoal(g.id);
-                  }
+                  void (async () => {
+                    const ok = await confirm({
+                      message: t('fin.sg.deleteConfirm', { title: g.title, amount: fmtCompact(g.allocatedAmount, g.currency) }),
+                    });
+                    if (ok) await deleteGoal(g.id);
+                  })();
                 }}
               />
             ))}
@@ -624,7 +622,7 @@ function GoalRow({ goal, onAllocate, onSet, onEdit, onDelete }: GoalRowProps) {
       <div className="flex items-center justify-between mt-1">
         <div className="text-[10px] text-text-muted">{pct.toFixed(0)}%</div>
         {goal.notes && (
-          <div className="text-[10px] text-text-muted/80 italic truncate ml-2">{goal.notes}</div>
+          <div className="text-[10px] text-text-muted/80 italic truncate ms-2">{goal.notes}</div>
         )}
       </div>
 
@@ -640,7 +638,7 @@ function GoalRow({ goal, onAllocate, onSet, onEdit, onDelete }: GoalRowProps) {
           <Pill size="sm" onClick={() => setCustomOpen(true)} icon="✎">
             {t('fin.sg.custom')}
           </Pill>
-          <div className="ml-auto flex items-center gap-1.5">
+          <div className="ms-auto flex items-center gap-1.5">
             <Pill size="sm" onClick={onEdit}>{t('fin.sg.edit')}</Pill>
             {/* Buffer goal is non-deletable — see store's deleteGoal guard. */}
             {!isBuffer && (

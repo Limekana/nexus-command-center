@@ -16,6 +16,8 @@
 // display so newest sits on top with the final balance.
 
 import { useMemo } from 'react';
+import { formatMoney } from '../../lib/currencies';
+import { formatLocale } from '../../utils/formatters';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
@@ -27,18 +29,9 @@ import { convertSync } from '../../api/fxRates';
 import type { Transaction } from '../../types/finance';
 import { LIABILITY_TYPES } from '../../types/finance';
 
-const CURRENCY_SYMBOL: Record<string, string> = {
-  EUR: '€', USD: '$', GBP: '£', SEK: 'kr', NOK: 'kr', DKK: 'kr', CHF: 'Fr', JPY: '¥',
-};
 
 function fmt(amount: number, currency: string): string {
-  const sym = CURRENCY_SYMBOL[currency.toUpperCase()] ?? '';
-  const isSuffix = ['kr', 'Fr'].includes(sym);
-  const num = amount.toLocaleString('fi-FI', {
-    maximumFractionDigits: 2,
-    minimumFractionDigits: 2,
-  });
-  return isSuffix ? `${num} ${sym}` : sym ? `${sym}${num}` : `${num} ${currency}`;
+  return formatMoney(amount, currency, { locale: formatLocale() });
 }
 
 interface RowEntry {
@@ -277,7 +270,7 @@ export default function AccountDetail() {
                   key={r.txn.id}
                   type="button"
                   onClick={() => navigate(`/finance/add?id=${r.txn.id}`)}
-                  className="w-full flex items-center gap-2 py-2 border-b border-border/40 last:border-0 text-left press-spring"
+                  className="w-full flex items-center gap-2 py-2 border-b border-border/40 last:border-0 text-start press-spring"
                 >
                   <span className={`text-base ${tone} w-5 text-center`}>
                     {glyph}
@@ -291,7 +284,7 @@ export default function AccountDetail() {
                       {r.counterparty ? ` · ${r.counterparty}` : ''}
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-end">
                     <div className={`text-sm font-semibold tabular-nums ${tone}`}>
                       {r.delta >= 0 ? '+' : ''}
                       {fmt(r.delta, account.currency)}

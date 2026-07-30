@@ -4,6 +4,7 @@
 // refresh and a stale indicator when a refresh falls back to cached data.
 
 import { useEffect } from 'react';
+import { formatLocale } from '../utils/formatters';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import SparkLine from './SparkLine';
@@ -183,7 +184,7 @@ function FearGreedGauge({ score }: { score: number }) {
       </div>
       <div className="relative h-2 rounded-full bg-surface2 overflow-hidden" aria-hidden>
         <div
-          className={`absolute inset-y-0 left-0 rounded-full ${tone.bar}`}
+          className={`absolute inset-y-0 start-0 rounded-full ${tone.bar}`}
           style={{ width: `${clamped}%` }}
         />
       </div>
@@ -231,7 +232,7 @@ function RateRow({ rate }: { rate: MacroRate }) {
           />
         ))}
       </div>
-      <span className="text-xs font-heading font-semibold text-text w-12 text-right">
+      <span className="text-xs font-heading font-semibold text-text w-12 text-end">
         {rate.value.toFixed(2)}%
       </span>
     </div>
@@ -244,7 +245,7 @@ function ChangePill({ change }: { change: number }) {
   const arrow = flat ? '→' : change > 0 ? '↑' : '↓';
   const tone = flat ? 'text-text-muted' : change > 0 ? 'text-success' : 'text-danger';
   return (
-    <span className={`text-[11px] font-heading whitespace-nowrap w-16 text-right ${tone}`}>
+    <span className={`text-[11px] font-heading whitespace-nowrap w-16 text-end ${tone}`}>
       {change > 0 && !flat ? '+' : ''}
       {change.toFixed(2)}% {arrow}
     </span>
@@ -284,7 +285,7 @@ function SkeletonRows() {
 
 // ── Formatting helpers ─────────────────────────────────────────────────────
 function fmtNum(n: number, decimals = 2): string {
-  return n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  return n.toLocaleString(formatLocale(), { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
 function minutesAgo(ts: number, t: TFunction): string {
@@ -297,5 +298,5 @@ function minutesAgo(ts: number, t: TFunction): string {
 
 function fmtEventDate(iso: string): string {
   const [y, m, d] = iso.split('-').map((p) => parseInt(p, 10));
-  return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return new Date(y, m - 1, d).toLocaleDateString(formatLocale(), { month: 'short', day: 'numeric' });
 }

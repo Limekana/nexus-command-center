@@ -13,12 +13,23 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import { supabase, OAUTH_REDIRECT_URL } from '../../lib/supabase';
 import { setGuestMode } from '../../lib/guestMode';
+import { isOnboarded } from '../../lib/onboarding';
+import { translateAuthError } from '../../lib/authErrors';
 
 export default function Login() {
+  const { t } = useTranslation();
+  // v1.8 / ACT-3 — the gate used to greet everyone with "Sign in", which reads
+  // as "welcome back" to someone who has never opened the app. `isOnboarded()`
+  // is set at the end of onboarding, which lives *behind* this gate, so at gate
+  // time an unset flag is a sound "this device has never completed first run".
+  // Read once on mount: the flag can't change while the gate is on screen, and
+  // re-reading would let the copy shift under the user mid-session.
+  const [firstRun] = useState(() => !isOnboarded());
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +44,7 @@ export default function Login() {
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     setSubmitting(false);
     if (error) {
-      setError(error.message);
+      setError(translateAuthError(error, t));
     }
     // On success, the session store listener will pick up the new session and
     // App.tsx will re-render away from this screen.
@@ -51,7 +62,7 @@ export default function Login() {
         },
       });
       if (error || !data?.url) {
-        setError(error?.message ?? 'Could not start Google sign-in.');
+        setError(translateAuthError(error, t) ?? t('auth.errGoogleStart'));
         setGoogleSubmitting(false);
         return;
       }
@@ -64,7 +75,7 @@ export default function Login() {
         window.location.href = data.url;
       }
     } catch (e) {
-      setError((e as Error).message);
+      setError(translateAuthError(e as Error, t));
     } finally {
       setGoogleSubmitting(false);
     }
@@ -89,9 +100,19 @@ export default function Login() {
   return (
     <div className="min-h-full bg-bg text-text flex flex-col">
       <div className="flex-1 flex flex-col justify-center px-6 max-w-md mx-auto w-full">
+        {/* "Nexus" is the product name — deliberately not a translation key. */}
         <div className="mb-8">
           <h1 className="font-heading font-bold text-3xl tracking-tight">Nexus</h1>
-          <p className="text-sm text-text-muted mt-1">Command Center · Sign in</p>
+          <p className="text-sm text-text-muted mt-1">
+            {firstRun ? t('auth.firstRunSubtitle') : t('auth.signInSubtitle')}
+          </p>
+          {/* ACT-3: on first run, lead with the local-first promise rather than
+              an account pitch — this is the screen where "you don't need an
+              account" has to land, and the guest control itself is the last
+              thing on the page. */}
+          {firstRun && (
+            <p className="text-xs text-primary/90 mt-2">{t('auth.firstRunPromise')}</p>
+          )}
         </div>
 
         {/* Primary affordance — Google. Suite-wide SSO source. */}
@@ -102,7 +123,7 @@ export default function Login() {
           className="btn w-full flex items-center justify-center gap-2"
         >
           <GoogleG />
-          {googleSubmitting ? 'Opening Google…' : 'Continue with Google'}
+          {googleSubmitting ? t('auth.googleOpening') : t('auth.google')}
         </button>
 
         {/* Email/password — secondary, collapsed by default.
@@ -115,20 +136,22 @@ export default function Login() {
             onClick={() => setShowEmail(true)}
             className="w-full text-center text-xs text-text-muted mt-3 py-3 underline-offset-2 hover:underline rounded-md"
           >
-            Use email instead
+            {t('auth.useEmail')}
           </button>
         ) : (
           <>
             <div className="flex items-center gap-3 my-5">
               <div className="flex-1 h-px bg-border" />
-              <span className="text-[10px] uppercase tracking-wider text-text-muted">or use email</span>
+              <span className="text-[10px] uppercase tracking-wider text-text-muted">
+                {t('auth.orUseEmail')}
+              </span>
               <div className="flex-1 h-px bg-border" />
             </div>
 
             <form onSubmit={onSubmit} className="space-y-3">
               <div>
                 <label className="block text-[10px] uppercase tracking-wider text-text-muted mb-1">
-                  Email
+                  {t('auth.emailLabel')}
                 </label>
                 <input
                   type="email"
@@ -137,12 +160,12 @@ export default function Login() {
                   className="input w-full"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder={t('auth.emailPlaceholder')}
                 />
               </div>
               <div>
                 <label className="block text-[10px] uppercase tracking-wider text-text-muted mb-1">
-                  Password
+                  {t('auth.passwordLabel')}
                 </label>
                 <input
                   type="password"
@@ -157,14 +180,14 @@ export default function Login() {
               </div>
 
               <button type="submit" disabled={submitting} className="btn-ghost w-full">
-                {submitting ? 'Signing in…' : 'Sign In with Email'}
+                {submitting ? t('auth.signingIn') : t('auth.signInEmail')}
               </button>
             </form>
 
             <p className="text-center text-xs text-text-muted mt-4">
-              Don't have an account?{' '}
+              {t('auth.noAccount')}{' '}
               <Link to="/auth/signup" className="text-primary">
-                Sign up
+                {t('auth.signUp')}
               </Link>
             </p>
           </>
@@ -192,10 +215,10 @@ export default function Login() {
             onClick={onGuest}
             className="w-full min-h-[44px] py-3 text-sm text-text-muted hover:text-text underline-offset-2 hover:underline rounded-md"
           >
-            Continue as guest
+            {t('auth.guest')}
           </button>
           <p className="text-[11px] text-text-muted mt-1.5 text-center px-4 leading-relaxed">
-            Local only — no cross-device sync. You can sign in later from Settings.
+            {t('auth.guestCaption')}
           </p>
         </div>
       </div>

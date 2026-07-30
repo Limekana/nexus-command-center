@@ -115,7 +115,7 @@ export function scoreToTier(score: number): InsightTier {
  *  breakdown returns the same score (modulo the computedAt timestamp).
  *  Reusable by the UI for "what-if I had different signals" diagnostics
  *  and by unit tests. */
-export function composeRating(
+function composeRating(
   ticker: string,
   breakdown: CompositeBreakdown,
 ): CompositeRating {

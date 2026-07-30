@@ -21,7 +21,7 @@ import { db } from '../db/database';
 
 const TTL_MS = 60 * 60 * 1000; // default 60 min when caller doesn't specify
 
-export interface CacheRead<T> {
+interface CacheRead<T> {
   data: T;
   fetchedAt: Date;
   ageMinutes: number;
@@ -77,7 +77,7 @@ const softIntervalMs: Record<string, number> = {
   'yahoo-summary': 24 * 60 * 60_000,          // 24h international fallback
 };
 
-export function setSoftInterval(bucket: string, ms: number): void {
+function setSoftInterval(bucket: string, ms: number): void {
   softIntervalMs[bucket] = ms;
 }
 
@@ -90,10 +90,6 @@ const dailyBudget: Record<string, number> = {
   coingecko: 200,
 };
 
-export function setDailyBudget(provider: string, n: number): void {
-  dailyBudget[provider] = n;
-}
-
 function todayKey(): string {
   // Local date so the budget resets at the user's local midnight, not UTC.
   const d = new Date();
@@ -104,7 +100,7 @@ function budgetStorageKey(provider: string): string {
   return `apibudget_${provider}_${todayKey()}`;
 }
 
-export function dailyBudgetUsed(provider: string): number {
+function dailyBudgetUsed(provider: string): number {
   try {
     return parseInt(localStorage.getItem(budgetStorageKey(provider)) ?? '0', 10) || 0;
   } catch {
@@ -112,13 +108,13 @@ export function dailyBudgetUsed(provider: string): number {
   }
 }
 
-export function dailyBudgetRemaining(provider: string): number {
+function dailyBudgetRemaining(provider: string): number {
   return Math.max(0, (dailyBudget[provider] ?? 9999) - dailyBudgetUsed(provider));
 }
 
 // Legacy per-minute sliding-window check — still used as a hard cap for the
 // "calls per minute" budget some providers enforce server-side.
-export function underRateLimit(bucket: string, maxPerMinute: number): boolean {
+function underRateLimit(bucket: string, maxPerMinute: number): boolean {
   const now = Date.now();
   const windowMs = 60_000;
   const stamps = (callTimestamps[bucket] ??= []);

@@ -83,7 +83,7 @@ interface YahooChartResponse {
 // Partial metric/profile snapshot derived from a /chart call's `meta` object.
 // Written opportunistically by getYahooQuote so getYahooMetric can use it as
 // a fallback when quoteSummary is unavailable (e.g. web/CORS or crumb fails).
-export interface YahooChartMeta {
+interface YahooChartMeta {
   ticker: string;
   longName?: string;
   exchange?: string;

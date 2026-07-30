@@ -10,7 +10,7 @@
 
 import type { WorkQualityLog } from '../types/work';
 
-export interface WorkScoreInput {
+interface WorkScoreInput {
   /** 1–5 average across the last 7 days that HAD a log. 0 when none. */
   weeklyRatingAvg: number;
   /** 0–7 distinct days logged in the last 7 days. */

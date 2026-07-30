@@ -327,7 +327,6 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
       updatedAt: now,
     };
     await db.studySessions.add(session);
-    await enqueue('study_session', session.id, 'insert', session);
     // Newest-first by startedAt.
     set({
       studySessions: [session, ...get().studySessions].sort((a, b) =>
@@ -347,7 +346,6 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
       syncStatus: 'pending',
     };
     await db.studySessions.put(updated);
-    await enqueue('study_session', id, 'update', updated);
     set({
       studySessions: get()
         .studySessions.map((s) => (s.id === id ? updated : s))
@@ -357,7 +355,6 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
 
   async deleteStudySession(id) {
     await db.studySessions.delete(id);
-    await enqueue('study_session', id, 'delete', { id });
     set({ studySessions: get().studySessions.filter((s) => s.id !== id) });
   },
 }));

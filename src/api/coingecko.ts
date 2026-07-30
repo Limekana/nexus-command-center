@@ -8,7 +8,7 @@ const BASE_URL = Capacitor.isNativePlatform()
   ? 'https://api.coingecko.com/api/v3'
   : '/cg/api/v3';
 
-export interface CryptoPrice {
+interface CryptoPrice {
   id: string;
   priceUsd: number;
   priceEur: number;

@@ -1,0 +1,1 @@
+As fontes agora vêm junto com o app em vez de serem baixadas do Google Fonts em tempo de execução. A interface aparece corretamente sem conexão de rede, e nenhuma requisição sai do seu dispositivo por causa da tipografia. Nenhuma outra mudança de comportamento em relação à 1.7.1.

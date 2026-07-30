@@ -468,7 +468,7 @@ interface FinnhubDividend {
   recordDate?: string;
 }
 
-export async function getDividends(ticker: string): Promise<DividendEvent[]> {
+async function getDividends(ticker: string): Promise<DividendEvent[]> {
   const key = `div_${ticker.toUpperCase()}`;
   const cached = await readCacheWithTTL<DividendEvent[]>(key, DIV_TTL_MS);
   if (cached) return cached;

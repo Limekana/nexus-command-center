@@ -22,7 +22,7 @@ export default function ModuleSummaryCard({ title, icon, tag, to, children }: Mo
   return (
     <button
       onClick={() => navigate(to)}
-      className="glass rounded-xl p-4 text-left press-spring flex flex-col min-h-[124px] w-full"
+      className="glass rounded-xl p-4 text-start press-spring flex flex-col min-h-[124px] w-full"
     >
       <div className="flex items-center justify-between mb-2">
         <span className="font-heading font-semibold text-sm flex items-center gap-2">

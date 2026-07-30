@@ -1,0 +1,1 @@
+Fonts are now bundled with the app instead of being fetched from Google Fonts at runtime. The interface renders correctly with no network connection, and no request leaves your device for typography. No other behaviour change from 1.7.1.

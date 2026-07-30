@@ -9,4 +9,4 @@ Fonctionnalités :
 
 Local d'abord, stockage sur l'appareil ; synchronisation cloud optionnelle liée au compte. Pas de Google Play Services, pas de Firebase — la connexion Google est un simple flux web OAuth. Les données de marché tierces (Finnhub, CoinGecko, Yahoo, BCE) et une fonction IA optionnelle sont des appels HTTPS initiés par l'utilisateur.
 
-Disponible en anglais, finnois, français, allemand, espagnol et chinois.
+Disponible en anglais, finnois, français, allemand, espagnol, chinois, hindi, portugais, indonésien et arabe.

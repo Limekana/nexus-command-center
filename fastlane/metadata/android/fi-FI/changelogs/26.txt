@@ -1,0 +1,1 @@
+Fontit toimitetaan nyt sovelluksen mukana sen sijaan, että ne haettaisiin Google Fontsista ajonaikaisesti. Käyttöliittymä näkyy oikein ilman verkkoyhteyttä, eikä typografian vuoksi lähde laitteeltasi yhtään pyyntöä. Ei muita muutoksia versioon 1.7.1 verrattuna.

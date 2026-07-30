@@ -7,7 +7,7 @@ import { useMemo, useState } from 'react';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { detectRecurring, projectCashFlow } from '../lib/cashFlowForecast';
-import { formatShortDate } from '../utils/formatters';
+import { formatShortDate, formatLocale } from '../utils/formatters';
 
 export default function CashFlowForecastCard() {
   const transactions = useFinanceStore((s) => s.transactions);
@@ -27,7 +27,7 @@ export default function CashFlowForecastCard() {
 
   const money = useMemo(
     () =>
-      new Intl.NumberFormat('fi-FI', {
+      new Intl.NumberFormat(formatLocale(), {
         style: 'currency',
         currency: baseCurrency,
         maximumFractionDigits: 0,

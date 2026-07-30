@@ -9,4 +9,4 @@ Funktionen:
 
 Lokal zuerst, Speicherung auf dem Gerät; optionale kontogebundene Cloud-Synchronisierung. Keine Google Play Services, kein Firebase — die Google-Anmeldung ist ein einfacher Web-OAuth-Ablauf. Marktdaten von Drittanbietern (Finnhub, CoinGecko, Yahoo, EZB) und eine optionale KI-Funktion sind nutzerinitiierte HTTPS-Aufrufe.
 
-Verfügbar in Englisch, Finnisch, Französisch, Deutsch, Spanisch und Chinesisch.
+Verfügbar in Englisch, Finnisch, Französisch, Deutsch, Spanisch, Chinesisch, Hindi, Portugiesisch, Indonesisch und Arabisch.

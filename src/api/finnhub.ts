@@ -191,7 +191,7 @@ async function yahooFetch(
   };
 }
 
-export async function getQuote(
+async function getQuote(
   ticker: string,
   opts: { force?: boolean } = {},
 ): Promise<QuoteResult | null> {

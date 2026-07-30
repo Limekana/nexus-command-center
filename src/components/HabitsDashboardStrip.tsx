@@ -40,7 +40,7 @@ export default function HabitsDashboardStrip() {
       <button
         type="button"
         onClick={() => navigate('/habits/add')}
-        className="glass rounded-xl p-4 flex items-center justify-between press-spring text-left w-full"
+        className="glass rounded-xl p-4 flex items-center justify-between press-spring text-start w-full"
       >
         <div className="min-w-0">
           <div className="font-heading font-semibold text-sm">{t('dash.buildHabitTitle')}</div>
@@ -48,7 +48,7 @@ export default function HabitsDashboardStrip() {
             {t('dash.buildHabitBody')}
           </div>
         </div>
-        <div className="pill pill-on flex-shrink-0 ml-3">{t('dash.addHabit')}</div>
+        <div className="pill pill-on flex-shrink-0 ms-3">{t('dash.addHabit')}</div>
       </button>
     );
   }
@@ -58,7 +58,7 @@ export default function HabitsDashboardStrip() {
       <button
         type="button"
         onClick={() => navigate('/habits')}
-        className="glass rounded-xl p-4 press-spring text-left w-full block"
+        className="glass rounded-xl p-4 press-spring text-start w-full block"
       >
         <div className="font-heading font-semibold text-sm">{t('dash.habits')}</div>
         <div className="text-[11px] text-text-muted mt-0.5">

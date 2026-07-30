@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { formatLocale } from '../../utils/formatters';
+import { currencyOptions } from '../../lib/currencies';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
@@ -8,7 +10,7 @@ import { validateTicker } from '../../lib/tickerValidation';
 import { isHoldingClosed } from '../../lib/positionStatus';
 import type { PortfolioHolding, AssetType } from '../../types/finance';
 
-const CURRENCIES = ['EUR', 'USD', 'GBP', 'SEK', 'NOK', 'DKK', 'CHF', 'JPY'];
+
 
 // Add flow asks for the FIRST purchase inline so a single tap creates both
 // the holding and its initial lot. Editing an existing holding never touches
@@ -148,7 +150,7 @@ export default function ManageHoldings() {
         <div className="flex-1 min-w-0">
           <div className="text-sm font-heading font-semibold truncate">
             {h.ticker.toUpperCase()}
-            {closed && <span className="ml-1.5 text-[8px] uppercase tracking-wider text-text-muted">{t('fin.mh.closed')}</span>}
+            {closed && <span className="ms-1.5 text-[8px] uppercase tracking-wider text-text-muted">{t('fin.mh.closed')}</span>}
           </div>
           <div className="text-[10px] text-text-muted truncate">
             {h.name} · {h.quantity}
@@ -262,8 +264,8 @@ export default function ManageHoldings() {
                     value={firstCurrency}
                     onChange={(e) => setFirstCurrency(e.target.value)}
                   >
-                    {CURRENCIES.map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                    {currencyOptions(formatLocale()).map((c) => (
+                      <option key={c.code} value={c.code}>{c.label}</option>
                     ))}
                   </select>
                 </div>

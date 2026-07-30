@@ -5,7 +5,7 @@
 // deterministic (we re-pick on every app open, so it stays fresh). `{h}` is
 // the habit title, `{n}` the current streak length.
 
-export type HabitMsgKind = 'primary' | 'evening' | 'morning' | 'milestone';
+type HabitMsgKind = 'primary' | 'evening' | 'morning' | 'milestone';
 
 interface Msg {
   title: string;

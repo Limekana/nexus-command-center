@@ -13,6 +13,7 @@
 // to that module's overview so the user can drill in.
 
 import { useMemo, useState } from 'react';
+import { formatLocale } from '../utils/formatters';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AppHeader from '../components/AppHeader';
@@ -27,7 +28,7 @@ function formatRange(start: Date, end: Date): string {
   const sameMonth = start.getMonth() === end.getMonth();
   const day = (d: Date) => d.getDate();
   const month = (d: Date) =>
-    new Intl.DateTimeFormat('fi-FI', { month: 'short' }).format(d);
+    new Intl.DateTimeFormat(formatLocale(), { month: 'short' }).format(d);
   const year = (d: Date) => d.getFullYear();
   if (sameMonth) {
     return `${day(start)}–${day(end)} ${month(end)} ${year(end)}`;
@@ -97,7 +98,7 @@ export default function WeeklyReview() {
   );
 
   const fmtMoney = (amount: number): string =>
-    new Intl.NumberFormat('fi-FI', {
+    new Intl.NumberFormat(formatLocale(), {
       style: 'currency',
       currency: baseCurrency,
       maximumFractionDigits: 0,
@@ -156,7 +157,7 @@ export default function WeeklyReview() {
         {/* Finance */}
         <button
           onClick={() => navigate('/finance')}
-          className="card text-left w-full active:bg-surface2/40"
+          className="card text-start w-full active:bg-surface2/40"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="font-heading font-semibold text-sm">💰 {t('weeklyReview.finance')}</span>
@@ -233,7 +234,7 @@ export default function WeeklyReview() {
               <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.volume')}</div>
               <div className="font-heading font-bold text-base">
                 {data.fitness.totalVolumeKg > 0
-                  ? `${Math.round(data.fitness.totalVolumeKg).toLocaleString('fi-FI')} kg`
+                  ? `${Math.round(data.fitness.totalVolumeKg).toLocaleString(formatLocale())} kg`
                   : '—'}
               </div>
             </div>
@@ -248,7 +249,7 @@ export default function WeeklyReview() {
         {/* Tasks */}
         <button
           onClick={() => navigate('/tasks')}
-          className="card text-left w-full active:bg-surface2/40"
+          className="card text-start w-full active:bg-surface2/40"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="font-heading font-semibold text-sm">✓ {t('weeklyReview.tasks')}</span>
@@ -280,7 +281,7 @@ export default function WeeklyReview() {
 
         <button
           onClick={() => navigate('/review/year')}
-          className="card w-full text-left active:bg-surface2/40"
+          className="card w-full text-start active:bg-surface2/40"
         >
           <div className="flex items-center justify-between">
             <div>

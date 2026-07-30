@@ -19,11 +19,15 @@ import fr from './locales/fr.json';
 import de from './locales/de.json';
 import es from './locales/es.json';
 import zh from './locales/zh.json';
+import hi from './locales/hi.json';
+import pt from './locales/pt.json';
+import id from './locales/id.json';
+import ar from './locales/ar.json';
 
-export const SUPPORTED_LANGS = ['en', 'fi', 'fr', 'de', 'es', 'zh'] as const;
+export const SUPPORTED_LANGS = ['en', 'fi', 'fr', 'de', 'es', 'zh', 'hi', 'pt', 'id', 'ar'] as const;
 export type Lang = (typeof SUPPORTED_LANGS)[number];
 
-export const LANG_STORAGE_KEY = 'limecore_lang';
+const LANG_STORAGE_KEY = 'limecore_lang';
 
 /** Native (endonym) display names for the in-app language switcher. */
 export const LANGUAGE_NAMES: Record<Lang, string> = {
@@ -33,13 +37,17 @@ export const LANGUAGE_NAMES: Record<Lang, string> = {
   de: 'Deutsch',
   es: 'Español',
   zh: '中文',
+  hi: 'हिन्दी',
+  pt: 'Português',
+  id: 'Bahasa Indonesia',
+  ar: 'العربية',
 };
 
 function isSupported(code: string): code is Lang {
   return (SUPPORTED_LANGS as readonly string[]).includes(code);
 }
 
-export function detectLanguage(): Lang {
+function detectLanguage(): Lang {
   // 1. explicit override
   try {
     const stored = localStorage.getItem(LANG_STORAGE_KEY);
@@ -66,7 +74,31 @@ export function setLanguage(lang: Lang): void {
   } catch {
     /* ignore persistence failure — still switch in-memory */
   }
+  applyDirection(lang);
   void i18n.changeLanguage(lang);
+}
+
+
+/** Languages that render right-to-left. Arabic is the only one so far. */
+const RTL_LANGS: readonly Lang[] = ['ar'];
+
+function isRtl(lang: string): boolean {
+  return (RTL_LANGS as readonly string[]).includes(lang.split('-')[0]);
+}
+
+/**
+ * Mirror the document for RTL languages.
+ *
+ * Set on <html> rather than a React root so it covers portals (modals, the
+ * sign-out confirm) too, and so CSS logical properties resolve correctly for
+ * the whole tree. `lang` goes on at the same time — it drives hyphenation and
+ * font fallback, which matters for Devanagari and Arabic script.
+ */
+function applyDirection(lang: string): void {
+  if (typeof document === 'undefined') return;
+  const el = document.documentElement;
+  el.dir = isRtl(lang) ? 'rtl' : 'ltr';
+  el.lang = lang.split('-')[0];
 }
 
 i18n.use(initReactI18next).init({
@@ -77,6 +109,10 @@ i18n.use(initReactI18next).init({
     de: { translation: de },
     es: { translation: es },
     zh: { translation: zh },
+    hi: { translation: hi },
+    pt: { translation: pt },
+    id: { translation: id },
+    ar: { translation: ar },
   },
   lng: detectLanguage(),
   fallbackLng: 'en',
@@ -85,5 +121,8 @@ i18n.use(initReactI18next).init({
   returnNull: false,
   react: { useSuspense: false },
 });
+
+// Set <html dir>/<html lang> for the language i18n actually booted with.
+applyDirection(i18n.language || 'en');
 
 export default i18n;

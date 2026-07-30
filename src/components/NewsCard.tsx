@@ -31,7 +31,7 @@ export default function NewsCard() {
           <button
             key={n.id}
             onClick={() => openExternalUrl(n.url)}
-            className="block w-full text-left py-1.5 border-b border-border/40 last:border-0 active:bg-surface2/50 rounded-sm"
+            className="block w-full text-start py-1.5 border-b border-border/40 last:border-0 active:bg-surface2/50 rounded-sm"
           >
             <div className="text-xs font-medium leading-snug line-clamp-2">{n.headline}</div>
             <div className="text-[10px] text-text-muted mt-0.5">

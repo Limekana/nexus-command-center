@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useConfirm } from '../../components/ConfirmDialog';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
@@ -23,6 +24,7 @@ const categories: { key: TaskCategory; labelKey: string }[] = [
 
 export default function AddTask() {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const editId = params.get('id');
@@ -77,7 +79,7 @@ export default function AddTask() {
 
   const onDelete = async () => {
     if (!editId) return;
-    if (!confirm(t('addtask.deleteConfirm'))) return;
+    if (!(await confirm({ message: t('addtask.deleteConfirm') }))) return;
     await deleteTask(editId);
     navigate('/tasks');
   };

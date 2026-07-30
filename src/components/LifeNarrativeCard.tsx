@@ -69,7 +69,7 @@ export default function LifeNarrativeCard({ input }: { input: NarrativeInput }) 
   if (!text && !loading) return null;
 
   return (
-    <div className="glass rounded-xl p-4 border-l-2 border-primary/40">
+    <div className="glass rounded-xl p-4 border-s-2 border-primary/40">
       <div className="flex items-center justify-between mb-2">
         <span className="text-[10px] uppercase tracking-wider text-text-muted flex items-center gap-1.5">
           <span className="text-primary" aria-hidden>✦</span> This week, in a nutshell

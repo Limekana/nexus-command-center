@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useConfirm } from './ConfirmDialog';
 import { adoptLocalData, hasLocalData } from '../lib/cloudSync';
 import { clearAllLocalData } from '../db/database';
 import { useSessionStore } from '../store/useSessionStore';
@@ -88,6 +90,8 @@ async function setDismissedInCloud(userId: string): Promise<void> {
 }
 
 export default function AdoptionPrompt() {
+  const { t } = useTranslation();
+  const confirm = useConfirm();
   const user = useSessionStore((s) => s.user);
   const syncNow = useSyncStore((s) => s.syncNow);
   const [show, setShow] = useState(false);
@@ -162,7 +166,7 @@ export default function AdoptionPrompt() {
   };
 
   const onDiscard = async () => {
-    if (!confirm('Wipe all local test data? This cannot be undone.')) return;
+    if (!(await confirm({ message: t('common.wipeTestData') }))) return;
     setBusy(true);
     try {
       await clearAllLocalData();

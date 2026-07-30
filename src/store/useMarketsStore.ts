@@ -8,7 +8,7 @@ import { create } from 'zustand';
 import { Capacitor, CapacitorHttp } from '@capacitor/core';
 import { getYahooQuote, getYahooSparkline } from '../api/yahoo';
 
-export interface MarketIndex {
+interface MarketIndex {
   ticker: string;
   label: string;
   price: number;
@@ -16,7 +16,7 @@ export interface MarketIndex {
   spark: number[];
 }
 
-export interface FxRateRow {
+interface FxRateRow {
   pair: string; // 'EUR/USD'
   rate: number;
   changePercent: number;
@@ -129,7 +129,7 @@ async function fetchFearGreed(): Promise<{ score: number; rating: string } | nul
 }
 
 /** Fallback categorical rating from a 0–100 score, matching CNN's bands. */
-export function ratingFromScore(s: number): string {
+function ratingFromScore(s: number): string {
   if (s < 25) return 'Extreme Fear';
   if (s < 45) return 'Fear';
   if (s <= 55) return 'Neutral';

@@ -34,7 +34,7 @@ const GENERIC_NAME_TOKENS = new Set([
   'etf', 'the', 'a', 'an', 'class', 'common', 'stock', 'shares',
 ]);
 
-export interface RelevanceCheck {
+interface RelevanceCheck {
   /** Ticker as the user types it, e.g. `NDAFIH.HE` or `AAPL`. */
   ticker: string;
   /** Ticker base (exchange suffix stripped), e.g. `NDAFIH` or `AAPL`. */

@@ -40,7 +40,7 @@ import { legacyIdToUuid } from '../utils/uuid';
 
 const ANCHOR_KEY = 'nexus.dividendRealize.anchor.v1';
 
-export interface DividendCredit {
+interface DividendCredit {
   /** Deterministic UUID (PK) = legacyIdToUuid(`div:<TICKER>:<exDivDate>`). */
   id: string;
   /** Stable natural key, stored on the entry for readability. */
@@ -61,7 +61,7 @@ export interface DividendCredit {
  * we'll credit. Set once, on first run, to "today" so historical dividends
  * aren't back-credited on upgrade. `now` is injectable for tests.
  */
-export function getDividendAnchor(now: number = Date.now()): string {
+function getDividendAnchor(now: number = Date.now()): string {
   const today = new Date(now).toISOString().slice(0, 10);
   try {
     const existing = localStorage.getItem(ANCHOR_KEY);

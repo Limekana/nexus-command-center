@@ -5,6 +5,8 @@
 //   - Each insight has a tone (info / warn / good) for color-coding.
 
 import { useMemo } from 'react';
+import { formatMoney } from '../lib/currencies';
+import { formatLocale } from '../utils/formatters';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { convertSync, normalizeCurrency } from '../api/fxRates';
@@ -16,14 +18,8 @@ interface Insight {
   text: string;
 }
 
-const CURRENCY_SYMBOL: Record<string, string> = {
-  EUR: '€', USD: '$', GBP: '£', SEK: 'kr', NOK: 'kr', DKK: 'kr', CHF: 'Fr', JPY: '¥',
-};
 function fmt(amount: number, currency: string): string {
-  const sym = CURRENCY_SYMBOL[currency.toUpperCase()] ?? '';
-  const isSuffix = ['kr', 'Fr'].includes(sym);
-  const num = amount.toLocaleString('fi-FI', { maximumFractionDigits: 0, minimumFractionDigits: 0 });
-  return isSuffix ? `${num} ${sym}` : sym ? `${sym}${num}` : `${num} ${currency}`;
+  return formatMoney(amount, currency, { locale: formatLocale(), min: 0, max: 0 });
 }
 
 export default function InsightsCard() {

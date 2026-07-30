@@ -17,9 +17,6 @@ export const PRIMARY = '#00D4FF';
 /** Success green. Same as tailwind colors.success + --success in index.css. */
 export const SUCCESS = '#3FB950';
 
-/** Danger red. Same as tailwind colors.danger + --danger in index.css. */
-export const DANGER = '#F85149';
-
 /** Warning amber. Same as tailwind colors.warning + --warning in index.css. */
 export const WARNING = '#D29922';
 
@@ -37,6 +34,6 @@ export const WORK_PINK = '#F778BA';
  *  text-muted ≈ #A8B2BC; alpha varies by surface (track vs rest-day track
  *  vs disabled). The constants below pre-bake the alpha so SVG strokes can
  *  consume them directly. */
-export const MUTED_RGB = '168, 178, 188'; // text-muted as raw RGB
+const MUTED_RGB = '168, 178, 188'; // text-muted as raw RGB
 export const TRACK_DEFAULT = `rgba(${MUTED_RGB}, 0.22)`;
 export const TRACK_REST = `rgba(${MUTED_RGB}, 0.16)`;

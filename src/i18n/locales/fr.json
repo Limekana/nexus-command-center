@@ -16,7 +16,12 @@
     "continue": "Continuer",
     "retry": "Réessayer",
     "loading": "Chargement…",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "wipeTestData": "Effacer toutes les données de test locales ? Action irréversible.",
+    "revokeAccess": "Retirer l'accès de {{name}} ?",
+    "thisUser": "cet utilisateur",
+    "deleteTitle": "Supprimer",
+    "deleteItem": "Supprimer cet élément ?"
   },
   "domains": {
     "lifeScore": "Score de vie",
@@ -30,8 +35,7 @@
     "home": "Accueil",
     "finance": "Finances",
     "life": "Vie",
-    "tasks": "Tâches",
-    "growth": "Progrès"
+    "tasks": "Tâches"
   },
   "life": {
     "notCountedYet": "Pas encore compté",
@@ -52,6 +56,50 @@
     "day": "jour",
     "days": "jours",
     "per100": "/ 100"
+  },
+  "auth": {
+    "signInSubtitle": "Command Center · Connexion",
+    "firstRunSubtitle": "Finances, forme, études et habitudes — un seul score.",
+    "firstRunPromise": "Aucun compte requis. Commencez maintenant, synchronisez plus tard.",
+    "google": "Continuer avec Google",
+    "googleOpening": "Ouverture de Google…",
+    "useEmail": "Utiliser un e-mail",
+    "orUseEmail": "ou par e-mail",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "vous@exemple.com",
+    "passwordLabel": "Mot de passe",
+    "signInEmail": "Se connecter par e-mail",
+    "signingIn": "Connexion…",
+    "noAccount": "Vous n'avez pas de compte ?",
+    "signUp": "S'inscrire",
+    "guest": "Continuer en invité",
+    "guestCaption": "Local uniquement — pas de synchronisation entre appareils. Vous pourrez vous connecter plus tard depuis les réglages.",
+    "createTitle": "Créer un compte",
+    "fullNameLabel": "Nom complet",
+    "fullNamePlaceholder": "Votre nom",
+    "passwordPlaceholder": "Au moins 10 caractères",
+    "passwordHint": "Majuscules et minuscules, un chiffre et un symbole requis.",
+    "confirmPasswordLabel": "Confirmer le mot de passe",
+    "createAccount": "Créer un compte",
+    "creatingAccount": "Création du compte…",
+    "haveAccount": "Vous avez déjà un compte ?",
+    "signIn": "Se connecter",
+    "checkEmailTitle": "Vérifiez votre e-mail",
+    "checkEmailBody": "Nous avons envoyé un lien de confirmation à <1>{{email}}</1>. Cliquez dessus, puis revenez ici pour vous connecter.",
+    "backToSignIn": "Retour à la connexion",
+    "errNameRequired": "Saisissez votre nom.",
+    "errPasswordShort": "Le mot de passe doit contenir au moins 10 caractères.",
+    "errPasswordWeak": "Le mot de passe doit contenir majuscules, minuscules, un chiffre et un symbole.",
+    "errPasswordMismatch": "Les mots de passe ne correspondent pas.",
+    "errGoogleStart": "Impossible de démarrer la connexion Google.",
+    "errInvalidCredentials": "E-mail ou mot de passe incorrect.",
+    "errAlreadyRegistered": "Un compte existe déjà pour cet e-mail. Essayez de vous connecter.",
+    "errWeakPassword": "Choisissez un mot de passe plus fort.",
+    "errEmailNotConfirmed": "Confirmez d'abord votre e-mail — le lien est dans votre boîte de réception.",
+    "errRateLimited": "Trop de tentatives. Patientez un instant, puis réessayez.",
+    "errNetwork": "Serveur injoignable. Vérifiez votre connexion et réessayez.",
+    "ageNote": "Vous devez avoir 16 ans ou plus pour créer un compte (13 ans si la loi locale le permet). En dessous, utilisez le mode invité — rien ne quitte votre appareil.",
+    "privacyLink": "Politique de confidentialité"
   },
   "onboarding": {
     "welcomeTitle": "Configurons le système de votre vie",
@@ -120,6 +168,13 @@
     "forceResync": "Forcer la resynchronisation de toutes les données locales",
     "forceResyncConfirm": "Remettre TOUTES les données locales en file pour envoi vers votre compte cloud ? Utile si la synchro est bloquée.",
     "preferences": "Préférences",
+    "privacy": "Confidentialité et IA",
+    "aiFeatures": "Fonctions IA",
+    "aiFeaturesOnSub": "Activé — vos scores hebdomadaires sont envoyés à Google Gemini pour rédiger le résumé Life.",
+    "aiFeaturesOffSub": "Désactivé — rien n'est envoyé à Google. Le résumé Life est masqué.",
+    "aiTrainingNote": "Google l'exécute sur son offre gratuite : ce que vous envoyez peut servir à entraîner ses futurs modèles. Laissez désactivé si cela ne vous convient pas.",
+    "privacyPolicy": "Politique de confidentialité",
+    "privacyPolicySub": "Ce que nous stockons et qui d'autre le voit",
     "baseCurrency": "Devise de base",
     "baseCurrencySub": "Totaux du portefeuille · taux de change quotidiens",
     "lifeProfile": "Profil de vie",
@@ -181,7 +236,19 @@
     "wipeLocalSub": "Recommandé sur les appareils partagés ou empruntés.",
     "tagFree": "Gratuit",
     "tagFreeFallback": "Gratuit · secours",
-    "tagSamsung": "Samsung Android"
+    "tagSamsung": "Samsung Android",
+    "yourData": "Vos données",
+    "yourDataNote": "Emportez une copie de tout, ou effacez-le. Un seul compte couvre Nexus Command Center, LimeLog et StudyDesk.",
+    "exportData": "Exporter mes données",
+    "exporting": "Préparation…",
+    "exportDone": "{{name}} enregistré",
+    "exportFailed": "Échec de l'export : {{msg}}",
+    "deleteAccount": "Supprimer mon compte",
+    "deletingAccount": "Suppression…",
+    "deleteAccountNote": "Efface votre compte et toutes ses données, dans les trois applications, immédiatement et irréversiblement. Aucun délai de récupération.",
+    "deleteAccountConfirm1": "Supprimer votre compte et tout son contenu ? C'est irréversible.",
+    "deleteAccountConfirm2": "Dernière vérification — cela efface aussi vos données LimeLog et StudyDesk. Continuer ?",
+    "deleteAccountFailed": "Échec de la suppression : {{msg}}"
   },
   "days": {
     "long": {
@@ -471,7 +538,7 @@
       "editCat": "Modifier la catégorie",
       "newCat": "Nouvelle catégorie",
       "catName": "Nom de la catégorie",
-      "monthlyLimit": "Limite mensuelle (€)",
+      "monthlyLimit": "Limite mensuelle ({{symbol}})",
       "icon": "Icône",
       "linkedAccount": "Compte lié (facultatif)",
       "none": "— Aucun —",
@@ -481,9 +548,10 @@
       "empty": "Aucune catégorie — appuyez sur + Nouvelle pour en ajouter",
       "shared": "Partagée",
       "autoUpdates": "Met à jour {{name}}",
-      "perMonth": "{{amount}} € / mois",
+      "perMonth": "{{amount}} / mois",
       "deleteConfirm": "Supprimer “{{name}}” ? Les transactions associées seront désétiquetées.",
-      "shareTitle": "Partager “{{name}}”"
+      "shareTitle": "Partager “{{name}}”",
+      "customIcon": "Icône personnalisée"
     },
     "ov": {
       "addTransaction": "Ajouter une transaction",
@@ -517,7 +585,8 @@
       "watchlist": "Liste de suivi",
       "watchlistSub": "Titres que vous suivez sans les détenir",
       "insights": "Analyses",
-      "insightsSub": "Signaux techniques + fondamentaux"
+      "insightsSub": "Signaux techniques + fondamentaux",
+      "holdingsPositions_many": "{{count}} positions · appuyez pour gérer"
     },
     "acctType": {
       "checking": "Compte courant",
@@ -573,7 +642,8 @@
       "fromName": "de {{name}}",
       "fromOther": "d’un autre compte",
       "toName": "vers {{name}}",
-      "toOther": "vers un autre compte"
+      "toOther": "vers un autre compte",
+      "unconvertable_many": "{{count}} transactions n’ont pas pu être converties en {{cur}} ; le solde peut être sous-estimé."
     },
     "assetClass": {
       "stock": "📈 Action",
@@ -602,7 +672,8 @@
       "empty": "Aucun élément suivi. Appuyez sur + Suivre pour suivre un ticker sans le détenir.",
       "targetAboveHit": "Objectif ≥ atteint",
       "targetBelowHit": "Objectif ≤ atteint",
-      "stopWatching": "Arrêter de suivre {{ticker}} ?"
+      "stopWatching": "Arrêter de suivre {{ticker}} ?",
+      "tickers_many": "{{count}} tickers"
     },
     "mh": {
       "title": "Gérer les positions",
@@ -662,7 +733,8 @@
       "noQuotes": "Aucune cotation — appuyez sur ↻ pour actualiser",
       "crypto": "Crypto",
       "loadingPrices": "Chargement des prix…",
-      "noPrices": "Aucun prix — appuyez sur ↻ pour actualiser"
+      "noPrices": "Aucun prix — appuyez sur ↻ pour actualiser",
+      "fetchErrors_many": "{{count}} erreurs de récupération"
     },
     "ml": {
       "purchases": "Achats",
@@ -714,7 +786,8 @@
       "computingSignals": "Calcul des signaux…",
       "emptyUniverse": "Aucune position ou ticker en liste de suivi. Ajoutez-en depuis le Portefeuille ou la Liste de suivi pour voir les notations ici.",
       "nothingIn": "Rien dans {{filter}}.",
-      "composite": "Composite {{score}}"
+      "composite": "Composite {{score}}",
+      "skipped_many": "{{count}} tickers ignorés"
     },
     "wi": {
       "title": "Et si ?",
@@ -803,7 +876,8 @@
       "delete": "Supprimer",
       "add": "Ajouter",
       "set": "Définir",
-      "amountIn": "Montant en {{cur}}"
+      "amountIn": "Montant en {{cur}}",
+      "unconvertable_many": "{{count}} éléments n’ont pas pu être convertis en {{cur}} (taux de change manquant)."
     }
   },
   "lifeProfile": {
@@ -881,36 +955,6 @@
     "created": "Créées",
     "footerRolling": "Ceci est une fenêtre {{word}} de 12 mois — reculez l’ancre mois par mois pour voir n’importe quelle tranche de 12 mois de votre historique.",
     "rollingWord": "glissante"
-  },
-  "growth": {
-    "title": "Progrès",
-    "habits": "Habitudes",
-    "reading": "Lecture",
-    "doneOfTotal": "{{done}}/{{total}} aujourd'hui",
-    "noHabitsToday": "Rien aujourd'hui",
-    "habitsEmpty": "Aucune habitude — créez-en une pour lancer une série.",
-    "openHabits": "Ouvrir les habitudes",
-    "openReading": "Ouvrir la lecture",
-    "add": "Ajouter",
-    "addBook": "Ajouter un livre",
-    "editBook": "Modifier le livre",
-    "readingNone": "Aucun livre",
-    "readingCounts": "{{reading}} en cours · {{want}} à lire · {{finished}} terminés",
-    "readingEmpty": "Ajoutez un livre pour suivre vos lectures.",
-    "readingEmptyTitle": "Votre liste de lecture est vide",
-    "bookTitle": "Titre",
-    "bookTitlePlaceholder": "Titre du livre",
-    "author": "Auteur",
-    "authorPlaceholder": "Facultatif",
-    "status": "Statut",
-    "currentPage": "Page actuelle",
-    "totalPages": "Pages au total",
-    "save": "Enregistrer",
-    "delete": "Supprimer",
-    "deleteConfirm": "Retirer ce livre de votre liste de lecture ?",
-    "statusWant": "À lire",
-    "statusReading": "En cours",
-    "statusFinished": "Terminé"
   },
   "markets": {
     "updated": "Mis à jour {{time}}",

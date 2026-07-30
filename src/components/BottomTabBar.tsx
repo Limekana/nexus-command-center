@@ -65,7 +65,7 @@ export default function BottomTabBar() {
             <span
               data-active-pill
               aria-hidden
-              className="absolute top-1.5 bottom-1.5 left-1.5 rounded-pill pointer-events-none transition-transform duration-300 ease-spring-soft"
+              className="absolute top-1.5 bottom-1.5 start-1.5 rounded-pill pointer-events-none transition-transform duration-300 ease-spring-soft"
               style={{
                 // 4 tabs evenly fill the inner space (width minus left+right
                 // 1.5 padding on the .glass-strong). Each tab occupies 1/4 of

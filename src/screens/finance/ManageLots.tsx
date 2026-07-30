@@ -5,6 +5,8 @@
 // aggregates in sync via recomputeHoldingAggregates() on every CRUD call.
 
 import { useMemo, useState } from 'react';
+import { currencyOptions } from '../../lib/currencies';
+import { formatLocale } from '../../utils/formatters';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
@@ -14,10 +16,10 @@ import { computeSale, totalRemainingShares, saleCostBasisInCurrency } from '../.
 import { convertSync } from '../../api/fxRates';
 import type { PortfolioLot } from '../../types/finance';
 
-const CURRENCIES = ['EUR', 'USD', 'GBP', 'SEK', 'NOK', 'DKK', 'CHF', 'JPY'];
+
 
 function formatNumber(n: number, max = 4): string {
-  return n.toLocaleString('fi-FI', { maximumFractionDigits: max, minimumFractionDigits: 0 });
+  return n.toLocaleString(formatLocale(), { maximumFractionDigits: max, minimumFractionDigits: 0 });
 }
 
 export default function ManageLots() {
@@ -247,7 +249,7 @@ export default function ManageLots() {
                 {holding.assetType === 'crypto' ? '₿' : holding.assetType === 'etf' ? '🧺' : '📈'} {holding.ticker.toUpperCase()}
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-end">
               <div className="text-[10px] uppercase tracking-wider text-text-muted">{t('fin.ml.totalUnits')}</div>
               <div className="font-heading font-bold text-lg">{formatNumber(holding.quantity)}</div>
             </div>
@@ -298,8 +300,8 @@ export default function ManageLots() {
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
               >
-                {CURRENCIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                {currencyOptions(formatLocale()).map((c) => (
+                  <option key={c.code} value={c.code}>{c.label}</option>
                 ))}
               </select>
             </div>
@@ -357,8 +359,8 @@ export default function ManageLots() {
                 value={sellCurrency}
                 onChange={(e) => setSellCurrency(e.target.value)}
               >
-                {CURRENCIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                {currencyOptions(formatLocale()).map((c) => (
+                  <option key={c.code} value={c.code}>{c.label}</option>
                 ))}
               </select>
             </div>
