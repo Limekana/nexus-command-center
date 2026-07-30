@@ -153,6 +153,23 @@ export default function Signup() {
           </button>
         </form>
 
+        {/* GDPR Art. 8 — consent for an information society service is only
+            valid from 16 (13 in some member states). We cannot verify ages and
+            are not expected to, but the policy states the limit, so the signup
+            form should too rather than leaving it somewhere nobody reads. It
+            also points at the option that needs no account at all. */}
+        <p className="text-[10px] text-text-muted mt-6 leading-relaxed text-center">
+          {t('auth.ageNote')}{' '}
+          <a
+            href="https://limekana.github.io/nexus-command-center/legal/privacy.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary"
+          >
+            {t('auth.privacyLink')}
+          </a>
+        </p>
+
         <p className="text-center text-xs text-text-muted mt-6">
           {t('auth.haveAccount')}{' '}
           <Link to="/auth/login" className="text-primary">
