@@ -136,7 +136,6 @@ pre-existing warning.
 
 | Ref | Item |
 |---|---|
-| 🔴 | **Re-publish `gh-pages`** — see the top of this document |
 | O-3 | Custom SMTP — 7 of 172 signups unconfirmed |
 | O-4 | Accept the Supabase DPA (Art. 28 needs a written processor agreement) |
 | O-5 | Backups off the free plan |
