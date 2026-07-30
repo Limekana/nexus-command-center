@@ -71,7 +71,7 @@ Branch `feature/v1.8-act2-act4-auth-gate`, pushed.
 | SD-4 | **A4** clear 6 lint warnings, add `--max-warnings 0` | ✅ `236d201` |
 | SD-5 | **A5** custom course colour (closed set of 8) | ⬜ open |
 | SD-6 | **A3** extract modals from 2,112-line `App.jsx` | ⬜ open |
-| SD-7 | **A6/B1/B2** one native `confirm()`, unnecessary exports, `postcss.config.cjs` | ⬜ open |
+| SD-7 | **A6/B1/B2** one native `confirm()`, unnecessary exports, `postcss.config.cjs` | 🟡 `confirm()` ✅ (**three** sites, not one — two are the L-8 deletion pair) · `postcss.config.cjs` ✅ deleted (it was `module.exports = {}` with no postcss/tailwind/autoprefixer in the tree) · unnecessary exports still open |
 | SD-F1 | **Onboarding "Maybe later" still fired the permission prompt** | ✅ done 2026-07-29 — see §6 |
 
 SD-2 was the headline: the Arabic RTL screenshot from earlier in the session
@@ -522,7 +522,19 @@ Worth noting for the disclaimer in the terms: the ToS already says the
 institution's official calculation is the one that counts, which covers a
 user configuring a scale that does not match their school's weighting rules.
 
-### SD-F3 🟡 Guest avatar is a bare dot
+### SD-F3 ✅ Guest avatar is a bare dot
+
+**Fixed 2026-07-29.** Inline SVG silhouette in `lib/avatar.jsx`, sized in `em`
+so one component serves both the 52px Settings avatar and the smaller topbar
+button. Squared, slightly wide shoulders rather than the stock
+circle-on-a-hump, so it reads as drawn rather than as a missing image.
+
+Turned out to be a duplication fix too: `avatarInitials` existed **verbatim in
+both `App.jsx` and `SettingsView.jsx`**, each with its own `"·"` fallback, so
+the bare dot had to be fixed twice or unified. Unified — it now returns `null`
+for guests and the caller renders the silhouette.
+
+Original write-up:
 
 `src/App.jsx:24-30` — `avatarInitials()` returns `"·"` when there is no session,
 so guests get a single interpunct in the top-right circle.
