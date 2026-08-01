@@ -99,7 +99,17 @@
     "errRateLimited": "Too many attempts. Wait a moment, then try again.",
     "errNetwork": "Couldn't reach the server. Check your connection and try again.",
     "ageNote": "You must be 16+ to create an account (13+ where local law allows). Under that age, use guest mode — nothing leaves your device.",
-    "privacyLink": "Privacy policy"
+    "privacyLink": "Privacy policy",
+    "otpTitle": "Enter your code",
+    "otpLabel": "Verification code",
+    "otpSubmit": "Confirm account",
+    "otpHint": "The code is valid for 60 minutes. The link in the email still works too.",
+    "otpResend": "Send a new code",
+    "otpResendIn": "Send a new code in",
+    "otpSent": "New code sent.",
+    "errOtp": "That code did not work. Check it and try again.",
+    "errOtpResend": "Could not send a new code. Try again shortly.",
+    "errOtpLength": "That code looks incomplete. Copy the whole code from the email."
   },
   "onboarding": {
     "welcomeTitle": "Let's set up your life OS",
