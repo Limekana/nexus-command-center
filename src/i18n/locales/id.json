@@ -305,7 +305,10 @@
     "deleteAccountNote": "Menghapus akun Anda dan seluruh datanya, di ketiga aplikasi, secara langsung dan permanen. Tidak ada masa pemulihan.",
     "deleteAccountConfirm1": "Hapus akun Anda beserta seluruh isinya? Tindakan ini tidak dapat dibatalkan.",
     "deleteAccountConfirm2": "Pemeriksaan terakhir — ini juga menghapus data LimeLog dan StudyDesk Anda. Lanjutkan?",
-    "deleteAccountFailed": "Penghapusan gagal: {{msg}}"
+    "deleteAccountFailed": "Penghapusan gagal: {{msg}}",
+    "support": "Dukungan",
+    "supportDev": "Dukung pengembangan",
+    "supportDevSub": "Traktir saya kopi di Ko-fi"
   },
   "lock": {
     "secureAccess": "Akses aman",

@@ -248,7 +248,10 @@
     "deleteAccountNote": "Poistaa tilisi ja kaikki sen tiedot kaikista kolmesta sovelluksesta välittömästi ja peruuttamattomasti. Palautusaikaa ei ole.",
     "deleteAccountConfirm1": "Poistetaanko tilisi ja kaikki sen sisältö? Tätä ei voi perua.",
     "deleteAccountConfirm2": "Viimeinen varmistus — tämä poistaa myös LimeLog- ja StudyDesk-tietosi. Jatketaanko?",
-    "deleteAccountFailed": "Poisto epäonnistui: {{msg}}"
+    "deleteAccountFailed": "Poisto epäonnistui: {{msg}}",
+    "support": "Tuki",
+    "supportDev": "Tue kehitystä",
+    "supportDevSub": "Tarjoa kahvit Ko-fissa"
   },
   "days": {
     "long": {

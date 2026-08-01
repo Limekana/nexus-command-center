@@ -248,7 +248,10 @@
     "deleteAccountNote": "Borra tu cuenta y todos sus datos, en las tres apps, de forma inmediata e irreversible. No hay periodo de recuperación.",
     "deleteAccountConfirm1": "¿Eliminar tu cuenta y todo su contenido? Esto no se puede deshacer.",
     "deleteAccountConfirm2": "Última comprobación: esto también borra tus datos de LimeLog y StudyDesk. ¿Continuar?",
-    "deleteAccountFailed": "Error al eliminar: {{msg}}"
+    "deleteAccountFailed": "Error al eliminar: {{msg}}",
+    "support": "Apoyo",
+    "supportDev": "Apoya el desarrollo",
+    "supportDevSub": "Invítame a un café en Ko-fi"
   },
   "days": {
     "long": {

@@ -305,7 +305,10 @@
     "deleteAccountNote": "يمحو حسابك وكل بياناته في التطبيقات الثلاثة فورًا وبلا رجعة. لا توجد مهلة للاسترجاع.",
     "deleteAccountConfirm1": "حذف حسابك وكل ما فيه؟ لا يمكن التراجع عن هذا.",
     "deleteAccountConfirm2": "تأكيد أخير — سيمحو هذا أيضًا بيانات LimeLog وStudyDesk. المتابعة؟",
-    "deleteAccountFailed": "فشل الحذف: {{msg}}"
+    "deleteAccountFailed": "فشل الحذف: {{msg}}",
+    "support": "الدعم",
+    "supportDev": "ادعم التطوير",
+    "supportDevSub": "اشترِ لي قهوة على Ko-fi"
   },
   "lock": {
     "secureAccess": "وصول آمن",

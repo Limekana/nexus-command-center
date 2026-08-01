@@ -248,7 +248,10 @@
     "deleteAccountNote": "Erases your account and all its data, in all three apps, immediately and irreversibly. There is no recovery window.",
     "deleteAccountConfirm1": "Delete your account and everything in it? This cannot be undone.",
     "deleteAccountConfirm2": "Last check — this also erases your LimeLog and StudyDesk data. Continue?",
-    "deleteAccountFailed": "Deletion failed: {{msg}}"
+    "deleteAccountFailed": "Deletion failed: {{msg}}",
+    "support": "Support",
+    "supportDev": "Support development",
+    "supportDevSub": "Buy me a coffee on Ko-fi"
   },
   "days": {
     "long": {

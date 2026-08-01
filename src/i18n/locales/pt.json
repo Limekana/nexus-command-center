@@ -305,7 +305,10 @@
     "deleteAccountNote": "Apaga sua conta e todos os dados dela, nos três aplicativos, de forma imediata e irreversível. Não há período de recuperação.",
     "deleteAccountConfirm1": "Excluir sua conta e tudo o que há nela? Isso não pode ser desfeito.",
     "deleteAccountConfirm2": "Última verificação — isso também apaga seus dados do LimeLog e do StudyDesk. Continuar?",
-    "deleteAccountFailed": "Falha na exclusão: {{msg}}"
+    "deleteAccountFailed": "Falha na exclusão: {{msg}}",
+    "support": "Apoio",
+    "supportDev": "Apoiar o desenvolvimento",
+    "supportDevSub": "Pague-me um café no Ko-fi"
   },
   "lock": {
     "secureAccess": "Acesso seguro",
