@@ -19,6 +19,7 @@ tagged/released yet:
   - **Item 3** — fitness weekly target hardcoded at 3, needs to flex — **open design question, not decided, do not build until it's picked** (static baseline vs. per-week override).
   - **Item 10 (`AUTH-2`)** — port StudyDesk's OTP code-entry step here. `OTP_MIN 6`/`OTP_MAX 10`, don't hardcode a digit count.
   - **Item 6** — icon redesign for bottom tabs, alongside StudyDesk (LimeLog's are already fine, that's the bar).
+  - **Item 9 (partial, confirmed 2026-08-01)** — a "Support development" link to Ko-fi from a settings screen. All three apps get this now, not StudyDesk alone — no schema, no API, just a link. Low priority, do last.
   - **None of this tags a release** — NCC stays at `1.7.2` unbumped until fdroiddata MR !41550 merges (see Suite Metadata in the snapshot). Code lands on `develop` regardless.
 
 `NEXUS_VERSION_STATUS_SNAPSHOT.md` is the full cross-app registry — read it for the parts that aren't NCC-specific (StudyDesk's status, the standing P1–P4 priorities, all Open Blockers) since decisions here can affect or be affected by the other two apps.
