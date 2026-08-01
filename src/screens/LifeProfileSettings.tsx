@@ -26,7 +26,13 @@ import {
   presetProfile,
   withDomainEnabled,
   withWeight,
+  MIN_WEEKLY_WORKOUT_TARGET,
+  MAX_WEEKLY_WORKOUT_TARGET,
+  currentWeeklyTarget,
+  withWeeklyTarget,
 } from '../lib/lifeProfile';
+import { startOfWeek } from '../lib/crossDomainSignals';
+import { dateKey } from '../lib/habitStreaks';
 
 const PRESETS: { key: LifeProfilePreset; labelKey: string }[] = [
   { key: 'student', labelKey: 'lifeProfile.student' },
@@ -76,6 +82,13 @@ export default function LifeProfileSettings() {
 
   const isCustom = draft.preset === 'custom';
   const enabled = enabledDomains(draft);
+  const workoutTarget = currentWeeklyTarget(draft);
+
+  // Effective from the current week, never retroactively. Closed weeks keep the
+  // target they were lived under — see `weeklyTargets` in lib/lifeProfile.
+  const onWorkoutTarget = (next: number) => {
+    setDraft((d) => withWeeklyTarget(d, next, dateKey(startOfWeek(new Date()))));
+  };
 
   const onPreset = (preset: LifeProfilePreset) => {
     if (preset === 'custom') {
@@ -179,6 +192,45 @@ export default function LifeProfileSettings() {
             </button>
           </div>
         )}
+
+        {/* v1.9 (Item 3) — the fitness sub-score used to measure everyone
+            against a hardcoded 3 workouts/week. Setting this applies from the
+            current week forward; weeks already closed keep the target they
+            were lived under, so raising it doesn't retroactively spoil your
+            history. */}
+        <div className="card p-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-sm">{t('lifeProfile.workoutTarget')}</div>
+              <div className="text-[10px] text-text-muted">
+                {t('lifeProfile.workoutTargetSub')}
+              </div>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                type="button"
+                className="btn-ghost w-9 h-9 flex items-center justify-center text-lg leading-none"
+                aria-label={t('lifeProfile.workoutTargetLess')}
+                disabled={workoutTarget <= MIN_WEEKLY_WORKOUT_TARGET}
+                onClick={() => onWorkoutTarget(workoutTarget - 1)}
+              >
+                −
+              </button>
+              <span className="text-base tabular-nums w-6 text-center" aria-live="polite">
+                {workoutTarget}
+              </span>
+              <button
+                type="button"
+                className="btn-ghost w-9 h-9 flex items-center justify-center text-lg leading-none"
+                aria-label={t('lifeProfile.workoutTargetMore')}
+                disabled={workoutTarget >= MAX_WEEKLY_WORKOUT_TARGET}
+                onClick={() => onWorkoutTarget(workoutTarget + 1)}
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </div>
 
         <p className="text-[10px] text-text-muted text-center px-2">
           {t('lifeProfile.footer', { min: MIN_ENABLED_DOMAINS, weight: MIN_DOMAIN_WEIGHT })}

@@ -55,7 +55,11 @@
     "avgRating": "平均 {{avg}}/5 · {{count}} {{unit}}",
     "day": "天",
     "days": "天",
-    "per100": "/ 100"
+    "per100": "/ 100",
+    "weekTarget": "本周目标",
+    "weekTargetAdjusted": "已为本周调整 — 平时是 {{baseline}}",
+    "weekTargetLess": "本周减少一次",
+    "weekTargetMore": "本周增加一次"
   },
   "auth": {
     "signInSubtitle": "Command Center · 登录",
@@ -904,7 +908,11 @@
     "footer": "自定义档案至少需要 {{min}} 个领域，每个至少 {{weight}}%。权重会自动重新平衡至总和 100%。",
     "enabled": "已启用",
     "disabled": "已停用",
-    "weightAria": "{{domain}} 权重"
+    "weightAria": "{{domain}} 权重",
+    "workoutTarget": "每周锻炼次数",
+    "workoutTargetSub": "你的常规目标。从本周开始生效，此前的周保持原目标。",
+    "workoutTargetLess": "减少一次",
+    "workoutTargetMore": "增加一次"
   },
   "weeklyReview": {
     "title": "每周回顾",

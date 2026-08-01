@@ -109,7 +109,11 @@
     "avgRating": "المتوسط {{avg}}/٥ · {{count}} {{unit}}",
     "day": "يوم",
     "days": "أيام",
-    "per100": "/ ١٠٠"
+    "per100": "/ ١٠٠",
+    "weekTarget": "هدف هذا الأسبوع",
+    "weekTargetAdjusted": "معدَّل لهذا الأسبوع — المعتاد {{baseline}}",
+    "weekTargetLess": "واحد أقل هذا الأسبوع",
+    "weekTargetMore": "واحد أكثر هذا الأسبوع"
   },
   "onboarding": {
     "welcomeTitle": "لنُعِدّ نظام تشغيل حياتك",
@@ -154,7 +158,11 @@
     "footer": "يحتاج الملف المخصّص إلى {{min}} مجالات على الأقل، ولا يقل وزن كل منها عن {{weight}}٪. تُعاد موازنة الأوزان تلقائيًا لتبلغ ١٠٠٪.",
     "enabled": "مفعّل",
     "disabled": "معطّل",
-    "weightAria": "وزن {{domain}}"
+    "weightAria": "وزن {{domain}}",
+    "workoutTarget": "التمارين في الأسبوع",
+    "workoutTargetSub": "هدفك المعتاد. يسري من هذا الأسبوع — والأسابيع السابقة تحتفظ بهدفها.",
+    "workoutTargetLess": "واحد أقل",
+    "workoutTargetMore": "واحد أكثر"
   },
   "goalTypes": {
     "net_worth": "صافي الثروة",

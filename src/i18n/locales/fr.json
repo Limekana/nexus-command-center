@@ -55,7 +55,11 @@
     "avgRating": "Moy. {{avg}}/5 · {{count}} {{unit}}",
     "day": "jour",
     "days": "jours",
-    "per100": "/ 100"
+    "per100": "/ 100",
+    "weekTarget": "Objectif de la semaine",
+    "weekTargetAdjusted": "Ajusté pour cette semaine — d’habitude {{baseline}}",
+    "weekTargetLess": "Un de moins cette semaine",
+    "weekTargetMore": "Un de plus cette semaine"
   },
   "auth": {
     "signInSubtitle": "Command Center · Connexion",
@@ -910,7 +914,11 @@
     "footer": "Un profil personnalisé nécessite au moins {{min}} domaines, chacun à au moins {{weight}} %. Les poids se rééquilibrent automatiquement pour atteindre 100 %.",
     "enabled": "activé",
     "disabled": "désactivé",
-    "weightAria": "poids {{domain}}"
+    "weightAria": "poids {{domain}}",
+    "workoutTarget": "Séances par semaine",
+    "workoutTargetSub": "Votre objectif habituel. S’applique à partir de cette semaine ; les précédentes gardent le leur.",
+    "workoutTargetLess": "Un de moins",
+    "workoutTargetMore": "Un de plus"
   },
   "weeklyReview": {
     "title": "Bilan hebdo",

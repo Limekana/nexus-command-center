@@ -109,7 +109,11 @@
     "avgRating": "औसत {{avg}}/5 · {{count}} {{unit}}",
     "day": "दिन",
     "days": "दिन",
-    "per100": "/ 100"
+    "per100": "/ 100",
+    "weekTarget": "इस सप्ताह का लक्ष्य",
+    "weekTargetAdjusted": "इस सप्ताह के लिए बदला — आमतौर पर {{baseline}}",
+    "weekTargetLess": "इस सप्ताह एक कम",
+    "weekTargetMore": "इस सप्ताह एक अधिक"
   },
   "onboarding": {
     "welcomeTitle": "चलिए आपका लाइफ़ OS सेट करें",
@@ -154,7 +158,11 @@
     "footer": "कस्टम प्रोफ़ाइल में कम से कम {{min}} क्षेत्र चाहिए, हर एक कम से कम {{weight}}%। भार अपने आप संतुलित होकर कुल 100% बनते हैं।",
     "enabled": "चालू",
     "disabled": "बंद",
-    "weightAria": "{{domain}} का भार"
+    "weightAria": "{{domain}} का भार",
+    "workoutTarget": "प्रति सप्ताह वर्कआउट",
+    "workoutTargetSub": "आपका सामान्य लक्ष्य। इस सप्ताह से लागू — पिछले सप्ताह अपना ही रखते हैं।",
+    "workoutTargetLess": "एक कम",
+    "workoutTargetMore": "एक अधिक"
   },
   "goalTypes": {
     "net_worth": "शुद्ध संपत्ति",

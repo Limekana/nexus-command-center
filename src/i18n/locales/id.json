@@ -109,7 +109,11 @@
     "avgRating": "Rata-rata {{avg}}/5 · {{count}} {{unit}}",
     "day": "hari",
     "days": "hari",
-    "per100": "/ 100"
+    "per100": "/ 100",
+    "weekTarget": "Target minggu ini",
+    "weekTargetAdjusted": "Disesuaikan untuk minggu ini — biasanya {{baseline}}",
+    "weekTargetLess": "Kurangi satu minggu ini",
+    "weekTargetMore": "Tambah satu minggu ini"
   },
   "onboarding": {
     "welcomeTitle": "Ayo siapkan sistem operasi hidupmu",
@@ -154,7 +158,11 @@
     "footer": "Profil kustom butuh minimal {{min}} bidang, masing-masing minimal {{weight}}%. Bobot menyeimbangkan diri secara otomatis hingga totalnya 100%.",
     "enabled": "aktif",
     "disabled": "nonaktif",
-    "weightAria": "Bobot {{domain}}"
+    "weightAria": "Bobot {{domain}}",
+    "workoutTarget": "Latihan per minggu",
+    "workoutTargetSub": "Target normal Anda. Berlaku mulai minggu ini — minggu sebelumnya tetap memakai targetnya.",
+    "workoutTargetLess": "Kurangi satu",
+    "workoutTargetMore": "Tambah satu"
   },
   "goalTypes": {
     "net_worth": "Kekayaan bersih",

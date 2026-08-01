@@ -55,7 +55,11 @@
     "avgRating": "Avg {{avg}}/5 · {{count}} {{unit}}",
     "day": "day",
     "days": "days",
-    "per100": "/ 100"
+    "per100": "/ 100",
+    "weekTarget": "This week’s target",
+    "weekTargetAdjusted": "Adjusted for this week — your usual is {{baseline}}",
+    "weekTargetLess": "One fewer this week",
+    "weekTargetMore": "One more this week"
   },
   "auth": {
     "signInSubtitle": "Command Center · Sign in",
@@ -904,7 +908,11 @@
     "footer": "A custom profile needs at least {{min}} domains, each at least {{weight}}%. Weights rebalance automatically to total 100%.",
     "enabled": "enabled",
     "disabled": "disabled",
-    "weightAria": "{{domain}} weight"
+    "weightAria": "{{domain}} weight",
+    "workoutTarget": "Workouts per week",
+    "workoutTargetSub": "Your normal target. Applies from this week on — past weeks keep theirs.",
+    "workoutTargetLess": "One fewer",
+    "workoutTargetMore": "One more"
   },
   "weeklyReview": {
     "title": "Weekly Review",
