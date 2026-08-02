@@ -1,0 +1,1 @@
+Neue Symbole in der unteren Leiste. Ein neues Konto lässt sich jetzt mit dem Code aus der E-Mail bestätigen, nicht nur über den Link. Lege dein eigenes wöchentliches Trainingsziel fest, mit Ausnahmen für einzelne Wochen. In den Einstellungen gibt es einen Link, falls du die Entwicklung unterstützen möchtest.

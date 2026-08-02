@@ -1,0 +1,1 @@
+Nuevos iconos en la barra inferior. Ahora puedes confirmar una cuenta con el código del correo, no solo con el enlace. Define tu objetivo semanal de entrenamiento, con excepciones por semana para vacaciones o enfermedad. En Ajustes hay un enlace por si quieres apoyar el desarrollo.
