@@ -248,7 +248,10 @@
     "deleteAccountNote": "Efface votre compte et toutes ses données, dans les trois applications, immédiatement et irréversiblement. Aucun délai de récupération.",
     "deleteAccountConfirm1": "Supprimer votre compte et tout son contenu ? C'est irréversible.",
     "deleteAccountConfirm2": "Dernière vérification — cela efface aussi vos données LimeLog et StudyDesk. Continuer ?",
-    "deleteAccountFailed": "Échec de la suppression : {{msg}}"
+    "deleteAccountFailed": "Échec de la suppression : {{msg}}",
+    "support": "Soutien",
+    "supportDev": "Soutenir le développement",
+    "supportDevSub": "Offrez-moi un café sur Ko-fi"
   },
   "days": {
     "long": {

@@ -305,7 +305,10 @@
     "deleteAccountNote": "आपका खाता और उसका सारा डेटा तीनों ऐप्स में तुरंत और स्थायी रूप से मिटा देता है। पुनर्प्राप्ति की कोई अवधि नहीं है।",
     "deleteAccountConfirm1": "अपना खाता और उसमें मौजूद सब कुछ हटाएँ? यह पूर्ववत नहीं किया जा सकता।",
     "deleteAccountConfirm2": "अंतिम पुष्टि — इससे आपका LimeLog और StudyDesk डेटा भी मिट जाएगा। जारी रखें?",
-    "deleteAccountFailed": "हटाना विफल: {{msg}}"
+    "deleteAccountFailed": "हटाना विफल: {{msg}}",
+    "support": "सहयोग",
+    "supportDev": "विकास में सहयोग करें",
+    "supportDevSub": "Ko-fi पर मुझे कॉफ़ी पिलाएँ"
   },
   "lock": {
     "secureAccess": "सुरक्षित पहुँच",

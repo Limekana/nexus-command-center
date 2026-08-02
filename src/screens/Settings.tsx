@@ -464,6 +464,25 @@ export default function Settings() {
           {dataMsg && <div className="text-[10px] text-warning mt-1 px-1">{dataMsg}</div>}
         </Section>
 
+        {/* ── Support ────────────────────────────────────────────────────
+             A link out, nothing more. No entitlements, no supporter-only
+             features, no webhook — so nothing here can gate the app or
+             change behaviour for someone who doesn't click it. */}
+        <Section title={t('settings.support')}>
+          <a
+            className="py-2 flex items-center justify-between gap-3 active:opacity-80"
+            href="https://ko-fi.com/limecorestudio"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <div className="min-w-0">
+              <div className="text-sm">{t('settings.supportDev')}</div>
+              <div className="text-[10px] text-text-muted">{t('settings.supportDevSub')}</div>
+            </div>
+            <span className="text-primary text-lg flex-shrink-0">›</span>
+          </a>
+        </Section>
+
         <Section title={t('settings.lifeProfile')}>
           <button
             className="w-full py-2 flex items-center justify-between gap-3 text-start active:opacity-80"
