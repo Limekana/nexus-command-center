@@ -41,7 +41,17 @@
     "errRateLimited": "Terlalu banyak percobaan. Tunggu sebentar, lalu coba lagi.",
     "errNetwork": "Tidak dapat menghubungi server. Periksa koneksimu dan coba lagi.",
     "ageNote": "Kamu harus berusia 16+ untuk membuat akun (13+ jika hukum setempat mengizinkan). Di bawah itu, gunakan mode tamu — tidak ada data yang keluar dari perangkatmu.",
-    "privacyLink": "Kebijakan privasi"
+    "privacyLink": "Kebijakan privasi",
+    "otpTitle": "Masukkan kode Anda",
+    "otpLabel": "Kode verifikasi",
+    "otpSubmit": "Konfirmasi akun",
+    "otpHint": "Kode berlaku selama 60 menit. Tautan di email juga masih berfungsi.",
+    "otpResend": "Kirim kode baru",
+    "otpResendIn": "Kirim kode baru dalam",
+    "otpSent": "Kode baru terkirim.",
+    "errOtp": "Kode itu tidak berhasil. Periksa dan coba lagi.",
+    "errOtpResend": "Tidak dapat mengirim kode baru. Coba sebentar lagi.",
+    "errOtpLength": "Kode itu tampak belum lengkap. Salin seluruh kode dari email."
   },
   "app": {
     "name": "Nexus Command Center",

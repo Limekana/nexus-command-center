@@ -99,7 +99,17 @@
     "errRateLimited": "Demasiados intentos. Espera un momento e inténtalo de nuevo.",
     "errNetwork": "No se pudo conectar con el servidor. Comprueba tu conexión e inténtalo de nuevo.",
     "ageNote": "Debes tener 16 años o más para crear una cuenta (13 donde la ley local lo permita). Si eres menor, usa el modo invitado: nada sale de tu dispositivo.",
-    "privacyLink": "Política de privacidad"
+    "privacyLink": "Política de privacidad",
+    "otpTitle": "Introduce tu código",
+    "otpLabel": "Código de verificación",
+    "otpSubmit": "Confirmar cuenta",
+    "otpHint": "El código es válido durante 60 minutos. El enlace del correo también sigue funcionando.",
+    "otpResend": "Enviar un código nuevo",
+    "otpResendIn": "Enviar un código nuevo en",
+    "otpSent": "Código nuevo enviado.",
+    "errOtp": "Ese código no funcionó. Compruébalo e inténtalo de nuevo.",
+    "errOtpResend": "No se pudo enviar un código nuevo. Inténtalo en un momento.",
+    "errOtpLength": "Ese código parece incompleto. Copia el código entero del correo."
   },
   "onboarding": {
     "welcomeTitle": "Configuremos el sistema de tu vida",

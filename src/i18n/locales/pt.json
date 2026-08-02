@@ -41,7 +41,17 @@
     "errRateLimited": "Muitas tentativas. Aguarde um momento e tente de novo.",
     "errNetwork": "Não foi possível conectar ao servidor. Verifique sua conexão e tente de novo.",
     "ageNote": "Você precisa ter 16 anos ou mais para criar uma conta (13 onde a lei local permitir). Abaixo dessa idade, use o modo convidado — nada sai do seu aparelho.",
-    "privacyLink": "Política de privacidade"
+    "privacyLink": "Política de privacidade",
+    "otpTitle": "Introduza o seu código",
+    "otpLabel": "Código de verificação",
+    "otpSubmit": "Confirmar conta",
+    "otpHint": "O código é válido durante 60 minutos. A ligação no e-mail também continua a funcionar.",
+    "otpResend": "Enviar um novo código",
+    "otpResendIn": "Enviar um novo código em",
+    "otpSent": "Novo código enviado.",
+    "errOtp": "Esse código não funcionou. Verifique e tente novamente.",
+    "errOtpResend": "Não foi possível enviar um novo código. Tente daqui a pouco.",
+    "errOtpLength": "Esse código parece incompleto. Copie o código completo do e-mail."
   },
   "app": {
     "name": "Nexus Command Center",
