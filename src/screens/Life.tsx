@@ -32,6 +32,7 @@ import {
   buildCrossDomainReport,
   bucketHabitsByWeek,
   lastNWeeks,
+  startOfWeek,
   type Insight,
   type LifeScore,
 } from '../lib/crossDomainSignals';
@@ -39,8 +40,14 @@ import { computeWorkScore, weeklyRatingStats } from '../lib/workScore';
 import { computeGoalProgress, type DataSources } from '../lib/goals';
 import {
   enabledDomains,
+  weeklyTargetFor,
+  currentWeeklyTarget,
+  withWeeklyTargetOverride,
+  MIN_WEEKLY_WORKOUT_TARGET,
+  MAX_WEEKLY_WORKOUT_TARGET,
   type DomainKey,
 } from '../lib/lifeProfile';
+import { dateKey } from '../lib/habitStreaks';
 import { PRIMARY, SUCCESS, WARNING, VIOLET, WORK_PINK } from '../lib/themeColors';
 
 const TONE_BORDER: Record<Insight['tone'], string> = {
@@ -98,6 +105,21 @@ export default function Life() {
   const profile = useLifeProfileStore((s) => s.profile);
   const aiEnabled = useSettingsStore((s) => s.aiEnabled);
   const loadProfile = useLifeProfileStore((s) => s.load);
+  const setProfile = useLifeProfileStore((s) => s.setProfile);
+
+  // v1.9 (Item 3) — this week's workout target, adjustable for this week only.
+  // The baseline lives in Life Profile settings; this is the "sick week, don't
+  // judge me by my usual" escape hatch, and it touches no other week.
+  const thisWeekKey = dateKey(startOfWeek(new Date()));
+  const weekTarget = weeklyTargetFor(profile, thisWeekKey);
+  const baselineTarget = currentWeeklyTarget(profile);
+  const onWeekTarget = (next: number) => {
+    // Setting it back to the baseline clears the override rather than storing a
+    // redundant entry, so the map only ever holds genuine exceptions.
+    void setProfile(
+      withWeeklyTargetOverride(profile, thisWeekKey, next === baselineTarget ? null : next),
+    );
+  };
 
   useEffect(() => {
     if (!workLoaded) void loadWork();
@@ -226,6 +248,46 @@ export default function Life() {
                   );
                 })}
               </div>
+
+              {/* Per-week workout target. Only where Fitness actually counts —
+                  a profile with fitness at 0 has no use for it. */}
+              {domains.includes('fitness') && (
+                <div className="w-full mt-3 flex items-center justify-between gap-3 px-1">
+                  <div className="min-w-0">
+                    <div className="text-[11px] text-text-muted">
+                      {t('life.weekTarget')}
+                    </div>
+                    {weekTarget !== baselineTarget && (
+                      <div className="text-[10px] text-warning">
+                        {t('life.weekTargetAdjusted', { baseline: baselineTarget })}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      type="button"
+                      className="btn-ghost w-8 h-8 flex items-center justify-center text-base leading-none"
+                      aria-label={t('life.weekTargetLess')}
+                      disabled={weekTarget <= MIN_WEEKLY_WORKOUT_TARGET}
+                      onClick={() => onWeekTarget(weekTarget - 1)}
+                    >
+                      −
+                    </button>
+                    <span className="text-sm tabular-nums w-5 text-center" aria-live="polite">
+                      {weekTarget}
+                    </span>
+                    <button
+                      type="button"
+                      className="btn-ghost w-8 h-8 flex items-center justify-center text-base leading-none"
+                      aria-label={t('life.weekTargetMore')}
+                      disabled={weekTarget >= MAX_WEEKLY_WORKOUT_TARGET}
+                      onClick={() => onWeekTarget(weekTarget + 1)}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </section>

@@ -55,7 +55,11 @@
     "avgRating": "Ø {{avg}}/5 · {{count}} {{unit}}",
     "day": "Tag",
     "days": "Tage",
-    "per100": "/ 100"
+    "per100": "/ 100",
+    "weekTarget": "Ziel dieser Woche",
+    "weekTargetAdjusted": "Für diese Woche angepasst — normal sind {{baseline}}",
+    "weekTargetLess": "Diese Woche eins weniger",
+    "weekTargetMore": "Diese Woche eins mehr"
   },
   "auth": {
     "signInSubtitle": "Command Center · Anmelden",
@@ -904,7 +908,11 @@
     "footer": "Ein benutzerdefiniertes Profil braucht mindestens {{min}} Bereiche, jeweils mindestens {{weight}} %. Die Gewichte werden automatisch auf 100 % ausbalanciert.",
     "enabled": "aktiviert",
     "disabled": "deaktiviert",
-    "weightAria": "{{domain}} Gewicht"
+    "weightAria": "{{domain}} Gewicht",
+    "workoutTarget": "Trainings pro Woche",
+    "workoutTargetSub": "Dein normales Ziel. Gilt ab dieser Woche — frühere Wochen behalten ihres.",
+    "workoutTargetLess": "Eins weniger",
+    "workoutTargetMore": "Eins mehr"
   },
   "weeklyReview": {
     "title": "Wochenrückblick",

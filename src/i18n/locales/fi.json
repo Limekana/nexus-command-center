@@ -55,7 +55,11 @@
     "avgRating": "Ka {{avg}}/5 · {{count}} {{unit}}",
     "day": "päivä",
     "days": "päivää",
-    "per100": "/ 100"
+    "per100": "/ 100",
+    "weekTarget": "Tämän viikon tavoite",
+    "weekTargetAdjusted": "Säädetty tälle viikolle — tavallisesti {{baseline}}",
+    "weekTargetLess": "Yksi vähemmän tällä viikolla",
+    "weekTargetMore": "Yksi lisää tällä viikolla"
   },
   "auth": {
     "signInSubtitle": "Command Center · Kirjaudu sisään",
@@ -904,7 +908,11 @@
     "footer": "Mukautettu profiili tarvitsee vähintään {{min}} osa-aluetta, kukin vähintään {{weight}} %. Painot tasapainottuvat automaattisesti 100 %:iin.",
     "enabled": "käytössä",
     "disabled": "pois",
-    "weightAria": "{{domain}} paino"
+    "weightAria": "{{domain}} paino",
+    "workoutTarget": "Treenejä viikossa",
+    "workoutTargetSub": "Normaali tavoitteesi. Voimassa tästä viikosta alkaen — aiemmat säilyttävät omansa.",
+    "workoutTargetLess": "Yksi vähemmän",
+    "workoutTargetMore": "Yksi lisää"
   },
   "weeklyReview": {
     "title": "Viikkokatsaus",

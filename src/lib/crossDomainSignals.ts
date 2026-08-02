@@ -27,7 +27,7 @@ import type { StudySession } from '../types/studies';
 import type { Transaction, BudgetCategory } from '../types/finance';
 import type { Habit, HabitCompletion } from '../types/habits';
 import { isEligibleOn, dateKey } from './habitStreaks';
-import { type LifeProfile, type DomainKey } from './lifeProfile';
+import { type LifeProfile, type DomainKey, weeklyTargetFor } from './lifeProfile';
 
 // ─── Week bucketing ─────────────────────────────────────────────────────
 
@@ -371,8 +371,10 @@ const DOMAIN_TO_SUBSCORE: Record<DomainKey, keyof Pick<LifeScore, 'workouts' | '
   habits: 'habits',
 };
 
-/** Weekly workout sessions that score 100. */
-const WEEKLY_WORKOUT_TARGET = 3;
+// v1.9 (Item 3) — the weekly workout target moved to the user's Life Profile
+// and is resolved per week by `weeklyTargetFor`. The old constant 3 lives on as
+// `DEFAULT_WEEKLY_WORKOUT_TARGET` there, so a profile that never set one scores
+// exactly as it did before.
 
 /** Weekly study minutes that score 100. */
 const WEEKLY_STUDY_TARGET_MINUTES = 240;
@@ -444,9 +446,14 @@ function lifeScoreForWeek(
   // a week where you did 2 of 3 is a 67 once it's closed, and history must not
   // drift.
   const pace = Math.min(1, Math.max(1 / 7, opts?.paceFraction ?? 1));
-  const expectedSessions = WEEKLY_WORKOUT_TARGET * pace;
+  // v1.9 (Item 3) — the target is per-user and per-week now, not a fixed 3.
+  // Resolved from the week being scored rather than from "now", so a closed
+  // week keeps the target that was in force while it was lived — the same
+  // no-drift rule the pace adjustment above obeys.
+  const weeklyTarget = weeklyTargetFor(opts?.profile, fit.weekStart);
+  const expectedSessions = weeklyTarget * pace;
   const workouts =
-    fit.sessionsCount >= WEEKLY_WORKOUT_TARGET
+    fit.sessionsCount >= weeklyTarget
       ? 100
       : Math.min(100, (fit.sessionsCount / expectedSessions) * 100);
   // Same pacing treatment as workouts above. Scoring the in-progress week

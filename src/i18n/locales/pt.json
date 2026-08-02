@@ -109,7 +109,11 @@
     "avgRating": "Média {{avg}}/5 · {{count}} {{unit}}",
     "day": "dia",
     "days": "dias",
-    "per100": "/ 100"
+    "per100": "/ 100",
+    "weekTarget": "Objetivo desta semana",
+    "weekTargetAdjusted": "Ajustado para esta semana — o habitual é {{baseline}}",
+    "weekTargetLess": "Menos um esta semana",
+    "weekTargetMore": "Mais um esta semana"
   },
   "onboarding": {
     "welcomeTitle": "Vamos configurar o sistema da sua vida",
@@ -154,7 +158,11 @@
     "footer": "Um perfil personalizado precisa de pelo menos {{min}} áreas, cada uma com no mínimo {{weight}}%. Os pesos se reequilibram automaticamente para somar 100%.",
     "enabled": "ativada",
     "disabled": "desativada",
-    "weightAria": "Peso de {{domain}}"
+    "weightAria": "Peso de {{domain}}",
+    "workoutTarget": "Treinos por semana",
+    "workoutTargetSub": "O seu objetivo normal. Aplica-se a partir desta semana; as anteriores mantêm o seu.",
+    "workoutTargetLess": "Menos um",
+    "workoutTargetMore": "Mais um"
   },
   "goalTypes": {
     "net_worth": "Patrimônio líquido",
