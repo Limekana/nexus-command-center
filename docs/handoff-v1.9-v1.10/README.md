@@ -13,7 +13,7 @@ file before touching code.
 Two small milestones, both scoped 2026-08-01, both on `develop`, neither
 tagged/released yet:
 
-- **v1.9 — SEC-1 only.** A security decision (see `NEXUS_V19_BUILD_PLAN_SNAPSHOT.md`), not really NCC-specific code — it's about the shared Supabase project. Read it for context; there's nothing to build here yet, it needs the owner's sign-off on the recommended path first.
+- **v1.9 — SEC-1 only.** ✅ **Decided and built 2026-08-01** (see `NEXUS_V19_BUILD_PLAN_SNAPSHOT.md`). It turned out not to be code-free after all: RLS was verified at the policy level rather than trusted to the advisor (which only sees whether RLS is *enabled*), and that verification surfaced one real gap the plan had missed — `ai-generate`'s rate limiter capped nothing, so anyone able to clone the repo could exhaust the Gemini free-tier daily quota and 429 every real user. Fixed with a Postgres-backed limiter; migration applied, advisor unchanged. **One thing still owed: redeploy the `ai-generate` Edge Function**, or the new caps are committed but not live.
 - **v1.10 — held-back features + housekeeping.** Full detail in `NEXUS_V110_BUILD_PLAN_SNAPSHOT.md`. **Your items in this repo:**
   - **Item 2** — Life/Fitness composite score reads low mid-week (pacing bug, not yet located in source).
   - **Item 3** — fitness weekly target hardcoded at 3, needs to flex — **open design question, not decided, do not build until it's picked** (static baseline vs. per-week override).

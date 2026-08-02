@@ -1,4 +1,4 @@
-// Limecore suite — server-side Gemini proxy. v1.4.
+// Limecore suite — server-side Gemini proxy. v1.5 (SEC-1: durable rate limits).
 //
 // DEPLOYED to Supabase project hkktorzhaqnfqsnlstda as edge function
 // `ai-generate` (verify_jwt = true). This file is the version-controlled copy;
@@ -51,15 +51,28 @@ function clampInt(v: unknown, lo: number, hi: number, def: number): number {
 // exposure. These two limits are a first layer against that: a per-user
 // sliding window, plus a global cap shared across all callers.
 //
-// HONEST LIMITATION: this state is a plain in-memory Map, so it only holds
-// for the lifetime of one isolate. Supabase Edge Functions can spin up
-// multiple isolates (cold starts, concurrent load, geographic routing), so
-// the "global" cap below is really per-isolate, not process-wide across the
-// whole deployment — a caller landing on several isolates could exceed the
-// nominal 120/hour. For this app (personal suite, ~2 real users, occasional
-// AI debriefs/narratives) that's an acceptable first layer. If this ever
-// needs to be airtight, the escalation path is a durable Postgres-backed
-// limiter (a counters table) instead of in-memory state.
+// SEC-1 (2026-08-01): the in-memory Map below is no longer the authoritative
+// limiter, because it could not be one. It only held for the lifetime of a
+// single isolate, and Supabase spins up isolates on cold start, concurrent
+// load and geographic routing — so the "global" cap was really per-isolate
+// and never bounded total call volume. Worse, the per-user window keys on the
+// JWT `sub`, and signup is open: rotating free accounts reset it at zero cost.
+//
+// The note that used to sit here justified all that with "personal suite, ~2
+// real users." There are 193 accounts. Anyone who can `git clone` could
+// exhaust the project's Gemini free-tier daily quota and hand every real user
+// a 429 — a cheap denial-of-service on a shipped feature, and uncapped billing
+// exposure the moment the tier stops being free.
+//
+// So the authoritative limiter is now `public.check_ai_rate_limit()`, backed
+// by a Postgres counters table (migration 20260801_ai_rate_limits.sql) — the
+// escalation path this comment used to merely name. It is process-wide and
+// survives isolate churn, which is what makes the global caps real and what
+// makes account rotation pointless.
+//
+// The in-memory limiter is KEPT as a free first layer: it costs one Map lookup,
+// catches the common runaway-loop case with no network round-trip, and is the
+// fallback if the database check fails (see checkLimits).
 // ---------------------------------------------------------------------------
 
 const USER_WINDOW_MS = 60_000; // 60s sliding window
@@ -67,6 +80,18 @@ const USER_LIMIT = 10; // ...max 10 requests per user in that window
 const GLOBAL_WINDOW_MS = 60 * 60_000; // 1h sliding window
 const GLOBAL_LIMIT = 120; // ...max 120 requests total, across all users
 const GLOBAL_KEY = "__global__";
+
+// Daily caps, enforced only by the durable limiter — an in-memory day window
+// is meaningless when isolates are recycled far more often than daily.
+//
+// GLOBAL_DAY_LIMIT is the one that matters: it maps to the Gemini free tier's
+// project-wide daily request cap, which is the actually-exhaustible resource.
+// The default is deliberately conservative. CONFIRM THE CURRENT FREE-TIER RPD
+// IN GOOGLE AI STUDIO before raising it — Google has changed that figure more
+// than once, so it is env-tunable rather than baked in.
+const USER_DAY_LIMIT = Number(Deno.env.get("AI_USER_DAY_LIMIT") ?? 50);
+const GLOBAL_DAY_LIMIT = Number(Deno.env.get("AI_GLOBAL_DAY_LIMIT") ?? 200);
+const DAY_WINDOW_MS = 24 * 60 * 60_000; // for Retry-After on a daily rejection
 
 // key -> recent request timestamps (ms). Pruned lazily on each lookup.
 const requestLog = new Map<string, number[]>();
@@ -106,6 +131,95 @@ function getUserIdFromAuthHeader(req: Request): string {
   }
 }
 
+// ---------------------------------------------------------------------------
+// The durable half of the limiter.
+//
+// Calls public.check_ai_rate_limit() over PostgREST with the service-role key.
+// Plain fetch rather than supabase-js: this is one RPC with a three-field body,
+// and the client library would be the function's only runtime dependency.
+//
+// EXECUTE on that routine is revoked from anon and authenticated precisely so
+// a caller cannot reach it directly and pre-burn someone else's bucket; the
+// service-role key is what gets us in. Both env vars are injected by the
+// platform, so there is no new secret to manage.
+// ---------------------------------------------------------------------------
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+
+/**
+ * One durable bucket check. Returns whether the call is allowed, or null if
+ * the check could not be completed — null means "no answer", which the caller
+ * treats differently from a definite false.
+ */
+async function checkDurable(
+  bucket: string,
+  limit: number,
+  windowInterval: string,
+): Promise<boolean | null> {
+  if (!SUPABASE_URL || !SERVICE_ROLE_KEY) return null;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/check_ai_rate_limit`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+      },
+      body: JSON.stringify({
+        p_bucket: bucket,
+        p_limit: limit,
+        p_window: windowInterval,
+      }),
+    });
+    if (!res.ok) return null;
+    return (await res.json()) === true;
+  } catch {
+    // Network/DB trouble. Deliberately not logged with the bucket name, which
+    // contains a user id.
+    return null;
+  }
+}
+
+/**
+ * Full limit check: in-memory first (free, no round-trip), then the durable
+ * counters that actually bound the Gemini quota.
+ *
+ * Returns the window (ms) that rejected the call, for Retry-After, or null if
+ * everything passed.
+ *
+ * DEGRADATION: a durable check returning null (database unreachable) falls
+ * back to the in-memory verdict rather than failing the request. A transient
+ * database blip should not make an opt-in feature look broken, and the
+ * in-memory layer still bounds the runaway-loop case. The trade is that a
+ * database outage temporarily restores the pre-SEC-1 posture — acceptable,
+ * because it is bounded by the outage rather than open indefinitely.
+ */
+async function checkLimits(userId: string, now: number): Promise<number | null> {
+  // Per-user, then global — checked in this order so a request already
+  // rejected for the user never also consumes a slot in a global bucket.
+  if (!checkAndRecord(`user:${userId}`, USER_WINDOW_MS, USER_LIMIT, now)) {
+    return USER_WINDOW_MS;
+  }
+  if (!checkAndRecord(GLOBAL_KEY, GLOBAL_WINDOW_MS, GLOBAL_LIMIT, now)) {
+    return GLOBAL_WINDOW_MS;
+  }
+
+  if ((await checkDurable(`user:${userId}`, USER_LIMIT, "1 minute")) === false) {
+    return USER_WINDOW_MS;
+  }
+  if ((await checkDurable(`user:${userId}:day`, USER_DAY_LIMIT, "1 day")) === false) {
+    return DAY_WINDOW_MS;
+  }
+  if ((await checkDurable("global:hour", GLOBAL_LIMIT, "1 hour")) === false) {
+    return GLOBAL_WINDOW_MS;
+  }
+  if ((await checkDurable("global:day", GLOBAL_DAY_LIMIT, "1 day")) === false) {
+    return DAY_WINDOW_MS;
+  }
+  return null;
+}
+
 // 429 with a Retry-After header — json() doesn't carry extra headers, so this
 // builds the response inline for this one case rather than extending it.
 function rateLimited(windowMs: number): Response {
@@ -123,17 +237,12 @@ Deno.serve(async (req: Request) => {
   const apiKey = Deno.env.get("GEMINI_API_KEY");
   if (!apiKey) return json({ error: "AI not configured (GEMINI_API_KEY secret not set)" }, 503);
 
-  // Rate limit BEFORE any upstream call: per-user window first, then the
-  // global cap. Checked in this order so a request already rejected for the
-  // user never also consumes a slot in the global bucket.
+  // Rate limit BEFORE any upstream call, so a rejected request never reaches
+  // Gemini and never costs anything.
   const now = Date.now();
   const userId = getUserIdFromAuthHeader(req);
-  if (!checkAndRecord(`user:${userId}`, USER_WINDOW_MS, USER_LIMIT, now)) {
-    return rateLimited(USER_WINDOW_MS);
-  }
-  if (!checkAndRecord(GLOBAL_KEY, GLOBAL_WINDOW_MS, GLOBAL_LIMIT, now)) {
-    return rateLimited(GLOBAL_WINDOW_MS);
-  }
+  const rejectedWindowMs = await checkLimits(userId, now);
+  if (rejectedWindowMs !== null) return rateLimited(rejectedWindowMs);
 
   let body: Record<string, unknown>;
   try {
