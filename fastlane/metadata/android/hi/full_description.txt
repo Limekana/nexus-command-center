@@ -7,4 +7,4 @@ Nexus Command Center, Limecore सुइट का केंद्र है —
 * अनुकूलन योग्य Life Profiles और लक्ष्य
 * हीटमैप के साथ साप्ताहिक और वार्षिक समीक्षाएँ
 
-लोकल-फ़र्स्ट, डेटा डिवाइस पर ही; क्लाउड सिंक वैकल्पिक और खाते से जुड़ा। कोई Google Play Services नहीं, कोई Firebase नहीं — Google साइन-इन एक सामान्य वेब OAuth फ़्लो है। तीसरे पक्ष का बाज़ार डेटा (Finnhub, CoinGecko, Yahoo, ECB) और वैकल्पिक AI सुविधा उपयोगकर्ता द्वारा शुरू की गई HTTPS कॉल हैं।
+लोकल-फ़र्स्ट, डेटा डिवाइस पर ही; क्लाउड सिंक वैकल्पिक और खाते से जुड़ा। कोई Google Play Services नहीं, कोई Firebase नहीं — Google साइन-इन एक सामान्य वेब OAuth फ़्लो है। तीसरे पक्ष का बाज़ार डेटा और वैकल्पिक AI सुविधा उपयोगकर्ता द्वारा शुरू की गई HTTPS कॉल हैं। बाज़ार डेटा के स्रोत: Finnhub, CoinGecko, Yahoo Finance, ECB, CNN Business (production.dataviz.cnn.io) — Fear & Greed सूचकांक के लिए, और ExchangeRate-API (open.er-api.com) — मुद्रा दरों के लिए।

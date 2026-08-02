@@ -7,6 +7,6 @@ Ominaisuudet:
 * Mukautettavat elämänprofiilit ja tavoitteet
 * Viikko- ja vuosikatsaukset lämpökartoilla
 
-Paikallinen ensin, tiedot laitteella; valinnainen tiliin sidottu pilvisynkronointi. Ei Google Play -palveluita, ei Firebasea — Google-kirjautuminen on tavallinen web-OAuth. Kolmannen osapuolen markkinadata (Finnhub, CoinGecko, Yahoo, EKP) ja valinnainen tekoälytoiminto ovat käyttäjän käynnistämiä HTTPS-kutsuja.
+Paikallinen ensin, tiedot laitteella; valinnainen tiliin sidottu pilvisynkronointi. Ei Google Play -palveluita, ei Firebasea — Google-kirjautuminen on tavallinen web-OAuth. Kolmannen osapuolen markkinadata ja valinnainen tekoälytoiminto ovat käyttäjän käynnistämiä HTTPS-kutsuja. Markkinadatan lähteet: Finnhub, CoinGecko, Yahoo Finance, EKP, CNN Business (production.dataviz.cnn.io) Fear & Greed -indeksiä varten ja ExchangeRate-API (open.er-api.com) valuuttakursseja varten.
 
 Saatavilla englanniksi, suomeksi, ranskaksi, saksaksi, espanjaksi, kiinaksi, hindiksi, portugaliksi, indonesiaksi ja arabiaksi.

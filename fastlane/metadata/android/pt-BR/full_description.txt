@@ -7,4 +7,4 @@ Recursos:
 * Life Profiles e metas configuráveis
 * Revisões semanais e anuais com mapas de calor
 
-Local-first, com armazenamento no dispositivo; sincronização na nuvem opcional e vinculada à conta. Sem Google Play Services, sem Firebase — o login com Google é um fluxo OAuth web comum. Dados de mercado de terceiros (Finnhub, CoinGecko, Yahoo, BCE) e um recurso de IA opcional são chamadas HTTPS iniciadas por você.
+Local-first, com armazenamento no dispositivo; sincronização na nuvem opcional e vinculada à conta. Sem Google Play Services, sem Firebase — o login com Google é um fluxo OAuth web comum. Dados de mercado de terceiros e um recurso de IA opcional são chamadas HTTPS iniciadas por você. Fontes dos dados de mercado: Finnhub, CoinGecko, Yahoo Finance, BCE, CNN Business (production.dataviz.cnn.io) para o índice Fear & Greed e ExchangeRate-API (open.er-api.com) para as taxas de câmbio.
