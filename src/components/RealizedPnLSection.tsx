@@ -6,25 +6,18 @@
 // straight from useFinanceStore; renders nothing until the first sale exists.
 
 import { useMemo, useState } from 'react';
+import { formatMoney } from '../lib/currencies';
+import { formatLocale } from '../utils/formatters';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { convertSync } from '../api/fxRates';
 import { lotRemaining } from '../lib/stockSaleFifo';
 
-const CURRENCY_SYMBOL: Record<string, string> = {
-  EUR: '€', USD: '$', GBP: '£', SEK: 'kr', NOK: 'kr', DKK: 'kr', CHF: 'Fr', JPY: '¥',
-};
 
 /** Absolute-value money formatter — callers prefix the sign so the colour and
  *  the +/− glyph stay in lockstep. */
 function fmt(amount: number, currency: string): string {
-  const sym = CURRENCY_SYMBOL[currency.toUpperCase()] ?? '';
-  const isSuffix = ['kr', 'Fr'].includes(sym);
-  const num = Math.abs(amount).toLocaleString('fi-FI', {
-    maximumFractionDigits: 2,
-    minimumFractionDigits: 2,
-  });
-  return isSuffix ? `${num} ${sym}` : sym ? `${sym}${num}` : `${num} ${currency}`;
+  return formatMoney(amount, currency, { locale: formatLocale(), signed: false });
 }
 
 export default function RealizedPnLSection() {
@@ -96,7 +89,7 @@ export default function RealizedPnLSection() {
       {/* Realized P&L — tap to expand the per-sale history */}
       <button
         onClick={() => setShowHistory((v) => !v)}
-        className="card text-left w-full active:bg-surface2/40"
+        className="card text-start w-full active:bg-surface2/40"
       >
         <div className="flex items-center justify-between">
           <div>
@@ -132,7 +125,7 @@ export default function RealizedPnLSection() {
                   {s.soldAt} · {s.sharesSold} sh @ {fmt(s.salePricePerShare, s.currency)}
                 </div>
               </div>
-              <div className={`text-right whitespace-nowrap ${s.realizedGainLoss >= 0 ? 'text-success' : 'text-danger'}`}>
+              <div className={`text-end whitespace-nowrap ${s.realizedGainLoss >= 0 ? 'text-success' : 'text-danger'}`}>
                 {s.realizedGainLoss >= 0 ? '+' : '−'}{fmt(s.realizedGainLoss, s.currency)}
               </div>
             </div>
@@ -145,7 +138,7 @@ export default function RealizedPnLSection() {
         <div className="card" style={{ opacity: 0.85 }}>
           <button
             onClick={() => setShowClosed((v) => !v)}
-            className="flex items-center justify-between w-full text-left"
+            className="flex items-center justify-between w-full text-start"
           >
             <span className="font-heading font-semibold text-sm">Closed positions</span>
             <span className="text-[10px] uppercase tracking-wider text-text-muted">
@@ -165,7 +158,7 @@ export default function RealizedPnLSection() {
                       Invested {fmt(c.invested, baseCurrency)} → Proceeds {fmt(c.proceeds, baseCurrency)}
                     </div>
                   </div>
-                  <div className={`text-right whitespace-nowrap ${c.gl >= 0 ? 'text-success' : 'text-danger'}`}>
+                  <div className={`text-end whitespace-nowrap ${c.gl >= 0 ? 'text-success' : 'text-danger'}`}>
                     {c.gl >= 0 ? '+' : '−'}{fmt(c.gl, baseCurrency)}
                   </div>
                 </div>

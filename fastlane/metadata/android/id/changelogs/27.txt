@@ -1,0 +1,1 @@
+Ikon baru di bilah bawah. Akun baru kini bisa dikonfirmasi dengan kode dari email, bukan hanya lewat tautan. Atur target latihan mingguanmu sendiri, dengan pengecualian per minggu untuk liburan atau sakit. Pengaturan punya tautan jika kamu ingin mendukung pengembangan.

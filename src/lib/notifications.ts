@@ -193,7 +193,7 @@ const createdChannels = new Set<NotificationCategory>();
  *  created in this session. Idempotent and best-effort — failures are
  *  logged. Pre-Oreo Androids ignore channels entirely (no-op on the
  *  native side) so this is safe to call there. */
-export async function ensureChannel(category: NotificationCategory): Promise<void> {
+async function ensureChannel(category: NotificationCategory): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
   if (createdChannels.has(category)) return;
   const spec = CHANNEL_SPECS[category];
@@ -212,7 +212,7 @@ export async function ensureChannel(category: NotificationCategory): Promise<voi
 
 // ─── Schedule / cancel ──────────────────────────────────────────────────
 
-export interface ScheduleOptions {
+interface ScheduleOptions {
   /** Stable numeric ID within the category's range. Re-scheduling with the
    *  same ID overwrites the prior notification. */
   id: number;
@@ -342,7 +342,7 @@ export async function onNotificationTap(
 /** Payload delivered to the action-tap handler. `extra` is the parsed
  *  JSON of whatever was set on the action's `extra` field at schedule
  *  time; null if the schedule call didn't include one or parsing failed. */
-export interface NotificationActionPayload {
+interface NotificationActionPayload {
   actionId: string;
   route: string;
   extra: Record<string, unknown> | null;

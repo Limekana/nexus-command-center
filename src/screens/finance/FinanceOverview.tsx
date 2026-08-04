@@ -12,7 +12,7 @@ import MarketsSegment from '../../components/MarketsSegment';
 import { useFinanceStore } from '../../store/useFinanceStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { convertSync, normalizeCurrency } from '../../api/fxRates';
-import { formatCurrency, formatShortDate, localDateKey } from '../../utils/formatters';
+import { formatCurrency, formatShortDate, localDateKey, formatLocale } from '../../utils/formatters';
 import { computeAccountBalance } from '../../lib/accountBalance';
 import { portfolioCashBalance } from '../../lib/portfolioCash';
 
@@ -155,10 +155,13 @@ export default function FinanceOverview() {
         <div className="glass-soft rounded-pill p-1 flex relative">
           <span
             aria-hidden
-            className="absolute top-1 bottom-1 left-1 rounded-pill transition-transform duration-300 ease-spring-soft"
+            className="absolute top-1 bottom-1 start-1 rounded-pill transition-transform duration-300 ease-spring-soft"
             style={{
               width: 'calc((100% - 0.5rem) / 3)',
-              transform: `translateX(${FINANCE_TABS.indexOf(tab) * 100}%)`,
+              // --dir is 1 in LTR and -1 in RTL (set in index.css). translateX has no
+              // logical form, so without this the pill slides away from the
+              // active tab once the axis flips.
+              transform: `translateX(calc(var(--dir) * ${FINANCE_TABS.indexOf(tab) * 100}%))`,
               background: 'rgba(0, 212, 255, 0.14)',
               boxShadow: '0 0 0 1px rgba(0, 212, 255, 0.45)',
             }}
@@ -193,7 +196,7 @@ export default function FinanceOverview() {
             {/* Net worth — combines portfolio + manual assets - liabilities */}
             <button
               onClick={() => navigate('/finance/networth')}
-              className="card text-left w-full active:bg-surface2/40"
+              className="card text-start w-full active:bg-surface2/40"
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -202,7 +205,7 @@ export default function FinanceOverview() {
                   </div>
                   <div className={`font-heading font-bold text-xl ${netWorth.total >= 0 ? 'text-text' : 'text-danger'}`}>
                     {netWorth.hasData
-                      ? new Intl.NumberFormat('fi-FI', {
+                      ? new Intl.NumberFormat(formatLocale(), {
                           style: 'currency',
                           currency: baseCurrency,
                           maximumFractionDigits: 0,
@@ -231,14 +234,14 @@ export default function FinanceOverview() {
             {/* What-If — prominent accent entry per BUG-18 */}
             <button
               onClick={() => navigate('/finance/whatif')}
-              className="card w-full text-left press-spring flex items-center justify-between"
+              className="card w-full text-start press-spring flex items-center justify-between"
               style={{ borderColor: 'rgba(0, 212, 255, 0.4)', background: 'rgba(0, 212, 255, 0.05)' }}
             >
               <div>
                 <div className="font-heading font-semibold text-sm text-primary">{t('fin.ov.runScenario')}</div>
                 <div className="text-[11px] text-text-muted">{t('fin.ov.runScenarioSub')}</div>
               </div>
-              <span className="text-primary text-lg" aria-hidden>→</span>
+              <span className="text-primary text-lg rtl-mirror" aria-hidden>→</span>
             </button>
 
             {/* v1.4 — projected income vs expenses from detected recurring
@@ -408,14 +411,14 @@ function EntryCard({ emoji, title, sub, onClick }: {
     <button
       type="button"
       onClick={onClick}
-      className="card w-full text-left flex items-center gap-3 active:bg-surface2/40 press-spring"
+      className="card w-full text-start flex items-center gap-3 active:bg-surface2/40 press-spring"
     >
       <span className="text-lg" aria-hidden>{emoji}</span>
       <div className="flex-1 min-w-0">
         <div className="font-heading font-semibold text-sm">{title}</div>
         <div className="text-[11px] text-text-muted truncate">{sub}</div>
       </div>
-      <span className="text-primary text-sm" aria-hidden>→</span>
+      <span className="text-primary text-sm rtl-mirror" aria-hidden>→</span>
     </button>
   );
 }

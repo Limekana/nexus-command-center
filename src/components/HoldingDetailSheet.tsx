@@ -8,6 +8,7 @@
 // this ticker" message and keep the logo + identity header.
 
 import { useEffect } from 'react';
+import { formatLocale } from '../utils/formatters';
 import BottomSheet from './BottomSheet';
 import SparkLine from './SparkLine';
 import { useFinanceStore } from '../store/useFinanceStore';
@@ -20,7 +21,7 @@ interface Props {
 
 function fmtNum(n: number | undefined, digits = 2): string {
   if (n == null) return '—';
-  return n.toLocaleString('fi-FI', { maximumFractionDigits: digits, minimumFractionDigits: 0 });
+  return n.toLocaleString(formatLocale(), { maximumFractionDigits: digits, minimumFractionDigits: 0 });
 }
 
 // Compact market cap formatter (Finnhub returns millions of USD).
@@ -111,7 +112,7 @@ export default function HoldingDetailSheet({ holding, onClose }: Props) {
             </div>
           </div>
           {stockQuote && (
-            <div className="text-right flex-shrink-0">
+            <div className="text-end flex-shrink-0">
               <div className="font-heading font-bold text-base">
                 {stockQuote.currency} {fmtNum(stockQuote.quote.c)}
               </div>

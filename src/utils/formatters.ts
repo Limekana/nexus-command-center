@@ -1,5 +1,41 @@
+import i18n from '../i18n';
+
+/** The formatting locale, deliberately not the same value as the i18n resource
+ *  language. i18n resolves to a bare code ('en'); the device reports a region
+ *  ('en-GB', 'en-IN', 'pt-BR'). When the two agree on language, prefer the
+ *  device's regional tag — that is what gives an Indian user lakh/crore digit
+ *  grouping (12,34,567) rather than the Western 1,234,567.
+ *
+ *  Every display formatter in the app routes through this. They were hardcoded
+ *  to 'fi-FI' across ~30 sites, so every user in every language got Finnish
+ *  number and date conventions: "1 234,56" with a space thousands separator,
+ *  and "26.7.2026" dates.
+ *
+ *  Read per call rather than cached: the language can change at runtime, and
+ *  callers are re-invoked on the re-render that i18next triggers. */
+export function formatLocale(): string {
+  const lang = (i18n.language || 'en').split('-')[0];
+  const nav = (typeof navigator !== 'undefined'
+    && (navigator.languages?.[0] || navigator.language)) || '';
+  return nav.split('-')[0] === lang ? nav : lang;
+}
+
+/** Localised weekday names, indexed 0 = Sunday to match Date.getDay().
+ *  Built from a known week (2024-01-07 was a Sunday) so every locale gets
+ *  correct names without a key per language. */
+export function weekdayNames(style: 'long' | 'short' | 'narrow'): string[] {
+  const fmt = new Intl.DateTimeFormat(formatLocale(), { weekday: style });
+  return Array.from({ length: 7 }, (_, i) => fmt.format(new Date(2024, 0, 7 + i)));
+}
+
+/** Localised month names, indexed 0 = January to match Date.getMonth(). */
+export function monthNames(style: 'long' | 'short' | 'narrow'): string[] {
+  const fmt = new Intl.DateTimeFormat(formatLocale(), { month: style });
+  return Array.from({ length: 12 }, (_, i) => fmt.format(new Date(2024, i, 1)));
+}
+
 export function formatCurrency(amount: number, currency = 'EUR'): string {
-  return new Intl.NumberFormat('fi-FI', {
+  return new Intl.NumberFormat(formatLocale(), {
     style: 'currency', currency, minimumFractionDigits: 2,
   }).format(amount);
 }
@@ -17,22 +53,22 @@ export function localDateKey(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-export function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat('fi-FI', {
-    day: '2-digit', month: 'short', year: 'numeric',
-  }).format(new Date(iso));
-}
-
+/** Short date — "26 Jul", "26 heinäk.", "२६ जुल".
+ *
+ *  NC-1 routed ~30 hardcoded `fi-FI` sites through formatLocale() and missed
+ *  this one, which is live in three screens: transaction dates on the Finance
+ *  overview, task due-date pills, and the cash-flow forecast. So the bug NC-1
+ *  set out to fix — every user in every language getting Finnish date
+ *  conventions — survived in exactly those places.
+ *
+ *  Its three neighbours (`formatDate`, `formatTime`, `formatPercent`) had no
+ *  callers at all and were deleted rather than fixed. Two of them were also
+ *  hardcoded to `fi-FI`, so leaving them would have left a loaded trap: the
+ *  next person needing a date formatter would have reached for one and
+ *  reintroduced the whole defect. */
 export function formatShortDate(iso: string): string {
-  return new Intl.DateTimeFormat('fi-FI', { day: '2-digit', month: 'short' }).format(new Date(iso));
-}
-
-export function formatTime(iso: string): string {
-  return new Intl.DateTimeFormat('fi-FI', { hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
-}
-
-export function formatPercent(value: number, decimals = 1): string {
-  return `${value >= 0 ? '+' : ''}${value.toFixed(decimals)}%`;
+  return new Intl.DateTimeFormat(formatLocale(), { day: '2-digit', month: 'short' })
+    .format(new Date(iso));
 }
 
 export function formatCacheAge(minutes: number): string {

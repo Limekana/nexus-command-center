@@ -6,7 +6,7 @@
 // No legend rendering here — the parent owns layout. We expose the palette
 // so the parent can render swatches that match the slice colors.
 
-export interface DonutSlice {
+interface DonutSlice {
   label: string;
   value: number;
 }
@@ -21,7 +21,7 @@ interface DonutProps {
 
 // Eyeballed palette — primary + 6 distinguishable tones, sequential enough
 // to read as "different categories" without clashing on the dark background.
-export const DONUT_PALETTE = [
+const DONUT_PALETTE = [
   '#00D4FF', // primary cyan
   '#3FB950', // success green
   '#D29922', // warning amber

@@ -29,7 +29,7 @@
 
 const TICKER_RE = /^[A-Z0-9.^:=-]{1,20}$/i;
 
-export interface TickerValidationResult {
+interface TickerValidationResult {
   ok: boolean;
   /** Trimmed value (caller decides case-folding). Empty string when input was empty. */
   normalised: string;

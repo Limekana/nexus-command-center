@@ -27,7 +27,7 @@ import type { StudySession } from '../types/studies';
 import type { Transaction, BudgetCategory } from '../types/finance';
 import type { Habit, HabitCompletion } from '../types/habits';
 import { isEligibleOn, dateKey } from './habitStreaks';
-import { type LifeProfile, type DomainKey } from './lifeProfile';
+import { type LifeProfile, type DomainKey, weeklyTargetFor } from './lifeProfile';
 
 // ─── Week bucketing ─────────────────────────────────────────────────────
 
@@ -41,11 +41,6 @@ export function startOfWeek(d: Date): Date {
   const delta = dow === 0 ? -6 : 1 - dow; // shift to Monday
   out.setDate(out.getDate() + delta);
   return out;
-}
-
-/** Stable key for a week — YYYY-MM-DD of the Monday. */
-export function weekKey(d: Date): string {
-  return dateKey(startOfWeek(d));
 }
 
 /** Generate the last N week-start dates (most recent first). */
@@ -62,14 +57,14 @@ export function lastNWeeks(n: number, today: Date = new Date()): Date[] {
 
 // ─── Weekly aggregates per domain ───────────────────────────────────────
 
-export interface WeeklyFitness {
+interface WeeklyFitness {
   weekStart: string;       // YYYY-MM-DD Monday
   sessionsCount: number;
   totalSetCount: number;
   trainingDays: Set<string>; // YYYY-MM-DD of days that had a workout
 }
 
-export interface WeeklyStudy {
+interface WeeklyStudy {
   weekStart: string;
   totalMinutes: number;
   sessionCount: number;
@@ -79,7 +74,7 @@ export interface WeeklyStudy {
   minutesOnRestDays: number;
 }
 
-export interface WeeklyFinance {
+interface WeeklyFinance {
   weekStart: string;
   /** Sum of expenses across the week. Income is excluded — we're comparing
    *  spending patterns, not net cashflow. */
@@ -90,7 +85,7 @@ export interface WeeklyFinance {
   budgetAdherence: number | null;
 }
 
-export interface WeeklyHabits {
+interface WeeklyHabits {
   weekStart: string;
   /** Total eligible (habit, date) pairs in the week. */
   eligibleCount: number;
@@ -106,7 +101,7 @@ function inWeek(date: Date, weekStart: Date): boolean {
   return date >= weekStart && date < end;
 }
 
-export function bucketFitnessByWeek(
+function bucketFitnessByWeek(
   sessions: WorkoutSession[],
   weeks: Date[],
 ): WeeklyFitness[] {
@@ -122,7 +117,7 @@ export function bucketFitnessByWeek(
   });
 }
 
-export function bucketStudyByWeek(
+function bucketStudyByWeek(
   sessions: StudySession[],
   weeks: Date[],
   fitnessWeeks: WeeklyFitness[],
@@ -147,7 +142,7 @@ export function bucketStudyByWeek(
   });
 }
 
-export function bucketFinanceByWeek(
+function bucketFinanceByWeek(
   txns: Transaction[],
   budgets: BudgetCategory[],
   weeks: Date[],
@@ -236,7 +231,7 @@ const MIN_WEEKS = 4;
 /** Fitness × Studies. Compare avg study minutes on workout days vs rest
  *  days across the last MIN_WEEKS weeks. Surface only if the delta is
  *  meaningful (≥15%). */
-export function fitnessStudyInsight(
+function fitnessStudyInsight(
   studyWeeks: WeeklyStudy[],
 ): Insight | null {
   const recent = studyWeeks.slice(0, MIN_WEEKS);
@@ -268,7 +263,7 @@ export function fitnessStudyInsight(
 
 /** Fitness × Finance. Spending in high-training weeks (3+ sessions) vs
  *  low-training weeks (≤1 session). */
-export function fitnessFinanceInsight(
+function fitnessFinanceInsight(
   fitnessWeeks: WeeklyFitness[],
   financeWeeks: WeeklyFinance[],
 ): Insight | null {
@@ -305,7 +300,7 @@ export function fitnessFinanceInsight(
 /** Habits × Fitness/Study output. Compare study minutes + workout sessions
  *  in weeks with high habit-hit ratio vs low. Threshold = top vs bottom
  *  half of the 4-week window. */
-export function habitsOutputInsight(
+function habitsOutputInsight(
   habitWeeks: WeeklyHabits[],
   studyWeeks: WeeklyStudy[],
   fitnessWeeks: WeeklyFitness[],
@@ -376,11 +371,34 @@ const DOMAIN_TO_SUBSCORE: Record<DomainKey, keyof Pick<LifeScore, 'workouts' | '
   habits: 'habits',
 };
 
+// v1.9 (Item 3) — the weekly workout target moved to the user's Life Profile
+// and is resolved per week by `weeklyTargetFor`. The old constant 3 lives on as
+// `DEFAULT_WEEKLY_WORKOUT_TARGET` there, so a profile that never set one scores
+// exactly as it did before.
+
+/** Weekly study minutes that score 100. */
+const WEEKLY_STUDY_TARGET_MINUTES = 240;
+
+/**
+ * Fraction of the week that has elapsed, counting today as a whole day, so
+ * Monday is 1/7 and Sunday is 7/7. Used to pace-adjust the fitness sub-score
+ * for the in-progress week (see `paceFraction` on `lifeScoreForWeek`).
+ *
+ * Clamped to [1/7, 1]: never zero (which would divide by zero on Monday) and
+ * never past a full week if the caller passes an already-closed week.
+ */
+function weekElapsedFraction(today: Date = new Date()): number {
+  const dow = today.getDay(); // 0 Sun .. 6 Sat
+  const dayIndex = dow === 0 ? 7 : dow; // Mon=1 .. Sun=7, matching startOfWeek
+  return Math.min(1, Math.max(1 / 7, dayIndex / 7));
+}
+
 /**
  * Weighted composite. Each component normalizes to 0..100 against a target.
  *
  * Targets (chosen to feel attainable but not trivial):
- *   - workouts: 3 sessions/week → 100
+ *   - workouts: 3 sessions/week → 100, pace-adjusted for the in-progress week
+ *               via `opts.paceFraction` (see below)
  *   - study   : 240 minutes/week → 100
  *   - habits  : hit ratio 80% → 100
  *   - budget  : adherence ratio ≤ 1.0 → 100, 1.2 → 0 (linear between)
@@ -399,15 +417,56 @@ const DOMAIN_TO_SUBSCORE: Record<DomainKey, keyof Pick<LifeScore, 'workouts' | '
  *     and tanked the composite, which read as a bug for users who, e.g., only
  *     track finances.)
  */
-export function lifeScoreForWeek(
+function lifeScoreForWeek(
   fit: WeeklyFitness,
   study: WeeklyStudy,
   fin: WeeklyFinance,
   habits: WeeklyHabits,
-  opts?: { workScore?: number; profile?: LifeProfile; workHasData?: boolean; everUsed?: Record<DomainKey, boolean> },
+  opts?: {
+    workScore?: number;
+    profile?: LifeProfile;
+    workHasData?: boolean;
+    everUsed?: Record<DomainKey, boolean>;
+    /**
+     * v1.8 — fraction of the week elapsed, for the in-progress week only.
+     * Omit (or pass 1) for a closed week, which scores against the full target.
+     */
+    paceFraction?: number;
+  },
 ): LifeScore {
-  const workouts = Math.min(100, (fit.sessionsCount / 3) * 100);
-  const studyScore = Math.min(100, (study.totalMinutes / 240) * 100);
+  // v1.8 — pace-adjusted fitness. This used to be `sessionsCount / 3`, which
+  // scored the in-progress week against the *whole* week's target: on Wednesday
+  // with 2 of 3 logged it read 67 even though the user was ahead of pace, and
+  // the composite only stopped looking broken on Sunday. Now the denominator is
+  // what you'd expect to have done by today, so being on pace reads as 100 all
+  // week. Hitting the full weekly target early still caps at 100 rather than
+  // scoring above it.
+  //
+  // Past weeks pass no paceFraction and keep scoring against the full target —
+  // a week where you did 2 of 3 is a 67 once it's closed, and history must not
+  // drift.
+  const pace = Math.min(1, Math.max(1 / 7, opts?.paceFraction ?? 1));
+  // v1.9 (Item 3) — the target is per-user and per-week now, not a fixed 3.
+  // Resolved from the week being scored rather than from "now", so a closed
+  // week keeps the target that was in force while it was lived — the same
+  // no-drift rule the pace adjustment above obeys.
+  const weeklyTarget = weeklyTargetFor(opts?.profile, fit.weekStart);
+  const expectedSessions = weeklyTarget * pace;
+  const workouts =
+    fit.sessionsCount >= weeklyTarget
+      ? 100
+      : Math.min(100, (fit.sessionsCount / expectedSessions) * 100);
+  // Same pacing treatment as workouts above. Scoring the in-progress week
+  // against the full 240-minute target made the study score read artificially
+  // low until Sunday — a user two days in with 70 minutes logged is on pace,
+  // not at 29%. Past weeks pass no paceFraction and keep scoring against the
+  // full target. The v1.8 braindump only named Fitness, so this was left then;
+  // the plumbing it needs already exists.
+  const expectedMinutes = WEEKLY_STUDY_TARGET_MINUTES * pace;
+  const studyScore =
+    study.totalMinutes >= WEEKLY_STUDY_TARGET_MINUTES
+      ? 100
+      : Math.min(100, (study.totalMinutes / expectedMinutes) * 100);
   const habitsScore = habits.hitRatio != null ? habits.hitRatio * 100 : 0;
   let budget = 50; // default mid when no budgets set
   if (fin.budgetAdherence != null) {
@@ -465,7 +524,7 @@ export function lifeScoreForWeek(
 
 // ─── Orchestrator — pull everything together ────────────────────────────
 
-export interface CrossDomainReport {
+interface CrossDomainReport {
   /** True when there's enough data (≥4 weeks) to surface any observation. */
   ready: boolean;
   /** All weekly buckets for both the dashboard rotator + /life screen. */
@@ -517,6 +576,8 @@ export function buildCrossDomainReport(
       workScore: i === 0 ? opts?.currentWorkScore ?? 0 : 0,
       workHasData: i === 0 ? opts?.workHasData === true : false,
       everUsed,
+      // Only week 0 is in progress; closed weeks score against the full target.
+      paceFraction: i === 0 ? weekElapsedFraction() : 1,
     }),
   );
 

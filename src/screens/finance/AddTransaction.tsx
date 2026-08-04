@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useConfirm } from '../../components/ConfirmDialog';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
@@ -16,6 +17,7 @@ const types: { key: TransactionType; labelKey: string }[] = [
 
 export default function AddTransaction() {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const editId = params.get('id');
@@ -123,7 +125,7 @@ export default function AddTransaction() {
 
   const onDelete = async () => {
     if (!editId) return;
-    if (!confirm(t('fin.tx.deleteConfirm'))) return;
+    if (!(await confirm({ message: t('fin.tx.deleteConfirm') }))) return;
     await deleteTransaction(editId);
     navigate('/finance');
   };

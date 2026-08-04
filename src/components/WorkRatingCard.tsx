@@ -13,11 +13,12 @@
 // inline note that collapses when empty.
 
 import { useEffect, useRef, useState } from 'react';
+import { weekdayNames } from '../utils/formatters';
 import { useWorkQualityStore, todayKey } from '../store/useWorkQualityStore';
 import { useLifeProfileStore } from '../store/useLifeProfileStore';
 
 const NOTE_MAX = 120;
-const DAY_LABEL = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
 
 export default function WorkRatingCard() {
   const workWeight = useLifeProfileStore((s) => s.profile.domains.work);
@@ -76,7 +77,7 @@ export default function WorkRatingCard() {
           {rating > 0 ? 'Work today — tap to change' : 'How was work today?'}
         </span>
         <span className="text-[10px] uppercase tracking-wider text-text-muted">
-          {DAY_LABEL[dow]}
+          {weekdayNames('short')[dow]}
         </span>
       </div>
 

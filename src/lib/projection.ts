@@ -13,14 +13,14 @@
 //     predicting any specific year.
 //   - Taxes and fees aren't modeled. Real-world returns are lower.
 
-export interface ProjectionPoint {
+interface ProjectionPoint {
   yearIndex: number;       // 0 = today, 1 = 1 year from now, …
   date: Date;              // exact date for this snapshot (anniversary of today)
   balanceNominal: number;  // raw projected balance in input currency
   balanceReal: number;     // same balance deflated by inflation (today's money)
 }
 
-export interface ProjectionInput {
+interface ProjectionInput {
   startingBalance: number;
   monthlyContribution: number;
   annualReturnRate: number; // 0.07 = 7%
@@ -28,7 +28,7 @@ export interface ProjectionInput {
   annualInflationRate: number; // 0.02 = 2% default; used only for `balanceReal`
 }
 
-export interface ProjectionResult {
+interface ProjectionResult {
   points: ProjectionPoint[];
   // Convenience: the final point for quick "in X years you have €Y" display.
   finalNominal: number;

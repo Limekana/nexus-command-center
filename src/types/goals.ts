@@ -35,7 +35,7 @@ export const GOAL_TYPES: readonly GoalType[] = [
 
 // Cumulative goal types accumulate events since startDate. Absolute goal
 // types reach a snapshot value (independent of startDate).
-export const CUMULATIVE_GOAL_TYPES: readonly GoalType[] = [
+const CUMULATIVE_GOAL_TYPES: readonly GoalType[] = [
   'task_count',
   'workout_count',
   'study_hours',

@@ -17,10 +17,105 @@ export type DomainKey = (typeof DOMAIN_KEYS)[number];
 
 export type LifeProfilePreset = 'student' | 'professional' | 'custom';
 
+/** One baseline setting, effective from a week-start key (`YYYY-MM-DD`). */
+export interface WeeklyTargetRule {
+  /** Week-start key this baseline takes effect from, inclusive. */
+  from: string;
+  target: number;
+}
+
 export interface LifeProfile {
   preset: LifeProfilePreset;
   /** weight 0–100 per domain; 0 = excluded. Enabled weights sum to 100. */
   domains: Record<DomainKey, number>;
+  /**
+   * v1.9 (Item 3) — workouts/week the fitness sub-score aims at, as a *history*
+   * rather than one number, ascending by `from`.
+   *
+   * A single mutable number would have rewritten the past: raise your target
+   * from 3 to 5 and every closed week silently re-scores against 5, so a week
+   * you finished on target drops to 60. `crossDomainSignals` states the rule
+   * this has to obey — "history must not drift" — so each change appends an
+   * entry instead, and a week is always scored against the baseline that was
+   * in force while it was being lived.
+   *
+   * Empty/absent means the pre-v1.9 default of 3 for every week, so existing
+   * profiles keep scoring exactly as they did.
+   */
+  weeklyTargets?: WeeklyTargetRule[];
+  /**
+   * Per-week exceptions keyed by week-start, for weeks the baseline shouldn't
+   * judge — illness, injury, travel. Beats the baseline for that week only.
+   */
+  weeklyTargetOverrides?: Record<string, number>;
+}
+
+/** Pre-v1.9 hardcoded value. Still the default when nothing has been set. */
+export const DEFAULT_WEEKLY_WORKOUT_TARGET = 3;
+export const MIN_WEEKLY_WORKOUT_TARGET = 1;
+/** Two a day, every day, is already past anything the score can usefully rank. */
+export const MAX_WEEKLY_WORKOUT_TARGET = 14;
+
+function clampTarget(n: unknown): number | null {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return null;
+  return Math.min(MAX_WEEKLY_WORKOUT_TARGET, Math.max(MIN_WEEKLY_WORKOUT_TARGET, Math.round(v)));
+}
+
+/**
+ * The workout target in force for `weekKey`: a per-week override if one exists,
+ * otherwise the newest baseline that had taken effect by then, otherwise the
+ * pre-v1.9 default.
+ */
+export function weeklyTargetFor(profile: LifeProfile | undefined, weekKey: string): number {
+  if (!profile) return DEFAULT_WEEKLY_WORKOUT_TARGET;
+  const override = profile.weeklyTargetOverrides?.[weekKey];
+  const clampedOverride = override === undefined ? null : clampTarget(override);
+  if (clampedOverride !== null) return clampedOverride;
+  // Rules are kept sorted ascending, so the last one that has taken effect by
+  // `weekKey` wins. Keys are `YYYY-MM-DD`, where lexical order is chronological.
+  let current = DEFAULT_WEEKLY_WORKOUT_TARGET;
+  for (const rule of profile.weeklyTargets ?? []) {
+    if (rule.from <= weekKey) current = rule.target;
+    else break;
+  }
+  return current;
+}
+
+/** The baseline in force right now — what Settings shows and edits. */
+export function currentWeeklyTarget(profile: LifeProfile | undefined): number {
+  const rules = profile?.weeklyTargets ?? [];
+  return rules.length ? rules[rules.length - 1].target : DEFAULT_WEEKLY_WORKOUT_TARGET;
+}
+
+/**
+ * Set the baseline from `fromWeekKey` forward, leaving earlier weeks alone.
+ *
+ * Replaces rather than appends when a rule already starts at that same week, so
+ * changing your mind twice in one week doesn't grow the list.
+ */
+export function withWeeklyTarget(
+  profile: LifeProfile,
+  target: number,
+  fromWeekKey: string,
+): LifeProfile {
+  const clamped = clampTarget(target) ?? DEFAULT_WEEKLY_WORKOUT_TARGET;
+  const rules = (profile.weeklyTargets ?? []).filter((r) => r.from !== fromWeekKey);
+  rules.push({ from: fromWeekKey, target: clamped });
+  rules.sort((a, b) => a.from.localeCompare(b.from));
+  return { ...profile, weeklyTargets: rules };
+}
+
+/** Set (or, with `null`, clear) the exception for one week. */
+export function withWeeklyTargetOverride(
+  profile: LifeProfile,
+  weekKey: string,
+  target: number | null,
+): LifeProfile {
+  const next = { ...(profile.weeklyTargetOverrides ?? {}) };
+  if (target === null) delete next[weekKey];
+  else next[weekKey] = clampTarget(target) ?? DEFAULT_WEEKLY_WORKOUT_TARGET;
+  return { ...profile, weeklyTargetOverrides: next };
 }
 
 /** A custom profile must keep at least this many domains enabled… */
@@ -28,20 +123,12 @@ export const MIN_ENABLED_DOMAINS = 2;
 /** …and no enabled domain may drop below this weight. */
 export const MIN_DOMAIN_WEIGHT = 5;
 
-export const DOMAIN_LABELS: Record<DomainKey, string> = {
-  finance: 'Finance',
-  fitness: 'Fitness',
-  studies: 'Studies',
-  work: 'Work',
-  habits: 'Habits',
-};
-
 export const STUDENT_PROFILE: LifeProfile = {
   preset: 'student',
   domains: { finance: 25, fitness: 25, studies: 25, work: 0, habits: 25 },
 };
 
-export const PROFESSIONAL_PROFILE: LifeProfile = {
+const PROFESSIONAL_PROFILE: LifeProfile = {
   preset: 'professional',
   domains: { finance: 25, fitness: 25, studies: 0, work: 25, habits: 25 },
 };
@@ -58,7 +145,7 @@ export function totalWeight(p: LifeProfile): number {
   return DOMAIN_KEYS.reduce((sum, k) => sum + (p.domains[k] ?? 0), 0);
 }
 
-export interface ProfileValidation {
+interface ProfileValidation {
   valid: boolean;
   error?: string;
 }
@@ -101,9 +188,37 @@ export function sanitiseLifeProfile(raw: unknown): LifeProfile {
     const n = Number(src[k]);
     domains[k] = Number.isFinite(n) ? Math.min(100, Math.max(0, Math.round(n))) : 0;
   }
-  const candidate: LifeProfile = { preset, domains };
+  // v1.9 — the workout-target fields are rebuilt here too. This function
+  // constructs a fresh object rather than spreading `obj`, so anything not
+  // named explicitly is silently dropped on every load; leaving these out
+  // would have wiped the user's target the first time their profile synced.
+  const rawRules = Array.isArray(obj.weeklyTargets) ? obj.weeklyTargets : [];
+  const weeklyTargets: WeeklyTargetRule[] = rawRules
+    .map((r) => {
+      const from = (r as Partial<WeeklyTargetRule>)?.from;
+      const target = clampTarget((r as Partial<WeeklyTargetRule>)?.target);
+      return typeof from === 'string' && WEEK_KEY_RE.test(from) && target !== null
+        ? { from, target }
+        : null;
+    })
+    .filter((r): r is WeeklyTargetRule => r !== null)
+    .sort((a, b) => a.from.localeCompare(b.from));
+
+  const weeklyTargetOverrides: Record<string, number> = {};
+  const rawOverrides = (obj.weeklyTargetOverrides ?? {}) as Record<string, unknown>;
+  if (rawOverrides && typeof rawOverrides === 'object') {
+    for (const [k, v] of Object.entries(rawOverrides)) {
+      const target = clampTarget(v);
+      if (WEEK_KEY_RE.test(k) && target !== null) weeklyTargetOverrides[k] = target;
+    }
+  }
+
+  const candidate: LifeProfile = { preset, domains, weeklyTargets, weeklyTargetOverrides };
   return validateLifeProfile(candidate).valid ? candidate : clone(STUDENT_PROFILE);
 }
+
+/** Week-start keys are `YYYY-MM-DD`; anything else is not ours and is dropped. */
+const WEEK_KEY_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 // ─── Auto-balance (Custom configurator) ──────────────────────────────────
 

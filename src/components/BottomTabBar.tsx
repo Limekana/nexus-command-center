@@ -16,29 +16,40 @@
 //     absolutely positioned over the tab grid and transitions its
 //     transform/width via the spring-soft timing. No JS measurement; we
 //     compute the pill's flex offset from the active tab index.
-//   - Icon glyphs grow ~10% on the active tab via .scale-110 for tactile
-//     feedback. Combined with the cyan accent + pill backdrop, the selected
-//     state is unmistakable without lighting up the whole bar.
+//   - Icons grow ~10% on the active tab for tactile feedback. Combined with
+//     the cyan accent + pill backdrop, the selected state is unmistakable
+//     without lighting up the whole bar.
 //   - Tab labels stay 11px (UI/UX review v1.1 #4 settled this).
+//
+// v1.9 (Item 6) — the four emoji glyphs (⊞ 💰 ◎ ✅) are gone. Two were
+// geometric symbols and two were full-colour emoji, so the row mixed a
+// monochrome accent with vendor artwork that renders differently on every
+// device and ignores the cyan accent entirely. Replaced with lucide line
+// icons at the same size and stroke weight LimeLog uses, which is the
+// treatment the suite is converging on.
 
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { LayoutGrid, Wallet, Activity, ListChecks, type LucideIcon } from 'lucide-react';
 
 interface Tab {
   to: string;
   labelKey: string;
-  icon: string;
+  Icon: LucideIcon;
   match: (p: string) => boolean;
 }
 
 const tabs: Tab[] = [
-  { to: '/', labelKey: 'nav.home', icon: '⊞', match: (p) => p === '/' },
-  { to: '/finance', labelKey: 'nav.finance', icon: '💰', match: (p) => p === '/finance' || p.startsWith('/finance/') },
+  { to: '/', labelKey: 'nav.home', Icon: LayoutGrid, match: (p) => p === '/' },
+  { to: '/finance', labelKey: 'nav.finance', Icon: Wallet, match: (p) => p === '/finance' || p.startsWith('/finance/') },
   // v1.3 scope reduction — Studies + Fitness tabs removed (their dedicated
   // screens were retired). Life is promoted to a primary tab; it surfaces
   // the cross-domain life score those domains now feed as signals.
-  { to: '/life', labelKey: 'nav.life', icon: '◎', match: (p) => p === '/life' },
-  { to: '/tasks', labelKey: 'nav.tasks', icon: '✅', match: (p) => p === '/tasks' || p.startsWith('/tasks/') },
+  //
+  // Activity (the pulse line) rather than a heart: Life is a composite score
+  // across four domains, not a health metric.
+  { to: '/life', labelKey: 'nav.life', Icon: Activity, match: (p) => p === '/life' },
+  { to: '/tasks', labelKey: 'nav.tasks', Icon: ListChecks, match: (p) => p === '/tasks' || p.startsWith('/tasks/') },
 ];
 
 export default function BottomTabBar() {
@@ -65,7 +76,7 @@ export default function BottomTabBar() {
             <span
               data-active-pill
               aria-hidden
-              className="absolute top-1.5 bottom-1.5 left-1.5 rounded-pill pointer-events-none transition-transform duration-300 ease-spring-soft"
+              className="absolute top-1.5 bottom-1.5 start-1.5 rounded-pill pointer-events-none transition-transform duration-300 ease-spring-soft"
               style={{
                 // 4 tabs evenly fill the inner space (width minus left+right
                 // 1.5 padding on the .glass-strong). Each tab occupies 1/4 of
@@ -78,7 +89,7 @@ export default function BottomTabBar() {
             />
           )}
           <div className="relative flex items-stretch">
-            {tabs.map((tab) => {
+            {tabs.map(({ Icon, ...tab }) => {
               const isActive = tab.match(pathname);
               return (
                 <button
@@ -92,11 +103,11 @@ export default function BottomTabBar() {
                   }`}
                 >
                   <span
-                    className={`text-lg leading-none transition-transform duration-300 ease-spring ${
+                    className={`leading-none transition-transform duration-300 ease-spring ${
                       isActive ? 'scale-110' : 'scale-100'
                     }`}
                   >
-                    {tab.icon}
+                    <Icon size={20} strokeWidth={1.75} aria-hidden="true" />
                   </span>
                   <span className="text-[11px] font-medium tracking-wide leading-tight">{t(tab.labelKey)}</span>
                 </button>

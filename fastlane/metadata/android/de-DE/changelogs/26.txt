@@ -1,0 +1,1 @@
+Schriftarten werden jetzt mit der App ausgeliefert, statt zur Laufzeit von Google Fonts geladen zu werden. Die Oberfläche wird auch ohne Netzwerkverbindung korrekt dargestellt, und für Typografie verlässt keine Anfrage dein Gerät. Sonst keine Verhaltensänderung gegenüber 1.7.1.

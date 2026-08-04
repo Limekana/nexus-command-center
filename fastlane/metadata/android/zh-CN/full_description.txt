@@ -7,6 +7,6 @@ Nexus Command Center 是 Limecore 套件的核心 —— 一个个人生活仪�
 * 可配置的生活档案与目标
 * 含热力图的每周与年度回顾
 
-本地优先，数据存储在设备上；可选的账户云同步。无 Google Play 服务，无 Firebase —— Google 登录采用普通的网页 OAuth 流程。第三方行情数据（Finnhub、CoinGecko、Yahoo、欧洲央行）以及可选的 AI 功能均为用户主动发起的 HTTPS 请求。
+本地优先，数据存储在设备上；可选的账户云同步。无 Google Play 服务，无 Firebase —— Google 登录采用普通的网页 OAuth 流程。第三方行情数据以及可选的 AI 功能均为用户主动发起的 HTTPS 请求。行情数据来源：Finnhub、CoinGecko、Yahoo Finance、欧洲央行、CNN Business（production.dataviz.cnn.io，提供恐慌与贪婪指数）以及 ExchangeRate-API（open.er-api.com，提供汇率）。
 
-提供英语、芬兰语、法语、德语、西班牙语和中文。
+提供英语、芬兰语、法语、德语、西班牙语、中文、印地语、葡萄牙语、印尼语和阿拉伯语。

@@ -1,0 +1,1 @@
+Uudet kuvakkeet alapalkkiin. Uuden tilin voi nyt vahvistaa sähköpostin koodilla pelkän linkin sijaan. Aseta oma viikoittainen treenitavoite ja tee siihen viikkokohtaisia poikkeuksia lomien tai sairastelun ajaksi. Asetuksissa on linkki, jos haluat tukea kehitystä.

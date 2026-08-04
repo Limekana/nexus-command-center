@@ -7,21 +7,17 @@
 // deposit to cover. Self-contained: reads + writes the finance store directly.
 
 import { useMemo, useState } from 'react';
+import { formatMoney } from '../lib/currencies';
+import { formatLocale } from '../utils/formatters';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { portfolioCashBalance } from '../lib/portfolioCash';
 import type { ManualAssetType } from '../types/finance';
 
-const CURRENCY_SYMBOL: Record<string, string> = {
-  EUR: '€', USD: '$', GBP: '£', SEK: 'kr', NOK: 'kr', DKK: 'kr', CHF: 'Fr', JPY: '¥',
-};
 const LIQUID_TYPES: ManualAssetType[] = ['cash', 'savings', 'checking'];
 
 function fmt(amount: number, currency: string): string {
-  const sym = CURRENCY_SYMBOL[currency.toUpperCase()] ?? '';
-  const isSuffix = ['kr', 'Fr'].includes(sym);
-  const num = Math.abs(amount).toLocaleString('fi-FI', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-  const body = isSuffix ? `${num} ${sym}` : sym ? `${sym}${num}` : `${num} ${currency}`;
+  const body = formatMoney(amount, currency, { locale: formatLocale(), signed: false });
   return amount < 0 ? `−${body}` : body;
 }
 

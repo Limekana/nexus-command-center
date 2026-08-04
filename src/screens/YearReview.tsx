@@ -7,6 +7,7 @@
 // glance — 365 cells per module, plus the totals at the top.
 
 import { useMemo, useState } from 'react';
+import { formatLocale } from '../utils/formatters';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AppHeader from '../components/AppHeader';
@@ -26,7 +27,7 @@ const TONE_STYLES = {
 
 function formatDateRange(start: Date, end: Date): string {
   const fmt = (d: Date) =>
-    new Intl.DateTimeFormat('fi-FI', { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
+    new Intl.DateTimeFormat(formatLocale(), { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
   return `${fmt(start)} → ${fmt(end)}`;
 }
 
@@ -71,7 +72,7 @@ export default function YearReview() {
   );
 
   const fmtMoney = (n: number) =>
-    new Intl.NumberFormat('fi-FI', {
+    new Intl.NumberFormat(formatLocale(), {
       style: 'currency',
       currency: baseCurrency,
       maximumFractionDigits: 0,
@@ -127,7 +128,7 @@ export default function YearReview() {
         {/* Finance */}
         <button
           onClick={() => navigate('/finance')}
-          className="card text-left w-full active:bg-surface2/40"
+          className="card text-start w-full active:bg-surface2/40"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="font-heading font-semibold text-sm">💰 {t('yearReview.finance')}</span>
@@ -150,7 +151,7 @@ export default function YearReview() {
               {topCategoryNames.map((c, i) => (
                 <div key={i} className="flex items-center justify-between text-xs">
                   <span className="truncate">{c.name}</span>
-                  <span className="text-text-muted whitespace-nowrap ml-2">{fmtMoney(c.total)}</span>
+                  <span className="text-text-muted whitespace-nowrap ms-2">{fmtMoney(c.total)}</span>
                 </div>
               ))}
             </div>
@@ -212,7 +213,7 @@ export default function YearReview() {
               {data.fitness.topExercises.map((ex, i) => (
                 <div key={i} className="flex items-center justify-between text-xs">
                   <span className="truncate">{ex.exercise}</span>
-                  <span className="text-text-muted whitespace-nowrap ml-2">{ex.sets} {t('yearReview.sets').toLowerCase()}</span>
+                  <span className="text-text-muted whitespace-nowrap ms-2">{ex.sets} {t('yearReview.sets').toLowerCase()}</span>
                 </div>
               ))}
             </div>
@@ -222,7 +223,7 @@ export default function YearReview() {
         {/* Tasks */}
         <button
           onClick={() => navigate('/tasks')}
-          className="card text-left w-full active:bg-surface2/40"
+          className="card text-start w-full active:bg-surface2/40"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="font-heading font-semibold text-sm">✓ {t('yearReview.tasks')}</span>

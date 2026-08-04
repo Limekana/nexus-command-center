@@ -31,7 +31,7 @@ export function startOfWeek(d: Date = new Date()): Date {
 }
 
 /** Sunday 23:59:59.999 local for the same week. */
-export function endOfWeek(weekStart: Date): Date {
+function endOfWeek(weekStart: Date): Date {
   const x = new Date(weekStart);
   x.setDate(x.getDate() + 6);
   x.setHours(23, 59, 59, 999);
@@ -70,7 +70,7 @@ function deltaLabel(current: number, prior: number, kind: 'count' | 'pct' = 'cou
 // Per-module aggregations
 // ───────────────────────────────────────────────────────────────────────────
 
-export interface FinanceWeekly {
+interface FinanceWeekly {
   spend: number;
   income: number;
   txCount: number;
@@ -80,7 +80,7 @@ export interface FinanceWeekly {
   priorSpend: number;
 }
 
-export function aggregateFinance(
+function aggregateFinance(
   transactions: Transaction[],
   weekStart: Date,
 ): FinanceWeekly {
@@ -129,14 +129,14 @@ export function aggregateFinance(
   };
 }
 
-export interface StudiesWeekly {
+interface StudiesWeekly {
   studyMinutes: number;
   sessionCount: number;
   gpa: number | null;
   minutesDelta: string;
 }
 
-export function aggregateStudies(
+function aggregateStudies(
   courses: Course[],
   sessions: StudySession[],
   weekStart: Date,
@@ -166,7 +166,7 @@ export function aggregateStudies(
   };
 }
 
-export interface FitnessWeekly {
+interface FitnessWeekly {
   workoutCount: number;
   totalSets: number;
   totalVolumeKg: number;
@@ -175,7 +175,7 @@ export interface FitnessWeekly {
   workoutsDelta: string;
 }
 
-export function aggregateFitness(
+function aggregateFitness(
   sessions: (WorkoutSession & { sets: WorkoutSet[] })[],
   weekStart: Date,
 ): FitnessWeekly {
@@ -222,7 +222,7 @@ export function aggregateFitness(
   };
 }
 
-export interface TasksWeekly {
+interface TasksWeekly {
   completed: number;
   created: number;
   stillOpen: number;
@@ -230,7 +230,7 @@ export interface TasksWeekly {
   completedDelta: string;
 }
 
-export function aggregateTasks(tasks: Task[], weekStart: Date): TasksWeekly {
+function aggregateTasks(tasks: Task[], weekStart: Date): TasksWeekly {
   const weekEnd = endOfWeek(weekStart);
   const prior = priorWeek(weekStart);
   const now = new Date();
@@ -264,12 +264,12 @@ export function aggregateTasks(tasks: Task[], weekStart: Date): TasksWeekly {
 // Cross-module insight synthesis
 // ───────────────────────────────────────────────────────────────────────────
 
-export interface WeeklyInsight {
+interface WeeklyInsight {
   text: string;
   tone: 'positive' | 'warn' | 'neutral';
 }
 
-export interface WeeklyReviewData {
+interface WeeklyReviewData {
   weekStart: Date;
   weekEnd: Date;
   finance: FinanceWeekly;
@@ -372,18 +372,3 @@ export function buildWeeklyReview(args: {
 // Notification payload formatter
 // ───────────────────────────────────────────────────────────────────────────
 
-/**
- * One-line summary used in the Sunday push body. Picks the most "newsworthy"
- * metric across modules so the user sees something specific, not "your
- * weekly review is ready" — which is generic and dismissable.
- */
-export function notificationBody(d: WeeklyReviewData): string {
-  const bits: string[] = [];
-  if (d.fitness.workoutCount > 0) bits.push(`${d.fitness.workoutCount} workouts`);
-  if (d.tasks.completed > 0) bits.push(`${d.tasks.completed} tasks done`);
-  if (d.studies.studyMinutes >= 60) {
-    bits.push(`${Math.round(d.studies.studyMinutes / 60)}h studied`);
-  }
-  if (bits.length === 0) return 'Tap to open this week’s review.';
-  return bits.slice(0, 3).join(' · ');
-}

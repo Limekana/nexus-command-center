@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useConfirm } from '../components/ConfirmDialog';
+import { currencyOptions } from '../lib/currencies';
+import { formatLocale } from '../utils/formatters';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { setLanguage, SUPPORTED_LANGS, LANGUAGE_NAMES, type Lang } from '../i18n';
+import { type Lang } from '../i18n';
+import LanguageGrid from '../components/LanguageGrid';
 import AppHeader from '../components/AppHeader';
 import ListRow from '../components/ListRow';
 import { useLifeProfileStore } from '../store/useLifeProfileStore';
@@ -13,6 +17,7 @@ import { useSyncStore } from '../store/useSyncStore';
 import { useSessionStore, userDisplayName } from '../store/useSessionStore';
 import { useSettingsStore, SUPPORTED_CURRENCIES, BaseCurrency } from '../store/useSettingsStore';
 import { clearAllLocalData } from '../db/database';
+import { downloadExport, deleteAccount } from '../lib/dataRights';
 import { getApiKey, setApiKey, clearApiKey, maskKey } from '../api/keys';
 import { allBudgetStats, type BudgetStats } from '../api/cache';
 import { biometricCapability } from '../utils/biometric';
@@ -36,6 +41,7 @@ import { setGuestMode } from '../lib/guestMode';
 const autoLockOptions = [1, 5, 15, 30, 60];
 
 export default function Settings() {
+  const confirm = useConfirm();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const currentLang = (i18n.language || 'en').split('-')[0] as Lang;
@@ -65,6 +71,8 @@ export default function Settings() {
   const setNotifPortfolioEodEnabled = useSettingsStore((s) => s.setNotifPortfolioEodEnabled);
   const notifNewsEnabled = useSettingsStore((s) => s.notifNewsEnabled);
   const setNotifNewsEnabled = useSettingsStore((s) => s.setNotifNewsEnabled);
+  const aiEnabled = useSettingsStore((s) => s.aiEnabled);
+  const setAiEnabled = useSettingsStore((s) => s.setAiEnabled);
   const notifMacroKeywordsEnabled = useSettingsStore((s) => s.notifMacroKeywordsEnabled);
   const setNotifMacroKeywordsEnabled = useSettingsStore((s) => s.setNotifMacroKeywordsEnabled);
   const [notifAvailable, setNotifAvailable] = useState(false);
@@ -89,6 +97,9 @@ export default function Settings() {
   const [bioReason, setBioReason] = useState('');
   const [signOutOpen, setSignOutOpen] = useState(false);
   const [signOutBusy, setSignOutBusy] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [dataMsg, setDataMsg] = useState<string | null>(null);
 
   useEffect(() => {
     // Read both slots separately (getApiKey('finnhub') without the slot name
@@ -128,14 +139,14 @@ export default function Settings() {
   };
 
   const onClearKey = async (slot: 'finnhub' | 'finnhub2') => {
-    if (!confirm(t('settings.clearKeyConfirm'))) return;
+    if (!(await confirm({ message: t('settings.clearKeyConfirm') }))) return;
     await clearApiKey(slot);
     if (slot === 'finnhub') setFinnhubKey('');
     else setFinnhubKey2('');
   };
 
   const onClearAll = async () => {
-    if (!confirm(t('settings.clearAllConfirm'))) return;
+    if (!(await confirm({ message: t('settings.clearAllConfirm') }))) return;
     // PIN re-entry gate. Without this, briefly-unlocked devices left in
     // someone else's hands could be nuked by a single tap. We require the PIN
     // even though the user has already unlocked the app in this session.
@@ -173,6 +184,43 @@ export default function Settings() {
     }
   };
 
+  // ── GDPR Art. 20 — portability ────────────────────────────────────────────
+  const onExport = async () => {
+    setDataMsg(null);
+    setExporting(true);
+    try {
+      const name = await downloadExport(user ? { id: user.id, email: user.email } : null);
+      setDataMsg(t('settings.exportDone', { name }));
+    } catch (e) {
+      setDataMsg(t('settings.exportFailed', { msg: (e as Error).message }));
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // ── GDPR Art. 17 — erasure ────────────────────────────────────────────────
+  // Two confirmations, because this is irreversible, there is no recovery
+  // window, and one account spans all three apps — so this erases LimeLog and
+  // StudyDesk data too, which the second confirmation says explicitly.
+  const onDeleteAccount = async () => {
+    if (!(await confirm({ message: t('settings.deleteAccountConfirm1') }))) return;
+    if (!(await confirm({ message: t('settings.deleteAccountConfirm2') }))) return;
+    setDataMsg(null);
+    setDeleting(true);
+    try {
+      await deleteAccount({
+        clearLocal: async () => {
+          await clearAllLocalData();
+          localStorage.clear();
+        },
+      });
+      location.reload();
+    } catch (e) {
+      setDataMsg(t('settings.deleteAccountFailed', { msg: (e as Error).message }));
+      setDeleting(false);
+    }
+  };
+
   const onChangePassword = async () => {
     if (!user?.email) return;
     const { error } = await supabase.auth.resetPasswordForEmail(user.email);
@@ -185,7 +233,7 @@ export default function Settings() {
 
   const onForceResync = async () => {
     if (!user) return;
-    if (!confirm(t('settings.forceResyncConfirm'))) return;
+    if (!(await confirm({ message: t('settings.forceResyncConfirm') }))) return;
     const { adoptLocalData } = await import('../lib/cloudSync');
     await adoptLocalData(user.id);
     await refreshPending();
@@ -193,7 +241,7 @@ export default function Settings() {
   };
 
   const lastSyncDisplay = lastSyncedAt
-    ? new Intl.DateTimeFormat('fi-FI', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }).format(new Date(lastSyncedAt))
+    ? new Intl.DateTimeFormat(formatLocale(), { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }).format(new Date(lastSyncedAt))
     : '—';
 
   return (
@@ -269,7 +317,7 @@ export default function Settings() {
               <div className="text-[10px] text-text-muted">{t('settings.autoLockSub')}</div>
             </div>
             <select
-              className="input max-w-[120px] py-2"
+              className="input max-w-[220px] py-2"
               value={autoLock}
               onChange={(e) => setAutoLock(Number(e.target.value))}
             >
@@ -355,18 +403,89 @@ export default function Settings() {
               value={baseCurrency}
               onChange={(e) => setBaseCurrency(e.target.value as BaseCurrency)}
             >
-              {SUPPORTED_CURRENCIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
+              {currencyOptions(formatLocale()).map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.label}
                 </option>
               ))}
             </select>
           </div>
         </Section>
 
+        <Section title={t('settings.privacy')}>
+          {/* Master switch for the cloud AI features. Off by default: the Life
+              narrative previously generated on arrival at the tab, so "opt-in"
+              was only true of the other two apps in the suite. */}
+          <Toggle
+            label={t('settings.aiFeatures')}
+            sub={aiEnabled ? t('settings.aiFeaturesOnSub') : t('settings.aiFeaturesOffSub')}
+            value={aiEnabled}
+            onChange={setAiEnabled}
+          />
+          {/* Free-tier disclosure. Consent has to be informed where it is
+              given, so this sits on the switch and not only in the policy. */}
+          <div className="text-[10px] text-text-muted px-1 pb-1 leading-relaxed">
+            {t('settings.aiTrainingNote')}
+          </div>
+          <a
+            className="py-2 flex items-center justify-between gap-3 active:opacity-80"
+            href="https://limekana.github.io/nexus-command-center/legal/privacy.html"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <div className="min-w-0">
+              <div className="text-sm">{t('settings.privacyPolicy')}</div>
+              <div className="text-[10px] text-text-muted">{t('settings.privacyPolicySub')}</div>
+            </div>
+            <span className="text-primary text-lg flex-shrink-0">›</span>
+          </a>
+        </Section>
+
+        {/* ── Your data — GDPR Art. 17 / 20 ──────────────────────────────
+             Buttons rather than a "write to us" address: a right the user has
+             to request is a right most of them never exercise. */}
+        <Section title={t('settings.yourData')}>
+          <div className="text-[10px] text-text-muted px-1 pb-2 leading-relaxed">
+            {t('settings.yourDataNote')}
+          </div>
+          <button className="btn-ghost w-full" onClick={onExport} disabled={exporting}>
+            {exporting ? t('settings.exporting') : t('settings.exportData')}
+          </button>
+          <button
+            className="btn-ghost w-full mt-2 text-danger border-danger/40"
+            onClick={onDeleteAccount}
+            disabled={deleting}
+          >
+            {deleting ? t('settings.deletingAccount') : t('settings.deleteAccount')}
+          </button>
+          <div className="text-[10px] text-text-muted px-1 pt-2 leading-relaxed">
+            {t('settings.deleteAccountNote')}
+          </div>
+          {dataMsg && <div className="text-[10px] text-warning mt-1 px-1">{dataMsg}</div>}
+        </Section>
+
+        {/* ── Support ────────────────────────────────────────────────────
+             A link out, nothing more. No entitlements, no supporter-only
+             features, no webhook — so nothing here can gate the app or
+             change behaviour for someone who doesn't click it. */}
+        <Section title={t('settings.support')}>
+          <a
+            className="py-2 flex items-center justify-between gap-3 active:opacity-80"
+            href="https://ko-fi.com/limecorestudio"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <div className="min-w-0">
+              <div className="text-sm">{t('settings.supportDev')}</div>
+              <div className="text-[10px] text-text-muted">{t('settings.supportDevSub')}</div>
+            </div>
+            <span className="text-primary text-lg flex-shrink-0">›</span>
+          </a>
+        </Section>
+
         <Section title={t('settings.lifeProfile')}>
           <button
-            className="w-full py-2 flex items-center justify-between gap-3 text-left active:opacity-80"
+            className="w-full py-2 flex items-center justify-between gap-3 text-start active:opacity-80"
             onClick={() => navigate('/settings/life-profile')}
           >
             <div className="min-w-0">
@@ -385,22 +504,7 @@ export default function Settings() {
         </Section>
 
         <Section title={t('settings.language')}>
-          <div className="grid grid-cols-2 gap-2">
-            {SUPPORTED_LANGS.map((code) => (
-              <button
-                key={code}
-                onClick={() => setLanguage(code)}
-                aria-pressed={currentLang === code}
-                className={`rounded-lg p-2.5 text-sm border transition-colors text-left ${
-                  currentLang === code
-                    ? 'border-primary bg-primary/10 text-primary font-semibold'
-                    : 'border-glass-border text-text'
-                }`}
-              >
-                {LANGUAGE_NAMES[code]}
-              </button>
-            ))}
-          </div>
+          <LanguageGrid current={currentLang} variant="settings" />
         </Section>
 
         <Section title={t('settings.notifications')}>

@@ -74,7 +74,7 @@ const WEIGHTS: Record<keyof FundamentalBreakdown, number> = {
 
 /** Compose a fundamental rating from an explicit breakdown. Pure — no
  *  fetches. Reusable from the orchestrator and from tests. */
-export function composeFundamentalRating(
+function composeFundamentalRating(
   ticker: string,
   breakdown: FundamentalBreakdown,
 ): FundamentalRating {

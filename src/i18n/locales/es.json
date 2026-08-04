@@ -16,7 +16,12 @@
     "continue": "Continuar",
     "retry": "Reintentar",
     "loading": "Cargando…",
-    "settings": "Ajustes"
+    "settings": "Ajustes",
+    "wipeTestData": "¿Borrar todos los datos de prueba locales? Esto no se puede deshacer.",
+    "revokeAccess": "¿Quitar el acceso de {{name}}?",
+    "thisUser": "este usuario",
+    "deleteTitle": "Eliminar",
+    "deleteItem": "¿Eliminar este elemento?"
   },
   "domains": {
     "lifeScore": "Puntuación de vida",
@@ -30,8 +35,7 @@
     "home": "Inicio",
     "finance": "Finanzas",
     "life": "Vida",
-    "tasks": "Tareas",
-    "growth": "Crecimiento"
+    "tasks": "Tareas"
   },
   "life": {
     "notCountedYet": "Aún no contado",
@@ -51,7 +55,65 @@
     "avgRating": "Prom. {{avg}}/5 · {{count}} {{unit}}",
     "day": "día",
     "days": "días",
-    "per100": "/ 100"
+    "per100": "/ 100",
+    "weekTarget": "Objetivo de esta semana",
+    "weekTargetAdjusted": "Ajustado solo esta semana — lo habitual es {{baseline}}",
+    "weekTargetLess": "Uno menos esta semana",
+    "weekTargetMore": "Uno más esta semana"
+  },
+  "auth": {
+    "signInSubtitle": "Command Center · Iniciar sesión",
+    "firstRunSubtitle": "Finanzas, forma física, estudios y hábitos: una sola puntuación.",
+    "firstRunPromise": "No necesitas cuenta. Empieza ahora y sincroniza después.",
+    "google": "Continuar con Google",
+    "googleOpening": "Abriendo Google…",
+    "useEmail": "Usar correo electrónico",
+    "orUseEmail": "o con correo",
+    "emailLabel": "Correo electrónico",
+    "emailPlaceholder": "tu@ejemplo.com",
+    "passwordLabel": "Contraseña",
+    "signInEmail": "Iniciar sesión con correo",
+    "signingIn": "Iniciando sesión…",
+    "noAccount": "¿No tienes cuenta?",
+    "signUp": "Crear cuenta",
+    "guest": "Continuar como invitado",
+    "guestCaption": "Solo local: sin sincronización entre dispositivos. Puedes iniciar sesión más tarde desde Ajustes.",
+    "createTitle": "Crear cuenta",
+    "fullNameLabel": "Nombre completo",
+    "fullNamePlaceholder": "Tu nombre",
+    "passwordPlaceholder": "Al menos 10 caracteres",
+    "passwordHint": "Necesita mayúsculas y minúsculas, un número y un símbolo.",
+    "confirmPasswordLabel": "Confirmar contraseña",
+    "createAccount": "Crear cuenta",
+    "creatingAccount": "Creando cuenta…",
+    "haveAccount": "¿Ya tienes cuenta?",
+    "signIn": "Iniciar sesión",
+    "checkEmailTitle": "Revisa tu correo",
+    "checkEmailBody": "Enviamos un enlace de confirmación a <1>{{email}}</1>. Haz clic en él y vuelve aquí para iniciar sesión.",
+    "backToSignIn": "Volver a iniciar sesión",
+    "errNameRequired": "Introduce tu nombre.",
+    "errPasswordShort": "La contraseña debe tener al menos 10 caracteres.",
+    "errPasswordWeak": "La contraseña necesita mayúsculas y minúsculas, un número y un símbolo.",
+    "errPasswordMismatch": "Las contraseñas no coinciden.",
+    "errGoogleStart": "No se pudo iniciar el acceso con Google.",
+    "errInvalidCredentials": "Correo o contraseña incorrectos.",
+    "errAlreadyRegistered": "Ya existe una cuenta con ese correo. Prueba a iniciar sesión.",
+    "errWeakPassword": "Elige una contraseña más segura.",
+    "errEmailNotConfirmed": "Confirma primero tu correo: el enlace está en tu bandeja de entrada.",
+    "errRateLimited": "Demasiados intentos. Espera un momento e inténtalo de nuevo.",
+    "errNetwork": "No se pudo conectar con el servidor. Comprueba tu conexión e inténtalo de nuevo.",
+    "ageNote": "Debes tener 16 años o más para crear una cuenta (13 donde la ley local lo permita). Si eres menor, usa el modo invitado: nada sale de tu dispositivo.",
+    "privacyLink": "Política de privacidad",
+    "otpTitle": "Introduce tu código",
+    "otpLabel": "Código de verificación",
+    "otpSubmit": "Confirmar cuenta",
+    "otpHint": "El código es válido durante 60 minutos. El enlace del correo también sigue funcionando.",
+    "otpResend": "Enviar un código nuevo",
+    "otpResendIn": "Enviar un código nuevo en",
+    "otpSent": "Código nuevo enviado.",
+    "errOtp": "Ese código no funcionó. Compruébalo e inténtalo de nuevo.",
+    "errOtpResend": "No se pudo enviar un código nuevo. Inténtalo en un momento.",
+    "errOtpLength": "Ese código parece incompleto. Copia el código entero del correo."
   },
   "onboarding": {
     "welcomeTitle": "Configuremos el sistema de tu vida",
@@ -120,6 +182,13 @@
     "forceResync": "Forzar resincronización de todos los datos locales",
     "forceResyncConfirm": "¿Volver a poner en cola TODOS los datos locales para subirlos a tu cuenta en la nube? Útil si la sincronización se atascó.",
     "preferences": "Preferencias",
+    "privacy": "Privacidad e IA",
+    "aiFeatures": "Funciones de IA",
+    "aiFeaturesOnSub": "Activado: tus puntuaciones semanales se envían a Google Gemini para redactar el resumen de Life.",
+    "aiFeaturesOffSub": "Desactivado: no se envía nada a Google. El resumen de Life está oculto.",
+    "aiTrainingNote": "Google lo ejecuta en su nivel gratuito, así que lo que envíes puede usarse para entrenar sus futuros modelos. Déjalo desactivado si no te convence.",
+    "privacyPolicy": "Política de privacidad",
+    "privacyPolicySub": "Qué guardamos y quién más lo ve",
     "baseCurrency": "Moneda base",
     "baseCurrencySub": "Totales de cartera · tipos de cambio diarios",
     "lifeProfile": "Perfil de vida",
@@ -181,7 +250,22 @@
     "wipeLocalSub": "Recomendado en dispositivos compartidos o prestados.",
     "tagFree": "Gratis",
     "tagFreeFallback": "Gratis · respaldo",
-    "tagSamsung": "Samsung Android"
+    "tagSamsung": "Samsung Android",
+    "yourData": "Tus datos",
+    "yourDataNote": "Llévate una copia de todo o bórralo. Una sola cuenta cubre Nexus Command Center, LimeLog y StudyDesk.",
+    "exportData": "Exportar mis datos",
+    "exporting": "Preparando…",
+    "exportDone": "{{name}} guardado",
+    "exportFailed": "Error al exportar: {{msg}}",
+    "deleteAccount": "Eliminar mi cuenta",
+    "deletingAccount": "Eliminando…",
+    "deleteAccountNote": "Borra tu cuenta y todos sus datos, en las tres apps, de forma inmediata e irreversible. No hay periodo de recuperación.",
+    "deleteAccountConfirm1": "¿Eliminar tu cuenta y todo su contenido? Esto no se puede deshacer.",
+    "deleteAccountConfirm2": "Última comprobación: esto también borra tus datos de LimeLog y StudyDesk. ¿Continuar?",
+    "deleteAccountFailed": "Error al eliminar: {{msg}}",
+    "support": "Apoyo",
+    "supportDev": "Apoya el desarrollo",
+    "supportDevSub": "Invítame a un café en Ko-fi"
   },
   "days": {
     "long": {
@@ -471,7 +555,7 @@
       "editCat": "Editar categoría",
       "newCat": "Nueva categoría",
       "catName": "Nombre de la categoría",
-      "monthlyLimit": "Límite mensual (€)",
+      "monthlyLimit": "Límite mensual ({{symbol}})",
       "icon": "Icono",
       "linkedAccount": "Cuenta vinculada (opcional)",
       "none": "— Ninguna —",
@@ -481,9 +565,10 @@
       "empty": "Aún no hay categorías — toca + Nueva para añadir una",
       "shared": "Compartida",
       "autoUpdates": "Actualiza automáticamente {{name}}",
-      "perMonth": "{{amount}} € / mes",
+      "perMonth": "{{amount}} / mes",
       "deleteConfirm": "¿Eliminar “{{name}}”? Las transacciones etiquetadas perderán la etiqueta.",
-      "shareTitle": "Compartir “{{name}}”"
+      "shareTitle": "Compartir “{{name}}”",
+      "customIcon": "Icono personalizado"
     },
     "ov": {
       "addTransaction": "Añadir transacción",
@@ -517,7 +602,8 @@
       "watchlist": "Lista de seguimiento",
       "watchlistSub": "Valores que sigues pero no posees",
       "insights": "Análisis",
-      "insightsSub": "Señales técnicas + fundamentales"
+      "insightsSub": "Señales técnicas + fundamentales",
+      "holdingsPositions_many": "{{count}} posiciones · toca para gestionar"
     },
     "acctType": {
       "checking": "Cuenta corriente",
@@ -573,7 +659,8 @@
       "fromName": "de {{name}}",
       "fromOther": "de otra cuenta",
       "toName": "a {{name}}",
-      "toOther": "a otra cuenta"
+      "toOther": "a otra cuenta",
+      "unconvertable_many": "{{count}} transacciones no se pudieron convertir a {{cur}}; el saldo puede estar subestimado."
     },
     "assetClass": {
       "stock": "📈 Acción",
@@ -602,7 +689,8 @@
       "empty": "Aún no hay elementos. Toca + Seguir para seguir un ticker sin poseerlo.",
       "targetAboveHit": "Objetivo ≥ alcanzado",
       "targetBelowHit": "Objetivo ≤ alcanzado",
-      "stopWatching": "¿Dejar de seguir {{ticker}}?"
+      "stopWatching": "¿Dejar de seguir {{ticker}}?",
+      "tickers_many": "{{count}} tickers"
     },
     "mh": {
       "title": "Gestionar posiciones",
@@ -662,7 +750,8 @@
       "noQuotes": "Sin cotizaciones — toca ↻ para actualizar",
       "crypto": "Cripto",
       "loadingPrices": "Cargando precios…",
-      "noPrices": "Sin precios — toca ↻ para actualizar"
+      "noPrices": "Sin precios — toca ↻ para actualizar",
+      "fetchErrors_many": "{{count}} errores de obtención"
     },
     "ml": {
       "purchases": "Compras",
@@ -714,7 +803,8 @@
       "computingSignals": "Calculando señales…",
       "emptyUniverse": "Aún no hay posiciones ni tickers en seguimiento. Añade algunos desde Cartera o Lista de seguimiento para ver calificaciones aquí.",
       "nothingIn": "Nada en {{filter}}.",
-      "composite": "Compuesto {{score}}"
+      "composite": "Compuesto {{score}}",
+      "skipped_many": "{{count}} tickers omitidos"
     },
     "wi": {
       "title": "¿Y si?",
@@ -803,7 +893,8 @@
       "delete": "Eliminar",
       "add": "Añadir",
       "set": "Fijar",
-      "amountIn": "Importe en {{cur}}"
+      "amountIn": "Importe en {{cur}}",
+      "unconvertable_many": "{{count}} elementos no se pudieron convertir a {{cur}} (falta tipo de cambio)."
     }
   },
   "lifeProfile": {
@@ -823,7 +914,11 @@
     "footer": "Un perfil personalizado necesita al menos {{min}} áreas, cada una al menos {{weight}} %. Los pesos se reequilibran automáticamente hasta sumar 100 %.",
     "enabled": "activado",
     "disabled": "desactivado",
-    "weightAria": "peso de {{domain}}"
+    "weightAria": "peso de {{domain}}",
+    "workoutTarget": "Entrenamientos por semana",
+    "workoutTargetSub": "Tu objetivo normal. Se aplica desde esta semana; las anteriores mantienen el suyo.",
+    "workoutTargetLess": "Uno menos",
+    "workoutTargetMore": "Uno más"
   },
   "weeklyReview": {
     "title": "Resumen semanal",
@@ -881,36 +976,6 @@
     "created": "Creadas",
     "footerRolling": "Esta es una ventana {{word}} de 12 meses — retrocede el ancla mes a mes para ver cualquier tramo de 12 meses de tu historial.",
     "rollingWord": "móvil"
-  },
-  "growth": {
-    "title": "Crecimiento",
-    "habits": "Hábitos",
-    "reading": "Lectura",
-    "doneOfTotal": "{{done}}/{{total}} hoy",
-    "noHabitsToday": "Nada hoy",
-    "habitsEmpty": "Aún no hay hábitos: crea uno para empezar una racha.",
-    "openHabits": "Abrir hábitos",
-    "openReading": "Abrir lectura",
-    "add": "Añadir",
-    "addBook": "Añadir libro",
-    "editBook": "Editar libro",
-    "readingNone": "Aún no hay libros",
-    "readingCounts": "{{reading}} leyendo · {{want}} por leer · {{finished}} terminados",
-    "readingEmpty": "Añade un libro para empezar a registrar tu lectura.",
-    "readingEmptyTitle": "Tu lista de lectura está vacía",
-    "bookTitle": "Título",
-    "bookTitlePlaceholder": "Título del libro",
-    "author": "Autor",
-    "authorPlaceholder": "Opcional",
-    "status": "Estado",
-    "currentPage": "Página actual",
-    "totalPages": "Páginas totales",
-    "save": "Guardar",
-    "delete": "Eliminar",
-    "deleteConfirm": "¿Quitar este libro de tu lista de lectura?",
-    "statusWant": "Por leer",
-    "statusReading": "Leyendo",
-    "statusFinished": "Terminado"
   },
   "markets": {
     "updated": "Actualizado {{time}}",

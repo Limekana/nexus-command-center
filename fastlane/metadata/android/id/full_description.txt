@@ -1,0 +1,10 @@
+Nexus Command Center adalah pusat rangkaian Limecore — dasbor kehidupan pribadi yang menggabungkan lima bidang (Keuangan, Kebugaran, Belajar, Kerja, Kebiasaan) menjadi satu Life Score.
+
+Fitur:
+* Anggaran, akun, kekayaan bersih, portofolio, dan data pasar langsung
+* Menarik latihan dari LimeLog dan sesi belajar dari StudyDesk
+* Pelacak kebiasaan dengan hitungan rentetan
+* Life Profiles dan target yang dapat dikonfigurasi
+* Tinjauan mingguan dan tahunan dengan heatmap
+
+Local-first dengan penyimpanan di perangkat; sinkronisasi awan opsional dan terikat akun. Tanpa Google Play Services, tanpa Firebase — masuk dengan Google memakai alur OAuth web biasa. Data pasar pihak ketiga dan fitur AI opsional adalah panggilan HTTPS yang kamu mulai sendiri. Sumber data pasar: Finnhub, CoinGecko, Yahoo Finance, ECB, CNN Business (production.dataviz.cnn.io) untuk indeks Fear & Greed, dan ExchangeRate-API (open.er-api.com) untuk kurs mata uang.

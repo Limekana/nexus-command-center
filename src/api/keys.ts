@@ -16,7 +16,7 @@
 
 import { Preferences } from '@capacitor/preferences';
 
-export type ApiKeyName = 'finnhub' | 'finnhub2';
+type ApiKeyName = 'finnhub' | 'finnhub2';
 
 const PREFIX = 'apikey_';
 
@@ -71,8 +71,3 @@ export function maskKey(key: string): string {
   return `••••${key.slice(-4)}`;
 }
 
-// Convenience for UI: how many Finnhub key slots are currently filled (0/1/2)?
-export async function finnhubKeyCount(): Promise<number> {
-  const [k1, k2] = await Promise.all([readKey('finnhub'), readKey('finnhub2')]);
-  return (k1 ? 1 : 0) + (k2 ? 1 : 0);
-}

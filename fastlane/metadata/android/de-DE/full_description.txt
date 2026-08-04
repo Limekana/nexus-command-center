@@ -7,6 +7,6 @@ Funktionen:
 * Konfigurierbare Lebensprofile und Ziele
 * Wochen- und Jahresrückblicke mit Heatmaps
 
-Lokal zuerst, Speicherung auf dem Gerät; optionale kontogebundene Cloud-Synchronisierung. Keine Google Play Services, kein Firebase — die Google-Anmeldung ist ein einfacher Web-OAuth-Ablauf. Marktdaten von Drittanbietern (Finnhub, CoinGecko, Yahoo, EZB) und eine optionale KI-Funktion sind nutzerinitiierte HTTPS-Aufrufe.
+Lokal zuerst, Speicherung auf dem Gerät; optionale kontogebundene Cloud-Synchronisierung. Keine Google Play Services, kein Firebase — die Google-Anmeldung ist ein einfacher Web-OAuth-Ablauf. Marktdaten von Drittanbietern und eine optionale KI-Funktion sind nutzerinitiierte HTTPS-Aufrufe. Quellen der Marktdaten: Finnhub, CoinGecko, Yahoo Finance, EZB, CNN Business (production.dataviz.cnn.io) für den Fear-&-Greed-Index und ExchangeRate-API (open.er-api.com) für Währungskurse.
 
-Verfügbar in Englisch, Finnisch, Französisch, Deutsch, Spanisch und Chinesisch.
+Verfügbar in Englisch, Finnisch, Französisch, Deutsch, Spanisch, Chinesisch, Hindi, Portugiesisch, Indonesisch und Arabisch.

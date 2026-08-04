@@ -14,6 +14,7 @@
 //     actual position, not zero.
 
 import { useEffect, useMemo, useState } from 'react';
+import { formatLocale } from '../../utils/formatters';
 import { useTranslation } from 'react-i18next';
 import AppHeader from '../../components/AppHeader';
 import { useFinanceStore } from '../../store/useFinanceStore';
@@ -22,7 +23,24 @@ import { convertSync, normalizeCurrency } from '../../api/fxRates';
 import { LIABILITY_TYPES } from '../../types/finance';
 import { project, yearReachingMilestone } from '../../lib/projection';
 
-const MILESTONES = [10_000, 50_000, 100_000, 250_000, 500_000, 1_000_000];
+// Milestones are derived from the user's current net worth rather than fixed,
+// because a fixed euro ladder is meaningless at other currency scales. In IDR
+// 1,000,000 is roughly €60, so every rung was already passed and the whole
+// feature rendered as noise; in INR the spacing was wrong for the opposite
+// reason. Powers of ten above the starting balance, at 1x/2.5x/5x within each
+// decade, give the same "next few meaningful targets" shape at any scale.
+function milestonesFor(startingBalance: number): number[] {
+  const base = Math.max(1000, Math.abs(startingBalance));
+  const decade = Math.pow(10, Math.floor(Math.log10(base)));
+  const out: number[] = [];
+  for (let d = decade; out.length < 6; d *= 10) {
+    for (const mult of [1, 2.5, 5]) {
+      const v = Math.round(d * mult);
+      if (v > base && out.length < 6) out.push(v);
+    }
+  }
+  return out;
+}
 
 const CONSERVATIVE_DEFAULT = 4;
 const OPTIMISTIC_DEFAULT = 7;
@@ -109,7 +127,7 @@ export default function WhatIf() {
   );
 
   const fmtMoney = (n: number) =>
-    new Intl.NumberFormat('fi-FI', {
+    new Intl.NumberFormat(formatLocale(), {
       style: 'currency',
       currency: baseCurrency,
       maximumFractionDigits: 0,
@@ -118,12 +136,12 @@ export default function WhatIf() {
   // Determine which milestones are actually reachable so we don't render
   // "€1M: never" for someone projecting a 5-year horizon — it just clutters.
   const milestoneRows = useMemo(() => {
-    return MILESTONES.map((target) => ({
+    return milestonesFor(startingBalance).map((target) => ({
       target,
       conservative: yearReachingMilestone(conservative.points, target, showInToday),
       optimistic: yearReachingMilestone(optimistic.points, target, showInToday),
     })).filter((row) => row.conservative != null || row.optimistic != null);
-  }, [conservative, optimistic, showInToday]);
+  }, [conservative, optimistic, showInToday, startingBalance]);
 
   const finalCons = showInToday ? conservative.finalReal : conservative.finalNominal;
   const finalOpt = showInToday ? optimistic.finalReal : optimistic.finalNominal;
@@ -261,8 +279,8 @@ export default function WhatIf() {
                 * predictable. With a 40px track and a 20px knob, translating
                 * 16px puts it 2px from the right edge — symmetric inset. */}
               <span
-                className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-text transition-transform ${
-                  showInToday ? 'translate-x-4' : 'translate-x-0'
+                className={`absolute top-0.5 start-0.5 w-5 h-5 rounded-full bg-text transition-transform ${
+                  showInToday ? 'translate-x-4 rtl:-translate-x-4' : 'translate-x-0'
                 }`}
               />
             </button>
@@ -285,7 +303,7 @@ export default function WhatIf() {
           <div className="font-heading font-semibold text-sm">
             {t('fin.wi.inYears', { n: years })}
             {showInToday && (
-              <span className="text-[10px] uppercase tracking-wider text-text-muted ml-2">
+              <span className="text-[10px] uppercase tracking-wider text-text-muted ms-2">
                 · {t('fin.wi.todayMoney')}
               </span>
             )}
@@ -323,7 +341,7 @@ export default function WhatIf() {
               <div className="grid grid-cols-3 gap-2 text-[9px] uppercase tracking-wider text-text-muted pb-1 border-b border-border/40">
                 <span>{t('fin.wi.target')}</span>
                 <span className="text-center">{t('fin.wi.conservative')}</span>
-                <span className="text-right">{t('fin.wi.optimistic')}</span>
+                <span className="text-end">{t('fin.wi.optimistic')}</span>
               </div>
               {milestoneRows.map((row) => (
                 <div key={row.target} className="grid grid-cols-3 gap-2 text-xs py-1">
@@ -331,7 +349,7 @@ export default function WhatIf() {
                   <span className="text-center text-text-muted">
                     {row.conservative != null ? t('fin.wi.inYearsShort', { n: row.conservative }) : '—'}
                   </span>
-                  <span className="text-right text-success">
+                  <span className="text-end text-success">
                     {row.optimistic != null ? t('fin.wi.inYearsShort', { n: row.optimistic }) : '—'}
                   </span>
                 </div>

@@ -7,6 +7,6 @@ Funciones:
 * Perfiles de vida y objetivos configurables
 * Resúmenes semanales y anuales con mapas de calor
 
-Local primero, almacenamiento en el dispositivo; sincronización en la nube opcional ligada a la cuenta. Sin Google Play Services, sin Firebase — el inicio de sesión de Google es un flujo web OAuth normal. Los datos de mercado de terceros (Finnhub, CoinGecko, Yahoo, BCE) y una función de IA opcional son llamadas HTTPS iniciadas por el usuario.
+Local primero, almacenamiento en el dispositivo; sincronización en la nube opcional ligada a la cuenta. Sin Google Play Services, sin Firebase — el inicio de sesión de Google es un flujo web OAuth normal. Los datos de mercado de terceros y una función de IA opcional son llamadas HTTPS iniciadas por el usuario. Fuentes de los datos de mercado: Finnhub, CoinGecko, Yahoo Finance, BCE, CNN Business (production.dataviz.cnn.io) para el índice Fear & Greed y ExchangeRate-API (open.er-api.com) para los tipos de cambio.
 
-Disponible en inglés, finlandés, francés, alemán, español y chino.
+Disponible en inglés, finlandés, francés, alemán, español, chino, hindi, portugués, indonesio y árabe.

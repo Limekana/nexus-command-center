@@ -8,6 +8,8 @@
 // invite-by-email row. All server errors are surfaced inline.
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useConfirm } from './ConfirmDialog';
 import {
   ShareRow,
   SharePermission,
@@ -31,6 +33,8 @@ export default function ShareModal({
   invite,
   revoke,
 }: Props) {
+  const { t } = useTranslation();
+  const confirm = useConfirm();
   const [shares, setShares] = useState<ShareRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState('');
@@ -78,7 +82,7 @@ export default function ShareModal({
   };
 
   const onRevoke = async (userId: string, name: string) => {
-    if (!confirm(`Remove ${name || 'this user'}'s access?`)) return;
+    if (!(await confirm({ message: t('common.revokeAccess', { name: name || t('common.thisUser') }) }))) return;
     setWorking(true);
     setError(null);
     setSuccess(null);
@@ -100,7 +104,7 @@ export default function ShareModal({
           <button
             onClick={onClose}
             aria-label="Close"
-            className="text-text-muted active:text-text px-2 -mr-2"
+            className="text-text-muted active:text-text px-2 -me-2"
           >
             ✕
           </button>

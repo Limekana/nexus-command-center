@@ -1,0 +1,1 @@
+Nouvelles icônes dans la barre du bas. Vous pouvez désormais confirmer un compte avec le code reçu par e-mail, et plus seulement avec le lien. Définissez votre objectif d'entraînement hebdomadaire, avec des exceptions par semaine. Les Réglages contiennent un lien si vous souhaitez soutenir le développement.

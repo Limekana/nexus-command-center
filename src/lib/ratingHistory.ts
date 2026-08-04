@@ -133,24 +133,3 @@ export function installRatingHistory(): void {
   });
 }
 
-/** Read the last N history entries for one ticker, newest first. Used by a
- *  future "rating drift over time" chart; not consumed by v1.2 UI yet but
- *  the storage is in place. */
-export async function readRatingHistory(ticker: string, limit = 30): Promise<Array<{
-  computedAt: string;
-  score: number;
-  tier: InsightTier;
-}>> {
-  const upper = ticker.toUpperCase();
-  const rows = await db.ratingHistory
-    .where('[ticker+computedAt]')
-    .between([upper, ''], [upper, '￿'])
-    .reverse()
-    .limit(limit)
-    .toArray();
-  return rows.map((r) => ({
-    computedAt: r.computedAt,
-    score: r.score,
-    tier: r.tier as InsightTier,
-  }));
-}

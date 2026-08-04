@@ -23,7 +23,7 @@ export function totalRemainingShares(lots: PortfolioLot[]): number {
   return lots.reduce((sum, l) => sum + lotRemaining(l), 0);
 }
 
-export interface SaleComputation {
+interface SaleComputation {
   /** Weighted-average cost of the shares being sold (FIFO). */
   costBasisPerShare: number;
   /** Which lots supplied the sold shares + how many — the audit trail. */

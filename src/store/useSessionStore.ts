@@ -9,6 +9,7 @@ import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { publishSession, clearPublishedSession } from '../lib/ssoPublisher';
 import { setGuestMode } from '../lib/guestMode';
+import { scheduleOriginStamp } from '../lib/originMarker';
 import { db } from '../db/database';
 
 interface SessionState {
@@ -62,8 +63,12 @@ export const useSessionStore = create<SessionState>((set) => ({
     // — acceptable trade for SSO reliability. Failures still swallowed
     // inside publishSession so the auth flow continues regardless.
     await publishSession(data.session);
+    // ACT-5 — cover the restored-session path too, not just fresh sign-ins.
+    // Every account that predates this instrumentation only ever appears here.
+    scheduleOriginStamp(data.session?.user ?? null);
     supabase.auth.onAuthStateChange((_event, session) => {
       set({ session, user: session?.user ?? null });
+      scheduleOriginStamp(session?.user ?? null);
       // Republish on every auth change — token refreshes, sign-in,
       // sign-out (null clears the bridge for siblings). Fire-and-forget
       // here is fine — onAuthStateChange callbacks aren't awaited by

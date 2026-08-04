@@ -25,7 +25,7 @@ import { convertSync } from '../api/fxRates';
 import type { Account, Transaction } from '../types/finance';
 import { LIABILITY_ACCOUNT_TYPES } from '../types/finance';
 
-export interface AccountBalanceResult {
+interface AccountBalanceResult {
   /** Final balance in the account's own currency. */
   balance: number;
   /** Starting balance (echoed back for convenience — the running-balance
@@ -107,61 +107,3 @@ export function computeAccountBalance(
   };
 }
 
-/**
- * Batch helper — compute balances for every account in one pass. Used by
- * Net Worth + the account list view. Returns a Map keyed by accountId for
- * O(1) lookup at render time. Internally this is just `computeAccountBalance`
- * per account; the convenience is avoiding the boilerplate at every caller.
- */
-export function computeAllAccountBalances(
-  accounts: Account[],
-  transactions: Transaction[],
-  fxRates: Record<string, number> | null,
-  baseCurrency: string,
-): Map<string, AccountBalanceResult> {
-  const out = new Map<string, AccountBalanceResult>();
-  for (const a of accounts) {
-    out.set(a.id, computeAccountBalance(a, transactions, fxRates, baseCurrency));
-  }
-  return out;
-}
-
-/**
- * Total net worth contribution from a set of accounts, converted to base
- * currency. Liability accounts (credit_card, loan) contribute their balance
- * as-is — by the negative-by-convention rule a credit card owing $2,000 has
- * a balance of -2000, which subtracts from net worth automatically.
- *
- * Archived accounts are EXCLUDED at this layer — the caller decides whether
- * to show or hide archived rows in the per-account list, but Net Worth never
- * counts them.
- */
-export function totalAccountNetWorthBase(
-  accounts: Account[],
-  transactions: Transaction[],
-  fxRates: Record<string, number> | null,
-  baseCurrency: string,
-): { total: number; unconvertableAccounts: string[] } {
-  let total = 0;
-  const unconvertableAccounts: string[] = [];
-  for (const a of accounts) {
-    if (a.archivedAt) continue;
-    const result = computeAccountBalance(a, transactions, fxRates, baseCurrency);
-    // Balance is in account.currency; convert back to baseCurrency for sum.
-    const inBase =
-      a.currency === baseCurrency
-        ? result.balance
-        : convertSync(result.balance, a.currency, baseCurrency, fxRates);
-    if (inBase == null) {
-      unconvertableAccounts.push(a.id);
-      continue;
-    }
-    total += inBase;
-  }
-  return { total, unconvertableAccounts };
-}
-
-/** Convenience predicate — true when the account is a liability type. */
-export function isLiabilityAccount(account: Account): boolean {
-  return LIABILITY_ACCOUNT_TYPES.includes(account.accountType);
-}

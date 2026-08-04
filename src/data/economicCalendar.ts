@@ -15,17 +15,17 @@
 // Dates below cover H2 2026. They are scheduled decision/release days and may
 // shift slightly — the countdown UI degrades gracefully either way.
 
-export type CalendarEventType = 'ecb' | 'fomc' | 'cpi' | 'nfp' | 'gdp';
-export type CalendarRegion = 'EU' | 'US';
+type CalendarEventType = 'ecb' | 'fomc' | 'cpi' | 'nfp' | 'gdp';
+type CalendarRegion = 'EU' | 'US';
 
-export interface CalendarEvent {
+interface CalendarEvent {
   date: string; // 'YYYY-MM-DD'
   label: string;
   type: CalendarEventType;
   region: CalendarRegion;
 }
 
-export const ECONOMIC_CALENDAR: CalendarEvent[] = [
+const ECONOMIC_CALENDAR: CalendarEvent[] = [
   { date: '2026-07-01', label: 'EU CPI Flash Est.', type: 'cpi', region: 'EU' },
   { date: '2026-07-03', label: 'US NFP Release', type: 'nfp', region: 'US' },
   { date: '2026-07-29', label: 'FOMC Decision', type: 'fomc', region: 'US' },
@@ -44,7 +44,7 @@ export const ECONOMIC_CALENDAR: CalendarEvent[] = [
   { date: '2026-12-17', label: 'ECB Meeting', type: 'ecb', region: 'EU' },
 ];
 
-export interface UpcomingEvent extends CalendarEvent {
+interface UpcomingEvent extends CalendarEvent {
   /** Whole days from `now` (00:00 local) to the event date. 0 = today. */
   daysUntil: number;
   isToday: boolean;

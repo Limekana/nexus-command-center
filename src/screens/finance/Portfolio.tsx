@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { formatMoney } from '../../lib/currencies';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
@@ -17,39 +18,23 @@ import RealizedPnLSection from '../../components/RealizedPnLSection';
 import PortfolioCashCard from '../../components/PortfolioCashCard';
 import { useFinanceStore } from '../../store/useFinanceStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
-import { formatCacheAge } from '../../utils/formatters';
+import { formatCacheAge, formatLocale } from '../../utils/formatters';
 import { convertSync, normalizeCurrency } from '../../api/fxRates';
 import type { PortfolioHolding, PortfolioLot } from '../../types/finance';
 import type { QuoteResult } from '../../api/finnhub';
 import type { CryptoResult } from '../../api/coingecko';
 import type { CompanyProfile } from '../../api/companyProfile';
 
-const CURRENCY_SYMBOL: Record<string, string> = {
-  EUR: '€',
-  USD: '$',
-  GBP: '£',
-  SEK: 'kr',
-  NOK: 'kr',
-  DKK: 'kr',
-  CHF: 'Fr',
-  JPY: '¥',
-};
 
 function fmt(amount: number, currency: string): string {
-  const sym = CURRENCY_SYMBOL[currency.toUpperCase()] ?? '';
-  const isSuffix = ['kr', 'Fr'].includes(sym);
-  const num = amount.toLocaleString('fi-FI', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-  return isSuffix ? `${num} ${sym}` : sym ? `${sym}${num}` : `${num} ${currency}`;
+  return formatMoney(amount, currency, { locale: formatLocale() });
 }
 
 // Compact format for the row's value column — drops decimals on values ≥ 1000
 // so a 5-digit holding doesn't push the % change off the row on narrow screens.
 function fmtCompact(amount: number, currency: string): string {
-  const sym = CURRENCY_SYMBOL[currency.toUpperCase()] ?? '';
-  const isSuffix = ['kr', 'Fr'].includes(sym);
-  const fractionDigits = Math.abs(amount) >= 1000 ? 0 : 2;
-  const num = amount.toLocaleString('fi-FI', { maximumFractionDigits: fractionDigits, minimumFractionDigits: fractionDigits });
-  return isSuffix ? `${num} ${sym}` : sym ? `${sym}${num}` : `${num} ${currency}`;
+  const d = Math.abs(amount) >= 1000 ? 0 : 2;
+  return formatMoney(amount, currency, { locale: formatLocale(), min: d, max: d });
 }
 
 type AllocationView = 'class' | 'sector' | 'currency';
@@ -486,12 +471,12 @@ export default function Portfolio() {
                 <div className="text-[10px] uppercase tracking-wider text-text-muted">{t('fin.port.cost')}</div>
                 <div className="font-medium">{fmt(totals.cost, baseCurrency)}</div>
               </div>
-              <div className="text-right">
+              <div className="text-end">
                 <div className="text-[10px] uppercase tracking-wider text-text-muted">{t('fin.port.totalPL')}</div>
                 <div className={`font-medium ${totals.pl >= 0 ? 'text-success' : 'text-danger'}`}>
                   {totals.pl >= 0 ? '+' : '−'}{fmt(Math.abs(totals.pl), baseCurrency)}
                   {totals.plPct != null && (
-                    <span className="opacity-70 ml-1">({totals.pl >= 0 ? '+' : ''}{totals.plPct.toFixed(1)}%)</span>
+                    <span className="opacity-70 ms-1">({totals.pl >= 0 ? '+' : ''}{totals.plPct.toFixed(1)}%)</span>
                   )}
                 </div>
               </div>
@@ -678,7 +663,7 @@ function HoldingRow({
   return (
     <button
       onClick={onTap}
-      className="w-full py-2 border-b border-border/40 last:border-0 active:bg-surface2/40 text-left"
+      className="w-full py-2 border-b border-border/40 last:border-0 active:bg-surface2/40 text-start"
     >
       <div className="flex items-center gap-2">
         <div className="flex flex-col min-w-0 w-[68px]">

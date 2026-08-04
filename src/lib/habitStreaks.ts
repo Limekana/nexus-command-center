@@ -58,7 +58,7 @@ export function isEligibleOn(habit: Habit, date: Date): boolean {
 /** True when the user "hit" the habit on a given date, given the completion
  *  set already filtered to this habit. For quantified habits, we sum amounts
  *  across completions for that date and compare against target. */
-export function isHitOn(
+function isHitOn(
   habit: Habit,
   date: Date,
   completionsByDate: Map<string, number>,
