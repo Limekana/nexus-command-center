@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { Preferences } from '@capacitor/preferences';
 import { db } from '../db/database';
 import { Course, Grade, GradeImport, StudySession } from '../types/studies';
-import { calculateGPA, GradeMode } from '../utils/gpa';
+import { calculateGPA, inferGradeMode, GradeMode } from '../utils/gpa';
 import { generateId } from '../utils/uuid';
 import { enqueue } from '../db/syncQueue';
 
@@ -103,7 +103,6 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
   async load() {
     set({ loading: true });
     const stored = await getPref(GRADE_MODE_KEY);
-    const gradeMode: GradeMode = stored === 'ib' ? 'ib' : 'us';
     // Load ALL courses + grades regardless of importId. The importId field is
     // a vestigial artifact from the old CSV-import path; cloud-synced subjects
     // from StudyDesk arrive stamped 'cloud' and would otherwise be invisible
@@ -119,6 +118,12 @@ export const useStudiesStore = create<StudiesStore>((set, get) => ({
     // in `archivedCourses` so the "Show archived" UI in StudiesOverview can
     // surface them. Archived rows continue to ride the realtime channel and
     // re-hydrate correctly on restore.
+    // An explicit choice wins; otherwise read the scale off the data. Defaulting
+    // blindly to 'us' put IB grades (1–7) through the percentage table, which
+    // floors everything under 60 — so synced StudyDesk grades rendered as
+    // GPA 0.00. See inferGradeMode.
+    const gradeMode: GradeMode =
+      stored === 'ib' || stored === 'us' ? stored : inferGradeMode(allGrades);
     const allCourses = allCoursesIncludingArchived.filter((c) => !c.archivedAt);
     const archivedCourses = allCoursesIncludingArchived.filter((c) => !!c.archivedAt);
     const previous = imports[1] ?? null;

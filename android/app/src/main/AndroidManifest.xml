@@ -138,9 +138,13 @@
          need notifications across reboots without opening the app. -->
 
 
-    <!-- Health Connect: read-only access to Steps and Weight -->
-    <uses-permission android:name="android.permission.health.READ_STEPS" />
-    <uses-permission android:name="android.permission.health.READ_WEIGHT" />
+    <!-- Health Connect permissions removed in v1.9: the Fitness view that used
+         them went away with BUG-15, and connectHealthConnect() has had no
+         caller since. Declaring health permissions for an unreachable feature
+         meant Android listed them on the app's permission screen with nothing
+         to justify them, which is exactly the sort of thing a user is right to
+         be suspicious about. The store's HC helpers are kept — reinstate these
+         two lines if the Fitness view ever returns. -->
 
     <!-- Health Connect package query (Android 11+ requires explicit queries) -->
     <queries>
