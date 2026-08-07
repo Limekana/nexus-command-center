@@ -1,0 +1,1 @@
+GPA-Anzeige für IB-Notenskalen behoben (zeigte 0,00 an). Eine ungenutzte Health-Connect-Berechtigungsanfrage wurde entfernt.

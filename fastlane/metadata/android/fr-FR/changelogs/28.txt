@@ -1,0 +1,1 @@
+Correction du GPA qui affichait 0,00 avec le barème de notation IB. Suppression d'une demande d'autorisation Health Connect inutilisée.

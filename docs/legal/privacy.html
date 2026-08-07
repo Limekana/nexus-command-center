@@ -34,7 +34,7 @@
 <header>
   <div class="brand">Limecore Studio</div>
   <h1>Privacy Policy</h1>
-  <div class="updated">Last updated 29 July 2026 · covers Nexus Command Center, LimeLog and StudyDesk</div>
+  <div class="updated">Last updated 6 August 2026 · covers Nexus Command Center, LimeLog and StudyDesk</div>
 </header>
 
 <p class="lede">
@@ -115,6 +115,7 @@
   <tr><th>Training</th><td>Programs and phases, sessions, every set with its weight, reps and effort rating, personal records, and session notes.</td></tr>
   <tr><th>Body metrics</th><td>Bodyweight and any measurements you choose to record, plus vertical-jump entries.</td></tr>
   <tr><th>Progress photos</th><td><strong>Stored only on your device.</strong> Photos are never uploaded and never reach our database.</td></tr>
+  <tr><th>Health Connect <em>(only if you grant it)</em></th><td><strong>Read on your device and never stored.</strong> If you allow it, LimeLog reads today's step count and active calories from Android Health Connect to show them on the Today screen. The numbers are displayed and discarded — they are not written to our database, not saved on your device, and not included in your export, because we never hold a copy. Revoke the permission in Health Connect and the reading stops immediately.</td></tr>
   <tr><th>AI debrief <em>(only if switched on)</em></th><td>The note you typed, plus what the model extracted: an effort rating, any body parts you mentioned as sore, a mood, and a one-line summary.</td></tr>
 </table>
 <div class="box">
@@ -132,12 +133,30 @@
   <tr><th>Grades</th><td>The grade, its weight, the date, and any note you write.</td></tr>
   <tr><th>Study sessions</th><td>Start time, duration, focus rating, and any note you write.</td></tr>
   <tr><th>AI debrief <em>(only if used)</em></th><td>The note you typed, plus what the model extracted: topic, a 1–5 comprehension rating, concepts you flagged as confusing, and a one-line summary.</td></tr>
+  <tr><th>Home-screen widgets <em>(only if you add one)</em></th><td><strong>Stays on your device.</strong> If you place a StudyDesk widget, the app writes a short list of upcoming assignments and exams — title, course name and due date — to private app storage so the launcher can draw it. Nothing is uploaded, and it is removed when you remove the widget. Worth knowing: whatever a widget shows is visible to anyone who can see your home screen, and depending on your launcher that can include a locked screen. If your coursework titles are sensitive to you, don't add the widget.</td></tr>
 </table>
 
 <h3>What we never collect</h3>
 <p>
   No location, no contacts, no advertising or device identifiers, no browsing
   history, no usage analytics. The apps request no permissions for any of it.
+</p>
+<p>
+  The only sensitive permissions any of the three ever ask for are notifications,
+  the camera (LimeLog progress photos, which stay on your device) and Health
+  Connect (LimeLog steps and calories, which are read and discarded). Each is
+  requested only when you use the feature that needs it, each can be declined,
+  and declining costs you that one feature and nothing else.
+</p>
+<p>
+  One thing you may notice and we would rather explain than have you find:
+  <strong>Nexus Command Center still lists two Health Connect permissions</strong>
+  (steps and weight) in Android's permission screen. They are left over from a
+  fitness view that was removed from the app, and there is no longer any way to
+  reach the feature — nothing requests them, nothing reads them, and no health
+  data enters Nexus Command Center from your device. They are being removed in
+  the next release. We are noting it here because an unexplained health
+  permission is a fair thing to be suspicious about.
 </p>
 
 <h2 id="processors">Who else sees your data</h2>
@@ -171,6 +190,24 @@ services below are the only ones that receive anything at all.</p>
   own or how much. They do, like any web request, see the IP address it came
   from. <strong>They happen whether or not you have an account</strong>, because
   prices are the same for everyone. The other two apps make no such requests.
+</p>
+
+<h3>Ko-fi (only if you tap the support link)</h3>
+<p>
+  All three apps have a "support this project" row in Settings. It is an ordinary
+  link that opens <code>ko-fi.com</code> in your browser — there is no payment
+  form inside the apps, no payment SDK, and no tracking pixel. Nothing is sent
+  anywhere unless you tap it, and tapping it sends nothing about you beyond what
+  any browser sends when it opens a page.
+</p>
+<p>
+  If you choose to donate, Ko-fi and its payment processor handle that entirely.
+  <strong>We never see your card details</strong> — they do not pass through our
+  apps or our database. What we receive from Ko-fi is what any creator sees: a
+  display name, the amount, and a message if you leave one. That is held by
+  Ko-fi under their own privacy policy, not by us, and it is not linked to your
+  Limecore account — we have no way to tell which account a donor belongs to.
+  Donating is not required and unlocks nothing; every feature is free either way.
 </p>
 
 <h2>The AI features</h2>

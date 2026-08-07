@@ -1,0 +1,1 @@
+Corrigido o GPA que mostrava 0,00 na escala de notas do IB. Removida uma solicitação de permissão do Health Connect que não era usada.

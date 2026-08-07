@@ -52,6 +52,25 @@ export function calculateGPA(
   return Math.round((weightedSum / totalCredits) * 100) / 100;
 }
 
+// ─── Scale inference ────────────────────────────────────────────────────
+/** Which scale a set of grades is on, for users who have never picked one.
+ *
+ *  `gradeToPoints` maps percentages and floors anything under 60 to 0. So a
+ *  1–7 IB set — or a Finnish 4–10 set — run through it produces a weighted sum
+ *  of exactly zero, and the dashboard showed **GPA 0.00 next to "6 courses"**.
+ *  That is what every StudyDesk user syncing IB grades into NCC saw, because
+ *  the mode defaults to 'us' and most people never open the setting.
+ *
+ *  Percentage grades do not sit at or below 10 in practice (a 7% subject
+ *  average is not a grade anyone is carrying), so the maximum observed value
+ *  is a safe discriminator. An explicit user choice always wins over this —
+ *  see `load()` in useStudiesStore. */
+export function inferGradeMode(grades: Grade[]): GradeMode {
+  const values = grades.map((g) => g.grade).filter((v) => Number.isFinite(v));
+  if (values.length === 0) return 'us';
+  return Math.max(...values) <= 10 ? 'ib' : 'us';
+}
+
 function gradeToPoints(grade: number): number {
   if (grade >= 93) return 4.0;
   if (grade >= 90) return 3.7;

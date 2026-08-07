@@ -1,0 +1,1 @@
+Korjattu GPA, joka näytti 0,00 IB-arvosana-asteikolla. Poistettu käyttämätön Health Connect -käyttöoikeuspyyntö.
