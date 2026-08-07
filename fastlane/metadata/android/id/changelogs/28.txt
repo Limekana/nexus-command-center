@@ -1,0 +1,1 @@
+Memperbaiki GPA yang menampilkan 0,00 pada skala penilaian IB. Menghapus permintaan izin Health Connect yang tidak terpakai.

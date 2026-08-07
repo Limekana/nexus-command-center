@@ -1,0 +1,1 @@
+Fixed GPA showing 0.00 for IB-scale grading. Removed an unused Health Connect permission request.
