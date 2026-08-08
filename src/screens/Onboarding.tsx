@@ -70,7 +70,11 @@ export default function Onboarding({ onDone }: Props) {
 
   return (
     <div className="onb-screen min-h-full bg-bg text-text flex flex-col items-center justify-center px-5 py-8">
-      <div className="onb-rise relative z-10 w-full max-w-md space-y-5">
+      {/* v1.9 Item 14 — Onboarding renders outside AppShell too, so it kept
+          its 448px phone column on desktop. Same per-tier scale-up as
+          LockScreen and Login; still centred, since a first-run wizard
+          stretched across the full width would read worse, not better. */}
+      <div className="onb-rise relative z-10 w-full max-w-md tablet:max-w-lg desktop:max-w-2xl space-y-5 desktop:space-y-7">
         {/* Brand */}
         <div className="text-center">
           <div className="onb-wordmark font-heading text-3xl font-bold tracking-tight text-primary uppercase">
