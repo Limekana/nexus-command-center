@@ -523,6 +523,20 @@
     "forgotPin": "Unohtuiko PIN? Nollaa kohdasta Asetukset → Tyhjennä kaikki tiedot"
   },
   "fin": {
+    "tbl": {
+      "position": "Positio",
+      "sector": "Toimiala",
+      "shares": "Osuudet",
+      "cost": "Hankintahinta",
+      "value": "Markkina-arvo",
+      "day": "Päivä",
+      "return": "Kokonaistuotto",
+      "allocation": "Jakauma",
+      "total": "Yhteensä",
+      "positions_one": "{{count}} positio",
+      "positions_other": "{{count}} positiota",
+      "aria": "Omistukset"
+    },
     "finance": "Talous",
     "tx": {
       "expense": "💸 Meno",

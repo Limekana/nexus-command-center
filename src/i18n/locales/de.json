@@ -523,6 +523,20 @@
     "forgotPin": "PIN vergessen? Zurücksetzen unter Einstellungen → Alle Daten löschen"
   },
   "fin": {
+    "tbl": {
+      "position": "Position",
+      "sector": "Sektor",
+      "shares": "Anteile",
+      "cost": "Einstandswert",
+      "value": "Marktwert",
+      "day": "Tag",
+      "return": "Gesamtrendite",
+      "allocation": "Aufteilung",
+      "total": "Gesamt",
+      "positions_one": "{{count}} Position",
+      "positions_other": "{{count}} Positionen",
+      "aria": "Bestände"
+    },
     "finance": "Finanzen",
     "tx": {
       "expense": "💸 Ausgabe",

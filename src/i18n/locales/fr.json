@@ -523,6 +523,20 @@
     "forgotPin": "PIN oublié ? Réinitialisez via Paramètres → Effacer toutes les données"
   },
   "fin": {
+    "tbl": {
+      "position": "Position",
+      "sector": "Secteur",
+      "shares": "Parts",
+      "cost": "Prix de revient",
+      "value": "Valeur de marché",
+      "day": "Jour",
+      "return": "Rendement total",
+      "allocation": "Répartition",
+      "total": "Total",
+      "positions_one": "{{count}} position",
+      "positions_other": "{{count}} positions",
+      "aria": "Portefeuille"
+    },
     "finance": "Finances",
     "tx": {
       "expense": "💸 Dépense",

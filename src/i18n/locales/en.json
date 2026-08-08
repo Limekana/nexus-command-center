@@ -523,6 +523,20 @@
     "forgotPin": "Forgot PIN? Reset in Settings → Clear All Data"
   },
   "fin": {
+    "tbl": {
+      "position": "Position",
+      "sector": "Sector",
+      "shares": "Shares",
+      "cost": "Cost basis",
+      "value": "Market value",
+      "day": "Day",
+      "return": "Total return",
+      "allocation": "Allocation",
+      "total": "Total",
+      "positions_one": "{{count}} position",
+      "positions_other": "{{count}} positions",
+      "aria": "Holdings"
+    },
     "finance": "Finance",
     "tx": {
       "expense": "💸 Expense",

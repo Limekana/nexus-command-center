@@ -7,6 +7,8 @@ import SparkLine from '../../components/SparkLine';
 import DonutChart, { colorForIndex } from '../../components/DonutChart';
 import PortfolioValueChart from '../../components/PortfolioValueChart';
 import HoldingDetailSheet from '../../components/HoldingDetailSheet';
+import HoldingsTable from '../../components/HoldingsTable';
+import { useShellTier } from '../../lib/useShell';
 import EarningsStrip from '../../components/EarningsStrip';
 import DividendTracker from '../../components/DividendTracker';
 import { isHoldingClosed } from '../../lib/positionStatus';
@@ -213,6 +215,9 @@ export default function Portfolio() {
   // id) keeps the sheet rendering its last frame during the slide-out
   // animation after onClose flips the parent's state.
   const [detailHolding, setDetailHolding] = useState<PortfolioHolding | null>(null);
+  // v1.9 Item 14b — the dense table is a desktop-tier surface; phone and
+  // tablet keep the card lists, which are the right shape for those widths.
+  const isDesktop = useShellTier() === 'desktop';
 
   // Helper used by all three Tier 2 surfaces — looks up a holding by ticker
   // (case-insensitive, equity bias) and opens the detail sheet.
@@ -565,6 +570,21 @@ export default function Portfolio() {
           onTapTicker={openDetailByTicker}
         />
 
+        {/* v1.9 Item 14b — at the desktop tier the two card lists collapse into
+            one dense table. The split into "Stocks + ETFs" and "Crypto" exists
+            because a phone can only show a handful of fields, so grouping is
+            how you tell positions apart; a table has a Sector column doing
+            that job, and splitting it would just mean two scroll regions and
+            two totals. Below 1201px nothing changes — the cards are untouched. */}
+        {isDesktop ? (
+          <HoldingsTable
+            rows={positions}
+            totalBase={totals.total}
+            baseCurrency={baseCurrency}
+            onSelect={setDetailHolding}
+          />
+        ) : (
+        <>
         {/* Stocks + ETFs list — value, P/L, sparkline */}
         <div className="card">
           <div className="flex items-center justify-between mb-3">
@@ -614,6 +634,8 @@ export default function Portfolio() {
             />
           ))}
         </div>
+        </>
+        )}
 
         {/* v1.3.2 — portfolio cash (proceeds + deposits − buys − withdrawals),
             with deposit/withdraw transfers to/from a liquid account. */}

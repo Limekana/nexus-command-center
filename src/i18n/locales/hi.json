@@ -631,6 +631,20 @@
     "greed": "लालच"
   },
   "fin": {
+    "tbl": {
+      "position": "पोज़िशन",
+      "sector": "क्षेत्र",
+      "shares": "शेयर",
+      "cost": "लागत आधार",
+      "value": "बाज़ार मूल्य",
+      "day": "दिन",
+      "return": "कुल प्रतिफल",
+      "allocation": "आवंटन",
+      "total": "कुल",
+      "positions_one": "{{count}} पोज़िशन",
+      "positions_other": "{{count}} पोज़िशन",
+      "aria": "होल्डिंग्स"
+    },
     "finance": "वित्त",
     "tx": {
       "expense": "💸 ख़र्च",

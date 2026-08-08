@@ -631,6 +631,20 @@
     "greed": "Keserakahan"
   },
   "fin": {
+    "tbl": {
+      "position": "Posisi",
+      "sector": "Sektor",
+      "shares": "Lembar",
+      "cost": "Biaya perolehan",
+      "value": "Nilai pasar",
+      "day": "Hari",
+      "return": "Total imbal hasil",
+      "allocation": "Alokasi",
+      "total": "Total",
+      "positions_one": "{{count}} posisi",
+      "positions_other": "{{count}} posisi",
+      "aria": "Kepemilikan"
+    },
     "finance": "Keuangan",
     "tx": {
       "expense": "💸 Pengeluaran",

@@ -631,6 +631,20 @@
     "greed": "جشع"
   },
   "fin": {
+    "tbl": {
+      "position": "المركز",
+      "sector": "القطاع",
+      "shares": "الأسهم",
+      "cost": "تكلفة الشراء",
+      "value": "القيمة السوقية",
+      "day": "اليوم",
+      "return": "العائد الإجمالي",
+      "allocation": "التوزيع",
+      "total": "الإجمالي",
+      "positions_one": "{{count}} مركز",
+      "positions_other": "{{count}} مراكز",
+      "aria": "الحيازات"
+    },
     "finance": "المال",
     "tx": {
       "expense": "💸 مصروف",

@@ -631,6 +631,20 @@
     "greed": "Ganância"
   },
   "fin": {
+    "tbl": {
+      "position": "Posição",
+      "sector": "Setor",
+      "shares": "Quotas",
+      "cost": "Custo de aquisição",
+      "value": "Valor de mercado",
+      "day": "Dia",
+      "return": "Retorno total",
+      "allocation": "Alocação",
+      "total": "Total",
+      "positions_one": "{{count}} posição",
+      "positions_other": "{{count}} posições",
+      "aria": "Carteira"
+    },
     "finance": "Finanças",
     "tx": {
       "expense": "💸 Despesa",
