@@ -22,6 +22,7 @@ import { useFinanceStore } from '../../store/useFinanceStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { formatCacheAge, formatLocale } from '../../utils/formatters';
 import { convertSync, normalizeCurrency } from '../../api/fxRates';
+import { holdingValueBase } from '../../lib/positionValue';
 import type { PortfolioHolding, PortfolioLot } from '../../types/finance';
 import type { QuoteResult } from '../../api/finnhub';
 import type { CryptoResult } from '../../api/coingecko';
@@ -129,8 +130,10 @@ function metricsFor(
         sparkKey: h.ticker.toUpperCase(),
       };
     }
+    // `native` survives only for the row's currency badge; the value itself
+    // comes from the shared helper so this and InsightsCard cannot drift.
     const native = normalizeCurrency(q.quote.c * h.quantity, q.currency);
-    const valueBase = convertSync(native.amount, native.currency, baseCurrency, rates);
+    const valueBase = holdingValueBase(h, stockQuotes, cryptoPrices, rates, baseCurrency);
     const dayNative = normalizeCurrency(q.quote.d * h.quantity, q.currency);
     const dayChangeBase = convertSync(dayNative.amount, dayNative.currency, baseCurrency, rates);
     const costBase = costBasisFromLots(h, lots, rates, baseCurrency);
@@ -165,9 +168,7 @@ function metricsFor(
       sparkKey: h.ticker.toLowerCase(),
     };
   }
-  const nativeEur = p.priceEur * h.quantity;
-  const valueBase =
-    baseCurrency === 'EUR' ? nativeEur : convertSync(nativeEur, 'EUR', baseCurrency, rates);
+  const valueBase = holdingValueBase(h, stockQuotes, cryptoPrices, rates, baseCurrency);
   // CoinGecko gives a 24h % directly. Approximate the 24h absolute change as
   // current_value × (pct/(100+pct)) so the math is consistent with how we'd
   // back out yesterday's price.

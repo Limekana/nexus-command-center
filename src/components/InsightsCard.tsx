@@ -9,7 +9,8 @@ import { formatMoney } from '../lib/currencies';
 import { formatLocale } from '../utils/formatters';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { useSettingsStore } from '../store/useSettingsStore';
-import { convertSync, normalizeCurrency } from '../api/fxRates';
+import { convertSync } from '../api/fxRates';
+import { holdingValueBase } from '../lib/positionValue';
 import { LIABILITY_TYPES } from '../types/finance';
 
 interface Insight {
@@ -39,20 +40,9 @@ export default function InsightsCard() {
     let portfolioBase = 0;
     let cryptoBase = 0;
     for (const h of holdings) {
-      let v: number | null = null;
-      if (h.assetType === 'stock' || h.assetType === 'etf') {
-        const q = stockQuotes.find((s) => s.ticker === h.ticker);
-        if (q) {
-          const native = normalizeCurrency(q.quote.c * h.quantity, q.currency);
-          v = convertSync(native.amount, native.currency, baseCurrency, fxRates);
-        }
-      } else {
-        const p = cryptoPrices?.prices.find((p) => p.id === h.ticker);
-        if (p) {
-          const native = p.priceEur * h.quantity;
-          v = baseCurrency === 'EUR' ? native : convertSync(native, 'EUR', baseCurrency, fxRates);
-        }
-      }
+      // v1.9 — was an inline copy of Portfolio.tsx's conversion. Same maths,
+      // now from one module, so a fix to either can't leave the other behind.
+      const v = holdingValueBase(h, stockQuotes, cryptoPrices, fxRates, baseCurrency);
       if (v != null) {
         positions.push({ ticker: h.ticker, valueBase: v, kind: h.assetType });
         portfolioBase += v;
