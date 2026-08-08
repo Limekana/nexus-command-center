@@ -324,6 +324,16 @@ export default function FinanceOverview() {
               </div>
             </div>
 
+            {/* v1.9 Item 14b #4 — CSV import/export. Not desktop-gated: the
+                mapping UI wants width and says so, but a phone can still take
+                a file and the export path is useful everywhere. */}
+            <EntryCard
+              emoji="🗒"
+              title={t('fin.imp.entryTitle')}
+              sub={t('fin.imp.entrySub')}
+              onClick={() => navigate('/finance/import')}
+            />
+
             {transactions.length > 0 && (
               <div className="card">
                 <div className="flex items-center justify-between mb-2">
