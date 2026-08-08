@@ -549,7 +549,9 @@
       "total": "Gesamt",
       "positions_one": "{{count}} Position",
       "positions_other": "{{count}} Positionen",
-      "aria": "Bestände"
+      "aria": "Bestände",
+      "filterSector": "Nur {{sector}} zeigen",
+      "ofCount": "{{count}} Positionen"
     },
     "finance": "Finanzen",
     "tx": {
@@ -717,7 +719,8 @@
       "empty": "Noch keine Einträge. Tippe auf + Beobachten, um einen Ticker zu verfolgen, ohne ihn zu besitzen.",
       "targetAboveHit": "Ziel ≥ erreicht",
       "targetBelowHit": "Ziel ≤ erreicht",
-      "stopWatching": "{{ticker}} nicht mehr beobachten?"
+      "stopWatching": "{{ticker}} nicht mehr beobachten?",
+      "pickOne": "Wähle ein Wertpapier, um Details zu sehen."
     },
     "mh": {
       "title": "Bestände verwalten",
@@ -1025,6 +1028,25 @@
       "noLimit": "Kein Budget",
       "noLimitsSet": "Noch hat keine Kategorie ein Monatsbudget, es gibt also keinen Vergleichswert.",
       "limitCaveat": "Verglichen mit dem aktuellen Budget je Kategorie — frühere Grenzen werden nicht gespeichert."
+    },
+    "dtg": {
+      "title": "Über Domänen hinweg",
+      "empty": "Noch nicht genug Wochen.",
+      "noData": "keine Daten",
+      "weekOf": "Woche vom {{date}}",
+      "scaleCaveat": "Jede Zeile ist auf ihren eigenen Bereich skaliert — Höhen vergleichen sich innerhalb einer Zeile, nicht zwischen Zeilen.",
+      "sessions": "{{count}} Einheiten",
+      "minutes": "{{count}} Min"
+    },
+    "qa": {
+      "title": "Schnell erfassen",
+      "placeholder": "12,50 Kaffee #essen @giro",
+      "needAmount": "Betrag?",
+      "needDescription": "wofür?",
+      "noCategory": "ohne Kategorie",
+      "noAccount": "ohne Konto",
+      "save": "Speichern",
+      "hint": "#Kategorie  @Konto  today/yesterday  ·  Tab vervollständigt  ·  Enter speichert  ·  Esc schließt"
     }
   },
   "lifeProfile": {

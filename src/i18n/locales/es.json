@@ -549,7 +549,9 @@
       "total": "Total",
       "positions_one": "{{count}} posición",
       "positions_other": "{{count}} posiciones",
-      "aria": "Cartera"
+      "aria": "Cartera",
+      "filterSector": "Mostrar solo {{sector}}",
+      "ofCount": "{{count}} posiciones"
     },
     "finance": "Finanzas",
     "tx": {
@@ -720,7 +722,8 @@
       "targetAboveHit": "Objetivo ≥ alcanzado",
       "targetBelowHit": "Objetivo ≤ alcanzado",
       "stopWatching": "¿Dejar de seguir {{ticker}}?",
-      "tickers_many": "{{count}} tickers"
+      "tickers_many": "{{count}} tickers",
+      "pickOne": "Elige un valor para ver su detalle."
     },
     "mh": {
       "title": "Gestionar posiciones",
@@ -1031,6 +1034,25 @@
       "noLimit": "Sin presupuesto",
       "noLimitsSet": "Ninguna categoría tiene presupuesto mensual todavía, así que no hay con qué comparar.",
       "limitCaveat": "Comparado con el presupuesto actual de cada categoría: no se guardan los límites anteriores."
+    },
+    "dtg": {
+      "title": "Entre dominios",
+      "empty": "Aún no hay semanas suficientes.",
+      "noData": "sin datos",
+      "weekOf": "Semana del {{date}}",
+      "scaleCaveat": "Cada fila se escala a su propio rango: las alturas se comparan dentro de una fila, no entre filas.",
+      "sessions": "{{count}} sesiones",
+      "minutes": "{{count}} min"
+    },
+    "qa": {
+      "title": "Añadir rápido",
+      "placeholder": "12,50 café #comida @corriente",
+      "needAmount": "¿importe?",
+      "needDescription": "¿para qué?",
+      "noCategory": "sin categoría",
+      "noAccount": "sin cuenta",
+      "save": "Guardar",
+      "hint": "#categoría  @cuenta  today/yesterday  ·  Tab completa  ·  Intro guarda  ·  Esc cierra"
     }
   },
   "lifeProfile": {

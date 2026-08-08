@@ -549,7 +549,9 @@
       "total": "Yhteensä",
       "positions_one": "{{count}} positio",
       "positions_other": "{{count}} positiota",
-      "aria": "Omistukset"
+      "aria": "Omistukset",
+      "filterSector": "Näytä vain {{sector}}",
+      "ofCount": "{{count}} positiota"
     },
     "finance": "Talous",
     "tx": {
@@ -717,7 +719,8 @@
       "empty": "Ei vielä seurattavia. Napauta + Seuraa seurataksesi tikkeriä omistamatta sitä.",
       "targetAboveHit": "Tavoite ≥ saavutettu",
       "targetBelowHit": "Tavoite ≤ saavutettu",
-      "stopWatching": "Lopetetaanko seuranta {{ticker}}?"
+      "stopWatching": "Lopetetaanko seuranta {{ticker}}?",
+      "pickOne": "Valitse tikkeri nähdäksesi tiedot."
     },
     "mh": {
       "title": "Hallitse omistuksia",
@@ -1025,6 +1028,25 @@
       "noLimit": "Ei budjettia",
       "noLimitsSet": "Millekään luokalle ei ole vielä asetettu kuukausibudjettia, joten vertailukohtaa ei ole.",
       "limitCaveat": "Verrataan kunkin luokan nykyiseen budjettiin — vanhoja rajoja ei säilytetä."
+    },
+    "dtg": {
+      "title": "Osa-alueiden välillä",
+      "empty": "Viikkoja ei ole vielä tarpeeksi.",
+      "noData": "ei tietoa",
+      "weekOf": "Viikko {{date}}",
+      "scaleCaveat": "Jokainen rivi skaalataan omaan vaihteluväliinsä — korkeuksia voi verrata rivin sisällä, ei rivien välillä.",
+      "sessions": "{{count}} kertaa",
+      "minutes": "{{count}} min"
+    },
+    "qa": {
+      "title": "Pikalisäys",
+      "placeholder": "12,50 kahvi #ruoka @käyttötili",
+      "needAmount": "summa?",
+      "needDescription": "mistä?",
+      "noCategory": "ei luokkaa",
+      "noAccount": "ei tiliä",
+      "save": "Tallenna",
+      "hint": "#luokka  @tili  today/yesterday  ·  Sarkain täydentää  ·  Enter tallentaa  ·  Esc sulkee"
     }
   },
   "lifeProfile": {

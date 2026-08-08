@@ -549,7 +549,9 @@
       "total": "合计",
       "positions_one": "{{count}} 个持仓",
       "positions_other": "{{count}} 个持仓",
-      "aria": "持仓明细"
+      "aria": "持仓明细",
+      "filterSector": "只显示{{sector}}",
+      "ofCount": "{{count}} 个持仓"
     },
     "finance": "财务",
     "tx": {
@@ -717,7 +719,8 @@
       "empty": "还没有关注项。点击 + 关注以关注一个代码而无需持有。",
       "targetAboveHit": "已达目标 ≥",
       "targetBelowHit": "已达目标 ≤",
-      "stopWatching": "停止关注 {{ticker}}？"
+      "stopWatching": "停止关注 {{ticker}}？",
+      "pickOne": "选择一个标的以查看详情。"
     },
     "mh": {
       "title": "管理持仓",
@@ -1025,6 +1028,25 @@
       "noLimit": "未设预算",
       "noLimitsSet": "还没有类别设置月度预算，因此无从比较。",
       "limitCaveat": "与各类别当前预算对比 — 不保存历史限额。"
+    },
+    "dtg": {
+      "title": "跨领域",
+      "empty": "周数还不够。",
+      "noData": "无数据",
+      "weekOf": "{{date}} 当周",
+      "scaleCaveat": "每行按各自的范围缩放 — 高度只在行内可比，不能跨行比较。",
+      "sessions": "{{count}} 次",
+      "minutes": "{{count}} 分钟"
+    },
+    "qa": {
+      "title": "快速添加",
+      "placeholder": "12.50 咖啡 #餐饮 @活期",
+      "needAmount": "金额？",
+      "needDescription": "用途？",
+      "noCategory": "未分类",
+      "noAccount": "无账户",
+      "save": "保存",
+      "hint": "#类别  @账户  today/yesterday  ·  Tab 补全  ·  Enter 保存  ·  Esc 关闭"
     }
   },
   "lifeProfile": {

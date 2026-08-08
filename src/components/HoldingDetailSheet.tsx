@@ -17,6 +17,17 @@ import type { PortfolioHolding } from '../types/finance';
 interface Props {
   holding: PortfolioHolding | null;
   onClose: () => void;
+  /**
+   * v1.9 Item 14b #7 — render the body directly instead of inside a bottom
+   * sheet, for the desktop watchlist's detail pane. A sheet is the right
+   * gesture on a phone and the wrong one beside a list on a 1600px window,
+   * where the whole point is that the detail is ALREADY visible.
+   *
+   * Deliberately a flag rather than a second component: the body is 150 lines
+   * of live-data rendering, and two copies of it would drift the moment either
+   * one gained a field.
+   */
+  inline?: boolean;
 }
 
 function fmtNum(n: number | undefined, digits = 2): string {
@@ -39,7 +50,7 @@ function relativeTime(unixSeconds: number): string {
   return `${Math.round(diff / 86400)}d ago`;
 }
 
-export default function HoldingDetailSheet({ holding, onClose }: Props) {
+export default function HoldingDetailSheet({ holding, onClose, inline = false }: Props) {
   const open = holding != null;
   const tickerKey = holding ? holding.ticker.toUpperCase() : '';
   const profile = useFinanceStore((s) => (tickerKey ? s.companyProfiles[tickerKey] : undefined));
@@ -69,7 +80,9 @@ export default function HoldingDetailSheet({ holding, onClose }: Props) {
   }, [open, holding, fetchHoldingDetail]);
 
   if (!holding) {
-    return <BottomSheet open={false} onClose={onClose}>{null}</BottomSheet>;
+    // Inline callers own their own empty state — the pane says "pick a ticker",
+    // which a closed sheet cannot.
+    return inline ? null : <BottomSheet open={false} onClose={onClose}>{null}</BottomSheet>;
   }
 
   const isEquity = holding.assetType === 'stock' || holding.assetType === 'etf';
@@ -82,9 +95,14 @@ export default function HoldingDetailSheet({ holding, onClose }: Props) {
     ? latestRec.strongBuy + latestRec.buy + latestRec.hold + latestRec.sell + latestRec.strongSell
     : 0;
 
-  return (
-    <BottomSheet open={open} onClose={onClose} title={holding.ticker.toUpperCase()}>
-      <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+  const body = (
+    <div
+      className={
+        inline
+          ? 'space-y-4 max-h-[calc(100vh-9rem)] overflow-y-auto pe-1'
+          : 'space-y-4 max-h-[70vh] overflow-y-auto'
+      }
+    >
         {/* Identity row — logo, name, current price + day change */}
         <div className="flex items-start gap-3">
           {profile?.logo ? (
@@ -239,7 +257,13 @@ export default function HoldingDetailSheet({ holding, onClose }: Props) {
             CoinGecko doesn't ship the deep fundamentals Finnhub provides — this sheet is informational for stocks and ETFs.
           </div>
         )}
-      </div>
+    </div>
+  );
+
+  if (inline) return body;
+  return (
+    <BottomSheet open={open} onClose={onClose} title={holding.ticker.toUpperCase()}>
+      {body}
     </BottomSheet>
   );
 }

@@ -657,7 +657,9 @@
       "total": "Total",
       "positions_one": "{{count}} posição",
       "positions_other": "{{count}} posições",
-      "aria": "Carteira"
+      "aria": "Carteira",
+      "filterSector": "Mostrar apenas {{sector}}",
+      "ofCount": "{{count}} posições"
     },
     "finance": "Finanças",
     "tx": {
@@ -828,7 +830,8 @@
       "empty": "Nenhum item acompanhado ainda. Toque em + Acompanhar para seguir um ticker sem possuí-lo.",
       "targetAboveHit": "Alvo ≥ atingido",
       "targetBelowHit": "Alvo ≤ atingido",
-      "stopWatching": "Parar de acompanhar {{ticker}}?"
+      "stopWatching": "Parar de acompanhar {{ticker}}?",
+      "pickOne": "Escolha um título para ver o detalhe."
     },
     "mh": {
       "title": "Gerenciar ativos",
@@ -1139,6 +1142,25 @@
       "noLimit": "Sem orçamento",
       "noLimitsSet": "Nenhuma categoria tem ainda orçamento mensal, por isso não há termo de comparação.",
       "limitCaveat": "Comparado com o orçamento atual de cada categoria — os limites anteriores não são guardados."
+    },
+    "dtg": {
+      "title": "Entre domínios",
+      "empty": "Ainda não há semanas suficientes.",
+      "noData": "sem dados",
+      "weekOf": "Semana de {{date}}",
+      "scaleCaveat": "Cada linha é escalada ao seu próprio intervalo — as alturas comparam-se dentro de uma linha, não entre linhas.",
+      "sessions": "{{count}} sessões",
+      "minutes": "{{count}} min"
+    },
+    "qa": {
+      "title": "Adição rápida",
+      "placeholder": "12,50 café #alimentação @conta",
+      "needAmount": "valor?",
+      "needDescription": "para quê?",
+      "noCategory": "sem categoria",
+      "noAccount": "sem conta",
+      "save": "Guardar",
+      "hint": "#categoria  @conta  today/yesterday  ·  Tab completa  ·  Enter guarda  ·  Esc fecha"
     }
   }
 }

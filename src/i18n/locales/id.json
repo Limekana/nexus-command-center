@@ -657,7 +657,9 @@
       "total": "Total",
       "positions_one": "{{count}} posisi",
       "positions_other": "{{count}} posisi",
-      "aria": "Kepemilikan"
+      "aria": "Kepemilikan",
+      "filterSector": "Tampilkan hanya {{sector}}",
+      "ofCount": "{{count}} posisi"
     },
     "finance": "Keuangan",
     "tx": {
@@ -822,7 +824,8 @@
       "empty": "Belum ada item pantauan. Ketuk + Pantau untuk melacak sebuah ticker tanpa memilikinya.",
       "targetAboveHit": "Target ≥ tercapai",
       "targetBelowHit": "Target ≤ tercapai",
-      "stopWatching": "Berhenti memantau {{ticker}}?"
+      "stopWatching": "Berhenti memantau {{ticker}}?",
+      "pickOne": "Pilih tiker untuk melihat detailnya."
     },
     "mh": {
       "title": "Kelola kepemilikan",
@@ -1127,6 +1130,25 @@
       "noLimit": "Tanpa anggaran",
       "noLimitsSet": "Belum ada kategori yang punya anggaran bulanan, jadi tidak ada pembandingnya.",
       "limitCaveat": "Dibandingkan dengan anggaran kategori saat ini — batas lama tidak disimpan."
+    },
+    "dtg": {
+      "title": "Lintas domain",
+      "empty": "Belum cukup banyak minggu.",
+      "noData": "tanpa data",
+      "weekOf": "Minggu {{date}}",
+      "scaleCaveat": "Tiap baris diskalakan ke rentangnya sendiri — tinggi dibandingkan dalam satu baris, bukan antarbaris.",
+      "sessions": "{{count}} sesi",
+      "minutes": "{{count}} mnt"
+    },
+    "qa": {
+      "title": "Tambah cepat",
+      "placeholder": "12.50 kopi #makan @giro",
+      "needAmount": "jumlah?",
+      "needDescription": "untuk apa?",
+      "noCategory": "tanpa kategori",
+      "noAccount": "tanpa akun",
+      "save": "Simpan",
+      "hint": "#kategori  @akun  today/yesterday  ·  Tab melengkapi  ·  Enter menyimpan  ·  Esc menutup"
     }
   }
 }

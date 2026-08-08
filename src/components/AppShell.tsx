@@ -8,6 +8,7 @@ import OfflineBanner from './OfflineBanner';
 import { useShellTier, useSidebarRail } from '../lib/useShell';
 import QuickLogFAB from './QuickLogFAB';
 import QuickLogBottomSheet from './QuickLogBottomSheet';
+import QuickAddOverlay from './QuickAddOverlay';
 import PageTransition from './ui/PageTransition';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { useStudiesStore } from '../store/useStudiesStore';
@@ -35,6 +36,7 @@ const RESUME_REFRESH_THRESHOLD_MS = 20 * 60 * 1000;
 
 export default function AppShell() {
   const [quickLogOpen, setQuickLogOpen] = useState(false);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
   const location = useLocation();
   // v1.9 Item 14, Phase 1 — desktop shell. Above 769px the bottom tab bar is
   // replaced by a persistent SideNav and the content column widens.
@@ -240,6 +242,38 @@ export default function AppShell() {
     };
   }, []);
 
+  // ─── v1.9 Item 14b #9 — keyboard-driven transaction entry ─────────────
+  //
+  // Desktop only: a phone has no keyboard to trigger this from, and the full
+  // Add Transaction screen is the better surface with a thumb.
+  //
+  // `n` fires only when the user is not already typing — otherwise typing an
+  // "n" into any input on the app would open a dialog over it. Ctrl/Cmd+K is
+  // unconditional, since it cannot collide with text entry.
+  useEffect(() => {
+    if (tier !== 'desktop') return;
+    const onKey = (e: KeyboardEvent) => {
+      const el = document.activeElement as HTMLElement | null;
+      const typing =
+        !!el &&
+        (el.tagName === 'INPUT' ||
+          el.tagName === 'TEXTAREA' ||
+          el.tagName === 'SELECT' ||
+          el.isContentEditable);
+      if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setQuickAddOpen(true);
+        return;
+      }
+      if (e.key === 'n' && !typing && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        setQuickAddOpen(true);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [tier]);
+
   const showFAB = location.pathname === '/' || location.pathname === '/tasks' ||
     location.pathname === '/finance';
 
@@ -293,6 +327,7 @@ export default function AppShell() {
       {showFAB && <QuickLogFAB onClick={() => setQuickLogOpen(true)} />}
       {isPhone && <BottomTabBar />}
       <QuickLogBottomSheet open={quickLogOpen} onClose={() => setQuickLogOpen(false)} />
+      <QuickAddOverlay open={quickAddOpen} onClose={() => setQuickAddOpen(false)} />
     </div>
   );
 }

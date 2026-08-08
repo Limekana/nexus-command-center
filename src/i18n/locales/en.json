@@ -549,7 +549,9 @@
       "total": "Total",
       "positions_one": "{{count}} position",
       "positions_other": "{{count}} positions",
-      "aria": "Holdings"
+      "aria": "Holdings",
+      "filterSector": "Show only {{sector}}",
+      "ofCount": "{{count}} positions"
     },
     "finance": "Finance",
     "tx": {
@@ -717,7 +719,8 @@
       "empty": "No watchlist items yet. Tap + Watch to track a ticker without owning it.",
       "targetAboveHit": "Target ≥ hit",
       "targetBelowHit": "Target ≤ hit",
-      "stopWatching": "Stop watching {{ticker}}?"
+      "stopWatching": "Stop watching {{ticker}}?",
+      "pickOne": "Pick a ticker to see its detail."
     },
     "mh": {
       "title": "Manage Holdings",
@@ -1025,6 +1028,25 @@
       "noLimit": "No budget set",
       "noLimitsSet": "No category has a monthly budget yet, so there is nothing to compare against.",
       "limitCaveat": "Compared against each category's current budget — past limits are not kept."
+    },
+    "dtg": {
+      "title": "Across domains",
+      "empty": "Not enough weeks yet.",
+      "noData": "no data",
+      "weekOf": "Week of {{date}}",
+      "scaleCaveat": "Each row is scaled to its own range — heights compare within a row, not across rows.",
+      "sessions": "{{count}} sessions",
+      "minutes": "{{count}} min"
+    },
+    "qa": {
+      "title": "Quick add",
+      "placeholder": "12.50 coffee #food @checking",
+      "needAmount": "amount?",
+      "needDescription": "what for?",
+      "noCategory": "no category",
+      "noAccount": "no account",
+      "save": "Save",
+      "hint": "#category  @account  today/yesterday  ·  Tab completes  ·  Enter saves  ·  Esc closes"
     }
   },
   "lifeProfile": {

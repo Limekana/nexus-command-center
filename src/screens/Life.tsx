@@ -19,6 +19,8 @@ import { useTranslation } from 'react-i18next';
 import AppHeader from '../components/AppHeader';
 import LifeScoreRing, { type RingSegment } from '../components/LifeScoreRing';
 import LifeNarrativeCard from '../components/LifeNarrativeCard';
+import DomainTrendGrid, { DOMAIN_COLOURS } from '../components/DomainTrendGrid';
+import { useShellTier } from '../lib/useShell';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { useFitnessStore } from '../store/useFitnessStore';
 import { useStudiesStore } from '../store/useStudiesStore';
@@ -182,6 +184,68 @@ export default function Life() {
   }, [report.weeks.lifeScores.length]);
 
   const thisWeek = report.weeks.lifeScores[0];
+
+  // v1.9 Item 14b #8 — the same report, re-read as five aligned series.
+  // The report's weekly arrays run newest-first (lifeScores[0] is this week);
+  // a time axis reads left-to-right oldest-first, so they are reversed once
+  // here rather than in the component, which should not have to know.
+  const isDesktop = useShellTier() === 'desktop';
+  const crossDomain = useMemo(() => {
+    const w = report.weeks;
+    const order = <T,>(arr: T[]) => [...arr].reverse();
+    const lifeScores = order(w.lifeScores);
+    const fitness = order(w.fitness);
+    const study = order(w.study);
+    const habitsW = order(w.habits);
+    const finance = order(w.finance);
+    const pct = (v: number) => `${Math.round(v)}%`;
+    return {
+      weekStarts: lifeScores.map((s) => s.weekStart),
+      series: [
+        {
+          key: 'life',
+          label: t('life.lifeScoreLabel'),
+          colour: DOMAIN_COLOURS.life,
+          values: lifeScores.map((s) => s.score),
+          max: 100,
+          format: (v: number) => String(Math.round(v)),
+        },
+        {
+          key: 'fitness',
+          label: t('domains.fitness'),
+          colour: DOMAIN_COLOURS.fitness,
+          values: fitness.map((f) => f.sessionsCount),
+          format: (v: number) => t('fin.dtg.sessions', { count: Math.round(v) }),
+        },
+        {
+          key: 'study',
+          label: t('domains.studies'),
+          colour: DOMAIN_COLOURS.study,
+          values: study.map((s) => s.totalMinutes),
+          format: (v: number) => t('fin.dtg.minutes', { count: Math.round(v) }),
+        },
+        {
+          key: 'habits',
+          label: t('domains.habits'),
+          colour: DOMAIN_COLOURS.habits,
+          // null stays null: a week with no eligible habit is not a 0% week.
+          values: habitsW.map((h) => (h.hitRatio == null ? null : h.hitRatio * 100)),
+          max: 100,
+          format: pct,
+        },
+        {
+          key: 'finance',
+          label: t('domains.finance'),
+          colour: DOMAIN_COLOURS.finance,
+          values: finance.map((f) => (f.budgetAdherence == null ? null : f.budgetAdherence * 100)),
+          // 100% is exactly on plan; the reference line is the whole point of
+          // this row, since above it is overspend and below it is headroom.
+          reference: 100,
+          format: pct,
+        },
+      ],
+    };
+  }, [report, t]);
   const domains = enabledDomains(profile);
 
   // Ring shows only domains that were measured this week (have data) — matching
@@ -343,6 +407,18 @@ export default function Life() {
                 ))}
               </div>
             )}
+          </section>
+        )}
+
+        {/* ─── CROSS-DOMAIN (v1.9 Item 14b #8, desktop only) ────────── */}
+        {isDesktop && report.ready && (
+          <section className="space-y-2 desktop:col-span-full">
+            <h2 className="font-heading font-semibold text-xs uppercase tracking-wider text-text-muted px-1">
+              {t('fin.dtg.title')}
+            </h2>
+            <div className="card">
+              <DomainTrendGrid weekStarts={crossDomain.weekStarts} series={crossDomain.series} />
+            </div>
           </section>
         )}
 

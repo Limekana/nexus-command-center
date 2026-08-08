@@ -657,7 +657,9 @@
       "total": "الإجمالي",
       "positions_one": "{{count}} مركز",
       "positions_other": "{{count}} مراكز",
-      "aria": "الحيازات"
+      "aria": "الحيازات",
+      "filterSector": "إظهار {{sector}} فقط",
+      "ofCount": "{{count}} مركزًا"
     },
     "finance": "المال",
     "tx": {
@@ -837,7 +839,8 @@
       "empty": "لا عناصر متابعة بعد. اضغط + متابعة لتتبّع رمز دون امتلاكه.",
       "targetAboveHit": "تحقّق الهدف ≥",
       "targetBelowHit": "تحقّق الهدف ≤",
-      "stopWatching": "إيقاف متابعة {{ticker}}؟"
+      "stopWatching": "إيقاف متابعة {{ticker}}؟",
+      "pickOne": "اختر رمزًا لعرض تفاصيله."
     },
     "mh": {
       "title": "إدارة الممتلكات",
@@ -1157,6 +1160,25 @@
       "noLimit": "بلا ميزانية",
       "noLimitsSet": "لا توجد فئة لها ميزانية شهرية بعد، فلا شيء تُقارَن به.",
       "limitCaveat": "تُقارَن بالميزانية الحالية لكل فئة — الحدود السابقة لا تُحفظ."
+    },
+    "dtg": {
+      "title": "عبر المجالات",
+      "empty": "لا توجد أسابيع كافية بعد.",
+      "noData": "لا بيانات",
+      "weekOf": "أسبوع {{date}}",
+      "scaleCaveat": "كل صف مُقاس على مداه الخاص — تُقارَن الارتفاعات داخل الصف لا بين الصفوف.",
+      "sessions": "{{count}} حصص",
+      "minutes": "{{count}} د"
+    },
+    "qa": {
+      "title": "إضافة سريعة",
+      "placeholder": "12.50 قهوة #طعام @جاري",
+      "needAmount": "المبلغ؟",
+      "needDescription": "لماذا؟",
+      "noCategory": "بلا فئة",
+      "noAccount": "بلا حساب",
+      "save": "حفظ",
+      "hint": "#فئة  @حساب  today/yesterday  ·  Tab يُكمل  ·  Enter يحفظ  ·  Esc يغلق"
     }
   }
 }

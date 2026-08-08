@@ -8,7 +8,7 @@
 // no lots) since the sheet only reads ticker/name/assetType for its identity
 // row and pulls live data via fetchHoldingDetail() based on ticker.
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { formatMoney } from '../../lib/currencies';
 import { formatLocale } from '../../utils/formatters';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +21,7 @@ import { useFinanceStore } from '../../store/useFinanceStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { convertSync, normalizeCurrency } from '../../api/fxRates';
 import { validateTicker } from '../../lib/tickerValidation';
+import { useShellTier } from '../../lib/useShell';
 import type { WatchlistItem, PortfolioHolding } from '../../types/finance';
 
 function fmt(amount: number, currency: string): string {
@@ -52,7 +53,13 @@ export default function Watchlist() {
   const [assetType, setAssetType] = useState<WatchlistItem['assetType']>('stock');
   const [targetAbove, setTargetAbove] = useState('');
   const [targetBelow, setTargetBelow] = useState('');
-  const [detailHolding, setDetailHolding] = useState<PortfolioHolding | null>(null);
+  // v1.9 Item 14b #7 — one selection, two presentations. On a phone the
+  // selection opens a bottom sheet, which is the right gesture there. On
+  // desktop it drives a permanently-visible right pane, because the whole
+  // point of the width is that you can compare the list against the detail
+  // without navigating away.
+  const isDesktop = useShellTier() === 'desktop';
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const startAdd = () => {
     setAdding(true);
@@ -155,6 +162,30 @@ export default function Watchlist() {
 
   const editingNow = adding || editing != null;
 
+  // HoldingDetailSheet wants a PortfolioHolding. quantity 0 is honest here —
+  // a watched ticker is explicitly one we do NOT own — and the sheet reads
+  // only ticker/name/assetType for identity, fetching everything else live.
+  const selectedHolding: PortfolioHolding | null = useMemo(() => {
+    const w = watchlist.find((x) => x.id === selectedId);
+    if (!w) return null;
+    return {
+      id: w.id,
+      ticker: w.ticker,
+      name: w.name,
+      assetType: w.assetType,
+      quantity: 0,
+      createdAt: w.createdAt,
+    };
+  }, [watchlist, selectedId]);
+
+  // Desktop keeps a row selected so the pane is never an empty column on
+  // arrival, and re-points if the selected ticker is deleted out from under it.
+  useEffect(() => {
+    if (!isDesktop) return;
+    if (selectedId && watchlist.some((w) => w.id === selectedId)) return;
+    setSelectedId(watchlist[0]?.id ?? null);
+  }, [isDesktop, watchlist, selectedId]);
+
   return (
     <>
       <AppHeader
@@ -182,7 +213,17 @@ export default function Watchlist() {
           )
         }
       />
-      <div className="space-y-3">
+      {/* Two panes above 1200px, one column below. `items-start` so the
+          detail pane does not stretch to the list's height when the list is
+          long, and the list keeps its own scroll. */}
+      <div
+        className={
+          isDesktop
+            ? 'grid grid-cols-[minmax(340px,440px)_1fr] gap-3 items-start'
+            : 'space-y-3'
+        }
+      >
+        <div className="space-y-3">
         {editingNow && (
           <div className="card space-y-2">
             <div className="font-heading font-semibold text-sm">
@@ -269,21 +310,21 @@ export default function Watchlist() {
             </div>
           )}
           {rows.map((r) => (
-            <div key={r.item.id} className="flex items-center gap-2 py-2 border-b border-border/40 last:border-0">
+            <div
+              key={r.item.id}
+              className={`flex items-center gap-2 py-2 border-b border-border/40 last:border-0 ${
+                // Cyan edge-rail for the active row — the same active-state
+                // language SideNav uses, so selection reads as one system.
+                isDesktop && selectedId === r.item.id
+                  ? 'border-s-2 border-s-primary bg-primary/[0.06] -ms-2 ps-2'
+                  : isDesktop
+                    ? 'border-s-2 border-s-transparent -ms-2 ps-2'
+                    : ''
+              }`}
+            >
               <button
-                onClick={() => {
-                  // Synthesize a minimal holding shape so HoldingDetailSheet
-                  // can fetch fundamentals. quantity 0 is fine — the sheet
-                  // doesn't read it.
-                  setDetailHolding({
-                    id: r.item.id,
-                    ticker: r.item.ticker,
-                    name: r.item.name,
-                    assetType: r.item.assetType,
-                    quantity: 0,
-                    createdAt: r.item.createdAt,
-                  });
-                }}
+                onClick={() => setSelectedId(r.item.id)}
+                aria-current={isDesktop && selectedId === r.item.id ? 'true' : undefined}
                 className="flex-1 flex items-center gap-2 min-w-0 text-start"
               >
                 <div className="flex flex-col w-[68px] min-w-0">
@@ -332,8 +373,28 @@ export default function Watchlist() {
             </div>
           ))}
         </div>
+        </div>
+
+        {isDesktop && (
+          // `sticky` so the detail stays put while a long watchlist scrolls
+          // past it — the pane is a reading surface, not a second list.
+          <div className="card sticky top-3">
+            {selectedHolding ? (
+              <HoldingDetailSheet holding={selectedHolding} onClose={() => {}} inline />
+            ) : (
+              <div className="text-xs text-text-muted text-center py-10">
+                {rows.length === 0 ? t('fin.wl.empty') : t('fin.wl.pickOne')}
+              </div>
+            )}
+          </div>
+        )}
       </div>
-      <HoldingDetailSheet holding={detailHolding} onClose={() => setDetailHolding(null)} />
+
+      {/* Phone and tablet keep the sheet. Rendering both would mount the same
+          live-data component twice and double every detail fetch. */}
+      {!isDesktop && (
+        <HoldingDetailSheet holding={selectedHolding} onClose={() => setSelectedId(null)} />
+      )}
     </>
   );
 }

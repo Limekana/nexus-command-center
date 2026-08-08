@@ -69,6 +69,19 @@ export default function HoldingsTable({ rows, totalBase, baseCurrency, onSelect 
     dir: 'desc',
   });
 
+  // v1.9 Item 14b #3 — the table's own drill-down. Opening the detail sheet is
+  // a drill-IN to one position; the question a dense table also raises is
+  // "show me just my tech", which is a filter. Clicking a sector cell narrows
+  // the table to that sector; everything downstream — allocation wash, totals,
+  // the allocation percentages themselves — recomputes against the filtered
+  // set, so the percentages read as share-of-sector rather than silently
+  // staying share-of-portfolio while the rows change underneath them.
+  const [sectorFilter, setSectorFilter] = useState<string | null>(null);
+  const visible = useMemo(
+    () => (sectorFilter ? rows.filter((r) => r.sector === sectorFilter) : rows),
+    [rows, sectorFilter],
+  );
+
   const sorted = useMemo(() => {
     // Nulls always sink to the bottom regardless of direction — a position
     // with no quote is not "the smallest", it is unknown, and letting it head
@@ -86,7 +99,7 @@ export default function HoldingsTable({ rows, totalBase, baseCurrency, onSelect 
       }
     };
     const dir = sort.dir === 'asc' ? 1 : -1;
-    return [...rows].sort((a, b) => {
+    return [...visible].sort((a, b) => {
       const av = val(a);
       const bv = val(b);
       if (av == null && bv == null) return 0;
@@ -95,7 +108,7 @@ export default function HoldingsTable({ rows, totalBase, baseCurrency, onSelect 
       if (typeof av === 'string' && typeof bv === 'string') return av.localeCompare(bv) * dir;
       return ((av as number) - (bv as number)) * dir;
     });
-  }, [rows, sort]);
+  }, [visible, sort]);
 
   const totals = useMemo(() => {
     let value = 0;
@@ -103,7 +116,7 @@ export default function HoldingsTable({ rows, totalBase, baseCurrency, onSelect 
     let day = 0;
     let anyValue = false;
     let anyCost = false;
-    for (const r of rows) {
+    for (const r of visible) {
       if (r.valueBase != null) { value += r.valueBase; anyValue = true; }
       if (r.costBase != null) { cost += r.costBase; anyCost = true; }
       if (r.dayChangeBase != null) day += r.dayChangeBase;
@@ -116,7 +129,12 @@ export default function HoldingsTable({ rows, totalBase, baseCurrency, onSelect 
       pl,
       plPct: pl != null && cost > 0 ? (pl / cost) * 100 : null,
     };
-  }, [rows]);
+  }, [visible]);
+
+  // Allocation is a share of what is on screen. Keeping the portfolio-wide
+  // denominator under a sector filter would show six rows whose percentages
+  // sum to 18% with no explanation of the missing 82%.
+  const allocBase = sectorFilter ? (totals.value ?? 0) : totalBase;
 
   const onHeader = (key: SortKey) =>
     setSort((s) => (s.key === key ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: key === 'position' || key === 'sector' ? 'asc' : 'desc' }));
@@ -140,6 +158,18 @@ export default function HoldingsTable({ rows, totalBase, baseCurrency, onSelect 
   if (rows.length === 0) return null;
 
   return (
+    <>
+      {sectorFilter && (
+        <button
+          type="button"
+          onClick={() => setSectorFilter(null)}
+          className="mb-2 inline-flex items-center gap-1.5 rounded-pill border border-primary/40 bg-primary/10 px-2.5 py-1 text-[11px] text-primary"
+        >
+          {sectorFilter}
+          <span className="text-primary/70">{t('fin.tbl.ofCount', { count: visible.length })}</span>
+          <span aria-hidden>&times;</span>
+        </button>
+      )}
     <div className="glass rounded-lg overflow-hidden" role="table" aria-label={t('fin.tbl.aria')}>
       {/* Header — mono micro-labels, sticky so the columns stay named while a
           long portfolio scrolls. The active column goes cyan and carries the
@@ -172,7 +202,7 @@ export default function HoldingsTable({ rows, totalBase, baseCurrency, onSelect 
 
       <div role="rowgroup">
         {sorted.map((r) => {
-          const alloc = totalBase > 0 && r.valueBase != null ? (r.valueBase / totalBase) * 100 : null;
+          const alloc = allocBase > 0 && r.valueBase != null ? (r.valueBase / allocBase) * 100 : null;
           return (
             <div
               key={r.holding.id}
@@ -204,7 +234,25 @@ export default function HoldingsTable({ rows, totalBase, baseCurrency, onSelect 
                 <div className="text-[11px] text-text-muted truncate">{r.holding.name}</div>
               </div>
               <div role="cell" className="relative min-w-0 self-center">
-                <span className="text-[11px] text-text-muted truncate block">{r.sector}</span>
+                {/* The sector cell is the filter handle. stopPropagation so a
+                    click here narrows the table instead of also opening the
+                    detail sheet for whatever row happened to be under it. */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSectorFilter((cur) => (cur === r.sector ? null : r.sector));
+                  }}
+                  className={`text-[11px] truncate block max-w-full text-start rounded-sm px-1 -mx-1 transition-colors ${
+                    sectorFilter === r.sector
+                      ? 'text-primary bg-primary/10'
+                      : 'text-text-muted hover:text-primary'
+                  }`}
+                  aria-pressed={sectorFilter === r.sector}
+                  title={t('fin.tbl.filterSector', { sector: r.sector })}
+                >
+                  {r.sector}
+                </button>
               </div>
               <div role="cell" className="relative self-center text-end text-xs tabular-nums">
                 {r.holding.quantity}
@@ -241,7 +289,7 @@ export default function HoldingsTable({ rows, totalBase, baseCurrency, onSelect 
           {t('fin.tbl.total')}
         </div>
         <div role="cell" className="self-center text-[11px] text-text-muted">
-          {t('fin.tbl.positions', { count: rows.length })}
+          {t('fin.tbl.positions', { count: visible.length })}
         </div>
         <div role="cell" />
         <div role="cell" className="self-center text-end text-xs tabular-nums text-text-muted">
@@ -260,5 +308,6 @@ export default function HoldingsTable({ rows, totalBase, baseCurrency, onSelect 
         <div role="cell" />
       </div>
     </div>
+    </>
   );
 }
