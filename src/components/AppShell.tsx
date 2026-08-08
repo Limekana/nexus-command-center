@@ -309,8 +309,11 @@ export default function AppShell() {
               window grows instead of widening the cards. Any future max-width
               here re-creates the dead space; widen the card minimum instead. */}
           <div
-            className={`mx-auto w-full pt-3 ${
-              isPhone ? 'max-w-md px-4' : tier === 'tablet' ? 'max-w-3xl px-5' : 'px-8'
+            // v1.9 — `pt-4` at desktop so the top of the frame matches the
+            // grid gap; the side gutter (px-8) is deliberately twice that.
+            // A 12px top against a 32px side read as an accident.
+            className={`mx-auto w-full ${
+              isPhone ? 'pt-3 max-w-md px-4' : tier === 'tablet' ? 'pt-3 max-w-3xl px-5' : 'pt-4 px-8'
             }`}
           >
             {/* v1.2 — PageTransition keyed on route's first segment cross-fades

@@ -106,8 +106,8 @@ export default function TasksOverview() {
           the whole screen — the stat row, the year heatmap, the filter chips —
           span both columns, because splitting those across a column boundary
           would read as two unrelated widgets. */}
-      <div className="space-y-3 desktop:grid desktop:grid-cols-[repeat(auto-fill,minmax(420px,1fr))] wide:grid-cols-[repeat(auto-fill,minmax(600px,1fr))] desktop:items-start desktop:gap-3 desktop:space-y-0">
-        <div className="grid grid-cols-2 gap-2 desktop:col-span-full">
+      <div className="space-y-3 desktop:space-y-0 desk-grid">
+        <div className="grid grid-cols-2 gap-2 desk-span">
           <StatCard value={dueToday} label={t('tasks.dueToday')} highlight />
           <StatCard
             value={overdueCount}
@@ -118,7 +118,7 @@ export default function TasksOverview() {
         </div>
 
         {tasks.some((t) => t.completed) && (
-          <div className="card desktop:col-span-full">
+          <div className="card desk-span">
             <div className="flex items-center justify-between mb-2">
               <span className="font-heading font-semibold text-sm">{t('tasks.completionStreak')}</span>
               <span className="text-[9px] uppercase tracking-wider text-text-muted">{t('tasks.days365')}</span>
@@ -127,7 +127,7 @@ export default function TasksOverview() {
           </div>
         )}
 
-        <div className="flex gap-2 overflow-x-auto no-scrollbar desktop:col-span-full">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar desk-span">
           {filterKeys.map((f) => (
             <button
               key={f.key}

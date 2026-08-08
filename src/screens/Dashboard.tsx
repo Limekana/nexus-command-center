@@ -106,8 +106,8 @@ export default function Dashboard() {
           then the module entry points.
           `items-start` matters — without it the grid stretches every column to
           the tallest one and the short cards grow dead space inside. */}
-      <div className="space-y-3 desktop:grid desktop:grid-cols-[repeat(auto-fill,minmax(420px,1fr))] wide:grid-cols-[repeat(auto-fill,minmax(600px,1fr))] desktop:items-start desktop:gap-4 desktop:space-y-0">
-        <div className="space-y-3">
+      <div className="space-y-3 desktop:space-y-0 desk-grid">
+        <div className="desk-stack">
           <SyncStatusChip />
 
           {/* v1.2 — daily habits surface above the stat grid. The strip itself
@@ -124,7 +124,7 @@ export default function Dashboard() {
           <CrossDomainCard />
         </div>
 
-        <div className="space-y-3">
+        <div className="desk-stack">
           <div className="sec mb-2">{t('dash.overview')}</div>
           {/* Stays 2-up in its column at every width — these are four small
               stat tiles and a 1×4 row of them reads as a strip, not a group. */}
@@ -156,7 +156,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="desk-stack">
         <div className="sec mb-2">{t('dash.modules')}</div>
         <div className="grid grid-cols-1 gap-2">
           <ModuleSummaryCard title={t('domains.finance')} icon="💰" tag={monthBudget > 0 ? t('dash.tagLive') : t('dash.tagIdle')} to="/finance">

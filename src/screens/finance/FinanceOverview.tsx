@@ -255,13 +255,13 @@ export default function FinanceOverview() {
           fragments of sibling cards, so they tile straight into this grid at
           `desktop:` with no change to any card. Below 1201px it stays the
           single `space-y-3` stack it has always been. */}
-      <div className="space-y-3 desktop:grid desktop:grid-cols-[repeat(auto-fill,minmax(420px,1fr))] wide:grid-cols-[repeat(auto-fill,minmax(600px,1fr))] desktop:items-start desktop:gap-3 desktop:space-y-0">
+      <div className="space-y-3 desktop:space-y-0 desk-grid">
         {/* Segmented control — sliding cyan pill mirrors the BottomTabBar's
             active-indicator language so the two feel like one system.
             Spans both columns and keeps a phone-ish width: it switches the
             whole screen, and a 1680px-wide three-segment pill would read as a
             banner rather than a control. */}
-        <div className="glass-soft rounded-pill p-1 flex relative desktop:col-span-full desktop:max-w-lg">
+        <div className="glass-soft rounded-pill p-1 flex relative desk-span desktop:max-w-lg">
           <span
             aria-hidden
             className="absolute top-1 bottom-1 start-1 rounded-pill transition-transform duration-300 ease-spring-soft"
@@ -417,7 +417,7 @@ export default function FinanceOverview() {
                 be readable, and halving it would defeat the point. Desktop
                 only; the phone keeps the stat cards above as its summary. */}
             {isDesktop && (
-              <div className="desktop:col-span-full">
+              <div className="desk-span">
                 <CashFlowDiagram
                   model={cashFlow}
                   baseCurrency={baseCurrency}
@@ -441,7 +441,7 @@ export default function FinanceOverview() {
                 what you planned" off one aggregation, so they belong together
                 and both need the horizontal room. */}
             {isDesktop && (
-              <div className="desktop:col-span-full card">
+              <div className="desk-span card">
                 <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
                   <span className="font-heading font-semibold text-sm">{t('fin.bvt.title')}</span>
                   <div className="flex items-center gap-1.5">

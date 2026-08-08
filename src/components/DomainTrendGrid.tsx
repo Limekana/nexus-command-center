@@ -160,7 +160,7 @@ export default function DomainTrendGrid({ weekStarts, series }: Props) {
       {selected != null && (
         <div className="mt-3 pt-3 border-t border-border/40">
           <div className="sec mb-1.5">{t('fin.dtg.weekOf', { date: weekLabel(weekStarts[selected]) })}</div>
-          <div className="grid gap-2 grid-cols-[repeat(auto-fill,minmax(120px,1fr))]">
+          <div className="grid gap-2 grid-cols-[repeat(auto-fit,minmax(120px,1fr))]">
             {series.map((s) => {
               const v = s.values[selected];
               return (

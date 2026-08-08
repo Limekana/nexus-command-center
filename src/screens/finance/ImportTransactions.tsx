@@ -393,7 +393,7 @@ export default function ImportTransactions() {
               {/* One card per column of the file, each carrying a live sample
                   from the user's own data. Recognition, not recall — and it is
                   the surface that genuinely needs the desktop width. */}
-              <div className="grid gap-2 grid-cols-[repeat(auto-fill,minmax(190px,1fr))]">
+              <div className="grid gap-2 grid-cols-[repeat(auto-fit,minmax(190px,1fr))]">
                 {headers.map((h, i) => {
                   const samples = dataRows.slice(0, 3).map((r) => (r[i] ?? '').trim()).filter(Boolean);
                   const active = mapping[i] && mapping[i] !== 'ignore';

@@ -36,6 +36,20 @@
        Set on :root/[dir] rather than per-component so any future slider gets
        it for free. */
     --dir: 1;
+
+    /* ─── v1.9 Item 14 — desktop layout rhythm ────────────────────────────
+     * ONE rhythm for the whole app. Four screens had independently chosen
+     * gaps (12 / 16 / 24px) and the result read as accidental rather than
+     * designed — the cards never lined up with each other from screen to
+     * screen. These two numbers are now the only place that rhythm lives.
+     *
+     * `--desk-col` is a MINIMUM, not a width: the grid fits as many columns
+     * of at least this size as it can and lets them share the remainder.
+     * Kept at the values whose column counts were reviewed and signed off
+     * (2 columns at 1440/1920, 3 at 2560) so this is purely a spacing fix
+     * and not a silent relayout. */
+    --desk-gap: 1rem;
+    --desk-col: 440px;
   }
 
   [dir='rtl'] {
@@ -136,6 +150,89 @@
 }
 
 @layer components {
+  /* ─── v1.9 Item 14 — the desktop card grid ────────────────────────────
+   *
+   * Every screen that tiles cards uses this one class, so the app has a
+   * single rhythm instead of one per screen.
+   *
+   * TWO STRUCTURAL FIXES:
+   *
+   * 1. `align-items: stretch` (the default; the screens were overriding it
+   *    with items-start). This is the big one. A grid row is as tall as its
+   *    tallest card, so with items-start a short card left a void beneath
+   *    it that read as a random hole. Measured: a 56px card beside a 240px
+   *    one left 210px of dead space. Equal heights make each row one
+   *    deliberate band. Content still sits at the top — only the frame
+   *    stretches.
+   *
+   * 2. `auto-fit`, not `auto-fill`, for SPARSE screens. Measured precisely,
+   *    because the difference is narrower than it looks: auto-fit only
+   *    collapses tracks that are empty across the whole grid, so it does
+   *    NOT tidy a partly-filled last row (a 3-card grid in 2 columns still
+   *    leaves one empty cell on row 2 — which is just what a grid looks
+   *    like, and reads fine). What it does fix is a screen with fewer cards
+   *    than columns: Finance → Markets carries two widgets, and auto-fill
+   *    would open a third track for them to rattle around in. auto-fit
+   *    gives two full-width-sharing cards instead.
+   *
+   * Column geometry is unchanged from the reviewed result: 2 x 800px at
+   * 1920, 3 x 741px at 2560, using the full content width in both cases.
+   *
+   * Below 1201px this is inert and the phone/tablet stack is untouched.
+   */
+  .desk-grid { display: block; }
+
+  /* A column of several cards used as ONE grid cell (Dashboard's three
+   * groups). It exists to fix a mismatch that read as sloppy: the cards
+   * inside a group were 12px apart while the gap between groups was 16px,
+   * so nothing lined up horizontally. One token drives both now.
+   * Phone keeps the 12px it has always had. */
+  .desk-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  @media (min-width: 1201px) {
+    .desk-stack { gap: var(--desk-gap); }
+  }
+
+  @media (min-width: 1201px) {
+    .desk-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(var(--desk-col), 1fr));
+      gap: var(--desk-gap);
+      align-items: stretch;
+    }
+    /* Full-bleed rows — segmented controls, the cash-flow diagram, the
+       budget grid. They keep the same gap as everything else, so a spanning
+       row and a tiled row sit on the same rhythm. */
+    .desk-span { grid-column: 1 / -1; }
+
+    /* Opt-in, for a grid child that WRAPS a card rather than being one
+     * (Life's sections are a heading plus a card). Stretching the wrapper
+     * alone would only move the void inside it, so the wrapper becomes a
+     * column and its last child absorbs the slack.
+     *
+     * Deliberately opt-in rather than `.desk-grid > *`: a blanket display
+     * rule would overwrite the `display: grid` on the stat-pair containers
+     * and collapse them into a single column. Direct `.card` children need
+     * nothing — `stretch` changes their height, not their layout. */
+    .desk-fill {
+      display: flex;
+      flex-direction: column;
+    }
+    .desk-fill > :last-child { flex: 1 1 auto; }
+  }
+
+  @media (min-width: 1600px) {
+    :root {
+      /* Wider cards rather than more of them past 1600px — the reviewed
+         result was 3 columns at 2560px, and this preserves it. */
+      --desk-col: 560px;
+    }
+  }
+
   /* ─── v1.0 base components (preserved verbatim) ─────────────────────── */
   .card {
     @apply bg-surface border border-border rounded-md p-3;
