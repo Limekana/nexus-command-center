@@ -1000,6 +1000,37 @@
       "cancel": "Annuler",
       "needAccount": "Créez d'abord un compte : chaque transaction doit aller quelque part.",
       "doneCount": "{{count}} transactions importées."
+    },
+    "nwt": {
+      "title": "Patrimoine net dans le temps",
+      "empty": "Rien à tracer pour l'instant — ajoutez un compte ou une transaction.",
+      "aria": "Évolution du patrimoine net",
+      "overWindow": "sur {{count}} mois",
+      "months": "{{count}} m",
+      "currency": "Devise d'affichage",
+      "holdings": "Placements",
+      "fromSnapshot": "instantané",
+      "portfolioCash": "Liquidités du portefeuille",
+      "ledger": "registre",
+      "breakdownFor": "Détail — {{month}}",
+      "addedHere": "Ajouté ici : {{names}}",
+      "noSnapshotYet": "Aucun instantané du portefeuille ne remonte jusqu'ici, les placements sont donc absents plutôt que nuls.",
+      "nothingHere": "Aucun compte n'existait encore à ce moment-là.",
+      "total": "Total",
+      "fxCaveat": "Les soldes passés en devises étrangères sont convertis aux taux d'aujourd'hui.",
+      "historyCaveat": "L'historique commence à l'ajout de chaque compte — un solde d'ouverture n'a pas de date.",
+      "noRate": "Pas encore de taux pour {{currency}} — affichage en devise de base."
+    },
+    "bvt": {
+      "title": "Budget vs réel",
+      "empty": "Aucune dépense enregistrée sur cette période.",
+      "aria": "Budget par rapport au réel, par mois",
+      "category": "Catégorie",
+      "budget": "Budget",
+      "total": "Total",
+      "noLimit": "Pas de budget",
+      "noLimitsSet": "Aucune catégorie n'a encore de budget mensuel, il n'y a donc rien à comparer.",
+      "limitCaveat": "Comparé au budget actuel de chaque catégorie — les anciens plafonds ne sont pas conservés."
     }
   },
   "lifeProfile": {

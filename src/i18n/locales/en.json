@@ -994,6 +994,37 @@
       "cancel": "Cancel",
       "needAccount": "Create an account first — every transaction has to land somewhere.",
       "doneCount": "Imported {{count}} transactions."
+    },
+    "nwt": {
+      "title": "Net worth over time",
+      "empty": "Nothing to plot yet — add an account or a transaction.",
+      "aria": "Net worth trend",
+      "overWindow": "over {{count}} months",
+      "months": "{{count}}m",
+      "currency": "Display currency",
+      "holdings": "Holdings",
+      "fromSnapshot": "snapshot",
+      "portfolioCash": "Portfolio cash",
+      "ledger": "ledger",
+      "breakdownFor": "Breakdown — {{month}}",
+      "addedHere": "Added here: {{names}}",
+      "noSnapshotYet": "No portfolio snapshot reaches this far back, so holdings are missing here rather than zero.",
+      "nothingHere": "No accounts existed yet at this point.",
+      "total": "Total",
+      "fxCaveat": "Past balances in other currencies are restated at today's rates.",
+      "historyCaveat": "History starts when each account was added — an opening balance carries no date.",
+      "noRate": "No rate for {{currency}} yet — showing base currency."
+    },
+    "bvt": {
+      "title": "Budget vs actual",
+      "empty": "No spending recorded in this window.",
+      "aria": "Budget versus actual by month",
+      "category": "Category",
+      "budget": "Budget",
+      "total": "Total",
+      "noLimit": "No budget set",
+      "noLimitsSet": "No category has a monthly budget yet, so there is nothing to compare against.",
+      "limitCaveat": "Compared against each category's current budget — past limits are not kept."
     }
   },
   "lifeProfile": {

@@ -29,6 +29,10 @@ import { LIABILITY_TYPES } from '../../types/finance';
 // conventions for liability accounts.
 import { computeAccountBalance } from '../../lib/accountBalance';
 import { portfolioCashBalance } from '../../lib/portfolioCash';
+// v1.9 Item 14b #5 — the time-series the Account model never got.
+import { buildNetWorthTrend } from '../../lib/netWorthTrend';
+import NetWorthTrendChart, { NetWorthBreakdown } from '../../components/NetWorthTrendChart';
+import { useShellTier } from '../../lib/useShell';
 
 
 
@@ -134,6 +138,69 @@ export default function NetWorth() {
   );
 
   const netWorth = portfolioTotalBase + totalAssets - totalLiabilities;
+
+  // ─── v1.9 Item 14b #5 — trended net worth ───────────────────────────────
+  //
+  // Window and display currency are VIEW state: the currency toggle restates
+  // the chart without touching the user's base-currency setting, which is a
+  // preference, not a lens. The trend itself is always built in base currency
+  // and scaled at render — conversion is linear, so one rate lookup restates
+  // every figure consistently instead of converting account by account.
+  const tier = useShellTier();
+  const snapshots = useFinanceStore((s) => s.portfolioSnapshots);
+  const [trendMonths, setTrendMonths] = useState(12);
+  // `string`, not the currency union: the <select> hands back a plain string
+  // and the trend builder takes any code the FX table can resolve.
+  const [trendCurrency, setTrendCurrency] = useState<string>(baseCurrency);
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+
+  const trend = useMemo(
+    () =>
+      buildNetWorthTrend({
+        accounts: manualAssets,
+        transactions,
+        snapshots,
+        // Same selector the headline portfolio-cash figure reads, so the trend's
+        // last point and the total above it cannot disagree.
+        cashEntries,
+        fxRates,
+        baseCurrency,
+        months: trendMonths,
+        today: new Date().toISOString().slice(0, 10),
+      }),
+    [manualAssets, transactions, snapshots, cashEntries, fxRates, baseCurrency, trendMonths],
+  );
+
+  // One rate for the whole restatement. null (an unknown rate) falls back to
+  // base rather than silently rendering unconverted numbers under a different
+  // currency symbol, which would be a straightforwardly wrong chart.
+  const trendRate = useMemo(() => {
+    if (trendCurrency === baseCurrency) return 1;
+    const r = convertSync(1, baseCurrency, trendCurrency, fxRates);
+    return r ?? null;
+  }, [trendCurrency, baseCurrency, fxRates]);
+  const effectiveTrendCurrency = trendRate == null ? baseCurrency : trendCurrency;
+  const scale = trendRate ?? 1;
+
+  const scaledTrend = useMemo(() => {
+    if (scale === 1) return trend;
+    return {
+      ...trend,
+      points: trend.points.map((p) => ({
+        ...p,
+        accounts: p.accounts.map((a) => ({ ...a, base: a.base * scale })),
+        accountsBase: p.accountsBase * scale,
+        holdingsBase: p.holdingsBase == null ? null : p.holdingsBase * scale,
+        portfolioCashBase: p.portfolioCashBase * scale,
+        total: p.total * scale,
+      })),
+    };
+  }, [trend, scale]);
+
+  const selectedPoint =
+    scaledTrend.points.find((p) => p.month === selectedMonth) ??
+    scaledTrend.points[scaledTrend.points.length - 1] ??
+    null;
 
   // Savings runway: months of expenses covered by liquid cash/savings.
   // Uses last 90d of expense transactions / 3 for monthly average.
@@ -308,6 +375,86 @@ export default function NetWorth() {
             <Cell label={t('fin.nw.liabilities')} value={`−${fmt(totalLiabilities, baseCurrency)}`} tone={totalLiabilities > 0 ? 'danger' : 'default'} />
           </div>
         </div>
+
+        {/* v1.9 Item 14b #5 — trended net worth. Chart and breakdown sit side
+            by side at desktop (the breakdown is the answer to a question the
+            chart raises, so they belong in one glance) and stack below it
+            elsewhere. */}
+        {!scaledTrend.isEmpty && (
+          <div className="card">
+            <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+              <span className="font-heading font-semibold text-sm">{t('fin.nwt.title')}</span>
+              <div className="flex items-center gap-1.5">
+                {[6, 12, 24].map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setTrendMonths(m)}
+                    className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded-sm border ${
+                      trendMonths === m
+                        ? 'border-primary/40 bg-primary/5 text-primary'
+                        : 'border-border text-text-muted'
+                    }`}
+                  >
+                    {t('fin.nwt.months', { count: m })}
+                  </button>
+                ))}
+                <select
+                  aria-label={t('fin.nwt.currency')}
+                  value={effectiveTrendCurrency}
+                  onChange={(e) => setTrendCurrency(e.target.value)}
+                  className="text-[10px] uppercase tracking-wider bg-surface2 border border-border rounded-sm px-1.5 py-0.5 text-text-muted focus:outline-none focus:border-primary"
+                >
+                  {currencyOptions(formatLocale()).map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.code}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid gap-4 desktop:grid-cols-[1.6fr_1fr] items-start">
+              <NetWorthTrendChart
+                trend={scaledTrend}
+                currency={effectiveTrendCurrency}
+                formatCurrency={fmt}
+                formatCompact={(v) =>
+                  new Intl.NumberFormat(formatLocale(), {
+                    notation: 'compact',
+                    maximumFractionDigits: 1,
+                  }).format(v)
+                }
+                selected={selectedMonth}
+                onSelect={setSelectedMonth}
+              />
+              {selectedPoint && (
+                <div className={tier === 'desktop' ? '' : 'pt-3 border-t border-border/40'}>
+                  <NetWorthBreakdown
+                    point={selectedPoint}
+                    currency={effectiveTrendCurrency}
+                    formatCurrency={fmt}
+                    typeLabel={(k) => ASSET_META[k as ManualAssetType]?.label ?? k}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Both caveats are properties of the data, not of the chart, so
+                they are stated rather than designed around. */}
+            <div className="mt-2 space-y-0.5">
+              {trendRate == null && trendCurrency !== baseCurrency && (
+                <div className="text-[10px] text-warning">
+                  {t('fin.nwt.noRate', { currency: trendCurrency })}
+                </div>
+              )}
+              {scaledTrend.usedFx && (
+                <div className="text-[10px] text-text-muted">{t('fin.nwt.fxCaveat')}</div>
+              )}
+              <div className="text-[10px] text-text-muted">{t('fin.nwt.historyCaveat')}</div>
+            </div>
+          </div>
+        )}
 
         {/* v1.2 follow-up — CTO Account refactor (BUG-5 partial revert).
             Savings Buffer card reads the SUM of all Savings-type account

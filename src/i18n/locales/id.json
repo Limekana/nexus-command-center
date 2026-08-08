@@ -1096,6 +1096,37 @@
       "cancel": "Batal",
       "needAccount": "Buat akun dulu — setiap transaksi harus punya tempat.",
       "doneCount": "{{count}} transaksi diimpor."
+    },
+    "nwt": {
+      "title": "Kekayaan bersih dari waktu ke waktu",
+      "empty": "Belum ada yang bisa digambar — tambahkan akun atau transaksi.",
+      "aria": "Tren kekayaan bersih",
+      "overWindow": "selama {{count}} bulan",
+      "months": "{{count}} bln",
+      "currency": "Mata uang tampilan",
+      "holdings": "Investasi",
+      "fromSnapshot": "cuplikan",
+      "portfolioCash": "Kas portofolio",
+      "ledger": "buku besar",
+      "breakdownFor": "Rincian — {{month}}",
+      "addedHere": "Ditambahkan di sini: {{names}}",
+      "noSnapshotYet": "Tidak ada cuplikan portofolio sejauh ini ke belakang, jadi investasi tidak ada di sini — bukan nol.",
+      "nothingHere": "Belum ada akun pada titik ini.",
+      "total": "Total",
+      "fxCaveat": "Saldo lampau dalam mata uang lain dinyatakan ulang dengan kurs hari ini.",
+      "historyCaveat": "Riwayat dimulai saat tiap akun ditambahkan — saldo awal tidak membawa tanggal.",
+      "noRate": "Belum ada kurs untuk {{currency}} — menampilkan mata uang dasar."
+    },
+    "bvt": {
+      "title": "Anggaran vs realisasi",
+      "empty": "Tidak ada pengeluaran tercatat pada rentang ini.",
+      "aria": "Anggaran dibanding realisasi per bulan",
+      "category": "Kategori",
+      "budget": "Anggaran",
+      "total": "Total",
+      "noLimit": "Tanpa anggaran",
+      "noLimitsSet": "Belum ada kategori yang punya anggaran bulanan, jadi tidak ada pembandingnya.",
+      "limitCaveat": "Dibandingkan dengan anggaran kategori saat ini — batas lama tidak disimpan."
     }
   }
 }

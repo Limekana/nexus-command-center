@@ -994,6 +994,37 @@
       "cancel": "Peruuta",
       "needAccount": "Luo ensin tili — jokaisen tapahtuman on päädyttävä jonnekin.",
       "doneCount": "Tuotiin {{count}} tapahtumaa."
+    },
+    "nwt": {
+      "title": "Nettovarallisuus ajan mittaan",
+      "empty": "Ei vielä piirrettävää — lisää tili tai tapahtuma.",
+      "aria": "Nettovarallisuuden kehitys",
+      "overWindow": "{{count}} kuukauden aikana",
+      "months": "{{count}} kk",
+      "currency": "Näyttövaluutta",
+      "holdings": "Sijoitukset",
+      "fromSnapshot": "tilannekuva",
+      "portfolioCash": "Salkun käteinen",
+      "ledger": "kirjanpito",
+      "breakdownFor": "Erittely — {{month}}",
+      "addedHere": "Lisätty tässä: {{names}}",
+      "noSnapshotYet": "Salkusta ei ole näin kaukaa tilannekuvaa, joten sijoitukset puuttuvat tästä eivätkä ole nolla.",
+      "nothingHere": "Tässä vaiheessa ei ollut vielä yhtään tiliä.",
+      "total": "Yhteensä",
+      "fxCaveat": "Muissa valuutoissa olevat menneet saldot on muunnettu tämän päivän kursseilla.",
+      "historyCaveat": "Historia alkaa siitä, kun tili lisättiin — alkusaldolla ei ole päivämäärää.",
+      "noRate": "Valuutalle {{currency}} ei ole vielä kurssia — näytetään perusvaluutta."
+    },
+    "bvt": {
+      "title": "Budjetti vs. toteuma",
+      "empty": "Tältä jaksolta ei ole kirjattuja menoja.",
+      "aria": "Budjetti ja toteuma kuukausittain",
+      "category": "Luokka",
+      "budget": "Budjetti",
+      "total": "Yhteensä",
+      "noLimit": "Ei budjettia",
+      "noLimitsSet": "Millekään luokalle ei ole vielä asetettu kuukausibudjettia, joten vertailukohtaa ei ole.",
+      "limitCaveat": "Verrataan kunkin luokan nykyiseen budjettiin — vanhoja rajoja ei säilytetä."
     }
   },
   "lifeProfile": {

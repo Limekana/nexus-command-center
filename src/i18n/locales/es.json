@@ -1000,6 +1000,37 @@
       "cancel": "Cancelar",
       "needAccount": "Crea primero una cuenta: cada transacción tiene que ir a alguna parte.",
       "doneCount": "Se importaron {{count}} transacciones."
+    },
+    "nwt": {
+      "title": "Patrimonio a lo largo del tiempo",
+      "empty": "Nada que trazar aún: añade una cuenta o una transacción.",
+      "aria": "Evolución del patrimonio",
+      "overWindow": "en {{count}} meses",
+      "months": "{{count}} m",
+      "currency": "Moneda de visualización",
+      "holdings": "Inversiones",
+      "fromSnapshot": "instantánea",
+      "portfolioCash": "Efectivo de la cartera",
+      "ledger": "registro",
+      "breakdownFor": "Desglose — {{month}}",
+      "addedHere": "Añadido aquí: {{names}}",
+      "noSnapshotYet": "Ninguna instantánea de la cartera llega tan atrás, así que aquí faltan las inversiones en vez de valer cero.",
+      "nothingHere": "Aún no existía ninguna cuenta en este momento.",
+      "total": "Total",
+      "fxCaveat": "Los saldos pasados en otras monedas se reexpresan a los tipos de hoy.",
+      "historyCaveat": "El historial empieza cuando se añadió cada cuenta: un saldo inicial no lleva fecha.",
+      "noRate": "Todavía no hay tipo para {{currency}}: se muestra la moneda base."
+    },
+    "bvt": {
+      "title": "Presupuesto vs real",
+      "empty": "No hay gastos registrados en este periodo.",
+      "aria": "Presupuesto frente a real por mes",
+      "category": "Categoría",
+      "budget": "Presupuesto",
+      "total": "Total",
+      "noLimit": "Sin presupuesto",
+      "noLimitsSet": "Ninguna categoría tiene presupuesto mensual todavía, así que no hay con qué comparar.",
+      "limitCaveat": "Comparado con el presupuesto actual de cada categoría: no se guardan los límites anteriores."
     }
   },
   "lifeProfile": {

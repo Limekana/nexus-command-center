@@ -994,6 +994,37 @@
       "cancel": "Abbrechen",
       "needAccount": "Lege zuerst ein Konto an — jede Transaktion muss irgendwo landen.",
       "doneCount": "{{count}} Transaktionen importiert."
+    },
+    "nwt": {
+      "title": "Nettovermögen im Zeitverlauf",
+      "empty": "Noch nichts zu zeigen — füge ein Konto oder eine Transaktion hinzu.",
+      "aria": "Verlauf des Nettovermögens",
+      "overWindow": "über {{count}} Monate",
+      "months": "{{count}} M",
+      "currency": "Anzeigewährung",
+      "holdings": "Depot",
+      "fromSnapshot": "Momentaufnahme",
+      "portfolioCash": "Depot-Barbestand",
+      "ledger": "Kontobuch",
+      "breakdownFor": "Aufschlüsselung — {{month}}",
+      "addedHere": "Hier hinzugekommen: {{names}}",
+      "noSnapshotYet": "So weit zurück gibt es keine Depot-Momentaufnahme, das Depot fehlt hier also, statt null zu sein.",
+      "nothingHere": "Zu diesem Zeitpunkt gab es noch keine Konten.",
+      "total": "Gesamt",
+      "fxCaveat": "Vergangene Fremdwährungssalden werden zu heutigen Kursen umgerechnet.",
+      "historyCaveat": "Die Historie beginnt, wenn ein Konto angelegt wurde — ein Anfangssaldo trägt kein Datum.",
+      "noRate": "Noch kein Kurs für {{currency}} — es wird die Basiswährung gezeigt."
+    },
+    "bvt": {
+      "title": "Budget vs. Ist",
+      "empty": "In diesem Zeitraum sind keine Ausgaben erfasst.",
+      "aria": "Budget gegen Ist je Monat",
+      "category": "Kategorie",
+      "budget": "Budget",
+      "total": "Gesamt",
+      "noLimit": "Kein Budget",
+      "noLimitsSet": "Noch hat keine Kategorie ein Monatsbudget, es gibt also keinen Vergleichswert.",
+      "limitCaveat": "Verglichen mit dem aktuellen Budget je Kategorie — frühere Grenzen werden nicht gespeichert."
     }
   },
   "lifeProfile": {

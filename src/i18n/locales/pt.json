@@ -1108,6 +1108,37 @@
       "cancel": "Cancelar",
       "needAccount": "Crie primeiro uma conta — cada transação tem de ir para algum lado.",
       "doneCount": "Importadas {{count}} transações."
+    },
+    "nwt": {
+      "title": "Património ao longo do tempo",
+      "empty": "Ainda não há nada para mostrar — adicione uma conta ou uma transação.",
+      "aria": "Evolução do património",
+      "overWindow": "em {{count}} meses",
+      "months": "{{count}} m",
+      "currency": "Moeda de apresentação",
+      "holdings": "Investimentos",
+      "fromSnapshot": "instantâneo",
+      "portfolioCash": "Dinheiro da carteira",
+      "ledger": "registo",
+      "breakdownFor": "Detalhe — {{month}}",
+      "addedHere": "Adicionado aqui: {{names}}",
+      "noSnapshotYet": "Nenhum instantâneo da carteira chega tão atrás, por isso os investimentos faltam aqui em vez de valerem zero.",
+      "nothingHere": "Ainda não existia nenhuma conta neste ponto.",
+      "total": "Total",
+      "fxCaveat": "Os saldos passados noutras moedas são reexpressos às taxas de hoje.",
+      "historyCaveat": "O histórico começa quando cada conta foi adicionada — um saldo inicial não tem data.",
+      "noRate": "Ainda não há taxa para {{currency}} — a mostrar a moeda base."
+    },
+    "bvt": {
+      "title": "Orçamento vs real",
+      "empty": "Sem despesas registadas neste período.",
+      "aria": "Orçamento face ao real por mês",
+      "category": "Categoria",
+      "budget": "Orçamento",
+      "total": "Total",
+      "noLimit": "Sem orçamento",
+      "noLimitsSet": "Nenhuma categoria tem ainda orçamento mensal, por isso não há termo de comparação.",
+      "limitCaveat": "Comparado com o orçamento atual de cada categoria — os limites anteriores não são guardados."
     }
   }
 }

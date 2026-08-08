@@ -994,6 +994,37 @@
       "cancel": "取消",
       "needAccount": "请先创建账户 — 每笔交易都得有归属。",
       "doneCount": "已导入 {{count}} 笔交易。"
+    },
+    "nwt": {
+      "title": "净资产走势",
+      "empty": "暂时没有可绘制的数据 — 先添加账户或交易。",
+      "aria": "净资产走势",
+      "overWindow": "{{count}} 个月内",
+      "months": "{{count}}个月",
+      "currency": "显示货币",
+      "holdings": "持仓",
+      "fromSnapshot": "快照",
+      "portfolioCash": "投资组合现金",
+      "ledger": "流水",
+      "breakdownFor": "构成 — {{month}}",
+      "addedHere": "此处新增：{{names}}",
+      "noSnapshotYet": "没有这么早的投资组合快照，因此这里的持仓是缺失而非为零。",
+      "nothingHere": "此时还没有任何账户。",
+      "total": "合计",
+      "fxCaveat": "其他货币的历史余额按今天的汇率重新折算。",
+      "historyCaveat": "历史从每个账户被添加时开始 — 期初余额没有日期。",
+      "noRate": "暂无 {{currency}} 的汇率 — 显示基准货币。"
+    },
+    "bvt": {
+      "title": "预算与实际",
+      "empty": "此区间没有支出记录。",
+      "aria": "按月对比预算与实际",
+      "category": "类别",
+      "budget": "预算",
+      "total": "合计",
+      "noLimit": "未设预算",
+      "noLimitsSet": "还没有类别设置月度预算，因此无从比较。",
+      "limitCaveat": "与各类别当前预算对比 — 不保存历史限额。"
     }
   },
   "lifeProfile": {

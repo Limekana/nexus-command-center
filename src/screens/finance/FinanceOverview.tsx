@@ -15,7 +15,10 @@ import { convertSync, normalizeCurrency } from '../../api/fxRates';
 import { formatCurrency, formatShortDate, localDateKey, formatLocale } from '../../utils/formatters';
 import { computeAccountBalance } from '../../lib/accountBalance';
 import CashFlowDiagram from '../../components/CashFlowDiagram';
-import { buildCashFlow, type CashFlowNode } from '../../lib/cashFlow';
+import BudgetTrendTable from '../../components/BudgetTrendTable';
+import { buildCashFlow } from '../../lib/cashFlow';
+import { buildBudgetTrend } from '../../lib/budgetTrend';
+import { formatMoney } from '../../lib/currencies';
 import { useShellTier } from '../../lib/useShell';
 import { portfolioCashBalance } from '../../lib/portfolioCash';
 
@@ -29,6 +32,33 @@ import { portfolioCashBalance } from '../../lib/portfolioCash';
 // runtime — no persistence.
 type FinanceTab = 'balance' | 'portfolio' | 'markets';
 const FINANCE_TABS: readonly FinanceTab[] = ['balance', 'portfolio', 'markets'];
+
+/**
+ * v1.9 Item 14b #3 — ONE filter for every drill-in on this screen.
+ *
+ * The cash-flow diagram and the budget grid both narrow the transaction list
+ * below them. Two independent filter states would let the two surfaces
+ * contradict each other on screen, with the list obeying whichever fired last
+ * and no way to tell which. Month is part of the filter because both sources
+ * are month-scoped — the diagram draws the current month, the grid draws one
+ * cell — and filtering a month-scoped click to all-time was the earlier
+ * version's mismatch.
+ *
+ * `categoryId: null` means uncategorised spending specifically, matching the
+ * budget grid's own uncategorised row.
+ */
+interface TxFilter {
+  categoryId: string | null;
+  /** `YYYY-MM`. */
+  month: string;
+  label: string;
+}
+
+function monthRange(key: string): { from: string; to: string } {
+  const [y, m] = key.split('-').map(Number);
+  const last = new Date(y, m, 0).getDate();
+  return { from: `${key}-01`, to: `${key}-${String(last).padStart(2, '0')}` };
+}
 
 export default function FinanceOverview() {
   const { t } = useTranslation();
@@ -106,28 +136,54 @@ export default function FinanceOverview() {
   // are ISO strings rather than Date objects: no timezone in play, so a
   // transaction stays in the month the user filed it under.
   const isDesktop = useShellTier() === 'desktop';
-  const [flowFilter, setFlowFilter] = useState<CashFlowNode | null>(null);
-  const cashFlow = useMemo(() => {
+  const [txFilter, setTxFilter] = useState<TxFilter | null>(null);
+  const [budgetMonths, setBudgetMonths] = useState(6);
+
+  const currentMonthKey = useMemo(() => {
     const now = new Date();
-    const y = now.getFullYear();
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  }, []);
+
+  // Labels live here so both the diagram and the budget grid feed the same
+  // aggregation with the same names — `buildCashFlow` stays i18n-free.
+  const flowLabels = useMemo(
+    () => ({
+      otherIncome: t('fin.flow.otherIncome'),
+      uncategorised: t('fin.flow.uncategorised'),
+      saved: t('fin.flow.saved'),
+      debt: t('fin.flow.debt'),
+      leftover: t('fin.flow.leftover'),
+      deficit: t('fin.flow.fromReserves'),
+    }),
+    [t],
+  );
+
+  const cashFlow = useMemo(() => {
+    const { from, to } = monthRange(currentMonthKey);
     return buildCashFlow({
       transactions,
       categories: budgetCategories,
       accounts: manualAssets,
-      from: `${y}-${mm}-01`,
-      to: `${y}-${mm}-${String(lastDay).padStart(2, '0')}`,
-      labels: {
-        otherIncome: t('fin.flow.otherIncome'),
-        uncategorised: t('fin.flow.uncategorised'),
-        saved: t('fin.flow.saved'),
-        debt: t('fin.flow.debt'),
-        leftover: t('fin.flow.leftover'),
-        deficit: t('fin.flow.fromReserves'),
-      },
+      from,
+      to,
+      labels: flowLabels,
     });
-  }, [transactions, budgetCategories, manualAssets, t]);
+  }, [transactions, budgetCategories, manualAssets, currentMonthKey, flowLabels]);
+
+  // v1.9 Item 14b #6 — same aggregation, run once per month. Built here rather
+  // than inside the table so the two desktop surfaces provably read one number.
+  const budgetTrend = useMemo(
+    () =>
+      buildBudgetTrend({
+        transactions,
+        categories: budgetCategories,
+        accounts: manualAssets,
+        months: budgetMonths,
+        today: new Date().toISOString().slice(0, 10),
+        labels: flowLabels,
+      }),
+    [transactions, budgetCategories, manualAssets, budgetMonths, flowLabels],
+  );
 
   // Drill-down (plan requirement #3): clicking a band filters the transaction
   // list below to exactly that flow. Only category-backed bands can filter —
@@ -135,9 +191,15 @@ export default function FinanceOverview() {
   // a set of transactions, so selecting them clears instead of filtering to
   // nothing, which would read as "no data" rather than "not applicable".
   const visibleTx = useMemo(() => {
-    if (!flowFilter?.categoryId) return transactions;
-    return transactions.filter((tx) => tx.categoryId === flowFilter.categoryId);
-  }, [transactions, flowFilter]);
+    if (!txFilter) return transactions;
+    const { from, to } = monthRange(txFilter.month);
+    return transactions.filter(
+      (tx) =>
+        tx.date >= from &&
+        tx.date <= to &&
+        (txFilter.categoryId === null ? !tx.categoryId : tx.categoryId === txFilter.categoryId),
+    );
+  }, [transactions, txFilter]);
 
   const { income, expenses } = useMemo(() => {
     const now = new Date();
@@ -360,8 +422,62 @@ export default function FinanceOverview() {
                   model={cashFlow}
                   baseCurrency={baseCurrency}
                   onSelect={(node) =>
-                    setFlowFilter((cur) =>
-                      cur?.id === node.id || !node.categoryId ? null : node,
+                    setTxFilter((cur) =>
+                      // Synthetic nodes are derived totals with no transaction
+                      // set behind them, so they clear rather than filter to an
+                      // empty list that would read as "no data".
+                      !node.categoryId ||
+                      (cur?.categoryId === node.categoryId && cur.month === currentMonthKey)
+                        ? null
+                        : { categoryId: node.categoryId, month: currentMonthKey, label: node.label },
+                    )
+                  }
+                />
+              </div>
+            )}
+
+            {/* v1.9 Item 14b #6 — budget vs actual. Full grid width beside the
+                cash-flow diagram: the two answer "where did it go" and "versus
+                what you planned" off one aggregation, so they belong together
+                and both need the horizontal room. */}
+            {isDesktop && (
+              <div className="desktop:col-span-full card">
+                <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+                  <span className="font-heading font-semibold text-sm">{t('fin.bvt.title')}</span>
+                  <div className="flex items-center gap-1.5">
+                    {[3, 6, 12].map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setBudgetMonths(m)}
+                        className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded-sm border ${
+                          budgetMonths === m
+                            ? 'border-primary/40 bg-primary/5 text-primary'
+                            : 'border-border text-text-muted'
+                        }`}
+                      >
+                        {t('fin.nwt.months', { count: m })}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => navigate('/finance/budgets')}
+                      className="text-[10px] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5 active:bg-primary/10"
+                    >
+                      {t('fin.ov.manage')}
+                    </button>
+                  </div>
+                </div>
+                <BudgetTrendTable
+                  trend={budgetTrend}
+                  baseCurrency={baseCurrency}
+                  formatCurrency={(v, c) => formatMoney(v, c, { locale: formatLocale() })}
+                  selected={txFilter}
+                  onSelect={(categoryId, month, label) =>
+                    setTxFilter((cur) =>
+                      cur?.categoryId === categoryId && cur.month === month
+                        ? null
+                        : { categoryId, month, label },
                     )
                   }
                 />
@@ -375,13 +491,14 @@ export default function FinanceOverview() {
                   {t('fin.ov.txTotal', { count: visibleTx.length })}
                 </span>
               </div>
-              {flowFilter?.categoryId && (
+              {txFilter && (
                 <button
                   type="button"
-                  onClick={() => setFlowFilter(null)}
+                  onClick={() => setTxFilter(null)}
                   className="mb-2 inline-flex items-center gap-1.5 rounded-pill border border-primary/40 bg-primary/10 px-2.5 py-1 text-[11px] text-primary"
                 >
-                  {flowFilter.label}
+                  {txFilter.label}
+                  <span className="text-primary/70">{txFilter.month}</span>
                   <span aria-hidden>&times;</span>
                 </button>
               )}
