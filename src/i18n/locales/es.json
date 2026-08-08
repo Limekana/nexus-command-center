@@ -523,6 +523,20 @@
     "forgotPin": "¿PIN olvidado? Restablece en Ajustes → Borrar todos los datos"
   },
   "fin": {
+    "flow": {
+      "title": "A dónde fue el dinero",
+      "empty": "No hay ingresos ni gastos en este período.",
+      "in": "Entra",
+      "out": "Sale",
+      "surplus": "{{amount}} sobrante",
+      "deficit": "{{amount}} cubierto con reservas",
+      "otherIncome": "Otros ingresos",
+      "uncategorised": "Sin categoría",
+      "saved": "Ahorrado",
+      "debt": "Deuda pagada",
+      "leftover": "Sobrante",
+      "fromReserves": "De reservas"
+    },
     "tbl": {
       "position": "Posición",
       "sector": "Sector",

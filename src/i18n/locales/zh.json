@@ -523,6 +523,20 @@
     "forgotPin": "忘记 PIN？在 设置 → 清除所有数据 中重置"
   },
   "fin": {
+    "flow": {
+      "title": "钱去哪儿了",
+      "empty": "本期间没有收入或支出记录。",
+      "in": "收入",
+      "out": "支出",
+      "surplus": "结余 {{amount}}",
+      "deficit": "动用储备 {{amount}}",
+      "otherIncome": "其他收入",
+      "uncategorised": "未分类",
+      "saved": "储蓄",
+      "debt": "偿还债务",
+      "leftover": "结余",
+      "fromReserves": "来自储备"
+    },
     "tbl": {
       "position": "持仓",
       "sector": "行业",

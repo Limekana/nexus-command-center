@@ -523,6 +523,20 @@
     "forgotPin": "Unohtuiko PIN? Nollaa kohdasta Asetukset → Tyhjennä kaikki tiedot"
   },
   "fin": {
+    "flow": {
+      "title": "Minne raha meni",
+      "empty": "Tältä jaksolta ei ole tuloja eikä menoja.",
+      "in": "Sisään",
+      "out": "Ulos",
+      "surplus": "{{amount}} jäi yli",
+      "deficit": "{{amount}} katettu säästöistä",
+      "otherIncome": "Muut tulot",
+      "uncategorised": "Luokittelematon",
+      "saved": "Säästöön",
+      "debt": "Velkaa maksettu",
+      "leftover": "Jäi yli",
+      "fromReserves": "Säästöistä"
+    },
     "tbl": {
       "position": "Positio",
       "sector": "Toimiala",

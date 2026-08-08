@@ -523,6 +523,20 @@
     "forgotPin": "PIN vergessen? Zurücksetzen unter Einstellungen → Alle Daten löschen"
   },
   "fin": {
+    "flow": {
+      "title": "Wohin das Geld floss",
+      "empty": "Für diesen Zeitraum sind keine Einnahmen oder Ausgaben erfasst.",
+      "in": "Ein",
+      "out": "Aus",
+      "surplus": "{{amount}} übrig",
+      "deficit": "{{amount}} aus Rücklagen gedeckt",
+      "otherIncome": "Sonstige Einnahmen",
+      "uncategorised": "Ohne Kategorie",
+      "saved": "Gespart",
+      "debt": "Schulden getilgt",
+      "leftover": "Übrig",
+      "fromReserves": "Aus Rücklagen"
+    },
     "tbl": {
       "position": "Position",
       "sector": "Sektor",

@@ -631,6 +631,20 @@
     "greed": "लालच"
   },
   "fin": {
+    "flow": {
+      "title": "पैसा कहाँ गया",
+      "empty": "इस अवधि में कोई आय या ख़र्च दर्ज नहीं है।",
+      "in": "आय",
+      "out": "ख़र्च",
+      "surplus": "{{amount}} बचा",
+      "deficit": "{{amount}} बचत से पूरा किया",
+      "otherIncome": "अन्य आय",
+      "uncategorised": "बिना श्रेणी",
+      "saved": "बचाया",
+      "debt": "क़र्ज़ चुकाया",
+      "leftover": "बचा हुआ",
+      "fromReserves": "बचत से"
+    },
     "tbl": {
       "position": "पोज़िशन",
       "sector": "क्षेत्र",

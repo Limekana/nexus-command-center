@@ -14,6 +14,9 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 import { convertSync, normalizeCurrency } from '../../api/fxRates';
 import { formatCurrency, formatShortDate, localDateKey, formatLocale } from '../../utils/formatters';
 import { computeAccountBalance } from '../../lib/accountBalance';
+import CashFlowDiagram from '../../components/CashFlowDiagram';
+import { buildCashFlow, type CashFlowNode } from '../../lib/cashFlow';
+import { useShellTier } from '../../lib/useShell';
 import { portfolioCashBalance } from '../../lib/portfolioCash';
 
 // v1.3 BUG-18 — Finance is split into two segments. "Balance" carries the
@@ -98,6 +101,43 @@ export default function FinanceOverview() {
       hasData: holdings.length > 0 || manualAssets.length > 0 || portfolioCashEntries.length > 0,
     };
   }, [holdings, stockQuotes, cryptoPrices, fxRates, manualAssets, transactions, portfolioCashEntries, baseCurrency]);
+
+  // v1.9 Item 14b #2 — cash-flow diagram, desktop tier only. The month bounds
+  // are ISO strings rather than Date objects: no timezone in play, so a
+  // transaction stays in the month the user filed it under.
+  const isDesktop = useShellTier() === 'desktop';
+  const [flowFilter, setFlowFilter] = useState<CashFlowNode | null>(null);
+  const cashFlow = useMemo(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
+    return buildCashFlow({
+      transactions,
+      categories: budgetCategories,
+      accounts: manualAssets,
+      from: `${y}-${mm}-01`,
+      to: `${y}-${mm}-${String(lastDay).padStart(2, '0')}`,
+      labels: {
+        otherIncome: t('fin.flow.otherIncome'),
+        uncategorised: t('fin.flow.uncategorised'),
+        saved: t('fin.flow.saved'),
+        debt: t('fin.flow.debt'),
+        leftover: t('fin.flow.leftover'),
+        deficit: t('fin.flow.fromReserves'),
+      },
+    });
+  }, [transactions, budgetCategories, manualAssets, t]);
+
+  // Drill-down (plan requirement #3): clicking a band filters the transaction
+  // list below to exactly that flow. Only category-backed bands can filter —
+  // the synthetic ones ("Left over", "From reserves") are derived totals, not
+  // a set of transactions, so selecting them clears instead of filtering to
+  // nothing, which would read as "no data" rather than "not applicable".
+  const visibleTx = useMemo(() => {
+    if (!flowFilter?.categoryId) return transactions;
+    return transactions.filter((tx) => tx.categoryId === flowFilter.categoryId);
+  }, [transactions, flowFilter]);
 
   const { income, expenses } = useMemo(() => {
     const now = new Date();
@@ -301,15 +341,42 @@ export default function FinanceOverview() {
               </div>
             )}
 
+            {/* v1.9 Item 14b #2 — spans the full grid: a Sankey needs width to
+                be readable, and halving it would defeat the point. Desktop
+                only; the phone keeps the stat cards above as its summary. */}
+            {isDesktop && (
+              <div className="desktop:col-span-full">
+                <CashFlowDiagram
+                  model={cashFlow}
+                  baseCurrency={baseCurrency}
+                  onSelect={(node) =>
+                    setFlowFilter((cur) =>
+                      cur?.id === node.id || !node.categoryId ? null : node,
+                    )
+                  }
+                />
+              </div>
+            )}
+
             <div className="card">
               <div className="flex items-center justify-between mb-3">
                 <span className="font-heading font-semibold text-sm">{t('fin.ov.recentTx')}</span>
                 <span className="text-[9px] uppercase tracking-wider text-text-muted">
-                  {t('fin.ov.txTotal', { count: transactions.length })}
+                  {t('fin.ov.txTotal', { count: visibleTx.length })}
                 </span>
               </div>
+              {flowFilter?.categoryId && (
+                <button
+                  type="button"
+                  onClick={() => setFlowFilter(null)}
+                  className="mb-2 inline-flex items-center gap-1.5 rounded-pill border border-primary/40 bg-primary/10 px-2.5 py-1 text-[11px] text-primary"
+                >
+                  {flowFilter.label}
+                  <span aria-hidden>&times;</span>
+                </button>
+              )}
               <div className="space-y-1">
-                {transactions.slice(0, 12).map((tx) => (
+                {visibleTx.slice(0, 12).map((tx) => (
                   <div key={tx.id} className="flex items-center gap-2 py-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary/60 flex-shrink-0" />
                     <div className="flex-1 min-w-0">

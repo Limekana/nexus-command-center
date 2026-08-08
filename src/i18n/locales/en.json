@@ -523,6 +523,20 @@
     "forgotPin": "Forgot PIN? Reset in Settings → Clear All Data"
   },
   "fin": {
+    "flow": {
+      "title": "Where the money went",
+      "empty": "No income or spending recorded for this period.",
+      "in": "In",
+      "out": "Out",
+      "surplus": "{{amount}} left over",
+      "deficit": "{{amount}} funded from reserves",
+      "otherIncome": "Other income",
+      "uncategorised": "Uncategorised",
+      "saved": "Saved",
+      "debt": "Debt repaid",
+      "leftover": "Left over",
+      "fromReserves": "From reserves"
+    },
     "tbl": {
       "position": "Position",
       "sector": "Sector",

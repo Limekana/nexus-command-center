@@ -631,6 +631,20 @@
     "greed": "Ganância"
   },
   "fin": {
+    "flow": {
+      "title": "Para onde foi o dinheiro",
+      "empty": "Sem receitas ou despesas neste período.",
+      "in": "Entrada",
+      "out": "Saída",
+      "surplus": "{{amount}} sobrou",
+      "deficit": "{{amount}} coberto por reservas",
+      "otherIncome": "Outras receitas",
+      "uncategorised": "Sem categoria",
+      "saved": "Poupado",
+      "debt": "Dívida paga",
+      "leftover": "Sobrou",
+      "fromReserves": "Das reservas"
+    },
     "tbl": {
       "position": "Posição",
       "sector": "Setor",

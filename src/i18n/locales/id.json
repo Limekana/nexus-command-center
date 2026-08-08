@@ -631,6 +631,20 @@
     "greed": "Keserakahan"
   },
   "fin": {
+    "flow": {
+      "title": "Ke mana uang pergi",
+      "empty": "Tidak ada pemasukan atau pengeluaran pada periode ini.",
+      "in": "Masuk",
+      "out": "Keluar",
+      "surplus": "Sisa {{amount}}",
+      "deficit": "{{amount}} ditutup dari cadangan",
+      "otherIncome": "Pemasukan lain",
+      "uncategorised": "Tanpa kategori",
+      "saved": "Ditabung",
+      "debt": "Utang dibayar",
+      "leftover": "Sisa",
+      "fromReserves": "Dari cadangan"
+    },
     "tbl": {
       "position": "Posisi",
       "sector": "Sektor",

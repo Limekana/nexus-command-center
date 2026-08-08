@@ -523,6 +523,20 @@
     "forgotPin": "PIN oublié ? Réinitialisez via Paramètres → Effacer toutes les données"
   },
   "fin": {
+    "flow": {
+      "title": "Où est passé l'argent",
+      "empty": "Aucun revenu ni dépense pour cette période.",
+      "in": "Entrées",
+      "out": "Sorties",
+      "surplus": "{{amount}} restant",
+      "deficit": "{{amount}} financé par les réserves",
+      "otherIncome": "Autres revenus",
+      "uncategorised": "Sans catégorie",
+      "saved": "Épargné",
+      "debt": "Dette remboursée",
+      "leftover": "Restant",
+      "fromReserves": "Des réserves"
+    },
     "tbl": {
       "position": "Position",
       "sector": "Secteur",
