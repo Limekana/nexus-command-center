@@ -39,7 +39,10 @@ interface Tab {
   match: (p: string) => boolean;
 }
 
-const tabs: Tab[] = [
+// Exported (v1.9 Item 14) so `SideNav` renders the same sections rather than
+// keeping a second copy of this list — two navigation components that can
+// drift apart is exactly the bug the desktop shell would otherwise introduce.
+export const tabs: Tab[] = [
   { to: '/', labelKey: 'nav.home', Icon: LayoutGrid, match: (p) => p === '/' },
   { to: '/finance', labelKey: 'nav.finance', Icon: Wallet, match: (p) => p === '/finance' || p.startsWith('/finance/') },
   // v1.3 scope reduction — Studies + Fitness tabs removed (their dedicated

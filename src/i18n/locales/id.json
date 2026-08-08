@@ -89,7 +89,9 @@
     "home": "Beranda",
     "finance": "Keuangan",
     "life": "Hidup",
-    "tasks": "Tugas"
+    "tasks": "Tugas",
+    "collapseSidebar": "Ciutkan bilah sisi",
+    "expandSidebar": "Perluas bilah sisi"
   },
   "life": {
     "notCountedYet": "Belum dihitung",

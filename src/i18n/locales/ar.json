@@ -89,7 +89,9 @@
     "home": "الرئيسية",
     "finance": "المال",
     "life": "الحياة",
-    "tasks": "المهام"
+    "tasks": "المهام",
+    "collapseSidebar": "طي الشريط الجانبي",
+    "expandSidebar": "توسيع الشريط الجانبي"
   },
   "life": {
     "notCountedYet": "لم يُحتسب بعد",

@@ -89,7 +89,9 @@
     "home": "होम",
     "finance": "वित्त",
     "life": "जीवन",
-    "tasks": "कार्य"
+    "tasks": "कार्य",
+    "collapseSidebar": "साइडबार छोटा करें",
+    "expandSidebar": "साइडबार बड़ा करें"
   },
   "life": {
     "notCountedYet": "अभी नहीं गिना गया",

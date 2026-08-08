@@ -35,7 +35,9 @@
     "home": "Home",
     "finance": "Finance",
     "life": "Life",
-    "tasks": "Tasks"
+    "tasks": "Tasks",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar"
   },
   "life": {
     "notCountedYet": "Not counted yet",

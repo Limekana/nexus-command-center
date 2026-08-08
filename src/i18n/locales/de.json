@@ -35,7 +35,9 @@
     "home": "Start",
     "finance": "Finanzen",
     "life": "Leben",
-    "tasks": "Aufgaben"
+    "tasks": "Aufgaben",
+    "collapseSidebar": "Seitenleiste einklappen",
+    "expandSidebar": "Seitenleiste ausklappen"
   },
   "life": {
     "notCountedYet": "Noch nicht gezählt",

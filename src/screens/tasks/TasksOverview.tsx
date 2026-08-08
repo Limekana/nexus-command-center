@@ -100,8 +100,14 @@ export default function TasksOverview() {
           </button>
         }
       />
-      <div className="space-y-3">
-        <div className="grid grid-cols-2 gap-2">
+      {/* v1.9 Item 14 — desktop arrangement. Below 1201px this is the same
+          single `space-y-3` stack it has always been. Above it, the task-group
+          cards tile two-up while the things that are controls or summaries for
+          the whole screen — the stat row, the year heatmap, the filter chips —
+          span both columns, because splitting those across a column boundary
+          would read as two unrelated widgets. */}
+      <div className="space-y-3 desktop:grid desktop:grid-cols-[repeat(auto-fill,minmax(420px,1fr))] wide:grid-cols-[repeat(auto-fill,minmax(600px,1fr))] desktop:items-start desktop:gap-3 desktop:space-y-0">
+        <div className="grid grid-cols-2 gap-2 desktop:col-span-full">
           <StatCard value={dueToday} label={t('tasks.dueToday')} highlight />
           <StatCard
             value={overdueCount}
@@ -112,7 +118,7 @@ export default function TasksOverview() {
         </div>
 
         {tasks.some((t) => t.completed) && (
-          <div className="card">
+          <div className="card desktop:col-span-full">
             <div className="flex items-center justify-between mb-2">
               <span className="font-heading font-semibold text-sm">{t('tasks.completionStreak')}</span>
               <span className="text-[9px] uppercase tracking-wider text-text-muted">{t('tasks.days365')}</span>
@@ -121,7 +127,7 @@ export default function TasksOverview() {
           </div>
         )}
 
-        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar desktop:col-span-full">
           {filterKeys.map((f) => (
             <button
               key={f.key}

@@ -35,7 +35,9 @@
     "home": "主页",
     "finance": "财务",
     "life": "生活",
-    "tasks": "任务"
+    "tasks": "任务",
+    "collapseSidebar": "折叠侧边栏",
+    "expandSidebar": "展开侧边栏"
   },
   "life": {
     "notCountedYet": "尚未计入",

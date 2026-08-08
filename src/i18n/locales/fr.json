@@ -35,7 +35,9 @@
     "home": "Accueil",
     "finance": "Finances",
     "life": "Vie",
-    "tasks": "Tâches"
+    "tasks": "Tâches",
+    "collapseSidebar": "Réduire la barre latérale",
+    "expandSidebar": "Développer la barre latérale"
   },
   "life": {
     "notCountedYet": "Pas encore compté",

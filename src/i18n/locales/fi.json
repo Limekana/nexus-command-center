@@ -35,7 +35,9 @@
     "home": "Koti",
     "finance": "Talous",
     "life": "Elämä",
-    "tasks": "Tehtävät"
+    "tasks": "Tehtävät",
+    "collapseSidebar": "Kutista sivupalkki",
+    "expandSidebar": "Laajenna sivupalkki"
   },
   "life": {
     "notCountedYet": "Ei vielä laskettu",

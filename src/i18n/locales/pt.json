@@ -89,7 +89,9 @@
     "home": "Início",
     "finance": "Finanças",
     "life": "Vida",
-    "tasks": "Tarefas"
+    "tasks": "Tarefas",
+    "collapseSidebar": "Recolher barra lateral",
+    "expandSidebar": "Expandir barra lateral"
   },
   "life": {
     "notCountedYet": "Ainda não contabilizado",

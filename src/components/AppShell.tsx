@@ -3,7 +3,9 @@ import { useEffect, useRef, useState } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import BottomTabBar from './BottomTabBar';
+import SideNav from './SideNav';
 import OfflineBanner from './OfflineBanner';
+import { useShellTier, useSidebarRail } from '../lib/useShell';
 import QuickLogFAB from './QuickLogFAB';
 import QuickLogBottomSheet from './QuickLogBottomSheet';
 import PageTransition from './ui/PageTransition';
@@ -34,6 +36,11 @@ const RESUME_REFRESH_THRESHOLD_MS = 20 * 60 * 1000;
 export default function AppShell() {
   const [quickLogOpen, setQuickLogOpen] = useState(false);
   const location = useLocation();
+  // v1.9 Item 14, Phase 1 — desktop shell. Above 769px the bottom tab bar is
+  // replaced by a persistent SideNav and the content column widens.
+  const tier = useShellTier();
+  const [rail, toggleRail] = useSidebarRail(tier);
+  const isPhone = tier === 'phone';
   const loadFinance = useFinanceStore((s) => s.load);
   const loadStudies = useStudiesStore((s) => s.load);
   const loadFitness = useFitnessStore((s) => s.load);
@@ -237,29 +244,54 @@ export default function AppShell() {
     location.pathname === '/finance';
 
   return (
-    <div className="min-h-full flex flex-col bg-bg text-text">
-      <OfflineBanner />
-      {/* pb-32 (128px) gives clear space below the last card so it isn't clipped
-        * by the fixed BottomTabBar (which is ~80px + its own safe-bottom inset). */}
-      {/* v1.2 follow-up — pb-32 → pb-44. The floating glass tab bar sits
-          ~80px above the safe-area inset; pb-32 (128px) left only ~16px of
-          clearance, so the last row of any screen got clipped or hidden
-          behind the bar. pb-44 (176px) gives generous breathing room so
-          the last item, FAB sheets, and bottom-pinned controls sit clear. */}
-      <main className="flex-1 overflow-y-auto pb-44 safe-top">
-        <div className="max-w-md mx-auto w-full px-4 pt-3">
-          {/* v1.2 — PageTransition keyed on route's first segment cross-fades
-              + lifts page content on inter-section navigation. Deep nav
-              within a section (Finance overview → Add Transaction) doesn't
-              re-trigger; only Finance → Studies-style jumps animate. Keeps
-              motion meaningful per the v1.2 design brief. */}
-          <PageTransition>
-            <Outlet />
-          </PageTransition>
-        </div>
-      </main>
+    // Phone keeps the original column exactly; tablet/desktop become a row
+    // with the SideNav as the first child.
+    <div className={`min-h-full flex bg-bg text-text ${isPhone ? 'flex-col' : 'flex-row'}`}>
+      {!isPhone && <SideNav rail={rail} onToggle={toggleRail} />}
+      {/* Wrapper so the banner + main stay a column inside the row. On phone
+          it is a transparent passthrough — flex-1 column inside a column. */}
+      <div className="flex flex-1 min-w-0 flex-col">
+        <OfflineBanner />
+        {/* pb-32 (128px) gives clear space below the last card so it isn't clipped
+          * by the fixed BottomTabBar (which is ~80px + its own safe-bottom inset). */}
+        {/* v1.2 follow-up — pb-32 → pb-44. The floating glass tab bar sits
+            ~80px above the safe-area inset; pb-32 (128px) left only ~16px of
+            clearance, so the last row of any screen got clipped or hidden
+            behind the bar. pb-44 (176px) gives generous breathing room so
+            the last item, FAB sheets, and bottom-pinned controls sit clear. */}
+        {/* v1.9 — that clearance only exists to clear the bottom bar, so above
+            the phone tier (where the bar is gone) it is dead space; pb-10 just
+            keeps the last card off the viewport edge. */}
+        <main className={`flex-1 overflow-y-auto safe-top ${isPhone ? 'pb-44' : 'pb-10'}`}>
+          {/* v1.9 Item 14 — the column was `max-w-md` (448px) at every width,
+              which is why a desktop window showed a phone-width strip.
+              Revised TWICE after owner review, and the cap was the problem
+              both times — first `max-w-4xl` (896px), then `max-w-[1800px]`.
+              Each still stranded everything past the cap as dead space on a
+              wide monitor, which was the original complaint. **There is no cap
+              on the desktop tier now: the column IS the shell.** What stops
+              cards from stretching is the column count, not a container width
+              — the screens tile with `auto-fill`, so they add columns as the
+              window grows instead of widening the cards. Any future max-width
+              here re-creates the dead space; widen the card minimum instead. */}
+          <div
+            className={`mx-auto w-full pt-3 ${
+              isPhone ? 'max-w-md px-4' : tier === 'tablet' ? 'max-w-3xl px-5' : 'px-8'
+            }`}
+          >
+            {/* v1.2 — PageTransition keyed on route's first segment cross-fades
+                + lifts page content on inter-section navigation. Deep nav
+                within a section (Finance overview → Add Transaction) doesn't
+                re-trigger; only Finance → Studies-style jumps animate. Keeps
+                motion meaningful per the v1.2 design brief. */}
+            <PageTransition>
+              <Outlet />
+            </PageTransition>
+          </div>
+        </main>
+      </div>
       {showFAB && <QuickLogFAB onClick={() => setQuickLogOpen(true)} />}
-      <BottomTabBar />
+      {isPhone && <BottomTabBar />}
       <QuickLogBottomSheet open={quickLogOpen} onClose={() => setQuickLogOpen(false)} />
     </div>
   );

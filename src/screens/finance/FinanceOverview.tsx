@@ -149,10 +149,17 @@ export default function FinanceOverview() {
           <IconChip emoji="+" label={t('fin.ov.addTransaction')} accent onClick={() => navigate('/finance/add')} />
         }
       />
-      <div className="space-y-3">
+      {/* v1.9 Item 14 — desktop arrangement. The tab bodies below are flat
+          fragments of sibling cards, so they tile straight into this grid at
+          `desktop:` with no change to any card. Below 1201px it stays the
+          single `space-y-3` stack it has always been. */}
+      <div className="space-y-3 desktop:grid desktop:grid-cols-[repeat(auto-fill,minmax(420px,1fr))] wide:grid-cols-[repeat(auto-fill,minmax(600px,1fr))] desktop:items-start desktop:gap-3 desktop:space-y-0">
         {/* Segmented control — sliding cyan pill mirrors the BottomTabBar's
-            active-indicator language so the two feel like one system. */}
-        <div className="glass-soft rounded-pill p-1 flex relative">
+            active-indicator language so the two feel like one system.
+            Spans both columns and keeps a phone-ish width: it switches the
+            whole screen, and a 1680px-wide three-segment pill would read as a
+            banner rather than a control. */}
+        <div className="glass-soft rounded-pill p-1 flex relative desktop:col-span-full desktop:max-w-lg">
           <span
             aria-hidden
             className="absolute top-1 bottom-1 start-1 rounded-pill transition-transform duration-300 ease-spring-soft"

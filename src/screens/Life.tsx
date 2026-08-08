@@ -292,6 +292,13 @@ export default function Life() {
           )}
         </section>
 
+        {/* v1.9 Item 14 — desktop arrangement. THIS WEEK stays full width
+            above: it is the hero of the screen and its score ring plus domain
+            breakdown is one composition, not something to split. The three
+            supporting sections below tile two-up at `desktop:` instead of
+            running down a very long single column. Below 1201px this wrapper
+            is a plain `space-y-6` stack, identical to before. */}
+        <div className="space-y-6 desktop:grid desktop:grid-cols-[repeat(auto-fill,minmax(420px,1fr))] wide:grid-cols-[repeat(auto-fill,minmax(600px,1fr))] desktop:items-start desktop:gap-6 desktop:space-y-0">
         {/* ─── AI NARRATIVE ─────────────────────────────────────────── */}
         {/* Gated on the Settings opt-in. Off by default — this card used to
             generate itself on arrival, which is not what "opt-in" means. */}
@@ -356,6 +363,7 @@ export default function Life() {
             </div>
           </section>
         )}
+        </div>
 
         <div className="text-[10px] text-text-muted text-center">
           {t('life.footer')}
