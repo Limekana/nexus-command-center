@@ -39,7 +39,7 @@ const TONE_CLASS: Record<PillTone, string> = {
 };
 
 const SIZE_CLASS: Record<PillSize, string> = {
-  sm: 'h-7 px-2.5 text-[11px]',
+  sm: 'h-7 px-2.5 text-[0.6875rem]',
   md: '',           // default — h-8 px-3 text-xs via .pill
   lg: 'pill-lg',    // h-10 px-4 text-sm
 };

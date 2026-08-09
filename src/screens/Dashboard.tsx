@@ -206,5 +206,5 @@ export default function Dashboard() {
 }
 
 function Empty({ msg }: { msg: string }) {
-  return <div className="text-[11px] text-text-muted/70 italic">{msg}</div>;
+  return <div className="text-[0.6875rem] text-text-muted/70 italic">{msg}</div>;
 }

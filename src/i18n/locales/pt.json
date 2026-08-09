@@ -328,7 +328,11 @@
     "deleteAccountFailed": "Falha na exclusão: {{msg}}",
     "support": "Apoio",
     "supportDev": "Apoiar o desenvolvimento",
-    "supportDevSub": "Pague-me um café no Ko-fi"
+    "supportDevSub": "Pague-me um café no Ko-fi",
+    "textSize": "Tamanho do texto",
+    "textAuto": "Auto",
+    "textSizeSub": "Aplica-se em todo o lado, incluindo no telemóvel.",
+    "textAutoSub": "{{pct}}% neste tamanho de ecrã — maior no computador, normal no telemóvel."
   },
   "lock": {
     "secureAccess": "Acesso seguro",

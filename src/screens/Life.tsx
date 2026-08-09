@@ -287,7 +287,7 @@ export default function Life() {
               <LifeScoreRing segments={ringSegments} size={200}>
                 <div className="flex flex-col items-center leading-none">
                   <span className="font-heading text-5xl font-bold">{thisWeek.score}</span>
-                  <span className="text-[10px] uppercase tracking-wider text-text-muted mt-1">{t('domains.lifeScore')}</span>
+                  <span className="text-[0.625rem] uppercase tracking-wider text-text-muted mt-1">{t('domains.lifeScore')}</span>
                 </div>
               </LifeScoreRing>
               <div className="grid grid-cols-2 gap-2 w-full mt-4">
@@ -318,11 +318,11 @@ export default function Life() {
               {domains.includes('fitness') && (
                 <div className="w-full mt-3 flex items-center justify-between gap-3 px-1">
                   <div className="min-w-0">
-                    <div className="text-[11px] text-text-muted">
+                    <div className="text-[0.6875rem] text-text-muted">
                       {t('life.weekTarget')}
                     </div>
                     {weekTarget !== baselineTarget && (
-                      <div className="text-[10px] text-warning">
+                      <div className="text-[0.625rem] text-warning">
                         {t('life.weekTargetAdjusted', { baseline: baselineTarget })}
                       </div>
                     )}
@@ -395,7 +395,7 @@ export default function Life() {
               <div className="space-y-2 stagger-children">
                 {report.insights.map((ins) => (
                   <article key={ins.id} className={`glass rounded-xl p-4 border-s-2 ${TONE_BORDER[ins.tone]}`}>
-                    <div className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
+                    <div className="text-[0.625rem] uppercase tracking-wider text-text-muted mb-1">
                       {t(DOMAIN_LABEL_KEY[ins.domain])}
                     </div>
                     <div className={`font-heading text-base font-bold leading-tight ${TONE_TEXT[ins.tone]} mb-1`}>
@@ -431,9 +431,9 @@ export default function Life() {
             <div ref={historyScrollRef} className="flex gap-2 overflow-x-auto no-scrollbar px-1 stagger-children">
               {[...report.weeks.lifeScores].reverse().map((w) => (
                 <div key={w.weekStart} className="glass-soft rounded-xl p-3 flex-shrink-0 w-20 flex flex-col items-center">
-                  <div className="text-[9px] uppercase tracking-wider text-text-muted">{w.weekStart.slice(5)}</div>
+                  <div className="text-[0.5625rem] uppercase tracking-wider text-text-muted">{w.weekStart.slice(5)}</div>
                   <div className="font-heading text-xl font-bold mt-1">{w.score}</div>
-                  <div className="text-[9px] text-text-muted mt-0.5">{t('life.per100')}</div>
+                  <div className="text-[0.5625rem] text-text-muted mt-0.5">{t('life.per100')}</div>
                 </div>
               ))}
             </div>
@@ -441,7 +441,7 @@ export default function Life() {
         )}
         </div>
 
-        <div className="text-[10px] text-text-muted text-center">
+        <div className="text-[0.625rem] text-text-muted text-center">
           {t('life.footer')}
         </div>
       </div>
@@ -464,10 +464,10 @@ function DomainCard({ domain, score, sub, measured = true }: { domain: DomainKey
     >
       <div className="flex items-center gap-1.5">
         <span aria-hidden className="w-2 h-2 rounded-full" style={{ background: measured ? DOMAIN_COLOR[domain] : 'rgba(168,178,188,0.4)' }} />
-        <div className="text-[10px] uppercase tracking-wider text-text-muted">{t(`domains.${domain}`)}</div>
+        <div className="text-[0.625rem] uppercase tracking-wider text-text-muted">{t(`domains.${domain}`)}</div>
       </div>
       <div className="font-heading text-xl font-bold mt-0.5">{measured ? score : '—'}</div>
-      {sub && <div className="text-[10px] text-text-muted mt-0.5">{sub}</div>}
+      {sub && <div className="text-[0.625rem] text-text-muted mt-0.5">{sub}</div>}
     </div>
   );
 }

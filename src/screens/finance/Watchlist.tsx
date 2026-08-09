@@ -256,7 +256,7 @@ export default function Watchlist() {
               autoCorrect="off"
             />
             {tickerError && (
-              <div className="text-[11px] text-warning">{tickerError}</div>
+              <div className="text-[0.6875rem] text-warning">{tickerError}</div>
             )}
             <input
               className="input"
@@ -264,7 +264,7 @@ export default function Watchlist() {
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
-            <div className="text-[10px] uppercase tracking-wider text-text-muted mt-2">
+            <div className="text-[0.625rem] uppercase tracking-wider text-text-muted mt-2">
               {t('fin.wl.alerts')}
             </div>
             <div className="flex gap-2">
@@ -291,7 +291,7 @@ export default function Watchlist() {
                 {t('common.cancel')}
               </button>
             </div>
-            <div className="text-[10px] text-text-muted">
+            <div className="text-[0.625rem] text-text-muted">
               {t('fin.wl.helper')}
             </div>
           </div>
@@ -300,7 +300,7 @@ export default function Watchlist() {
         <div className="card">
           <div className="flex items-center justify-between mb-3">
             <span className="font-heading font-semibold text-sm">{t('fin.wl.watching')}</span>
-            <span className="text-[9px] uppercase tracking-wider text-text-muted">
+            <span className="text-[0.5625rem] uppercase tracking-wider text-text-muted">
               {t('fin.wl.tickers', { count: rows.length })}
             </span>
           </div>
@@ -329,7 +329,7 @@ export default function Watchlist() {
               >
                 <div className="flex flex-col w-[68px] min-w-0">
                   <span className="text-sm font-medium truncate">{r.item.ticker.toUpperCase()}</span>
-                  <span className="text-[9px] uppercase tracking-wider text-text-muted truncate">
+                  <span className="text-[0.5625rem] uppercase tracking-wider text-text-muted truncate">
                     {t(`fin.assetAbbr.${r.item.assetType}`, { defaultValue: r.item.assetType.toUpperCase() })}
                   </span>
                   {/* v1.2 — Insights tier pill. Stock + ETF only (crypto/fx
@@ -351,11 +351,11 @@ export default function Watchlist() {
                   <span className="text-sm whitespace-nowrap">
                     {r.price != null ? fmt(r.price, r.currency) : '—'}
                   </span>
-                  <span className={`text-[10px] whitespace-nowrap ${r.dayPct >= 0 ? 'text-success' : 'text-danger'}`}>
+                  <span className={`text-[0.625rem] whitespace-nowrap ${r.dayPct >= 0 ? 'text-success' : 'text-danger'}`}>
                     {r.dayPct >= 0 ? '↑' : '↓'} {Math.abs(r.dayPct).toFixed(2)}%
                   </span>
                   {r.alert && (
-                    <span className={`text-[9px] uppercase tracking-wider px-1 py-0.5 rounded-sm border mt-0.5 ${
+                    <span className={`text-[0.5625rem] uppercase tracking-wider px-1 py-0.5 rounded-sm border mt-0.5 ${
                       r.alert === 'above'
                         ? 'border-success/40 bg-success/10 text-success'
                         : 'border-warning/40 bg-warning/10 text-warning'

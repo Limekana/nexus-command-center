@@ -328,7 +328,11 @@
     "deleteAccountFailed": "فشل الحذف: {{msg}}",
     "support": "الدعم",
     "supportDev": "ادعم التطوير",
-    "supportDevSub": "اشترِ لي قهوة على Ko-fi"
+    "supportDevSub": "اشترِ لي قهوة على Ko-fi",
+    "textSize": "حجم النص",
+    "textAuto": "تلقائي",
+    "textSizeSub": "يُطبَّق في كل مكان، بما في ذلك هاتفك.",
+    "textAutoSub": "{{pct}}% على هذا الحجم من الشاشة — أكبر على سطح المكتب، وقياسي على الهاتف."
   },
   "lock": {
     "secureAccess": "وصول آمن",

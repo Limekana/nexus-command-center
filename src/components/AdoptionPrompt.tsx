@@ -214,7 +214,7 @@ export default function AdoptionPrompt() {
           </button>
         </div>
         {/* v1.1 — UI/UX review #6: 10px → 11px on a legal-flavored disclosure. */}
-        <p className="text-[11px] text-text-muted mt-3 text-center">
+        <p className="text-[0.6875rem] text-text-muted mt-3 text-center">
           You won't be asked again on this account.
         </p>
       </div>

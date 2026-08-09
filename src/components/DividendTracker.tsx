@@ -99,19 +99,19 @@ export default function DividendTracker({
     <div className="card">
       <div className="flex items-center justify-between mb-3">
         <span className="font-heading font-semibold text-sm">Dividends</span>
-        <span className="text-[9px] uppercase tracking-wider text-success border border-success/40 bg-success/5 rounded-sm px-1.5 py-0.5">
+        <span className="text-[0.5625rem] uppercase tracking-wider text-success border border-success/40 bg-success/5 rounded-sm px-1.5 py-0.5">
           Projected Annual
         </span>
       </div>
       <div className="mb-3">
-        <div className="text-[10px] uppercase tracking-[0.15em] text-text-muted">
+        <div className="text-[0.625rem] uppercase tracking-[0.15em] text-text-muted">
           Projected income · trailing 12m
         </div>
         <div className="font-heading font-bold text-xl tracking-tight">
           {formatCurrency(totalProjected, baseCurrency)}
         </div>
         {realizedYtd != null && realizedYtd > 0 && (
-          <div className="text-[10px] text-text-muted mt-1">
+          <div className="text-[0.625rem] text-text-muted mt-1">
             Realized this year:{' '}
             <span className="text-success font-medium">
               {formatCurrency(realizedYtd, baseCurrency)}
@@ -119,7 +119,7 @@ export default function DividendTracker({
           </div>
         )}
         {soon && soon.nextExDiv && (
-          <div className="text-[10px] text-text-muted mt-1">
+          <div className="text-[0.625rem] text-text-muted mt-1">
             Next ex-div: <span className="text-text font-medium">{soon.ticker}</span> on {soon.nextExDiv}
           </div>
         )}
@@ -133,7 +133,7 @@ export default function DividendTracker({
           >
             <div className="min-w-0">
               <div className="text-sm font-medium truncate">{r.ticker}</div>
-              <div className="text-[9px] text-text-muted">
+              <div className="text-[0.5625rem] text-text-muted">
                 {r.trailingPerShare.toFixed(2)} {r.trailingCurrency}/share · trailing
               </div>
             </div>
@@ -142,7 +142,7 @@ export default function DividendTracker({
                 {formatCurrency(r.projectedAnnualBase, baseCurrency)}
               </div>
               {r.nextExDiv && (
-                <div className="text-[9px] text-text-muted">ex-div {r.nextExDiv}</div>
+                <div className="text-[0.5625rem] text-text-muted">ex-div {r.nextExDiv}</div>
               )}
             </div>
           </button>

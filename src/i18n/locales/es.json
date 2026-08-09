@@ -267,7 +267,11 @@
     "deleteAccountFailed": "Error al eliminar: {{msg}}",
     "support": "Apoyo",
     "supportDev": "Apoya el desarrollo",
-    "supportDevSub": "Invítame a un café en Ko-fi"
+    "supportDevSub": "Invítame a un café en Ko-fi",
+    "textSize": "Tamaño del texto",
+    "textAuto": "Auto",
+    "textSizeSub": "Se aplica en todas partes, también en el móvil.",
+    "textAutoSub": "{{pct}}% en este tamaño de pantalla: mayor en escritorio, estándar en el móvil."
   },
   "days": {
     "long": {

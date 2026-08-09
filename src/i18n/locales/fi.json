@@ -267,7 +267,11 @@
     "deleteAccountFailed": "Poisto epäonnistui: {{msg}}",
     "support": "Tuki",
     "supportDev": "Tue kehitystä",
-    "supportDevSub": "Tarjoa kahvit Ko-fissa"
+    "supportDevSub": "Tarjoa kahvit Ko-fissa",
+    "textSize": "Tekstin koko",
+    "textAuto": "Auto",
+    "textSizeSub": "Vaikuttaa kaikkialla, myös puhelimessa.",
+    "textAutoSub": "{{pct}} % tällä näytön koolla — suurempi työpöydällä, tavallinen puhelimessa."
   },
   "days": {
     "long": {

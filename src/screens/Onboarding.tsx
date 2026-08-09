@@ -80,7 +80,7 @@ export default function Onboarding({ onDone }: Props) {
           <div className="onb-wordmark font-heading text-3xl font-bold tracking-tight text-primary uppercase">
             {t('app.name')}
           </div>
-          <div className="text-[11px] uppercase tracking-[0.18em] text-text-muted mt-1">
+          <div className="text-[0.6875rem] uppercase tracking-[0.18em] text-text-muted mt-1">
             {t('app.tagline')}
           </div>
         </div>
@@ -137,11 +137,11 @@ export default function Onboarding({ onDone }: Props) {
                       <span className="text-sm font-semibold">{t(`onboarding.preset_${p.key}`)}</span>
                       {picked === p.key && <span aria-hidden className="text-primary text-sm">✓</span>}
                     </div>
-                    <div className="text-[11px] text-text-muted mt-0.5">{t(p.descKey)}</div>
+                    <div className="text-[0.6875rem] text-text-muted mt-0.5">{t(p.descKey)}</div>
                   </button>
                 ))}
               </div>
-              <p className="text-[10px] text-text-muted text-center">{t('onboarding.profileCustomHint')}</p>
+              <p className="text-[0.625rem] text-text-muted text-center">{t('onboarding.profileCustomHint')}</p>
               <button className="btn w-full" onClick={() => setStep(3)}>
                 {t('common.continue')}
               </button>
@@ -165,11 +165,11 @@ export default function Onboarding({ onDone }: Props) {
                           on ? 'border-primary bg-primary/15 text-primary' : 'border-glass-border text-transparent'
                         }`}
                       >
-                        <span aria-hidden className="text-[11px] leading-none">✓</span>
+                        <span aria-hidden className="text-[0.6875rem] leading-none">✓</span>
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm">{t(`domains.${key}`)}</div>
-                        <div className="text-[10px] text-text-muted">{domainNote[key]}</div>
+                        <div className="text-[0.625rem] text-text-muted">{domainNote[key]}</div>
                       </div>
                     </div>
                   );

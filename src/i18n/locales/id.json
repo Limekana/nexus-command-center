@@ -328,7 +328,11 @@
     "deleteAccountFailed": "Penghapusan gagal: {{msg}}",
     "support": "Dukungan",
     "supportDev": "Dukung pengembangan",
-    "supportDevSub": "Traktir saya kopi di Ko-fi"
+    "supportDevSub": "Traktir saya kopi di Ko-fi",
+    "textSize": "Ukuran teks",
+    "textAuto": "Otomatis",
+    "textSizeSub": "Berlaku di mana saja, termasuk di ponsel.",
+    "textAutoSub": "{{pct}}% pada ukuran layar ini — lebih besar di desktop, standar di ponsel."
   },
   "lock": {
     "secureAccess": "Akses aman",

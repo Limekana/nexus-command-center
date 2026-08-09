@@ -121,7 +121,7 @@ export default function WeeklyReview() {
             {t('weeklyReview.prev')}
           </button>
           <div className="text-center">
-            <div className="text-[9px] uppercase tracking-[0.2em] text-text-muted">
+            <div className="text-[0.5625rem] uppercase tracking-[0.2em] text-text-muted">
               {t('weeklyReview.week')}
             </div>
             <div className="font-heading font-semibold text-sm">
@@ -161,27 +161,27 @@ export default function WeeklyReview() {
         >
           <div className="flex items-center justify-between mb-2">
             <span className="font-heading font-semibold text-sm">💰 {t('weeklyReview.finance')}</span>
-            <span className="text-[9px] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-1.5 py-0.5">
+            <span className="text-[0.5625rem] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-1.5 py-0.5">
               {t('weeklyReview.open')}
             </span>
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.spend')}</div>
+              <div className="text-[0.5625rem] uppercase tracking-wider text-text-muted">{t('weeklyReview.spend')}</div>
               <div className="font-heading font-bold text-base">{fmtMoney(data.finance.spend)}</div>
-              <div className="text-[9px] text-text-muted">{data.finance.spendDelta}</div>
+              <div className="text-[0.5625rem] text-text-muted">{data.finance.spendDelta}</div>
             </div>
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.income')}</div>
+              <div className="text-[0.5625rem] uppercase tracking-wider text-text-muted">{t('weeklyReview.income')}</div>
               <div className="font-heading font-bold text-base">{fmtMoney(data.finance.income)}</div>
             </div>
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.tx')}</div>
+              <div className="text-[0.5625rem] uppercase tracking-wider text-text-muted">{t('weeklyReview.tx')}</div>
               <div className="font-heading font-bold text-base">{data.finance.txCount}</div>
             </div>
           </div>
           {topCategoryName && (
-            <div className="text-[10px] text-text-muted mt-2">
+            <div className="text-[0.625rem] text-text-muted mt-2">
               {t('weeklyReview.topCategory', { name: topCategoryName, amount: fmtMoney(data.finance.topCategoryAmount) })}
             </div>
           )}
@@ -195,18 +195,18 @@ export default function WeeklyReview() {
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.studied')}</div>
+              <div className="text-[0.5625rem] uppercase tracking-wider text-text-muted">{t('weeklyReview.studied')}</div>
               <div className="font-heading font-bold text-base">
                 {formatHours(data.studies.studyMinutes)}
               </div>
-              <div className="text-[9px] text-text-muted">{data.studies.minutesDelta}</div>
+              <div className="text-[0.5625rem] text-text-muted">{data.studies.minutesDelta}</div>
             </div>
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.sessions')}</div>
+              <div className="text-[0.5625rem] uppercase tracking-wider text-text-muted">{t('weeklyReview.sessions')}</div>
               <div className="font-heading font-bold text-base">{data.studies.sessionCount}</div>
             </div>
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.gpa')}</div>
+              <div className="text-[0.5625rem] uppercase tracking-wider text-text-muted">{t('weeklyReview.gpa')}</div>
               <div className="font-heading font-bold text-base">
                 {data.studies.gpa != null ? data.studies.gpa.toFixed(2) : '—'}
               </div>
@@ -222,16 +222,16 @@ export default function WeeklyReview() {
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.workouts')}</div>
+              <div className="text-[0.5625rem] uppercase tracking-wider text-text-muted">{t('weeklyReview.workouts')}</div>
               <div className="font-heading font-bold text-base">{data.fitness.workoutCount}</div>
-              <div className="text-[9px] text-text-muted">{data.fitness.workoutsDelta}</div>
+              <div className="text-[0.5625rem] text-text-muted">{data.fitness.workoutsDelta}</div>
             </div>
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.sets')}</div>
+              <div className="text-[0.5625rem] uppercase tracking-wider text-text-muted">{t('weeklyReview.sets')}</div>
               <div className="font-heading font-bold text-base">{data.fitness.totalSets}</div>
             </div>
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.volume')}</div>
+              <div className="text-[0.5625rem] uppercase tracking-wider text-text-muted">{t('weeklyReview.volume')}</div>
               <div className="font-heading font-bold text-base">
                 {data.fitness.totalVolumeKg > 0
                   ? `${Math.round(data.fitness.totalVolumeKg).toLocaleString(formatLocale())} kg`
@@ -240,7 +240,7 @@ export default function WeeklyReview() {
             </div>
           </div>
           {data.fitness.topExercise && (
-            <div className="text-[10px] text-text-muted mt-2">
+            <div className="text-[0.625rem] text-text-muted mt-2">
               {t('weeklyReview.mostTrained', { name: data.fitness.topExercise, sets: data.fitness.topExerciseSets })}
             </div>
           )}
@@ -253,27 +253,27 @@ export default function WeeklyReview() {
         >
           <div className="flex items-center justify-between mb-2">
             <span className="font-heading font-semibold text-sm">✓ {t('weeklyReview.tasks')}</span>
-            <span className="text-[9px] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-1.5 py-0.5">
+            <span className="text-[0.5625rem] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-1.5 py-0.5">
               {t('weeklyReview.open')}
             </span>
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.completed')}</div>
+              <div className="text-[0.5625rem] uppercase tracking-wider text-text-muted">{t('weeklyReview.completed')}</div>
               <div className="font-heading font-bold text-base">{data.tasks.completed}</div>
-              <div className="text-[9px] text-text-muted">{data.tasks.completedDelta}</div>
+              <div className="text-[0.5625rem] text-text-muted">{data.tasks.completedDelta}</div>
             </div>
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.new')}</div>
+              <div className="text-[0.5625rem] uppercase tracking-wider text-text-muted">{t('weeklyReview.new')}</div>
               <div className="font-heading font-bold text-base">{data.tasks.created}</div>
             </div>
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-text-muted">{t('weeklyReview.openCount')}</div>
+              <div className="text-[0.5625rem] uppercase tracking-wider text-text-muted">{t('weeklyReview.openCount')}</div>
               <div className="font-heading font-bold text-base">{data.tasks.stillOpen}</div>
             </div>
           </div>
           {data.tasks.overdue > 0 && (
-            <div className="text-[10px] text-danger mt-2">
+            <div className="text-[0.625rem] text-danger mt-2">
               ⚠ {t('weeklyReview.overdue', { n: data.tasks.overdue })}
             </div>
           )}
@@ -286,17 +286,17 @@ export default function WeeklyReview() {
           <div className="flex items-center justify-between">
             <div>
               <div className="font-heading font-semibold text-sm">📅 {t('weeklyReview.yearInReview')}</div>
-              <div className="text-[10px] text-text-muted mt-0.5">
+              <div className="text-[0.625rem] text-text-muted mt-0.5">
                 {t('weeklyReview.yearInReviewSub')}
               </div>
             </div>
-            <span className="text-[10px] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5">
+            <span className="text-[0.625rem] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5">
               {t('weeklyReview.open')}
             </span>
           </div>
         </button>
 
-        <div className="card text-center text-[10px] text-text-muted">
+        <div className="card text-center text-[0.625rem] text-text-muted">
           {t('weeklyReview.footer')}
         </div>
       </div>

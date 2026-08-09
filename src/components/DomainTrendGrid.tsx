@@ -77,11 +77,11 @@ export default function DomainTrendGrid({ weekStarts, series }: Props) {
   return (
     <div>
       <div className="overflow-x-auto">
-        <div className="min-w-[560px]">
+        <div className="min-w-[35rem]">
           {series.map((s, rowIdx) => (
             <div key={s.key} className="flex items-center gap-3 mb-1.5 last:mb-0">
-              <div className="w-[104px] flex-shrink-0">
-                <div className="text-[11px] truncate flex items-center gap-1.5" title={s.label}>
+              <div className="w-[6.5rem] flex-shrink-0">
+                <div className="text-[0.6875rem] truncate flex items-center gap-1.5" title={s.label}>
                   <span
                     aria-hidden
                     className="inline-block w-1.5 h-1.5 rounded-full flex-shrink-0"
@@ -89,7 +89,7 @@ export default function DomainTrendGrid({ weekStarts, series }: Props) {
                   />
                   <span className="truncate">{s.label}</span>
                 </div>
-                <div className="text-[9px] text-text-muted tabular-nums">
+                <div className="text-[0.5625rem] text-text-muted tabular-nums">
                   {(() => {
                     const last = s.values[s.values.length - 1];
                     return last == null ? '—' : s.format(last);
@@ -138,12 +138,12 @@ export default function DomainTrendGrid({ weekStarts, series }: Props) {
           ))}
 
           <div className="flex items-center gap-3 mt-1">
-            <div className="w-[104px] flex-shrink-0" />
+            <div className="w-[6.5rem] flex-shrink-0" />
             <div className="flex-1 flex gap-px">
               {weekStarts.map((w, i) => (
                 <span
                   key={w}
-                  className={`flex-1 text-[8px] text-center truncate ${
+                  className={`flex-1 text-[0.5rem] text-center truncate ${
                     selected === i ? 'text-primary' : 'text-text-muted'
                   }`}
                 >
@@ -160,12 +160,12 @@ export default function DomainTrendGrid({ weekStarts, series }: Props) {
       {selected != null && (
         <div className="mt-3 pt-3 border-t border-border/40">
           <div className="sec mb-1.5">{t('fin.dtg.weekOf', { date: weekLabel(weekStarts[selected]) })}</div>
-          <div className="grid gap-2 grid-cols-[repeat(auto-fit,minmax(120px,1fr))]">
+          <div className="grid gap-2 grid-cols-[repeat(auto-fit,minmax(7.5rem,1fr))]">
             {series.map((s) => {
               const v = s.values[selected];
               return (
                 <div key={s.key} className="rounded-md border border-border bg-surface2/40 px-2 py-1.5">
-                  <div className="text-[9px] uppercase tracking-wider text-text-muted truncate">{s.label}</div>
+                  <div className="text-[0.5625rem] uppercase tracking-wider text-text-muted truncate">{s.label}</div>
                   <div className="text-sm font-heading font-semibold tabular-nums" style={{ color: s.colour }}>
                     {v == null ? '—' : s.format(v)}
                   </div>
@@ -176,7 +176,7 @@ export default function DomainTrendGrid({ weekStarts, series }: Props) {
         </div>
       )}
 
-      <div className="text-[10px] text-text-muted mt-2">{t('fin.dtg.scaleCaveat')}</div>
+      <div className="text-[0.625rem] text-text-muted mt-2">{t('fin.dtg.scaleCaveat')}</div>
     </div>
   );
 }

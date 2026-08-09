@@ -22,7 +22,7 @@ export default function NewsCard() {
     <div className="card">
       <div className="flex items-center justify-between mb-3">
         <span className="font-heading font-semibold text-sm">Market News</span>
-        <span className="text-[9px] uppercase tracking-wider text-text-muted">
+        <span className="text-[0.5625rem] uppercase tracking-wider text-text-muted">
           {news.length} stories
         </span>
       </div>
@@ -34,7 +34,7 @@ export default function NewsCard() {
             className="block w-full text-start py-1.5 border-b border-border/40 last:border-0 active:bg-surface2/50 rounded-sm"
           >
             <div className="text-xs font-medium leading-snug line-clamp-2">{n.headline}</div>
-            <div className="text-[10px] text-text-muted mt-0.5">
+            <div className="text-[0.625rem] text-text-muted mt-0.5">
               {n.source} · {relativeTime(n.datetime)}
             </div>
           </button>

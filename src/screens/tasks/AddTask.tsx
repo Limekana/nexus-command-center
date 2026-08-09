@@ -179,7 +179,7 @@ export default function AddTask() {
             {t('addtask.deleteTask')}
           </button>
         )}
-        <div className="text-[10px] text-text-muted text-center">
+        <div className="text-[0.625rem] text-text-muted text-center">
           {t('addtask.queued')}
         </div>
       </div>

@@ -363,7 +363,7 @@ export default function NetWorth() {
       <div className="space-y-3">
         {/* Total */}
         <div className="card-elevated">
-          <div className="text-[10px] uppercase tracking-[0.15em] text-text-muted mb-1">
+          <div className="text-[0.625rem] uppercase tracking-[0.15em] text-text-muted mb-1">
             {t('fin.nw.totalNetWorth')}
           </div>
           <div className={`font-heading font-bold text-3xl tracking-tight ${netWorth >= 0 ? 'text-text' : 'text-danger'}`}>
@@ -390,7 +390,7 @@ export default function NetWorth() {
                     key={m}
                     type="button"
                     onClick={() => setTrendMonths(m)}
-                    className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded-sm border ${
+                    className={`text-[0.625rem] uppercase tracking-wider px-1.5 py-0.5 rounded-sm border ${
                       trendMonths === m
                         ? 'border-primary/40 bg-primary/5 text-primary'
                         : 'border-border text-text-muted'
@@ -403,7 +403,7 @@ export default function NetWorth() {
                   aria-label={t('fin.nwt.currency')}
                   value={effectiveTrendCurrency}
                   onChange={(e) => setTrendCurrency(e.target.value)}
-                  className="text-[10px] uppercase tracking-wider bg-surface2 border border-border rounded-sm px-1.5 py-0.5 text-text-muted focus:outline-none focus:border-primary"
+                  className="text-[0.625rem] uppercase tracking-wider bg-surface2 border border-border rounded-sm px-1.5 py-0.5 text-text-muted focus:outline-none focus:border-primary"
                 >
                   {currencyOptions(formatLocale()).map((c) => (
                     <option key={c.code} value={c.code}>
@@ -444,14 +444,14 @@ export default function NetWorth() {
                 they are stated rather than designed around. */}
             <div className="mt-2 space-y-0.5">
               {trendRate == null && trendCurrency !== baseCurrency && (
-                <div className="text-[10px] text-warning">
+                <div className="text-[0.625rem] text-warning">
                   {t('fin.nwt.noRate', { currency: trendCurrency })}
                 </div>
               )}
               {scaledTrend.usedFx && (
-                <div className="text-[10px] text-text-muted">{t('fin.nwt.fxCaveat')}</div>
+                <div className="text-[0.625rem] text-text-muted">{t('fin.nwt.fxCaveat')}</div>
               )}
-              <div className="text-[10px] text-text-muted">{t('fin.nwt.historyCaveat')}</div>
+              <div className="text-[0.625rem] text-text-muted">{t('fin.nwt.historyCaveat')}</div>
             </div>
           </div>
         )}
@@ -472,7 +472,7 @@ export default function NetWorth() {
         >
           <div className="flex items-center justify-between mb-2">
             <span className="font-heading font-semibold text-sm">{t('fin.nw.savingsRunway')}</span>
-            <span className={`text-[9px] uppercase tracking-wider border rounded-sm px-1.5 py-0.5 ${
+            <span className={`text-[0.5625rem] uppercase tracking-wider border rounded-sm px-1.5 py-0.5 ${
               savingsAccountsBase <= 0
                 ? 'border-text-muted/40 bg-surface2 text-text-muted'
                 : runwayStatus === 'good'
@@ -496,7 +496,7 @@ export default function NetWorth() {
               {t('fin.nw.ofExpenses')}
             </span>
           </div>
-          <div className="text-[10px] text-text-muted">
+          <div className="text-[0.625rem] text-text-muted">
             {savingsAccountsBase > 0
               ? t('fin.nw.runwayDesc', { sav: fmt(savingsAccountsBase, baseCurrency), exp: fmt(monthlyExpensesAvg, baseCurrency) })
               : t('fin.nw.runwayEmpty', { liq: fmt(liquidBase, baseCurrency) })}
@@ -518,7 +518,7 @@ export default function NetWorth() {
                   className={`chip flex-col gap-0.5 py-2 ${assetType === ty ? 'chip-on' : ''}`}
                 >
                   <span className="text-sm">{ASSET_META[ty].icon}</span>
-                  <span className="text-[9px] uppercase tracking-wider">{t(`fin.acctType.${ty}`)}</span>
+                  <span className="text-[0.5625rem] uppercase tracking-wider">{t(`fin.acctType.${ty}`)}</span>
                 </button>
               ))}
             </div>
@@ -557,7 +557,7 @@ export default function NetWorth() {
                 </select>
               </div>
               {editing && (
-                <div className="text-[10px] text-text-muted mt-1">
+                <div className="text-[0.625rem] text-text-muted mt-1">
                   {t('fin.nw.openingNote', { amt: fmt(editing.startingBalance, editing.currency) })}
                 </div>
               )}
@@ -576,7 +576,7 @@ export default function NetWorth() {
                 {t('common.cancel')}
               </button>
             </div>
-            <div className="text-[10px] text-text-muted">
+            <div className="text-[0.625rem] text-text-muted">
               {LIABILITY_TYPES.includes(assetType)
                 ? t('fin.nw.liabilityHint')
                 : t('fin.nw.assetHint')}
@@ -616,7 +616,7 @@ export default function NetWorth() {
                     className="flex-1 min-w-0 text-start press-spring"
                   >
                     <div className="text-sm font-medium truncate">{a.name}</div>
-                    <div className="text-[10px] text-text-muted truncate">
+                    <div className="text-[0.625rem] text-text-muted truncate">
                       {fmt(a.balanceNative, a.currency)} · {t('fin.ad.opened').toLowerCase()} {fmt(a.startingBalance, a.currency)}
                       {a.notes && ` · ${a.notes}`}
                     </div>
@@ -647,7 +647,7 @@ export default function NetWorth() {
 function Cell({ label, value, tone }: { label: string; value: string; tone?: 'default' | 'danger' }) {
   return (
     <div>
-      <div className="text-[9px] uppercase tracking-wider text-text-muted">{label}</div>
+      <div className="text-[0.5625rem] uppercase tracking-wider text-text-muted">{label}</div>
       <div className={`text-sm font-medium ${tone === 'danger' ? 'text-danger' : ''}`}>{value}</div>
     </div>
   );

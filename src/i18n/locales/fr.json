@@ -267,7 +267,11 @@
     "deleteAccountFailed": "Échec de la suppression : {{msg}}",
     "support": "Soutien",
     "supportDev": "Soutenir le développement",
-    "supportDevSub": "Offrez-moi un café sur Ko-fi"
+    "supportDevSub": "Offrez-moi un café sur Ko-fi",
+    "textSize": "Taille du texte",
+    "textAuto": "Auto",
+    "textSizeSub": "S'applique partout, y compris sur votre téléphone.",
+    "textAutoSub": "{{pct}} % à cette taille d'écran — plus grand sur ordinateur, standard sur téléphone."
   },
   "days": {
     "long": {

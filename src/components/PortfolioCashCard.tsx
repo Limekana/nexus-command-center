@@ -74,7 +74,7 @@ export default function PortfolioCashCard() {
     <div className="card">
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.15em] text-text-muted">
+          <div className="text-[0.625rem] uppercase tracking-[0.15em] text-text-muted">
             Portfolio cash
           </div>
           <div className={`font-heading font-bold text-xl ${negative ? 'text-danger' : 'text-text'}`}>
@@ -101,14 +101,14 @@ export default function PortfolioCashCard() {
       </div>
 
       {negative && mode === null && (
-        <div className="text-[10px] text-danger mt-1">
+        <div className="text-[0.625rem] text-danger mt-1">
           Negative — deposit cash to cover your purchases.
         </div>
       )}
 
       {mode !== null && (
         <div className="mt-3 space-y-2">
-          <div className="text-[11px] uppercase tracking-wider text-text-muted">
+          <div className="text-[0.6875rem] uppercase tracking-wider text-text-muted">
             {mode === 'deposit' ? 'Deposit from account → portfolio' : 'Withdraw portfolio → account'}
           </div>
           <div className="flex gap-2">
@@ -131,7 +131,7 @@ export default function PortfolioCashCard() {
               ))}
             </select>
           </div>
-          {error && <div className="text-[11px] text-danger">{error}</div>}
+          {error && <div className="text-[0.6875rem] text-danger">{error}</div>}
           <div className="flex gap-2">
             <button
               className="btn flex-1"

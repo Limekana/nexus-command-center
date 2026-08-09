@@ -148,7 +148,7 @@ export default function Login() {
           <>
             <div className="flex items-center gap-3 my-5">
               <div className="flex-1 h-px bg-border" />
-              <span className="text-[10px] uppercase tracking-wider text-text-muted">
+              <span className="text-[0.625rem] uppercase tracking-wider text-text-muted">
                 {t('auth.orUseEmail')}
               </span>
               <div className="flex-1 h-px bg-border" />
@@ -156,7 +156,7 @@ export default function Login() {
 
             <form onSubmit={onSubmit} className="space-y-3">
               <div>
-                <label className="block text-[10px] uppercase tracking-wider text-text-muted mb-1">
+                <label className="block text-[0.625rem] uppercase tracking-wider text-text-muted mb-1">
                   {t('auth.emailLabel')}
                 </label>
                 <input
@@ -170,7 +170,7 @@ export default function Login() {
                 />
               </div>
               <div>
-                <label className="block text-[10px] uppercase tracking-wider text-text-muted mb-1">
+                <label className="block text-[0.625rem] uppercase tracking-wider text-text-muted mb-1">
                   {t('auth.passwordLabel')}
                 </label>
                 <input
@@ -223,7 +223,7 @@ export default function Login() {
           >
             {t('auth.guest')}
           </button>
-          <p className="text-[11px] text-text-muted mt-1.5 text-center px-4 leading-relaxed">
+          <p className="text-[0.6875rem] text-text-muted mt-1.5 text-center px-4 leading-relaxed">
             {t('auth.guestCaption')}
           </p>
         </div>

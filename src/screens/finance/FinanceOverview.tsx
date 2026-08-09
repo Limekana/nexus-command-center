@@ -309,7 +309,7 @@ export default function FinanceOverview() {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] uppercase tracking-[0.15em] text-text-muted">
+                  <div className="text-[0.625rem] uppercase tracking-[0.15em] text-text-muted">
                     {t('fin.ov.netWorth')}
                   </div>
                   <div className={`font-heading font-bold text-xl ${netWorth.total >= 0 ? 'text-text' : 'text-danger'}`}>
@@ -322,11 +322,11 @@ export default function FinanceOverview() {
                       : '—'}
                   </div>
                 </div>
-                <span className="text-[10px] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5">
+                <span className="text-[0.625rem] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5">
                   {t('fin.ov.manage')}
                 </span>
               </div>
-              <div className="text-[10px] text-text-muted mt-1">
+              <div className="text-[0.625rem] text-text-muted mt-1">
                 {netWorth.hasData
                   ? t('fin.ov.netWorthSub')
                   : t('fin.ov.netWorthEmpty')}
@@ -348,7 +348,7 @@ export default function FinanceOverview() {
             >
               <div>
                 <div className="font-heading font-semibold text-sm text-primary">{t('fin.ov.runScenario')}</div>
-                <div className="text-[11px] text-text-muted">{t('fin.ov.runScenarioSub')}</div>
+                <div className="text-[0.6875rem] text-text-muted">{t('fin.ov.runScenarioSub')}</div>
               </div>
               <span className="text-primary text-lg rtl-mirror" aria-hidden>→</span>
             </button>
@@ -363,7 +363,7 @@ export default function FinanceOverview() {
                 <span className="font-heading font-semibold text-sm">{t('fin.ov.budgetBreakdown')}</span>
                 <button
                   onClick={() => navigate('/finance/budgets')}
-                  className="text-[10px] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5 active:bg-primary/10"
+                  className="text-[0.625rem] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5 active:bg-primary/10"
                 >
                   {t('fin.ov.manage')}
                 </button>
@@ -400,13 +400,13 @@ export default function FinanceOverview() {
               <div className="card">
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-heading font-semibold text-sm">{t('fin.ov.spendPattern')}</span>
-                  <span className="text-[9px] uppercase tracking-wider text-text-muted">
+                  <span className="text-[0.5625rem] uppercase tracking-wider text-text-muted">
                     {t('fin.ov.spendDays', { cur: baseCurrency })}
                   </span>
                 </div>
                 <HeatmapCalendar data={spendByDay} tint="warning" unit={baseCurrency === 'EUR' ? '€' : baseCurrency} />
                 {spendByDay.size === 0 && (
-                  <div className="text-[10px] text-text-muted mt-2 text-center">
+                  <div className="text-[0.625rem] text-text-muted mt-2 text-center">
                     {t('fin.ov.spendEmpty')}
                   </div>
                 )}
@@ -450,7 +450,7 @@ export default function FinanceOverview() {
                         key={m}
                         type="button"
                         onClick={() => setBudgetMonths(m)}
-                        className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded-sm border ${
+                        className={`text-[0.625rem] uppercase tracking-wider px-1.5 py-0.5 rounded-sm border ${
                           budgetMonths === m
                             ? 'border-primary/40 bg-primary/5 text-primary'
                             : 'border-border text-text-muted'
@@ -462,7 +462,7 @@ export default function FinanceOverview() {
                     <button
                       type="button"
                       onClick={() => navigate('/finance/budgets')}
-                      className="text-[10px] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5 active:bg-primary/10"
+                      className="text-[0.625rem] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5 active:bg-primary/10"
                     >
                       {t('fin.ov.manage')}
                     </button>
@@ -487,7 +487,7 @@ export default function FinanceOverview() {
             <div className="card">
               <div className="flex items-center justify-between mb-3">
                 <span className="font-heading font-semibold text-sm">{t('fin.ov.recentTx')}</span>
-                <span className="text-[9px] uppercase tracking-wider text-text-muted">
+                <span className="text-[0.5625rem] uppercase tracking-wider text-text-muted">
                   {t('fin.ov.txTotal', { count: visibleTx.length })}
                 </span>
               </div>
@@ -495,7 +495,7 @@ export default function FinanceOverview() {
                 <button
                   type="button"
                   onClick={() => setTxFilter(null)}
-                  className="mb-2 inline-flex items-center gap-1.5 rounded-pill border border-primary/40 bg-primary/10 px-2.5 py-1 text-[11px] text-primary"
+                  className="mb-2 inline-flex items-center gap-1.5 rounded-pill border border-primary/40 bg-primary/10 px-2.5 py-1 text-[0.6875rem] text-primary"
                 >
                   {txFilter.label}
                   <span className="text-primary/70">{txFilter.month}</span>
@@ -508,7 +508,7 @@ export default function FinanceOverview() {
                     <span className="w-1.5 h-1.5 rounded-full bg-primary/60 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="text-sm truncate">{tx.description}</div>
-                      <div className="text-[10px] text-text-muted">{formatShortDate(tx.date)}</div>
+                      <div className="text-[0.625rem] text-text-muted">{formatShortDate(tx.date)}</div>
                     </div>
                     <span
                       className={`text-sm whitespace-nowrap ${
@@ -617,7 +617,7 @@ function EntryCard({ emoji, title, sub, onClick }: {
       <span className="text-lg" aria-hidden>{emoji}</span>
       <div className="flex-1 min-w-0">
         <div className="font-heading font-semibold text-sm">{title}</div>
-        <div className="text-[11px] text-text-muted truncate">{sub}</div>
+        <div className="text-[0.6875rem] text-text-muted truncate">{sub}</div>
       </div>
       <span className="text-primary text-sm rtl-mirror" aria-hidden>→</span>
     </button>

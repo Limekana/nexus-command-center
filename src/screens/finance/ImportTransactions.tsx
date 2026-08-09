@@ -59,7 +59,7 @@ const ROLES: ColumnRole[] = [
   'notes',
 ];
 
-const PREVIEW_GRID = 'grid-cols-[36px_44px_104px_minmax(140px,1fr)_minmax(90px,132px)_110px_92px]';
+const PREVIEW_GRID = 'grid-cols-[2.25rem_2.75rem_6.5rem_minmax(8.75rem,1fr)_minmax(5.625rem,8.25rem)_6.875rem_5.75rem]';
 
 export default function ImportTransactions() {
   const { t } = useTranslation();
@@ -355,7 +355,7 @@ export default function ImportTransactions() {
             <div className="text-sm font-heading font-semibold">
               {fileName ?? t('fin.imp.dropHere')}
             </div>
-            <div className="text-[11px] text-text-muted mt-0.5">
+            <div className="text-[0.6875rem] text-text-muted mt-0.5">
               {fileName
                 ? t('fin.imp.rowsFound', { count: dataRows.length })
                 : t('fin.imp.dropHint')}
@@ -393,7 +393,7 @@ export default function ImportTransactions() {
               {/* One card per column of the file, each carrying a live sample
                   from the user's own data. Recognition, not recall — and it is
                   the surface that genuinely needs the desktop width. */}
-              <div className="grid gap-2 grid-cols-[repeat(auto-fit,minmax(190px,1fr))]">
+              <div className="grid gap-2 grid-cols-[repeat(auto-fit,minmax(11.875rem,1fr))]">
                 {headers.map((h, i) => {
                   const samples = dataRows.slice(0, 3).map((r) => (r[i] ?? '').trim()).filter(Boolean);
                   const active = mapping[i] && mapping[i] !== 'ignore';
@@ -407,7 +407,7 @@ export default function ImportTransactions() {
                       <div className="sec truncate" title={h}>
                         {h}
                       </div>
-                      <div className="text-[11px] text-text-muted truncate h-4" title={samples.join(' · ')}>
+                      <div className="text-[0.6875rem] text-text-muted truncate h-4" title={samples.join(' · ')}>
                         {samples[0] ?? '—'}
                       </div>
                       <select
@@ -479,11 +479,11 @@ export default function ImportTransactions() {
                 </div>
               )}
               {createCategories && newCategoryNames.length > 0 && (
-                <div className="text-[11px] text-text-muted mt-2">
+                <div className="text-[0.6875rem] text-text-muted mt-2">
                   {t('fin.imp.willCreate', { count: newCategoryNames.length, names: newCategoryNames.slice(0, 4).join(', ') })}
                 </div>
               )}
-              <div className="text-[11px] text-text-muted mt-2">{t('fin.imp.noTransfers')}</div>
+              <div className="text-[0.6875rem] text-text-muted mt-2">{t('fin.imp.noTransfers')}</div>
             </Panel>
 
             {/* ── 3. Review ───────────────────────────────────────────── */}
@@ -502,7 +502,7 @@ export default function ImportTransactions() {
               </div>
 
               <div className="overflow-x-auto">
-                <div role="table" aria-label={t('fin.imp.previewAria')} className="min-w-[720px]">
+                <div role="table" aria-label={t('fin.imp.previewAria')} className="min-w-[45rem]">
                   <div role="row" className={`grid ${PREVIEW_GRID} gap-2 px-2 pb-1.5 border-b border-border`}>
                     <span role="columnheader" className="sr-only">{t('fin.imp.include')}</span>
                     <span role="columnheader" className="sec text-end">#</span>
@@ -556,7 +556,7 @@ export default function ImportTransactions() {
                             `${r.type === 'income' ? '+' : '−'}${money(r.amount)}`
                           )}
                         </span>
-                        <span role="cell" className="text-[10px] uppercase tracking-wider">
+                        <span role="cell" className="text-[0.625rem] uppercase tracking-wider">
                           {broken ? (
                             <span className="text-danger">
                               {r.problems.map((p) => t(`fin.imp.problem.${p}`)).join(', ')}
@@ -573,7 +573,7 @@ export default function ImportTransactions() {
                 </div>
               </div>
               {rows.length > 300 && (
-                <div className="text-[11px] text-text-muted mt-2">
+                <div className="text-[0.6875rem] text-text-muted mt-2">
                   {t('fin.imp.truncated', { shown: 300, total: rows.length })}
                 </div>
               )}
@@ -586,7 +586,7 @@ export default function ImportTransactions() {
                   {t('fin.imp.cancel')}
                 </button>
               </div>
-              {!accountId && <div className="text-[11px] text-danger mt-2">{t('fin.imp.needAccount')}</div>}
+              {!accountId && <div className="text-[0.6875rem] text-danger mt-2">{t('fin.imp.needAccount')}</div>}
             </Panel>
           </>
         )}
@@ -601,7 +601,7 @@ function Panel({ step, title, children }: { step: number; title: string; childre
   return (
     <section className="card">
       <div className="flex items-center gap-2 mb-3">
-        <span className="w-5 h-5 rounded-full border border-primary/50 bg-primary/10 text-primary text-[10px] font-heading font-semibold flex items-center justify-center flex-shrink-0">
+        <span className="w-5 h-5 rounded-full border border-primary/50 bg-primary/10 text-primary text-[0.625rem] font-heading font-semibold flex items-center justify-center flex-shrink-0">
           {step}
         </span>
         <h2 className="font-heading font-semibold text-sm">{title}</h2>
@@ -652,7 +652,7 @@ function Tally({ value, label, tone }: { value: number; label: string; tone: 'pr
           ? 'text-danger border-danger/40 bg-danger/5'
           : 'text-text-muted border-border';
   return (
-    <span className={`inline-flex items-baseline gap-1.5 rounded-pill border px-2.5 py-1 text-[10px] uppercase tracking-wider ${cls}`}>
+    <span className={`inline-flex items-baseline gap-1.5 rounded-pill border px-2.5 py-1 text-[0.625rem] uppercase tracking-wider ${cls}`}>
       <b className="font-heading text-xs tabular-nums">{value}</b>
       {label}
     </span>

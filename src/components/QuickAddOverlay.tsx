@@ -210,7 +210,7 @@ export default function QuickAddOverlay({ open, onClose }: Props) {
         )}
 
         {/* The preview is the safety net that makes a terse syntax honest. */}
-        <div id="quickadd-preview" className="mt-2 pt-2 border-t border-border/60 flex flex-wrap items-center gap-1.5 text-[11px]">
+        <div id="quickadd-preview" className="mt-2 pt-2 border-t border-border/60 flex flex-wrap items-center gap-1.5 text-[0.6875rem]">
           <Chip
             tone={draft.amount != null ? (draft.type === 'income' ? 'success' : 'primary') : 'empty'}
             label={
@@ -235,9 +235,9 @@ export default function QuickAddOverlay({ open, onClose }: Props) {
         </div>
 
         <div className="mt-2 flex items-center justify-between gap-2">
-          <span className="text-[10px] text-text-muted">{t('fin.qa.hint')}</span>
+          <span className="text-[0.625rem] text-text-muted">{t('fin.qa.hint')}</span>
           <div className="flex items-center gap-2">
-            {saved && <span className="text-[11px] text-success truncate max-w-[240px]">✓ {saved}</span>}
+            {saved && <span className="text-[0.6875rem] text-success truncate max-w-[240px]">✓ {saved}</span>}
             <button type="button" className="btn btn-sm" disabled={!complete || !resolvedAccount || busy} onClick={() => void save()}>
               {t('fin.qa.save')}
             </button>

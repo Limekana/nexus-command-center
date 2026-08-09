@@ -69,7 +69,7 @@ export default function BudgetTrendTable({
   }
 
   const grid = {
-    gridTemplateColumns: `minmax(130px, 1.4fr) 92px repeat(${months.length}, minmax(58px, 1fr))`,
+    gridTemplateColumns: `minmax(8.125rem, 1.4fr) 5.75rem repeat(${months.length}, minmax(3.625rem, 1fr))`,
   };
 
   const money = (v: number) => formatCurrency(v, baseCurrency);
@@ -123,7 +123,7 @@ export default function BudgetTrendTable({
               disabled={!clickable}
               onClick={() => clickable && onSelect(categoryId, c.month, label)}
               style={cellStyle(c, hasLimit, rowMax)}
-              className={`px-1 py-1.5 text-[11px] text-end tabular-nums transition-colors ${
+              className={`px-1 py-1.5 text-[0.6875rem] text-end tabular-nums transition-colors ${
                 clickable ? 'cursor-pointer hover:brightness-125' : 'cursor-default'
               } ${sel ? 'ring-1 ring-inset ring-primary' : ''} ${
                 c.over ? 'text-danger' : c.actual > 0 ? 'text-text' : 'text-text-muted/40'
@@ -141,7 +141,7 @@ export default function BudgetTrendTable({
   return (
     <div>
       <div className="overflow-x-auto">
-        <div role="table" aria-label={t('fin.bvt.aria')} className="min-w-[640px]">
+        <div role="table" aria-label={t('fin.bvt.aria')} className="min-w-[40rem]">
           <div role="row" className="grid gap-px border-b border-border" style={grid}>
             <span role="columnheader" className="sec px-2 pb-1.5">
               {t('fin.bvt.category')}
@@ -175,9 +175,9 @@ export default function BudgetTrendTable({
       </div>
 
       <div className="mt-2 space-y-0.5">
-        {trend.noLimitsSet && <div className="text-[10px] text-warning">{t('fin.bvt.noLimitsSet')}</div>}
+        {trend.noLimitsSet && <div className="text-[0.625rem] text-warning">{t('fin.bvt.noLimitsSet')}</div>}
         {/* The one claim this view could accidentally make and shouldn't. */}
-        <div className="text-[10px] text-text-muted">{t('fin.bvt.limitCaveat')}</div>
+        <div className="text-[0.625rem] text-text-muted">{t('fin.bvt.limitCaveat')}</div>
       </div>
     </div>
   );

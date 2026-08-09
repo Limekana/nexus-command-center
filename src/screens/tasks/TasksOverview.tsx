@@ -121,7 +121,7 @@ export default function TasksOverview() {
           <div className="card desk-span">
             <div className="flex items-center justify-between mb-2">
               <span className="font-heading font-semibold text-sm">{t('tasks.completionStreak')}</span>
-              <span className="text-[9px] uppercase tracking-wider text-text-muted">{t('tasks.days365')}</span>
+              <span className="text-[0.5625rem] uppercase tracking-wider text-text-muted">{t('tasks.days365')}</span>
             </div>
             <HeatmapCalendar data={completedByDay} tint="primary" unit="task" />
           </div>
@@ -141,7 +141,7 @@ export default function TasksOverview() {
 
         {groups.overdue.length > 0 && (
           <div className="card">
-            <div className="text-[10px] font-heading font-semibold uppercase tracking-wider text-danger mb-2">
+            <div className="text-[0.625rem] font-heading font-semibold uppercase tracking-wider text-danger mb-2">
               {t('tasks.overdue')}
             </div>
             {groups.overdue.map((t) => (
@@ -152,7 +152,7 @@ export default function TasksOverview() {
 
         {groups.today.length > 0 && (
           <div className="card">
-            <div className="text-[10px] font-heading font-semibold uppercase tracking-wider text-warning mb-2">
+            <div className="text-[0.625rem] font-heading font-semibold uppercase tracking-wider text-warning mb-2">
               {t('tasks.filterToday')}
             </div>
             {groups.today.map((t) => (
@@ -163,7 +163,7 @@ export default function TasksOverview() {
 
         {groups.upcoming.length > 0 && (
           <div className="card">
-            <div className="text-[10px] font-heading font-semibold uppercase tracking-wider text-text-muted mb-2">
+            <div className="text-[0.625rem] font-heading font-semibold uppercase tracking-wider text-text-muted mb-2">
               {t('tasks.upcoming')}
             </div>
             {groups.upcoming.map((t) => (
@@ -174,7 +174,7 @@ export default function TasksOverview() {
 
         {groups.done.length > 0 && filter === 'done' && (
           <div className="card">
-            <div className="text-[10px] font-heading font-semibold uppercase tracking-wider text-success mb-2">
+            <div className="text-[0.625rem] font-heading font-semibold uppercase tracking-wider text-success mb-2">
               {t('tasks.completed')}
             </div>
             {groups.done.map((t) => (
@@ -241,7 +241,7 @@ function TaskItem({
     <div className="flex items-center gap-2 py-1.5">
       <button
         onClick={() => onToggle(task.id)}
-        className={`w-4 h-4 rounded-sm border flex-shrink-0 flex items-center justify-center text-[10px] ${
+        className={`w-4 h-4 rounded-sm border flex-shrink-0 flex items-center justify-center text-[0.625rem] ${
           task.completed
             ? 'bg-success border-success text-bg'
             : 'border-border bg-surface2'
@@ -254,12 +254,12 @@ function TaskItem({
         {task.title}
       </span>
       {sharedFromOther && (
-        <span className="text-[9px] px-1.5 py-0.5 rounded-sm bg-primary/15 text-primary border border-primary/30 whitespace-nowrap">
+        <span className="text-[0.5625rem] px-1.5 py-0.5 rounded-sm bg-primary/15 text-primary border border-primary/30 whitespace-nowrap">
           {t('tasks.shared')}
         </span>
       )}
       {tagText && (
-        <span className={`text-[10px] px-1.5 py-0.5 rounded-sm border whitespace-nowrap ${toneClasses[tagText.tone]}`}>
+        <span className={`text-[0.625rem] px-1.5 py-0.5 rounded-sm border whitespace-nowrap ${toneClasses[tagText.tone]}`}>
           {tagText.text}
         </span>
       )}

@@ -103,7 +103,7 @@ export default function PortfolioValueChart({ snapshots, baseCurrency, formatCur
         <path d={linePath} fill="none" stroke={strokeColor} strokeWidth="2" strokeLinejoin="round" />
         <circle cx={endPoint.x} cy={endPoint.y} r="3" fill={strokeColor} />
       </svg>
-      <div className="flex justify-between text-[9px] text-text-muted mt-1">
+      <div className="flex justify-between text-[0.5625rem] text-text-muted mt-1">
         <span>{filtered[0].date}</span>
         <span>{filtered[filtered.length - 1].date}</span>
       </div>
@@ -119,7 +119,7 @@ function RangeToggle({ value, onChange }: { value: Range; onChange: (r: Range) =
         <button
           key={r}
           onClick={() => onChange(r)}
-          className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded-sm border ${
+          className={`text-[0.625rem] uppercase tracking-wider px-1.5 py-0.5 rounded-sm border ${
             value === r
               ? 'border-primary/40 bg-primary/5 text-primary'
               : 'border-border text-text-muted'

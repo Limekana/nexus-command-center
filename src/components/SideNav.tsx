@@ -59,7 +59,7 @@ export default function SideNav({ rail, onToggle }: SideNavProps) {
         {!rail && (
           <div className="min-w-0">
             <div className="truncate font-heading text-base font-bold leading-none tracking-tight">Nexus</div>
-            <div className="mt-1 text-[10px] uppercase tracking-[0.14em] text-text-muted">Command Center</div>
+            <div className="mt-1 text-[0.625rem] uppercase tracking-[0.14em] text-text-muted">Command Center</div>
           </div>
         )}
       </div>
@@ -114,7 +114,7 @@ export default function SideNav({ rail, onToggle }: SideNavProps) {
             <PanelLeftClose size={18} strokeWidth={1.75} aria-hidden="true" />
           )}
           {!rail && (
-            <span className="text-[11px] uppercase tracking-[0.12em]">{t('nav.collapseSidebar')}</span>
+            <span className="text-[0.6875rem] uppercase tracking-[0.12em]">{t('nav.collapseSidebar')}</span>
           )}
         </button>
       </div>

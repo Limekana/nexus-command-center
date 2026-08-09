@@ -149,9 +149,9 @@ export default function LockScreen() {
     <div className="min-h-full flex flex-col items-center justify-center bg-bg p-6 desktop:p-10 safe-top safe-bottom">
       <div className="w-full max-w-xs tablet:max-w-sm desktop:max-w-xl flex flex-col items-center gap-6 desktop:gap-9">
         <div className="text-center space-y-1 desktop:space-y-2">
-          <div className="text-[10px] desktop:text-xs uppercase tracking-[0.2em] text-text-muted">{t('app.name')}</div>
+          <div className="text-[0.625rem] desktop:text-xs uppercase tracking-[0.2em] text-text-muted">{t('app.name')}</div>
           <h1 className="font-heading font-bold text-2xl desktop:text-4xl text-text">{t('lock.secureAccess')}</h1>
-          <div className="text-[10px] desktop:text-sm text-text-muted">{t('lock.deviceEncrypted')}</div>
+          <div className="text-[0.625rem] desktop:text-sm text-text-muted">{t('lock.deviceEncrypted')}</div>
         </div>
 
         <button
@@ -165,7 +165,7 @@ export default function LockScreen() {
         >
           👆
         </button>
-        <div className="text-[10px] desktop:text-sm text-text-muted -mt-2">
+        <div className="text-[0.625rem] desktop:text-sm text-text-muted -mt-2">
           {!biometricEnabled
             ? t('lock.bioDisabled')
             : bioAvailable
@@ -228,7 +228,7 @@ export default function LockScreen() {
           </div>
         </div>
 
-        <div className="text-[10px] desktop:text-xs text-text-muted/60">{t('lock.forgotPin')}</div>
+        <div className="text-[0.625rem] desktop:text-xs text-text-muted/60">{t('lock.forgotPin')}</div>
       </div>
     </div>
   );

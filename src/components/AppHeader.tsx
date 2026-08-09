@@ -46,7 +46,7 @@ export default function AppHeader({ title, back, backLabel, action, showAvatar =
         {showAvatar && (
           <button
             onClick={() => navigate('/settings')}
-            className="w-9 h-9 rounded-full glass-soft flex items-center justify-center text-[10px] font-heading font-semibold text-primary press-spring flex-shrink-0"
+            className="w-9 h-9 rounded-full glass-soft flex items-center justify-center text-[0.625rem] font-heading font-semibold text-primary press-spring flex-shrink-0"
             aria-label="Account"
           >
             {initials}

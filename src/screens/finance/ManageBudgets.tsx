@@ -180,7 +180,7 @@ export default function ManageBudgets() {
                   </option>
                 ))}
               </select>
-              <div className="text-[10px] text-text-muted mt-1">
+              <div className="text-[0.625rem] text-text-muted mt-1">
                 {linkedAssetId
                   ? t('fin.budg.linkedOn')
                   : t('fin.budg.linkedOff')}
@@ -219,20 +219,20 @@ export default function ManageBudgets() {
                   <div className="text-sm flex items-center gap-1.5">
                     <span className="truncate">{c.name}</span>
                     {sharedFromOther && (
-                      <span className="text-[9px] px-1.5 py-0.5 rounded-sm bg-primary/15 text-primary border border-primary/30 whitespace-nowrap">
+                      <span className="text-[0.5625rem] px-1.5 py-0.5 rounded-sm bg-primary/15 text-primary border border-primary/30 whitespace-nowrap">
                         {t('fin.budg.shared')}
                       </span>
                     )}
                     {linkedAsset && (
                       <span
-                        className="text-[9px] px-1.5 py-0.5 rounded-sm bg-success/10 text-success border border-success/30 whitespace-nowrap"
+                        className="text-[0.5625rem] px-1.5 py-0.5 rounded-sm bg-success/10 text-success border border-success/30 whitespace-nowrap"
                         title={t('fin.budg.autoUpdates', { name: linkedAsset.name })}
                       >
                         <span className="rtl-mirror" aria-hidden>→</span> {linkedAsset.name}
                       </span>
                     )}
                   </div>
-                  <div className="text-[10px] text-text-muted">{t('fin.budg.perMonth', { amount: formatMoney(c.monthlyLimit, baseCurrency, { locale: formatLocale() }) })}</div>
+                  <div className="text-[0.625rem] text-text-muted">{t('fin.budg.perMonth', { amount: formatMoney(c.monthlyLimit, baseCurrency, { locale: formatLocale() }) })}</div>
                 </div>
                 <RowActions
                   onShare={!sharedFromOther ? () => setSharing(c) : undefined}

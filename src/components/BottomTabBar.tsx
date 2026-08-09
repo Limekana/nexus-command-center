@@ -112,7 +112,7 @@ export default function BottomTabBar() {
                   >
                     <Icon size={20} strokeWidth={1.75} aria-hidden="true" />
                   </span>
-                  <span className="text-[11px] font-medium tracking-wide leading-tight">{t(tab.labelKey)}</span>
+                  <span className="text-[0.6875rem] font-medium tracking-wide leading-tight">{t(tab.labelKey)}</span>
                 </button>
               );
             })}

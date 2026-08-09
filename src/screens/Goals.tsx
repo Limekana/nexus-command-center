@@ -132,7 +132,7 @@ export default function Goals() {
         {goals.length === 0 && !editingNow && (
           <div className="card text-center text-xs text-text-muted py-6">
             {t('goals.noGoalsTitle')}
-            <div className="text-[10px] mt-2">
+            <div className="text-[0.625rem] mt-2">
               {t('goals.noGoalsBody')}
             </div>
           </div>
@@ -140,7 +140,7 @@ export default function Goals() {
 
         {active.length > 0 && !editingNow && (
           <div className="card space-y-3">
-            <div className="text-[10px] uppercase tracking-wider text-text-muted">{t('goals.active')}</div>
+            <div className="text-[0.625rem] uppercase tracking-wider text-text-muted">{t('goals.active')}</div>
             {active.map((g) => (
               <GoalRow
                 key={g.id}
@@ -157,7 +157,7 @@ export default function Goals() {
 
         {completed.length > 0 && !editingNow && (
           <div className="card space-y-3 opacity-80">
-            <div className="text-[10px] uppercase tracking-wider text-success">{t('goals.completed')}</div>
+            <div className="text-[0.625rem] uppercase tracking-wider text-success">{t('goals.completed')}</div>
             {completed.map((g) => (
               <GoalRow
                 key={g.id}
@@ -232,11 +232,11 @@ function GoalRow({
             <div className="flex-1 h-2 rounded-full bg-surface2 overflow-hidden">
               <div className={`h-full ${barColor} transition-all`} style={{ width: `${pct}%` }} />
             </div>
-            <span className="text-[10px] text-text-muted whitespace-nowrap">
+            <span className="text-[0.625rem] text-text-muted whitespace-nowrap">
               {Math.round(progress.percent)}%
             </span>
           </div>
-          <div className="flex items-center justify-between text-[10px] text-text-muted mt-1">
+          <div className="flex items-center justify-between text-[0.625rem] text-text-muted mt-1">
             <span>
               {formatGoalValue(goal, progress.currentValue, baseCurrency)}
               {' / '}
@@ -251,7 +251,7 @@ function GoalRow({
           {progress.reached && !goal.completed && (
             <button
               onClick={onComplete}
-              className="text-[10px] mt-2 px-2 py-1 rounded-sm border border-success/40 bg-success/5 text-success active:bg-success/10"
+              className="text-[0.625rem] mt-2 px-2 py-1 rounded-sm border border-success/40 bg-success/5 text-success active:bg-success/10"
             >
               {t('goals.markComplete')}
             </button>
@@ -259,7 +259,7 @@ function GoalRow({
           {goal.completed && (
             <button
               onClick={onComplete}
-              className="text-[10px] mt-2 px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary"
+              className="text-[0.625rem] mt-2 px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary"
             >
               {t('goals.reopen')}
             </button>
@@ -338,7 +338,7 @@ function GoalForm({
       />
 
       <div>
-        <div className="text-[10px] uppercase tracking-wider text-text-muted mb-1">{t('goals.type')}</div>
+        <div className="text-[0.625rem] uppercase tracking-wider text-text-muted mb-1">{t('goals.type')}</div>
         <div className="grid grid-cols-3 gap-1.5">
           {GOAL_TYPES.map((gt) => {
             const m = GOAL_TYPE_LABELS[gt];
@@ -347,7 +347,7 @@ function GoalForm({
                 key={gt}
                 type="button"
                 onClick={() => onPickType(gt)}
-                className={`chip text-[11px] ${goalType === gt ? 'chip-on' : ''}`}
+                className={`chip text-[0.6875rem] ${goalType === gt ? 'chip-on' : ''}`}
               >
                 {m.icon} {t(`goalTypes.${gt}`, { defaultValue: m.label })}
               </button>
@@ -357,7 +357,7 @@ function GoalForm({
       </div>
 
       <div>
-        <div className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
+        <div className="text-[0.625rem] uppercase tracking-wider text-text-muted mb-1">
           {t('goals.target')} {meta.unit ? `(${meta.unit})` : ''}
         </div>
         <input
@@ -371,7 +371,7 @@ function GoalForm({
 
       {needsExercise && (
         <div>
-          <div className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
+          <div className="text-[0.625rem] uppercase tracking-wider text-text-muted mb-1">
             {t('goals.exerciseName')}
           </div>
           <input
@@ -381,7 +381,7 @@ function GoalForm({
             onChange={(e) => setExerciseName(e.target.value)}
             autoCapitalize="words"
           />
-          <div className="text-[10px] text-text-muted mt-1">
+          <div className="text-[0.625rem] text-text-muted mt-1">
             {t('goals.exerciseHint')}
           </div>
         </div>
@@ -389,7 +389,7 @@ function GoalForm({
 
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <div className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
+          <div className="text-[0.625rem] uppercase tracking-wider text-text-muted mb-1">
             {t('goals.startDate')}
           </div>
           <input
@@ -399,13 +399,13 @@ function GoalForm({
             onChange={(e) => setStartDate(e.target.value)}
           />
           {isCumulative && (
-            <div className="text-[9px] text-text-muted mt-1">
+            <div className="text-[0.5625rem] text-text-muted mt-1">
               {t('goals.startHint')}
             </div>
           )}
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
+          <div className="text-[0.625rem] uppercase tracking-wider text-text-muted mb-1">
             {t('goals.targetDate')} {goalType === 'lift_pr' || goalType === 'gpa' ? t('goals.optional') : ''}
           </div>
           <input

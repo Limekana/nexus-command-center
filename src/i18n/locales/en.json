@@ -267,7 +267,11 @@
     "deleteAccountFailed": "Deletion failed: {{msg}}",
     "support": "Support",
     "supportDev": "Support development",
-    "supportDevSub": "Buy me a coffee on Ko-fi"
+    "supportDevSub": "Buy me a coffee on Ko-fi",
+    "textSize": "Text size",
+    "textAuto": "Auto",
+    "textSizeSub": "Applies everywhere, including on your phone.",
+    "textAutoSub": "{{pct}}% on this screen size — larger on desktop, standard on a phone."
   },
   "days": {
     "long": {

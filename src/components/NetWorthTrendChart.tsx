@@ -221,7 +221,7 @@ export default function NetWorthTrendChart({
         )}
       </div>
 
-      <div className="flex justify-between text-[9px] text-text-muted mt-0.5">
+      <div className="flex justify-between text-[0.5625rem] text-text-muted mt-0.5">
         <span>{first.month}</span>
         <span>{latest.month}</span>
       </div>
@@ -263,15 +263,15 @@ export function NetWorthBreakdown({
     <div>
       <div className="flex items-baseline justify-between mb-2">
         <span className="sec">{t('fin.nwt.breakdownFor', { month: point.month })}</span>
-        <span className="text-[10px] text-text-muted tabular-nums">{point.asOf}</span>
+        <span className="text-[0.625rem] text-text-muted tabular-nums">{point.asOf}</span>
       </div>
       {point.addedAccounts.length > 0 && (
-        <div className="text-[10px] text-text-muted mb-2">
+        <div className="text-[0.625rem] text-text-muted mb-2">
           ▲ {t('fin.nwt.addedHere', { names: point.addedAccounts.join(', ') })}
         </div>
       )}
       {point.holdingsBase == null && (
-        <div className="text-[10px] text-warning mb-2">{t('fin.nwt.noSnapshotYet')}</div>
+        <div className="text-[0.625rem] text-warning mb-2">{t('fin.nwt.noSnapshotYet')}</div>
       )}
       <div className="space-y-1.5">
         {rows.length === 0 && <div className="text-xs text-text-muted">{t('fin.nwt.nothingHere')}</div>}
@@ -281,7 +281,7 @@ export function NetWorthBreakdown({
             <div key={r.key}>
               <div className="flex items-baseline justify-between gap-2 text-xs">
                 <span className="truncate" title={r.label}>
-                  {r.label} <span className="text-text-muted text-[10px]">{r.sub}</span>
+                  {r.label} <span className="text-text-muted text-[0.625rem]">{r.sub}</span>
                 </span>
                 <span className={`tabular-nums flex-shrink-0 ${negative ? 'text-danger' : 'text-text'}`}>
                   {formatCurrency(r.value, currency)}

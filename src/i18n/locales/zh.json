@@ -267,7 +267,11 @@
     "deleteAccountFailed": "删除失败：{{msg}}",
     "support": "支持",
     "supportDev": "支持开发",
-    "supportDevSub": "在 Ko-fi 上请我喝杯咖啡"
+    "supportDevSub": "在 Ko-fi 上请我喝杯咖啡",
+    "textSize": "文字大小",
+    "textAuto": "自动",
+    "textSizeSub": "在所有设备上生效，包括手机。",
+    "textAutoSub": "当前屏幕尺寸下为 {{pct}}% — 桌面更大，手机为标准。"
   },
   "days": {
     "long": {

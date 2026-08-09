@@ -144,7 +144,7 @@ export default function InsightsCard() {
     <div className="card">
       <div className="flex items-center justify-between mb-2">
         <span className="font-heading font-semibold text-sm">Insights</span>
-        <span className="text-[9px] uppercase tracking-wider text-text-muted">
+        <span className="text-[0.5625rem] uppercase tracking-wider text-text-muted">
           {insights.length} observation{insights.length === 1 ? '' : 's'}
         </span>
       </div>

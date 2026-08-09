@@ -267,7 +267,11 @@
     "deleteAccountFailed": "Löschen fehlgeschlagen: {{msg}}",
     "support": "Unterstützen",
     "supportDev": "Entwicklung unterstützen",
-    "supportDevSub": "Spendiere mir einen Kaffee auf Ko-fi"
+    "supportDevSub": "Spendiere mir einen Kaffee auf Ko-fi",
+    "textSize": "Schriftgröße",
+    "textAuto": "Auto",
+    "textSizeSub": "Gilt überall, auch auf dem Telefon.",
+    "textAutoSub": "{{pct}} % bei dieser Bildschirmgröße — größer am Desktop, normal am Telefon."
   },
   "days": {
     "long": {

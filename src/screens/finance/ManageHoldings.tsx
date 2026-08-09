@@ -144,22 +144,22 @@ export default function ManageHoldings() {
         key={h.id}
         className={`flex items-center gap-2 py-2 border-b border-border/40 last:border-0 ${closed ? 'opacity-60' : ''}`}
       >
-        <span className="text-[9px] uppercase text-text-muted w-10 flex-shrink-0">
+        <span className="text-[0.5625rem] uppercase text-text-muted w-10 flex-shrink-0">
           {t(`fin.assetAbbr.${h.assetType}`)}
         </span>
         <div className="flex-1 min-w-0">
           <div className="text-sm font-heading font-semibold truncate">
             {h.ticker.toUpperCase()}
-            {closed && <span className="ms-1.5 text-[8px] uppercase tracking-wider text-text-muted">{t('fin.mh.closed')}</span>}
+            {closed && <span className="ms-1.5 text-[0.5rem] uppercase tracking-wider text-text-muted">{t('fin.mh.closed')}</span>}
           </div>
-          <div className="text-[10px] text-text-muted truncate">
+          <div className="text-[0.625rem] text-text-muted truncate">
             {h.name} · {h.quantity}
             {h.sectorOverride && <> · {h.sectorOverride}</>}
           </div>
         </div>
         <button
           onClick={() => navigate(`/finance/portfolio/lots/${h.id}`)}
-          className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded-sm border border-border text-text-muted active:border-primary active:text-primary flex-shrink-0"
+          className="text-[0.625rem] uppercase tracking-wider px-1.5 py-0.5 rounded-sm border border-border text-text-muted active:border-primary active:text-primary flex-shrink-0"
         >
           📦 {lotCount}
         </button>
@@ -225,7 +225,7 @@ export default function ManageHoldings() {
               autoFocus
             />
             {tickerError && (
-              <div className="text-[11px] text-warning">{tickerError}</div>
+              <div className="text-[0.6875rem] text-warning">{tickerError}</div>
             )}
             <input
               className="input"
@@ -241,7 +241,7 @@ export default function ManageHoldings() {
             />
             {!editing && (
               <>
-                <div className="text-[10px] uppercase tracking-wider text-text-muted mt-1">
+                <div className="text-[0.625rem] uppercase tracking-wider text-text-muted mt-1">
                   {t('fin.mh.firstPurchase')}
                 </div>
                 <div className="flex gap-2">
@@ -285,7 +285,7 @@ export default function ManageHoldings() {
                 {t('common.cancel')}
               </button>
             </div>
-            <div className="text-[10px] text-text-muted">
+            <div className="text-[0.625rem] text-text-muted">
               {assetType === 'stock'
                 ? t('fin.mh.stockHint')
                 : assetType === 'etf'
@@ -318,7 +318,7 @@ export default function ManageHoldings() {
               className="w-full flex items-center justify-between text-sm font-heading font-semibold"
             >
               <span className="text-text-muted">{t('fin.mh.closedPositions')}</span>
-              <span className="text-[10px] uppercase tracking-wider text-text-muted">
+              <span className="text-[0.625rem] uppercase tracking-wider text-text-muted">
                 {closedH.length} · {showClosed ? '▲' : '▼'}
               </span>
             </button>

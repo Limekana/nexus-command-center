@@ -50,6 +50,34 @@
      * and not a silent relayout. */
     --desk-gap: 1rem;
     --desk-col: 440px;
+
+    /* ─── v1.9 — UI scale ─────────────────────────────────────────────────
+     * Type in this app was sized for a phone held at arm's length, and on a
+     * monitor it read as tiny. Rather than retune ~800 individual sizes,
+     * every font size in the codebase is now expressed in rem (the 368
+     * px-literal ones were converted to exact rem equivalents, so nothing
+     * moved at 100%), which makes the whole type scale a single number.
+     *
+     * Desktop gets a larger default with no user action, because "it is too
+     * small" should not require finding a setting first. Phone and tablet
+     * stay exactly as shipped.
+     *
+     * An explicit choice in Settings sets `--ui-scale` INLINE on <html>,
+     * which outranks the media query below in both directions — so picking
+     * 100% on a desktop really does mean 100%. Clearing the choice removes
+     * the inline value and the tier default takes over again. */
+    --ui-scale: 1;
+  }
+
+  @media (min-width: 1201px) {
+    :root { --ui-scale: 1.2; }
+  }
+
+  /* `100%` rather than a hard 16px so a user who has raised their browser or
+   * WebView default font size keeps that, scaled — overriding it with an
+   * absolute px would quietly undo an accessibility preference. */
+  html {
+    font-size: calc(100% * var(--ui-scale));
   }
 
   [dir='rtl'] {
@@ -270,7 +298,7 @@
   }
 
   .sec {
-    @apply text-[10px] uppercase tracking-[0.12em] text-text-muted font-medium;
+    @apply text-[0.625rem] uppercase tracking-[0.12em] text-text-muted font-medium;
   }
 
   .alert {

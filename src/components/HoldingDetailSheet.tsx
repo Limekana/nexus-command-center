@@ -122,7 +122,7 @@ export default function HoldingDetailSheet({ holding, onClose, inline = false }:
             <div className="font-heading font-semibold text-sm truncate">
               {profile?.name || holding.name}
             </div>
-            <div className="text-[10px] uppercase tracking-wider text-text-muted">
+            <div className="text-[0.625rem] uppercase tracking-wider text-text-muted">
               {profile?.exchange || holding.assetType.toUpperCase()}
               {profile?.country && ` · ${profile.country}`}
               {profile?.finnhubIndustry && ` · ${profile.finnhubIndustry}`}
@@ -144,7 +144,7 @@ export default function HoldingDetailSheet({ holding, onClose, inline = false }:
         {/* Sparkline */}
         {sparkline && sparkline.length >= 2 && (
           <div>
-            <div className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
+            <div className="text-[0.625rem] uppercase tracking-wider text-text-muted mb-1">
               7-day price
             </div>
             <SparkLine data={sparkline} height={48} trend={trend} />
@@ -154,7 +154,7 @@ export default function HoldingDetailSheet({ holding, onClose, inline = false }:
         {/* Fundamentals grid — only for equities, only if we have data */}
         {isEquity && (
           <div>
-            <div className="text-[10px] uppercase tracking-wider text-text-muted mb-2">
+            <div className="text-[0.625rem] uppercase tracking-wider text-text-muted mb-2">
               Fundamentals
             </div>
             {loading && !metric ? (
@@ -192,10 +192,10 @@ export default function HoldingDetailSheet({ holding, onClose, inline = false }:
         {isEquity && latestRec && recTotal > 0 && (
           <div>
             <div className="flex items-center justify-between mb-1">
-              <div className="text-[10px] uppercase tracking-wider text-text-muted">
+              <div className="text-[0.625rem] uppercase tracking-wider text-text-muted">
                 Analyst consensus
               </div>
-              <div className="text-[9px] text-text-muted">
+              <div className="text-[0.5625rem] text-text-muted">
                 {recTotal} analysts · {latestRec.period.slice(0, 7)}
               </div>
             </div>
@@ -206,7 +206,7 @@ export default function HoldingDetailSheet({ holding, onClose, inline = false }:
               <RecSeg n={latestRec.sell} total={recTotal} color="#EF4444" />
               <RecSeg n={latestRec.strongSell} total={recTotal} color="#991B1B" />
             </div>
-            <div className="flex justify-between text-[9px] mt-1 text-text-muted">
+            <div className="flex justify-between text-[0.5625rem] mt-1 text-text-muted">
               <span>Strong Buy {latestRec.strongBuy}</span>
               <span>Buy {latestRec.buy}</span>
               <span>Hold {latestRec.hold}</span>
@@ -219,7 +219,7 @@ export default function HoldingDetailSheet({ holding, onClose, inline = false }:
         {/* News list */}
         {isEquity && (
           <div>
-            <div className="text-[10px] uppercase tracking-wider text-text-muted mb-2">
+            <div className="text-[0.625rem] uppercase tracking-wider text-text-muted mb-2">
               Recent news
             </div>
             {loading && !news ? (
@@ -241,7 +241,7 @@ export default function HoldingDetailSheet({ holding, onClose, inline = false }:
                     <div className="text-xs font-medium leading-snug line-clamp-2">
                       {n.headline}
                     </div>
-                    <div className="text-[10px] text-text-muted mt-0.5">
+                    <div className="text-[0.625rem] text-text-muted mt-0.5">
                       {n.source} · {relativeTime(n.datetime)}
                     </div>
                   </a>
@@ -271,7 +271,7 @@ export default function HoldingDetailSheet({ holding, onClose, inline = false }:
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between items-baseline">
-      <span className="text-text-muted text-[10px] uppercase tracking-wider">{label}</span>
+      <span className="text-text-muted text-[0.625rem] uppercase tracking-wider">{label}</span>
       <span className="font-medium tabular-nums">{value}</span>
     </div>
   );

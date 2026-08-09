@@ -146,11 +146,11 @@ export default function CashFlowDiagram({ model, baseCurrency, onSelect }: Props
     <div className="card">
       <div className="flex items-baseline justify-between mb-1">
         <span className="font-heading font-semibold text-sm">{t('fin.flow.title')}</span>
-        <span className="text-[10px] uppercase tracking-[0.12em] text-text-muted">
+        <span className="text-[0.625rem] uppercase tracking-[0.12em] text-text-muted">
           {t('fin.flow.in')} {money(model.totalIn)} · {t('fin.flow.out')} {money(model.totalOut)}
         </span>
       </div>
-      <div className="text-[11px] text-text-muted mb-3">
+      <div className="text-[0.6875rem] text-text-muted mb-3">
         {model.net >= 0
           ? t('fin.flow.surplus', { amount: money(model.net) })
           : t('fin.flow.deficit', { amount: money(-model.net) })}

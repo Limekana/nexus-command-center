@@ -328,7 +328,11 @@
     "deleteAccountFailed": "हटाना विफल: {{msg}}",
     "support": "सहयोग",
     "supportDev": "विकास में सहयोग करें",
-    "supportDevSub": "Ko-fi पर मुझे कॉफ़ी पिलाएँ"
+    "supportDevSub": "Ko-fi पर मुझे कॉफ़ी पिलाएँ",
+    "textSize": "पाठ का आकार",
+    "textAuto": "स्वतः",
+    "textSizeSub": "हर जगह लागू होता है, फ़ोन पर भी।",
+    "textAutoSub": "इस स्क्रीन आकार पर {{pct}}% — डेस्कटॉप पर बड़ा, फ़ोन पर सामान्य।"
   },
   "lock": {
     "secureAccess": "सुरक्षित पहुँच",

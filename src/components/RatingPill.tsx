@@ -52,7 +52,7 @@ export default function RatingPill({ ticker, compact = false, className = '' }: 
   if (!rating) {
     return (
       <span
-        className={`inline-flex items-center h-5 px-2 rounded-pill border border-glass-border text-text-muted/50 text-[10px] uppercase tracking-wide ${className}`}
+        className={`inline-flex items-center h-5 px-2 rounded-pill border border-glass-border text-text-muted/50 text-[0.625rem] uppercase tracking-wide ${className}`}
         style={{ background: 'rgba(28, 33, 40, 0.30)' }}
       >
         —
@@ -67,7 +67,7 @@ export default function RatingPill({ ticker, compact = false, className = '' }: 
   const tabPrefix = insightsTab === 'fundamental' ? 'Fundamental' : 'Technical';
   return (
     <span
-      className={`inline-flex items-center gap-1 h-5 px-2 rounded-pill border ${tone.text} ${tone.border} text-[10px] uppercase tracking-wide font-medium ${className}`}
+      className={`inline-flex items-center gap-1 h-5 px-2 rounded-pill border ${tone.text} ${tone.border} text-[0.625rem] uppercase tracking-wide font-medium ${className}`}
       style={{ background: tone.bg }}
       title={`${tabPrefix} · Composite ${rating.score.toFixed(0)} · ${TIER_LABEL[rating.tier]}${rating.partial ? ' (partial coverage)' : ''}`}
     >

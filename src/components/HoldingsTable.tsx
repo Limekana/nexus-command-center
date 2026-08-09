@@ -55,7 +55,7 @@ interface Props {
 }
 
 const GRID =
-  'grid-cols-[minmax(150px,1.7fr)_minmax(96px,1fr)_88px_112px_124px_132px_136px_104px]';
+  'grid-cols-[minmax(9.375rem,1.7fr)_minmax(6rem,1fr)_5.5rem_7rem_7.75rem_8.25rem_8.5rem_6.5rem]';
 
 /** Nulls here are real and distinct from zero: no quote has arrived yet, or no
  *  lots were ever recorded so cost basis is genuinely unknown. Rendering them
@@ -163,7 +163,7 @@ export default function HoldingsTable({ rows, totalBase, baseCurrency, onSelect 
         <button
           type="button"
           onClick={() => setSectorFilter(null)}
-          className="mb-2 inline-flex items-center gap-1.5 rounded-pill border border-primary/40 bg-primary/10 px-2.5 py-1 text-[11px] text-primary"
+          className="mb-2 inline-flex items-center gap-1.5 rounded-pill border border-primary/40 bg-primary/10 px-2.5 py-1 text-[0.6875rem] text-primary"
         >
           {sectorFilter}
           <span className="text-primary/70">{t('fin.tbl.ofCount', { count: visible.length })}</span>
@@ -187,7 +187,7 @@ export default function HoldingsTable({ rows, totalBase, baseCurrency, onSelect 
               role="columnheader"
               aria-sort={active ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}
               onClick={() => onHeader(c.key)}
-              className={`flex items-center gap-1 text-[10px] uppercase tracking-[0.12em] transition-colors ${
+              className={`flex items-center gap-1 text-[0.625rem] uppercase tracking-[0.12em] transition-colors ${
                 c.align === 'end' ? 'justify-end' : 'justify-start'
               } ${active ? 'text-primary' : 'text-text-muted hover:text-text'}`}
             >
@@ -231,7 +231,7 @@ export default function HoldingsTable({ rows, totalBase, baseCurrency, onSelect 
 
               <div role="cell" className="relative min-w-0">
                 <div className="font-heading font-semibold text-sm truncate">{r.holding.ticker}</div>
-                <div className="text-[11px] text-text-muted truncate">{r.holding.name}</div>
+                <div className="text-[0.6875rem] text-text-muted truncate">{r.holding.name}</div>
               </div>
               <div role="cell" className="relative min-w-0 self-center">
                 {/* The sector cell is the filter handle. stopPropagation so a
@@ -243,7 +243,7 @@ export default function HoldingsTable({ rows, totalBase, baseCurrency, onSelect 
                     e.stopPropagation();
                     setSectorFilter((cur) => (cur === r.sector ? null : r.sector));
                   }}
-                  className={`text-[11px] truncate block max-w-full text-start rounded-sm px-1 -mx-1 transition-colors ${
+                  className={`text-[0.6875rem] truncate block max-w-full text-start rounded-sm px-1 -mx-1 transition-colors ${
                     sectorFilter === r.sector
                       ? 'text-primary bg-primary/10'
                       : 'text-text-muted hover:text-primary'
@@ -265,11 +265,11 @@ export default function HoldingsTable({ rows, totalBase, baseCurrency, onSelect 
               </div>
               <div role="cell" className={`relative self-center text-end text-xs tabular-nums ${tone(r.dayChangeBase)}`}>
                 <div>{money(r.dayChangeBase)}</div>
-                <div className="text-[10px] opacity-80">{pct(r.dayChangePct)}</div>
+                <div className="text-[0.625rem] opacity-80">{pct(r.dayChangePct)}</div>
               </div>
               <div role="cell" className={`relative self-center text-end text-xs tabular-nums ${tone(r.plBase)}`}>
                 <div>{money(r.plBase)}</div>
-                <div className="text-[10px] opacity-80">{pct(r.plPct)}</div>
+                <div className="text-[0.625rem] opacity-80">{pct(r.plPct)}</div>
               </div>
               <div role="cell" className="relative self-center text-end text-xs tabular-nums text-text-muted">
                 {alloc == null ? DASH : `${alloc.toFixed(1)}%`}
@@ -288,7 +288,7 @@ export default function HoldingsTable({ rows, totalBase, baseCurrency, onSelect 
         <div role="cell" className="font-heading font-semibold text-xs uppercase tracking-[0.12em] text-text-muted self-center">
           {t('fin.tbl.total')}
         </div>
-        <div role="cell" className="self-center text-[11px] text-text-muted">
+        <div role="cell" className="self-center text-[0.6875rem] text-text-muted">
           {t('fin.tbl.positions', { count: visible.length })}
         </div>
         <div role="cell" />
@@ -303,7 +303,7 @@ export default function HoldingsTable({ rows, totalBase, baseCurrency, onSelect 
         </div>
         <div role="cell" className={`self-center text-end text-xs tabular-nums ${tone(totals.pl)}`}>
           <div>{money(totals.pl)}</div>
-          <div className="text-[10px] opacity-80">{pct(totals.plPct)}</div>
+          <div className="text-[0.625rem] opacity-80">{pct(totals.plPct)}</div>
         </div>
         <div role="cell" />
       </div>
