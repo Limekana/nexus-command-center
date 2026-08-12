@@ -1,0 +1,5 @@
+Fixes a Life Score bug.
+
+A monthly budget was being measured against a single week, so one lump-sum payment — a subscription, rent, insurance — could read as over 4x over budget and drop your Life Score to 0 even when you were exactly on budget for the month.
+
+Budget adherence is now month-to-date against your monthly limit, so spending 22 of a 22 budget scores full marks.

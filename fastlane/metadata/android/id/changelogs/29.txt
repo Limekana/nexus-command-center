@@ -1,0 +1,5 @@
+Memperbaiki bug Life Score.
+
+Anggaran bulanan diukur terhadap satu minggu saja, sehingga satu pembayaran sekaligus — langganan, sewa, asuransi — bisa terbaca lebih dari 4x melebihi anggaran dan menjatuhkan Life Score ke 0 padahal kamu tepat sesuai anggaran.
+
+Kini kepatuhan anggaran dihitung sejak awal bulan terhadap batas bulanan.

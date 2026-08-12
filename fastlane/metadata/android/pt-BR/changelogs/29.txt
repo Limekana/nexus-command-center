@@ -1,0 +1,5 @@
+Corrige um erro no Life Score.
+
+Um orçamento mensal era medido contra uma única semana, então um pagamento único — assinatura, aluguel, seguro — podia marcar mais de 4x acima e zerar o Life Score mesmo com o mês exatamente dentro do orçamento.
+
+A aderência agora é calculada do início do mês contra o limite mensal.

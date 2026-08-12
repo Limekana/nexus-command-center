@@ -1,0 +1,5 @@
+Korjaa Life Score -virheen.
+
+Kuukausibudjettia verrattiin yhteen viikkoon, joten yksi kertamaksu — tilaus, vuokra, vakuutus — saattoi näyttää yli nelinkertaiselta ylitykseltä ja pudottaa Life Scoren nollaan, vaikka olit tarkalleen budjetissa.
+
+Budjetin seuranta lasketaan nyt kuukauden alusta kuukausirajaa vasten.

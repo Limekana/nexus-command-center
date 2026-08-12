@@ -1,0 +1,5 @@
+Corrige un bug du Life Score.
+
+Un budget mensuel était comparé à une seule semaine : un paiement unique — abonnement, loyer, assurance — pouvait afficher plus de 4x de dépassement et faire tomber le Life Score à 0 alors que le budget du mois était exactement respecté.
+
+Le suivi se fait désormais depuis le début du mois, face à la limite mensuelle.

@@ -1,0 +1,5 @@
+Behebt einen Life-Score-Fehler.
+
+Ein Monatsbudget wurde an einer einzelnen Woche gemessen, sodass eine Einmalzahlung — ein Abo, Miete, Versicherung — als mehr als 4-fache Überschreitung galt und den Life Score auf 0 drückte, obwohl das Monatsbudget exakt eingehalten war.
+
+Die Budgettreue wird jetzt seit Monatsbeginn gegen das Monatslimit gerechnet.

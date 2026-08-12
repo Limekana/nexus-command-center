@@ -1,0 +1,5 @@
+Corrige un error de Life Score.
+
+Un presupuesto mensual se medía contra una sola semana, así que un pago único — una suscripción, el alquiler, un seguro — podía marcar más de 4x por encima y dejar tu Life Score en 0 aun estando exactamente dentro del presupuesto.
+
+Ahora la adherencia se calcula desde el inicio del mes contra el límite mensual.
