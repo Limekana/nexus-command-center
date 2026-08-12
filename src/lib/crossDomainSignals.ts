@@ -80,7 +80,10 @@ interface WeeklyFinance {
    *  spending patterns, not net cashflow. */
   expenseTotal: number;
   /** Adherence ratio: actual / proportional weekly budget. 1.0 = exactly
-   *  on track, <1 = under budget, >1 = over. Computed against monthly
+   *  on track, <1 = under budget, >1 = over. Month-to-date spend over the
+   *  monthly limit, taken up to the end of this week — NOT this week's spend
+   *  over a prorated weekly slice, which broke on any lump-sum expense (see
+   *  bucketFinanceByWeek). Computed against monthly
    *  budget × 7/30. */
   budgetAdherence: number | null;
 }
@@ -148,20 +151,58 @@ function bucketFinanceByWeek(
   weeks: Date[],
 ): WeeklyFinance[] {
   const monthlyBudgetTotal = budgets.reduce((s, b) => s + b.monthlyLimit, 0);
-  // Proportional weekly budget. 7 days / 30-day month is a deliberate
-  // approximation — real calendar months are 28-31 days. Close enough for
-  // a weekly trend pill; we'd over-engineer to compute the exact month
-  // each week falls in.
-  const proportionalWeekly = monthlyBudgetTotal * (7 / 30);
+
+  // A MONTHLY budget is measured against the MONTH, not against a prorated
+  // slice of it. This used to divide the monthly total by 30 and compare one
+  // week's spending to `monthlyTotal * 7/30`, which is wrong for the single
+  // most common kind of budgeted expense: the lump sum.
+  //
+  // Owner's report, and it reproduces exactly: a €22/month Claude
+  // subscription, logged as one €22 charge. That whole amount lands in one
+  // week, so the old maths compared €22 against a €5.13 weekly slice for an
+  // adherence of 4.29 — far past the 1.2 that scores 0 — and the composite
+  // life score collapsed to 0 for someone who was precisely, exactly, on
+  // budget. Rent, insurance and every subscription have the same shape, so
+  // the failure was guaranteed rather than unlucky, and it got worse the more
+  // faithfully the user logged.
+  //
+  // Adherence is now MONTH-TO-DATE spend over the monthly limit, taken up to
+  // the end of the week being scored. €22 of a €22 budget reads 1.0 → 100.
+  // €30 of it reads 1.36 → 0, which is genuinely over budget.
+  //
+  // No pace adjustment here, deliberately — unlike the fitness and study
+  // targets above, a budget is a CAP rather than a quota to hit. Spending
+  // your month's allowance in week one is being on budget, not being ahead of
+  // schedule, and prorating it would resurrect the very bug this replaces.
+  const expenses = txns.filter((t) => t.type === 'expense');
   return weeks.map((w) => {
-    const inThisWeek = txns.filter(
-      (t) => t.type === 'expense' && inWeek(new Date(t.date), w),
-    );
-    const expenseTotal = inThisWeek.reduce((sum, t) => sum + t.amount, 0);
+    const expenseTotal = expenses
+      .filter((t) => inWeek(new Date(t.date), w))
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    // The month the scored week ENDS in, so a week straddling a month
+    // boundary is judged against the budget period it lands in rather than
+    // the one it left behind.
+    const weekEnd = new Date(w);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    weekEnd.setHours(23, 59, 59, 999);
+    const monthStart = new Date(weekEnd.getFullYear(), weekEnd.getMonth(), 1);
+
+    const monthToDate = expenses
+      .filter((t) => {
+        const d = new Date(t.date);
+        return d >= monthStart && d <= weekEnd;
+      })
+      .reduce((sum, t) => sum + t.amount, 0);
+
     const budgetAdherence =
-      proportionalWeekly > 0 ? expenseTotal / proportionalWeekly : null;
+      monthlyBudgetTotal > 0 ? monthToDate / monthlyBudgetTotal : null;
+
     return {
       weekStart: dateKey(w),
+      // Still the WEEK's spend — this feeds the weekly trend, and turning it
+      // into a month-to-date figure would silently change what every other
+      // consumer of `expenseTotal` is showing.
       expenseTotal,
       budgetAdherence,
     };
