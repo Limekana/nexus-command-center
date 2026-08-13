@@ -150,7 +150,7 @@ export default function HabitsOverview() {
                   {t('habits.today')}
                 </div>
                 {totalEligible > 0 && (
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider">
+                  <div className="text-[0.625rem] text-text-muted uppercase tracking-wider">
                     {t('habits.doneOfTotal', { done: doneToday.length, total: totalEligible })}
                   </div>
                 )}
@@ -209,7 +209,7 @@ export default function HabitsOverview() {
                           >
                             <div className="flex flex-col items-center leading-none">
                               {h.type === 'binary' ? (
-                                <span className="text-[10px] uppercase tracking-wider text-text-muted">
+                                <span className="text-[0.625rem] uppercase tracking-wider text-text-muted">
                                   {t('habits.tap')}
                                 </span>
                               ) : (
@@ -222,7 +222,7 @@ export default function HabitsOverview() {
                                       Previously only the +N button carried
                                       it, and the button overflowed when the
                                       unit was longer than ~5 chars. */}
-                                  <span className="text-[9px] text-text-muted">
+                                  <span className="text-[0.5625rem] text-text-muted">
                                     {t('habits.of')} {h.targetAmount}{h.unit ? ` ${h.unit}` : ''}
                                   </span>
                                 </>
@@ -233,7 +233,7 @@ export default function HabitsOverview() {
                         <div className="mt-2 font-heading font-semibold text-sm truncate w-full">
                           {h.title}
                         </div>
-                        <div className="text-[10px] text-text-muted mb-2">
+                        <div className="text-[0.625rem] text-text-muted mb-2">
                           {streak.current > 0 ? (
                             <>🔥 {streak.current}d</>
                           ) : (
@@ -331,7 +331,7 @@ export default function HabitsOverview() {
                           <div className="font-heading font-semibold text-sm truncate">
                             {h.title}
                           </div>
-                          <div className="text-[10px] text-text-muted">
+                          <div className="text-[0.625rem] text-text-muted">
                             🔥 {streak.current}d {t('habits.streakSuffix')}
                           </div>
                         </div>
@@ -386,7 +386,7 @@ export default function HabitsOverview() {
                           <div className="font-heading font-semibold text-sm truncate">
                             {h.title}
                           </div>
-                          <div className="text-[10px] text-text-muted truncate">
+                          <div className="text-[0.625rem] text-text-muted truncate">
                             {dayLabels || t('habits.specificDays')} · 🔥 {streak.current}d
                           </div>
                         </div>
@@ -431,7 +431,7 @@ export default function HabitsOverview() {
                       <div className="font-heading font-semibold text-sm truncate">
                         {h.title}
                       </div>
-                      <div className="text-[10px] text-text-muted">
+                      <div className="text-[0.625rem] text-text-muted">
                         {t('habits.archivedOn', { date: h.archivedAt?.slice(0, 10) })}
                       </div>
                     </div>
@@ -457,7 +457,7 @@ export default function HabitsOverview() {
           </section>
         )}
 
-        <div className="text-[10px] text-text-muted text-center">
+        <div className="text-[0.625rem] text-text-muted text-center">
           {t('habits.syncedAcross')}
         </div>
       </div>
@@ -534,7 +534,7 @@ export default function HabitsOverview() {
                         }`}
                         aria-label={`${done ? t('habits.logged') : t('habits.notLogged')} ${d.toLocaleDateString(formatLocale(), { weekday: 'long', day: 'numeric', month: 'short' })}`}
                       >
-                        <span className="text-[9px] uppercase tracking-wider">
+                        <span className="text-[0.5625rem] uppercase tracking-wider">
                           {isToday ? t('days.todayShort') : dMini(d.getDay())}
                         </span>
                         <span className="text-sm font-heading font-semibold leading-none">

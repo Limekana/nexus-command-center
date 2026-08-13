@@ -221,7 +221,7 @@ export default function NotificationsExplainerModal() {
             </span>
           </li>
         </ul>
-        <p className="text-[10px] text-text-muted mb-4">
+        <p className="text-[0.625rem] text-text-muted mb-4">
           You can mute any category individually in Settings → Notifications.
         </p>
         {errMsg && (

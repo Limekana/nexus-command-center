@@ -26,7 +26,7 @@ export default function ListRow({ label, value, tag, leading, onClick }: ListRow
       {value && <div className="text-sm text-text-muted whitespace-nowrap">{value}</div>}
       {tag && (
         <span
-          className={`text-[10px] px-1.5 py-0.5 rounded-sm border whitespace-nowrap ${
+          className={`text-[0.625rem] px-1.5 py-0.5 rounded-sm border whitespace-nowrap ${
             toneClasses[tag.tone ?? 'muted']
           }`}
         >

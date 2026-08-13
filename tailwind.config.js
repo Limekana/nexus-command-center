@@ -3,6 +3,17 @@ export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      // v1.9 Item 14 — shell tiers as named screens so content density and the
+      // navigation shell key off the SAME numbers. `src/lib/useShell.ts`
+      // resolves the identical boundaries in JS for the cases where a media
+      // query is not enough (choosing what to mount, not just how to style it).
+      // Additive: sm/md/lg/xl/2xl are untouched, so existing responsive
+      // classes keep their current meaning.
+      screens: {
+        tablet: '769px',
+        desktop: '1201px',
+        wide: '1600px',
+      },
       colors: {
         // ─── v1.0 Cyber Slate base ─────────────────────────────────────────
         bg: '#0D1117',

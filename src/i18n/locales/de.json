@@ -35,7 +35,9 @@
     "home": "Start",
     "finance": "Finanzen",
     "life": "Leben",
-    "tasks": "Aufgaben"
+    "tasks": "Aufgaben",
+    "collapseSidebar": "Seitenleiste einklappen",
+    "expandSidebar": "Seitenleiste ausklappen"
   },
   "life": {
     "notCountedYet": "Noch nicht gezählt",
@@ -265,7 +267,11 @@
     "deleteAccountFailed": "Löschen fehlgeschlagen: {{msg}}",
     "support": "Unterstützen",
     "supportDev": "Entwicklung unterstützen",
-    "supportDevSub": "Spendiere mir einen Kaffee auf Ko-fi"
+    "supportDevSub": "Spendiere mir einen Kaffee auf Ko-fi",
+    "textSize": "Schriftgröße",
+    "textAuto": "Auto",
+    "textSizeSub": "Gilt überall, auch auf dem Telefon.",
+    "textAutoSub": "{{pct}} % bei dieser Bildschirmgröße — größer am Desktop, normal am Telefon."
   },
   "days": {
     "long": {
@@ -521,6 +527,36 @@
     "forgotPin": "PIN vergessen? Zurücksetzen unter Einstellungen → Alle Daten löschen"
   },
   "fin": {
+    "flow": {
+      "title": "Wohin das Geld floss",
+      "empty": "Für diesen Zeitraum sind keine Einnahmen oder Ausgaben erfasst.",
+      "in": "Ein",
+      "out": "Aus",
+      "surplus": "{{amount}} übrig",
+      "deficit": "{{amount}} aus Rücklagen gedeckt",
+      "otherIncome": "Sonstige Einnahmen",
+      "uncategorised": "Ohne Kategorie",
+      "saved": "Gespart",
+      "debt": "Schulden getilgt",
+      "leftover": "Übrig",
+      "fromReserves": "Aus Rücklagen"
+    },
+    "tbl": {
+      "position": "Position",
+      "sector": "Sektor",
+      "shares": "Anteile",
+      "cost": "Einstandswert",
+      "value": "Marktwert",
+      "day": "Tag",
+      "return": "Gesamtrendite",
+      "allocation": "Aufteilung",
+      "total": "Gesamt",
+      "positions_one": "{{count}} Position",
+      "positions_other": "{{count}} Positionen",
+      "aria": "Bestände",
+      "filterSector": "Nur {{sector}} zeigen",
+      "ofCount": "{{count}} Positionen"
+    },
     "finance": "Finanzen",
     "tx": {
       "expense": "💸 Ausgabe",
@@ -687,7 +723,8 @@
       "empty": "Noch keine Einträge. Tippe auf + Beobachten, um einen Ticker zu verfolgen, ohne ihn zu besitzen.",
       "targetAboveHit": "Ziel ≥ erreicht",
       "targetBelowHit": "Ziel ≤ erreicht",
-      "stopWatching": "{{ticker}} nicht mehr beobachten?"
+      "stopWatching": "{{ticker}} nicht mehr beobachten?",
+      "pickOne": "Wähle ein Wertpapier, um Details zu sehen."
     },
     "mh": {
       "title": "Bestände verwalten",
@@ -889,6 +926,131 @@
       "add": "Hinzufügen",
       "set": "Setzen",
       "amountIn": "Betrag in {{cur}}"
+    },
+    "imp": {
+      "entryTitle": "Import & Export",
+      "entrySub": "Bank-CSV einlesen oder alles exportieren",
+      "title": "Transaktionen importieren",
+      "stepFile": "Datei wählen",
+      "stepMap": "Spalten zuordnen",
+      "stepReview": "Prüfen und importieren",
+      "dropHere": "CSV hier ablegen",
+      "dropHint": "Komma-, Semikolon- oder Tabulator-getrennt. Bis zur Bestätigung wird nichts gespeichert.",
+      "chooseFile": "Datei wählen",
+      "clear": "Verwerfen",
+      "exportAll": "{{count}} Transaktionen exportieren",
+      "rowsFound": "{{count}} Zeilen gefunden",
+      "tooBig": "Die Datei ist über {{mb}} MB groß — ein Bankauszug hat normalerweise ein paar hundert Kilobyte.",
+      "unreadable": "Die Datei konnte nicht als Text gelesen werden.",
+      "emptyFile": "Die Datei enthält keine Zeilen.",
+      "columnN": "Spalte {{n}}",
+      "roleFor": "Rolle für {{column}}",
+      "role": {
+        "ignore": "Ignorieren",
+        "date": "Datum",
+        "description": "Beschreibung",
+        "amount": "Betrag",
+        "debit": "Soll (raus)",
+        "credit": "Haben (rein)",
+        "category": "Kategorie",
+        "notes": "Notizen"
+      },
+      "account": "Importieren nach",
+      "dateOrder": "Datumsreihenfolge",
+      "dmy": "Tag / Monat / Jahr",
+      "mdy": "Monat / Tag / Jahr",
+      "ymd": "Jahr / Monat / Tag",
+      "decimal": "Dezimalzeichen",
+      "decDot": "1234.56",
+      "decComma": "1234,56",
+      "delimiter": "Trennzeichen",
+      "tab": "Tabulator",
+      "firstRowHeader": "Erste Zeile ist eine Überschrift",
+      "invertSign": "Positive Beträge sind Ausgaben",
+      "createCategories": "Fehlende Kategorien anlegen",
+      "dateAmbiguous": "Jedes Datum in dieser Datei liest sich in beiden Reihenfolgen gleich, die Reihenfolge ließ sich also nicht bestimmen. Vor dem Import prüfen.",
+      "willCreate": "{{count}} neue Kategorien werden angelegt: {{names}}",
+      "noTransfers": "Umbuchungen werden nicht importiert — eine CSV nennt kein Zielkonto. Diese bitte von Hand anlegen.",
+      "selected": "ausgewählt",
+      "duplicates": "Duplikate",
+      "skipped": "unbrauchbar",
+      "selectAll": "Alle auswählen",
+      "selectNone": "Auswahl aufheben",
+      "previewAria": "Import-Vorschau",
+      "include": "Übernehmen",
+      "includeRow": "Zeile {{line}} übernehmen",
+      "date": "Datum",
+      "description": "Beschreibung",
+      "category": "Kategorie",
+      "amount": "Betrag",
+      "status": "Status",
+      "bad": "?",
+      "ok": "Neu",
+      "problem": {
+        "date": "kein Datum",
+        "amount": "kein Betrag",
+        "description": "keine Beschreibung"
+      },
+      "dup": {
+        "existing": "Schon vorhanden",
+        "file": "Wiederholung"
+      },
+      "truncated": "Es werden die ersten {{shown}} von {{total}} Zeilen gezeigt — Auswahl und Import umfassen weiterhin alle {{total}}.",
+      "importCount": "{{count}} importieren",
+      "importing": "Wird importiert…",
+      "cancel": "Abbrechen",
+      "needAccount": "Lege zuerst ein Konto an — jede Transaktion muss irgendwo landen.",
+      "doneCount": "{{count}} Transaktionen importiert."
+    },
+    "nwt": {
+      "title": "Nettovermögen im Zeitverlauf",
+      "empty": "Noch nichts zu zeigen — füge ein Konto oder eine Transaktion hinzu.",
+      "aria": "Verlauf des Nettovermögens",
+      "overWindow": "über {{count}} Monate",
+      "months": "{{count}} M",
+      "currency": "Anzeigewährung",
+      "holdings": "Depot",
+      "fromSnapshot": "Momentaufnahme",
+      "portfolioCash": "Depot-Barbestand",
+      "ledger": "Kontobuch",
+      "breakdownFor": "Aufschlüsselung — {{month}}",
+      "addedHere": "Hier hinzugekommen: {{names}}",
+      "noSnapshotYet": "So weit zurück gibt es keine Depot-Momentaufnahme, das Depot fehlt hier also, statt null zu sein.",
+      "nothingHere": "Zu diesem Zeitpunkt gab es noch keine Konten.",
+      "total": "Gesamt",
+      "fxCaveat": "Vergangene Fremdwährungssalden werden zu heutigen Kursen umgerechnet.",
+      "historyCaveat": "Die Historie beginnt, wenn ein Konto angelegt wurde — ein Anfangssaldo trägt kein Datum.",
+      "noRate": "Noch kein Kurs für {{currency}} — es wird die Basiswährung gezeigt."
+    },
+    "bvt": {
+      "title": "Budget vs. Ist",
+      "empty": "In diesem Zeitraum sind keine Ausgaben erfasst.",
+      "aria": "Budget gegen Ist je Monat",
+      "category": "Kategorie",
+      "budget": "Budget",
+      "total": "Gesamt",
+      "noLimit": "Kein Budget",
+      "noLimitsSet": "Noch hat keine Kategorie ein Monatsbudget, es gibt also keinen Vergleichswert.",
+      "limitCaveat": "Verglichen mit dem aktuellen Budget je Kategorie — frühere Grenzen werden nicht gespeichert."
+    },
+    "dtg": {
+      "title": "Über Domänen hinweg",
+      "empty": "Noch nicht genug Wochen.",
+      "noData": "keine Daten",
+      "weekOf": "Woche vom {{date}}",
+      "scaleCaveat": "Jede Zeile ist auf ihren eigenen Bereich skaliert — Höhen vergleichen sich innerhalb einer Zeile, nicht zwischen Zeilen.",
+      "sessions": "{{count}} Einheiten",
+      "minutes": "{{count}} Min"
+    },
+    "qa": {
+      "title": "Schnell erfassen",
+      "placeholder": "12,50 Kaffee #essen @giro",
+      "needAmount": "Betrag?",
+      "needDescription": "wofür?",
+      "noCategory": "ohne Kategorie",
+      "noAccount": "ohne Konto",
+      "save": "Speichern",
+      "hint": "#Kategorie  @Konto  today/yesterday  ·  Tab vervollständigt  ·  Enter speichert  ·  Esc schließt"
     }
   },
   "lifeProfile": {

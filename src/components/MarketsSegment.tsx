@@ -26,7 +26,7 @@ export default function MarketsSegment() {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] uppercase tracking-[0.15em] text-text-muted">
+        <span className="text-[0.625rem] uppercase tracking-[0.15em] text-text-muted">
           {lastFetched
             ? t('markets.updated', { time: minutesAgo(lastFetched, t) })
             : isLoading
@@ -38,7 +38,7 @@ export default function MarketsSegment() {
           type="button"
           onClick={() => fetchMarkets({ force: true })}
           disabled={isLoading}
-          className="text-[10px] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5 active:bg-primary/10 disabled:opacity-40"
+          className="text-[0.625rem] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5 active:bg-primary/10 disabled:opacity-40"
         >
           {isLoading ? '…' : `↻ ${t('markets.refresh')}`}
         </button>
@@ -49,7 +49,7 @@ export default function MarketsSegment() {
       {empty && !isLoading && (
         <div className="card text-center text-xs text-text-muted py-6">
           {error ?? t('markets.noData')}
-          <div className="text-[10px] mt-1">{t('markets.retryHint')}</div>
+          <div className="text-[0.625rem] mt-1">{t('markets.retryHint')}</div>
         </div>
       )}
 
@@ -89,7 +89,7 @@ export default function MarketsSegment() {
 
       <Section title={t('markets.calendar')}>
         {events.length === 0 && (
-          <div className="text-[11px] text-text-muted text-center py-2">{t('markets.noEvents')}</div>
+          <div className="text-[0.6875rem] text-text-muted text-center py-2">{t('markets.noEvents')}</div>
         )}
         {events.map((e) => (
           <div key={`${e.date}-${e.label}`} className="flex items-center gap-2 py-1.5 border-b border-border/30 last:border-0">
@@ -97,9 +97,9 @@ export default function MarketsSegment() {
             <span className="text-sm" aria-hidden>{EVENT_ICONS[e.type]}</span>
             <div className="flex-1 min-w-0">
               <div className="text-xs truncate">{e.label}</div>
-              <div className="text-[10px] text-text-muted">{fmtEventDate(e.date)}</div>
+              <div className="text-[0.625rem] text-text-muted">{fmtEventDate(e.date)}</div>
             </div>
-            <span className="text-[9px] uppercase tracking-wider text-text-muted">{e.region}</span>
+            <span className="text-[0.5625rem] uppercase tracking-wider text-text-muted">{e.region}</span>
           </div>
         ))}
       </Section>
@@ -111,7 +111,7 @@ export default function MarketsSegment() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="card">
-      <div className="text-[10px] uppercase tracking-[0.15em] text-text-muted mb-2">{title}</div>
+      <div className="text-[0.625rem] uppercase tracking-[0.15em] text-text-muted mb-2">{title}</div>
       <div>{children}</div>
     </div>
   );
@@ -123,7 +123,7 @@ function QuoteRow({ label, value, change, spark }: { label: string; value: strin
     <div className="flex items-center gap-2 py-1.5 border-b border-border/30 last:border-0">
       <div className="w-24 flex-shrink-0">
         <div className="text-xs font-heading font-semibold truncate">{label}</div>
-        <div className="text-[10px] text-text-muted">{value}</div>
+        <div className="text-[0.625rem] text-text-muted">{value}</div>
       </div>
       <div className="flex-1 min-w-0 h-5">
         {spark.length >= 2 ? <SparkLine data={spark} height={20} /> : <div className="h-5" />}
@@ -144,7 +144,7 @@ function SentimentSection({ sentiment }: { sentiment: SentimentGauge }) {
         <div className="flex items-center gap-2 py-1.5 border-b border-border/30 last:border-0">
           <div className="flex-1 min-w-0">
             <div className="text-xs font-heading font-semibold truncate">{t('markets.vix')}</div>
-            <div className="text-[10px] text-text-muted">{fmtNum(vix.value)} · {t('markets.fearGauge')}</div>
+            <div className="text-[0.625rem] text-text-muted">{fmtNum(vix.value)} · {t('markets.fearGauge')}</div>
           </div>
           <ChangePill change={vix.changePercent} />
         </div>
@@ -188,7 +188,7 @@ function FearGreedGauge({ score }: { score: number }) {
           style={{ width: `${clamped}%` }}
         />
       </div>
-      <div className="flex justify-between text-[9px] uppercase tracking-wider text-text-muted mt-1">
+      <div className="flex justify-between text-[0.5625rem] uppercase tracking-wider text-text-muted mt-1">
         <span>{t('markets.extremeFear')}</span>
         <span>{t('markets.extremeGreed')}</span>
       </div>
@@ -205,7 +205,7 @@ function CommodityRow({ label, value, change }: { label: string; value: string; 
     <div className="flex items-center gap-2 py-1.5 border-b border-border/30 last:border-0">
       <div className="flex-1 min-w-0">
         <div className="text-xs font-heading font-semibold truncate">{label}</div>
-        <div className="text-[10px] text-text-muted">{value}</div>
+        <div className="text-[0.625rem] text-text-muted">{value}</div>
       </div>
       <div className="relative w-8 h-3 rounded-sm bg-surface2 overflow-hidden" aria-hidden>
         <div
@@ -245,7 +245,7 @@ function ChangePill({ change }: { change: number }) {
   const arrow = flat ? '→' : change > 0 ? '↑' : '↓';
   const tone = flat ? 'text-text-muted' : change > 0 ? 'text-success' : 'text-danger';
   return (
-    <span className={`text-[11px] font-heading whitespace-nowrap w-16 text-end ${tone}`}>
+    <span className={`text-[0.6875rem] font-heading whitespace-nowrap w-16 text-end ${tone}`}>
       {change > 0 && !flat ? '+' : ''}
       {change.toFixed(2)}% {arrow}
     </span>
@@ -263,7 +263,7 @@ function CountdownBadge({ daysUntil, isToday }: { daysUntil: number; isToday: bo
         ? 'bg-warning/10 text-warning border-warning/30'
         : 'bg-surface2 text-text-muted border-border';
   return (
-    <span className={`text-[9px] font-heading font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-sm border w-10 text-center flex-shrink-0 ${tone}`}>
+    <span className={`text-[0.5625rem] font-heading font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-sm border w-10 text-center flex-shrink-0 ${tone}`}>
       {isToday ? t('markets.today') : `${daysUntil}d`}
     </span>
   );

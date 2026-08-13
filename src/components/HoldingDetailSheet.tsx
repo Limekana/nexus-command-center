@@ -17,6 +17,17 @@ import type { PortfolioHolding } from '../types/finance';
 interface Props {
   holding: PortfolioHolding | null;
   onClose: () => void;
+  /**
+   * v1.9 Item 14b #7 — render the body directly instead of inside a bottom
+   * sheet, for the desktop watchlist's detail pane. A sheet is the right
+   * gesture on a phone and the wrong one beside a list on a 1600px window,
+   * where the whole point is that the detail is ALREADY visible.
+   *
+   * Deliberately a flag rather than a second component: the body is 150 lines
+   * of live-data rendering, and two copies of it would drift the moment either
+   * one gained a field.
+   */
+  inline?: boolean;
 }
 
 function fmtNum(n: number | undefined, digits = 2): string {
@@ -39,7 +50,7 @@ function relativeTime(unixSeconds: number): string {
   return `${Math.round(diff / 86400)}d ago`;
 }
 
-export default function HoldingDetailSheet({ holding, onClose }: Props) {
+export default function HoldingDetailSheet({ holding, onClose, inline = false }: Props) {
   const open = holding != null;
   const tickerKey = holding ? holding.ticker.toUpperCase() : '';
   const profile = useFinanceStore((s) => (tickerKey ? s.companyProfiles[tickerKey] : undefined));
@@ -69,7 +80,9 @@ export default function HoldingDetailSheet({ holding, onClose }: Props) {
   }, [open, holding, fetchHoldingDetail]);
 
   if (!holding) {
-    return <BottomSheet open={false} onClose={onClose}>{null}</BottomSheet>;
+    // Inline callers own their own empty state — the pane says "pick a ticker",
+    // which a closed sheet cannot.
+    return inline ? null : <BottomSheet open={false} onClose={onClose}>{null}</BottomSheet>;
   }
 
   const isEquity = holding.assetType === 'stock' || holding.assetType === 'etf';
@@ -82,9 +95,14 @@ export default function HoldingDetailSheet({ holding, onClose }: Props) {
     ? latestRec.strongBuy + latestRec.buy + latestRec.hold + latestRec.sell + latestRec.strongSell
     : 0;
 
-  return (
-    <BottomSheet open={open} onClose={onClose} title={holding.ticker.toUpperCase()}>
-      <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+  const body = (
+    <div
+      className={
+        inline
+          ? 'space-y-4 max-h-[calc(100vh-9rem)] overflow-y-auto pe-1'
+          : 'space-y-4 max-h-[70vh] overflow-y-auto'
+      }
+    >
         {/* Identity row — logo, name, current price + day change */}
         <div className="flex items-start gap-3">
           {profile?.logo ? (
@@ -104,7 +122,7 @@ export default function HoldingDetailSheet({ holding, onClose }: Props) {
             <div className="font-heading font-semibold text-sm truncate">
               {profile?.name || holding.name}
             </div>
-            <div className="text-[10px] uppercase tracking-wider text-text-muted">
+            <div className="text-[0.625rem] uppercase tracking-wider text-text-muted">
               {profile?.exchange || holding.assetType.toUpperCase()}
               {profile?.country && ` · ${profile.country}`}
               {profile?.finnhubIndustry && ` · ${profile.finnhubIndustry}`}
@@ -126,7 +144,7 @@ export default function HoldingDetailSheet({ holding, onClose }: Props) {
         {/* Sparkline */}
         {sparkline && sparkline.length >= 2 && (
           <div>
-            <div className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
+            <div className="text-[0.625rem] uppercase tracking-wider text-text-muted mb-1">
               7-day price
             </div>
             <SparkLine data={sparkline} height={48} trend={trend} />
@@ -136,7 +154,7 @@ export default function HoldingDetailSheet({ holding, onClose }: Props) {
         {/* Fundamentals grid — only for equities, only if we have data */}
         {isEquity && (
           <div>
-            <div className="text-[10px] uppercase tracking-wider text-text-muted mb-2">
+            <div className="text-[0.625rem] uppercase tracking-wider text-text-muted mb-2">
               Fundamentals
             </div>
             {loading && !metric ? (
@@ -174,10 +192,10 @@ export default function HoldingDetailSheet({ holding, onClose }: Props) {
         {isEquity && latestRec && recTotal > 0 && (
           <div>
             <div className="flex items-center justify-between mb-1">
-              <div className="text-[10px] uppercase tracking-wider text-text-muted">
+              <div className="text-[0.625rem] uppercase tracking-wider text-text-muted">
                 Analyst consensus
               </div>
-              <div className="text-[9px] text-text-muted">
+              <div className="text-[0.5625rem] text-text-muted">
                 {recTotal} analysts · {latestRec.period.slice(0, 7)}
               </div>
             </div>
@@ -188,7 +206,7 @@ export default function HoldingDetailSheet({ holding, onClose }: Props) {
               <RecSeg n={latestRec.sell} total={recTotal} color="#EF4444" />
               <RecSeg n={latestRec.strongSell} total={recTotal} color="#991B1B" />
             </div>
-            <div className="flex justify-between text-[9px] mt-1 text-text-muted">
+            <div className="flex justify-between text-[0.5625rem] mt-1 text-text-muted">
               <span>Strong Buy {latestRec.strongBuy}</span>
               <span>Buy {latestRec.buy}</span>
               <span>Hold {latestRec.hold}</span>
@@ -201,7 +219,7 @@ export default function HoldingDetailSheet({ holding, onClose }: Props) {
         {/* News list */}
         {isEquity && (
           <div>
-            <div className="text-[10px] uppercase tracking-wider text-text-muted mb-2">
+            <div className="text-[0.625rem] uppercase tracking-wider text-text-muted mb-2">
               Recent news
             </div>
             {loading && !news ? (
@@ -223,7 +241,7 @@ export default function HoldingDetailSheet({ holding, onClose }: Props) {
                     <div className="text-xs font-medium leading-snug line-clamp-2">
                       {n.headline}
                     </div>
-                    <div className="text-[10px] text-text-muted mt-0.5">
+                    <div className="text-[0.625rem] text-text-muted mt-0.5">
                       {n.source} · {relativeTime(n.datetime)}
                     </div>
                   </a>
@@ -239,7 +257,13 @@ export default function HoldingDetailSheet({ holding, onClose }: Props) {
             CoinGecko doesn't ship the deep fundamentals Finnhub provides — this sheet is informational for stocks and ETFs.
           </div>
         )}
-      </div>
+    </div>
+  );
+
+  if (inline) return body;
+  return (
+    <BottomSheet open={open} onClose={onClose} title={holding.ticker.toUpperCase()}>
+      {body}
     </BottomSheet>
   );
 }
@@ -247,7 +271,7 @@ export default function HoldingDetailSheet({ holding, onClose }: Props) {
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between items-baseline">
-      <span className="text-text-muted text-[10px] uppercase tracking-wider">{label}</span>
+      <span className="text-text-muted text-[0.625rem] uppercase tracking-wider">{label}</span>
       <span className="font-medium tabular-nums">{value}</span>
     </div>
   );

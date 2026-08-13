@@ -96,6 +96,10 @@ interface FinanceStore {
     patch: Partial<Omit<Transaction, 'id' | 'createdAt'>>
   ) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
+  /** v1.9 Item 14b #4 — CSV import. Returns the number written. */
+  addTransactionsBulk: (
+    rows: Omit<Transaction, 'id' | 'createdAt' | 'syncStatus'>[]
+  ) => Promise<number>;
 
   addBudgetCategory: (c: Omit<BudgetCategory, 'id' | 'createdAt'>) => Promise<void>;
   updateBudgetCategory: (id: string, patch: Partial<BudgetCategory>) => Promise<void>;
@@ -290,6 +294,36 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
     // Delete can drop spend below 80% → wipe the tracker so future re-cross
     // fires again. checkBudgetThresholds handles that bookkeeping itself.
     void checkBudgetThresholds(get().transactions, get().budgetCategories);
+  },
+
+  // v1.9 Item 14b #4 — CSV import writes hundreds of rows at once. Looping
+  // addTransaction would be correct but pathological: one Dexie transaction,
+  // one queue write, one store notification and one budget-threshold sweep per
+  // row, so a 400-line bank export re-renders the app 400 times and runs the
+  // O(n·m) alert scan 400 times. This does the same work once.
+  //
+  // Sync semantics are deliberately unchanged: every row still gets its own
+  // `insert` queue entry, because the queue drains per-entity and a batched
+  // payload would have no way to report a partial failure.
+  async addTransactionsBulk(rows) {
+    if (rows.length === 0) return 0;
+    const now = new Date().toISOString();
+    const txs: Transaction[] = rows.map((r) => ({
+      ...r,
+      id: generateId(),
+      syncStatus: 'pending',
+      createdAt: now,
+    }));
+    await db.transactions.bulkAdd(txs);
+    for (const tx of txs) await enqueue('transaction', tx.id, 'insert', tx);
+    // Imported rows are historical, so ordering by date keeps the transaction
+    // list coherent rather than dumping a month of history on top of today.
+    const merged = [...txs, ...get().transactions].sort((a, b) =>
+      a.date === b.date ? b.createdAt.localeCompare(a.createdAt) : b.date.localeCompare(a.date),
+    );
+    set({ transactions: merged });
+    void checkBudgetThresholds(merged, get().budgetCategories);
+    return txs.length;
   },
 
   async addBudgetCategory(c) {

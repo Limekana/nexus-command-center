@@ -44,7 +44,7 @@ export default function HabitsDashboardStrip() {
       >
         <div className="min-w-0">
           <div className="font-heading font-semibold text-sm">{t('dash.buildHabitTitle')}</div>
-          <div className="text-[11px] text-text-muted mt-0.5">
+          <div className="text-[0.6875rem] text-text-muted mt-0.5">
             {t('dash.buildHabitBody')}
           </div>
         </div>
@@ -61,7 +61,7 @@ export default function HabitsDashboardStrip() {
         className="glass rounded-xl p-4 press-spring text-start w-full block"
       >
         <div className="font-heading font-semibold text-sm">{t('dash.habits')}</div>
-        <div className="text-[11px] text-text-muted mt-0.5">
+        <div className="text-[0.6875rem] text-text-muted mt-0.5">
           {t('dash.nothingToday')}
         </div>
       </button>
@@ -87,7 +87,7 @@ export default function HabitsDashboardStrip() {
         >
           {t('dash.habitsToday')}
         </button>
-        <div className="text-[10px] text-text-muted uppercase tracking-wider">
+        <div className="text-[0.625rem] text-text-muted uppercase tracking-wider">
           {t('dash.doneOfTotal', { done: completedToday, total: eligible.length })}
         </div>
       </div>
@@ -114,7 +114,7 @@ export default function HabitsDashboardStrip() {
                 strokeWidth={4}
                 color={h.color}
               />
-              <div className="text-[10px] text-text-muted truncate max-w-full leading-tight">
+              <div className="text-[0.625rem] text-text-muted truncate max-w-full leading-tight">
                 {h.title}
               </div>
             </button>

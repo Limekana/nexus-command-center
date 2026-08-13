@@ -129,7 +129,7 @@ export default function Signup() {
 
           <form onSubmit={onVerify} className="space-y-3">
             <div>
-              <label className="block text-[10px] uppercase tracking-wider text-text-muted mb-1">
+              <label className="block text-[0.625rem] uppercase tracking-wider text-text-muted mb-1">
                 {t('auth.otpLabel')}
               </label>
               <input
@@ -155,7 +155,7 @@ export default function Signup() {
             </button>
           </form>
 
-          <p className="text-[10px] text-text-muted mt-3">{t('auth.otpHint')}</p>
+          <p className="text-[0.625rem] text-text-muted mt-3">{t('auth.otpHint')}</p>
 
           <button
             type="button"
@@ -187,7 +187,7 @@ export default function Signup() {
 
         <form onSubmit={onSubmit} className="space-y-3">
           <div>
-            <label className="block text-[10px] uppercase tracking-wider text-text-muted mb-1">
+            <label className="block text-[0.625rem] uppercase tracking-wider text-text-muted mb-1">
               {t('auth.fullNameLabel')}
             </label>
             <input
@@ -201,7 +201,7 @@ export default function Signup() {
             />
           </div>
           <div>
-            <label className="block text-[10px] uppercase tracking-wider text-text-muted mb-1">
+            <label className="block text-[0.625rem] uppercase tracking-wider text-text-muted mb-1">
               {t('auth.emailLabel')}
             </label>
             <input
@@ -215,7 +215,7 @@ export default function Signup() {
             />
           </div>
           <div>
-            <label className="block text-[10px] uppercase tracking-wider text-text-muted mb-1">
+            <label className="block text-[0.625rem] uppercase tracking-wider text-text-muted mb-1">
               {t('auth.passwordLabel')}
             </label>
             <input
@@ -228,10 +228,10 @@ export default function Signup() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder={t('auth.passwordPlaceholder')}
             />
-            <p className="text-[10px] text-text-muted mt-1">{t('auth.passwordHint')}</p>
+            <p className="text-[0.625rem] text-text-muted mt-1">{t('auth.passwordHint')}</p>
           </div>
           <div>
-            <label className="block text-[10px] uppercase tracking-wider text-text-muted mb-1">
+            <label className="block text-[0.625rem] uppercase tracking-wider text-text-muted mb-1">
               {t('auth.confirmPasswordLabel')}
             </label>
             <input
@@ -262,7 +262,7 @@ export default function Signup() {
             are not expected to, but the policy states the limit, so the signup
             form should too rather than leaving it somewhere nobody reads. It
             also points at the option that needs no account at all. */}
-        <p className="text-[10px] text-text-muted mt-6 leading-relaxed text-center">
+        <p className="text-[0.625rem] text-text-muted mt-6 leading-relaxed text-center">
           {t('auth.ageNote')}{' '}
           <a
             href="https://limekana.github.io/nexus-command-center/legal/privacy.html"

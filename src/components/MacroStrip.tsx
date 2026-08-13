@@ -59,7 +59,7 @@ export default function MacroStrip() {
       <div className="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
         {rows.filter((r) => r.has).map((r) => (
           <div key={r.ticker} className="flex flex-col items-center min-w-[64px] flex-shrink-0">
-            <div className="text-[9px] uppercase tracking-wider text-text-muted">{r.label}</div>
+            <div className="text-[0.5625rem] uppercase tracking-wider text-text-muted">{r.label}</div>
             {r.spark && r.spark.length >= 2 ? (
               <div className="w-full h-4 mt-0.5">
                 <SparkLine data={r.spark} height={16} trend={r.dayPct >= 0 ? 'up' : 'down'} />
@@ -67,7 +67,7 @@ export default function MacroStrip() {
             ) : (
               <div className="h-4 mt-0.5" />
             )}
-            <div className={`text-[10px] font-medium ${r.dayPct >= 0 ? 'text-success' : 'text-danger'}`}>
+            <div className={`text-[0.625rem] font-medium ${r.dayPct >= 0 ? 'text-success' : 'text-danger'}`}>
               {r.dayPct >= 0 ? '↑' : '↓'} {Math.abs(r.dayPct).toFixed(2)}%
             </div>
           </div>

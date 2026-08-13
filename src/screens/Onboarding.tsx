@@ -70,13 +70,17 @@ export default function Onboarding({ onDone }: Props) {
 
   return (
     <div className="onb-screen min-h-full bg-bg text-text flex flex-col items-center justify-center px-5 py-8">
-      <div className="onb-rise relative z-10 w-full max-w-md space-y-5">
+      {/* v1.9 Item 14 — Onboarding renders outside AppShell too, so it kept
+          its 448px phone column on desktop. Same per-tier scale-up as
+          LockScreen and Login; still centred, since a first-run wizard
+          stretched across the full width would read worse, not better. */}
+      <div className="onb-rise relative z-10 w-full max-w-md tablet:max-w-lg desktop:max-w-2xl space-y-5 desktop:space-y-7">
         {/* Brand */}
         <div className="text-center">
           <div className="onb-wordmark font-heading text-3xl font-bold tracking-tight text-primary uppercase">
             {t('app.name')}
           </div>
-          <div className="text-[11px] uppercase tracking-[0.18em] text-text-muted mt-1">
+          <div className="text-[0.6875rem] uppercase tracking-[0.18em] text-text-muted mt-1">
             {t('app.tagline')}
           </div>
         </div>
@@ -133,11 +137,11 @@ export default function Onboarding({ onDone }: Props) {
                       <span className="text-sm font-semibold">{t(`onboarding.preset_${p.key}`)}</span>
                       {picked === p.key && <span aria-hidden className="text-primary text-sm">✓</span>}
                     </div>
-                    <div className="text-[11px] text-text-muted mt-0.5">{t(p.descKey)}</div>
+                    <div className="text-[0.6875rem] text-text-muted mt-0.5">{t(p.descKey)}</div>
                   </button>
                 ))}
               </div>
-              <p className="text-[10px] text-text-muted text-center">{t('onboarding.profileCustomHint')}</p>
+              <p className="text-[0.625rem] text-text-muted text-center">{t('onboarding.profileCustomHint')}</p>
               <button className="btn w-full" onClick={() => setStep(3)}>
                 {t('common.continue')}
               </button>
@@ -161,11 +165,11 @@ export default function Onboarding({ onDone }: Props) {
                           on ? 'border-primary bg-primary/15 text-primary' : 'border-glass-border text-transparent'
                         }`}
                       >
-                        <span aria-hidden className="text-[11px] leading-none">✓</span>
+                        <span aria-hidden className="text-[0.6875rem] leading-none">✓</span>
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm">{t(`domains.${key}`)}</div>
-                        <div className="text-[10px] text-text-muted">{domainNote[key]}</div>
+                        <div className="text-[0.625rem] text-text-muted">{domainNote[key]}</div>
                       </div>
                     </div>
                   );

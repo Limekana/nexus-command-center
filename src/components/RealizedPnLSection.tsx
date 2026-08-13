@@ -93,19 +93,19 @@ export default function RealizedPnLSection() {
       >
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-[10px] uppercase tracking-[0.15em] text-text-muted">
+            <div className="text-[0.625rem] uppercase tracking-[0.15em] text-text-muted">
               Realized P&L
             </div>
             <div className={`font-heading font-bold text-xl ${realized.totalBase >= 0 ? 'text-success' : 'text-danger'}`}>
               {realized.totalBase >= 0 ? '+' : '−'}{fmt(realized.totalBase, baseCurrency)}
             </div>
           </div>
-          <span className="text-[10px] uppercase tracking-wider text-text-muted">
+          <span className="text-[0.625rem] uppercase tracking-wider text-text-muted">
             {stockSales.length} sale{stockSales.length === 1 ? '' : 's'} {showHistory ? '▲' : '▼'}
           </span>
         </div>
         {realized.partial && (
-          <div className="text-[10px] text-text-muted mt-1">
+          <div className="text-[0.625rem] text-text-muted mt-1">
             Partial — some sales in currencies without a live FX rate.
           </div>
         )}
@@ -121,7 +121,7 @@ export default function RealizedPnLSection() {
             >
               <div className="min-w-0">
                 <div className="font-medium">{s.ticker.toUpperCase()}</div>
-                <div className="text-[10px] text-text-muted">
+                <div className="text-[0.625rem] text-text-muted">
                   {s.soldAt} · {s.sharesSold} sh @ {fmt(s.salePricePerShare, s.currency)}
                 </div>
               </div>
@@ -141,7 +141,7 @@ export default function RealizedPnLSection() {
             className="flex items-center justify-between w-full text-start"
           >
             <span className="font-heading font-semibold text-sm">Closed positions</span>
-            <span className="text-[10px] uppercase tracking-wider text-text-muted">
+            <span className="text-[0.625rem] uppercase tracking-wider text-text-muted">
               {closed.length} · {showClosed ? '▲' : '▼'}
             </span>
           </button>
@@ -154,7 +154,7 @@ export default function RealizedPnLSection() {
                 >
                   <div className="min-w-0">
                     <div className="font-medium">{c.ticker}</div>
-                    <div className="text-[10px] text-text-muted">
+                    <div className="text-[0.625rem] text-text-muted">
                       Invested {fmt(c.invested, baseCurrency)} → Proceeds {fmt(c.proceeds, baseCurrency)}
                     </div>
                   </div>

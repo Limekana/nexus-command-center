@@ -86,7 +86,7 @@ export default function InsightsBreakdownSheet({ open, onClose, rating }: Props)
           <div className="font-heading font-bold text-3xl tracking-tight">
             {r.score >= 0 ? '+' : ''}{r.score.toFixed(0)}
           </div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wider">
+          <div className="text-[0.625rem] text-text-muted uppercase tracking-wider">
             {tabPrefix} · {new Date(r.computedAt).toLocaleTimeString()}
           </div>
         </div>
@@ -100,7 +100,7 @@ export default function InsightsBreakdownSheet({ open, onClose, rating }: Props)
             <SignalRow key={key} label={labels[key] ?? key} signal={signal} />
           ))}
         </div>
-        <div className="text-[10px] text-text-muted text-center">
+        <div className="text-[0.625rem] text-text-muted text-center">
           {footnote}
         </div>
       </div>
@@ -121,7 +121,7 @@ function SignalRow({ label, signal }: SignalRowProps) {
           <div className="font-heading font-semibold text-sm">{label}</div>
           <div className="text-text-muted text-xs">—</div>
         </div>
-        <div className="text-[10px] text-text-muted mt-0.5">{signal.detail}</div>
+        <div className="text-[0.625rem] text-text-muted mt-0.5">{signal.detail}</div>
       </div>
     );
   }
@@ -147,7 +147,7 @@ function SignalRow({ label, signal }: SignalRowProps) {
           {signal.score > 0 ? '+' : ''}{signal.score.toFixed(0)}
         </div>
       </div>
-      <div className="text-[10px] text-text-muted mt-0.5">{signal.label}</div>
+      <div className="text-[0.625rem] text-text-muted mt-0.5">{signal.label}</div>
       {/* Center-anchored bar — left half is bearish, right half bullish.
           The zero line sits at 50%; positive scores extend rightward, negatives
           leftward. */}
@@ -162,7 +162,7 @@ function SignalRow({ label, signal }: SignalRowProps) {
           }
         />
       </div>
-      <div className="text-[10px] text-text-muted mt-1.5">{signal.detail}</div>
+      <div className="text-[0.625rem] text-text-muted mt-1.5">{signal.detail}</div>
     </div>
   );
 }

@@ -54,7 +54,7 @@ export default function EarningsStrip({ events, onTapTicker }: Props) {
     <div className="card">
       <div className="flex items-center justify-between mb-2">
         <span className="font-heading font-semibold text-sm">Earnings Calendar</span>
-        <span className="text-[9px] uppercase tracking-wider text-text-muted">
+        <span className="text-[0.5625rem] uppercase tracking-wider text-text-muted">
           Next {upcoming.length}
         </span>
       </div>
@@ -71,12 +71,12 @@ export default function EarningsStrip({ events, onTapTicker }: Props) {
               <div className="flex items-center gap-2 min-w-0">
                 <span className="text-sm font-medium">{e.symbol}</span>
                 {e.hour && (
-                  <span className="text-[9px] uppercase tracking-wider text-text-muted">
+                  <span className="text-[0.5625rem] uppercase tracking-wider text-text-muted">
                     {hourLabel(e.hour)}
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-2 text-[10px]">
+              <div className="flex items-center gap-2 text-[0.625rem]">
                 <span className="text-text-muted">{e.date}</span>
                 <span className={`font-medium ${imminent ? 'text-primary' : 'text-text'}`}>
                   {relativeLabel(e.date)}

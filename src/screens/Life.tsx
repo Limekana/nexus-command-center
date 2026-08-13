@@ -19,6 +19,8 @@ import { useTranslation } from 'react-i18next';
 import AppHeader from '../components/AppHeader';
 import LifeScoreRing, { type RingSegment } from '../components/LifeScoreRing';
 import LifeNarrativeCard from '../components/LifeNarrativeCard';
+import DomainTrendGrid, { DOMAIN_COLOURS } from '../components/DomainTrendGrid';
+import { useShellTier } from '../lib/useShell';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { useFitnessStore } from '../store/useFitnessStore';
 import { useStudiesStore } from '../store/useStudiesStore';
@@ -182,6 +184,68 @@ export default function Life() {
   }, [report.weeks.lifeScores.length]);
 
   const thisWeek = report.weeks.lifeScores[0];
+
+  // v1.9 Item 14b #8 — the same report, re-read as five aligned series.
+  // The report's weekly arrays run newest-first (lifeScores[0] is this week);
+  // a time axis reads left-to-right oldest-first, so they are reversed once
+  // here rather than in the component, which should not have to know.
+  const isDesktop = useShellTier() === 'desktop';
+  const crossDomain = useMemo(() => {
+    const w = report.weeks;
+    const order = <T,>(arr: T[]) => [...arr].reverse();
+    const lifeScores = order(w.lifeScores);
+    const fitness = order(w.fitness);
+    const study = order(w.study);
+    const habitsW = order(w.habits);
+    const finance = order(w.finance);
+    const pct = (v: number) => `${Math.round(v)}%`;
+    return {
+      weekStarts: lifeScores.map((s) => s.weekStart),
+      series: [
+        {
+          key: 'life',
+          label: t('life.lifeScoreLabel'),
+          colour: DOMAIN_COLOURS.life,
+          values: lifeScores.map((s) => s.score),
+          max: 100,
+          format: (v: number) => String(Math.round(v)),
+        },
+        {
+          key: 'fitness',
+          label: t('domains.fitness'),
+          colour: DOMAIN_COLOURS.fitness,
+          values: fitness.map((f) => f.sessionsCount),
+          format: (v: number) => t('fin.dtg.sessions', { count: Math.round(v) }),
+        },
+        {
+          key: 'study',
+          label: t('domains.studies'),
+          colour: DOMAIN_COLOURS.study,
+          values: study.map((s) => s.totalMinutes),
+          format: (v: number) => t('fin.dtg.minutes', { count: Math.round(v) }),
+        },
+        {
+          key: 'habits',
+          label: t('domains.habits'),
+          colour: DOMAIN_COLOURS.habits,
+          // null stays null: a week with no eligible habit is not a 0% week.
+          values: habitsW.map((h) => (h.hitRatio == null ? null : h.hitRatio * 100)),
+          max: 100,
+          format: pct,
+        },
+        {
+          key: 'finance',
+          label: t('domains.finance'),
+          colour: DOMAIN_COLOURS.finance,
+          values: finance.map((f) => (f.budgetAdherence == null ? null : f.budgetAdherence * 100)),
+          // 100% is exactly on plan; the reference line is the whole point of
+          // this row, since above it is overspend and below it is headroom.
+          reference: 100,
+          format: pct,
+        },
+      ],
+    };
+  }, [report, t]);
   const domains = enabledDomains(profile);
 
   // Ring shows only domains that were measured this week (have data) — matching
@@ -223,7 +287,7 @@ export default function Life() {
               <LifeScoreRing segments={ringSegments} size={200}>
                 <div className="flex flex-col items-center leading-none">
                   <span className="font-heading text-5xl font-bold">{thisWeek.score}</span>
-                  <span className="text-[10px] uppercase tracking-wider text-text-muted mt-1">{t('domains.lifeScore')}</span>
+                  <span className="text-[0.625rem] uppercase tracking-wider text-text-muted mt-1">{t('domains.lifeScore')}</span>
                 </div>
               </LifeScoreRing>
               <div className="grid grid-cols-2 gap-2 w-full mt-4">
@@ -254,11 +318,11 @@ export default function Life() {
               {domains.includes('fitness') && (
                 <div className="w-full mt-3 flex items-center justify-between gap-3 px-1">
                   <div className="min-w-0">
-                    <div className="text-[11px] text-text-muted">
+                    <div className="text-[0.6875rem] text-text-muted">
                       {t('life.weekTarget')}
                     </div>
                     {weekTarget !== baselineTarget && (
-                      <div className="text-[10px] text-warning">
+                      <div className="text-[0.625rem] text-warning">
                         {t('life.weekTargetAdjusted', { baseline: baselineTarget })}
                       </div>
                     )}
@@ -292,6 +356,13 @@ export default function Life() {
           )}
         </section>
 
+        {/* v1.9 Item 14 — desktop arrangement. THIS WEEK stays full width
+            above: it is the hero of the screen and its score ring plus domain
+            breakdown is one composition, not something to split. The three
+            supporting sections below tile two-up at `desktop:` instead of
+            running down a very long single column. Below 1201px this wrapper
+            is a plain `space-y-6` stack, identical to before. */}
+        <div className="space-y-6 desktop:space-y-0 desk-grid">
         {/* ─── AI NARRATIVE ─────────────────────────────────────────── */}
         {/* Gated on the Settings opt-in. Off by default — this card used to
             generate itself on arrival, which is not what "opt-in" means. */}
@@ -312,7 +383,7 @@ export default function Life() {
 
         {/* ─── PATTERNS ─────────────────────────────────────────────── */}
         {report.ready && (
-          <section className="space-y-2">
+          <section className="space-y-2 desk-fill">
             <h2 className="font-heading font-semibold text-xs uppercase tracking-wider text-text-muted px-1">
               {t('life.patterns')}
             </h2>
@@ -324,7 +395,7 @@ export default function Life() {
               <div className="space-y-2 stagger-children">
                 {report.insights.map((ins) => (
                   <article key={ins.id} className={`glass rounded-xl p-4 border-s-2 ${TONE_BORDER[ins.tone]}`}>
-                    <div className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
+                    <div className="text-[0.625rem] uppercase tracking-wider text-text-muted mb-1">
                       {t(DOMAIN_LABEL_KEY[ins.domain])}
                     </div>
                     <div className={`font-heading text-base font-bold leading-tight ${TONE_TEXT[ins.tone]} mb-1`}>
@@ -339,25 +410,38 @@ export default function Life() {
           </section>
         )}
 
+        {/* ─── CROSS-DOMAIN (v1.9 Item 14b #8, desktop only) ────────── */}
+        {isDesktop && report.ready && (
+          <section className="space-y-2 desk-span desk-fill">
+            <h2 className="font-heading font-semibold text-xs uppercase tracking-wider text-text-muted px-1">
+              {t('fin.dtg.title')}
+            </h2>
+            <div className="card">
+              <DomainTrendGrid weekStarts={crossDomain.weekStarts} series={crossDomain.series} />
+            </div>
+          </section>
+        )}
+
         {/* ─── HISTORY ─────────────────────────────────────────────── */}
         {report.ready && (
-          <section className="space-y-2">
+          <section className="space-y-2 desk-fill">
             <h2 className="font-heading font-semibold text-xs uppercase tracking-wider text-text-muted px-1">
               {t('life.history')}
             </h2>
             <div ref={historyScrollRef} className="flex gap-2 overflow-x-auto no-scrollbar px-1 stagger-children">
               {[...report.weeks.lifeScores].reverse().map((w) => (
                 <div key={w.weekStart} className="glass-soft rounded-xl p-3 flex-shrink-0 w-20 flex flex-col items-center">
-                  <div className="text-[9px] uppercase tracking-wider text-text-muted">{w.weekStart.slice(5)}</div>
+                  <div className="text-[0.5625rem] uppercase tracking-wider text-text-muted">{w.weekStart.slice(5)}</div>
                   <div className="font-heading text-xl font-bold mt-1">{w.score}</div>
-                  <div className="text-[9px] text-text-muted mt-0.5">{t('life.per100')}</div>
+                  <div className="text-[0.5625rem] text-text-muted mt-0.5">{t('life.per100')}</div>
                 </div>
               ))}
             </div>
           </section>
         )}
+        </div>
 
-        <div className="text-[10px] text-text-muted text-center">
+        <div className="text-[0.625rem] text-text-muted text-center">
           {t('life.footer')}
         </div>
       </div>
@@ -380,10 +464,10 @@ function DomainCard({ domain, score, sub, measured = true }: { domain: DomainKey
     >
       <div className="flex items-center gap-1.5">
         <span aria-hidden className="w-2 h-2 rounded-full" style={{ background: measured ? DOMAIN_COLOR[domain] : 'rgba(168,178,188,0.4)' }} />
-        <div className="text-[10px] uppercase tracking-wider text-text-muted">{t(`domains.${domain}`)}</div>
+        <div className="text-[0.625rem] uppercase tracking-wider text-text-muted">{t(`domains.${domain}`)}</div>
       </div>
       <div className="font-heading text-xl font-bold mt-0.5">{measured ? score : '—'}</div>
-      {sub && <div className="text-[10px] text-text-muted mt-0.5">{sub}</div>}
+      {sub && <div className="text-[0.625rem] text-text-muted mt-0.5">{sub}</div>}
     </div>
   );
 }

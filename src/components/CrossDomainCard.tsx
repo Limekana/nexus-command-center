@@ -79,11 +79,11 @@ export default function CrossDomainCard() {
       >
         <div className="flex items-center justify-between mb-1">
           <h2 className="font-heading font-semibold text-sm">{t('dash.lifePatterns')}</h2>
-          <span className="text-[10px] text-text-muted uppercase tracking-wider">
+          <span className="text-[0.625rem] text-text-muted uppercase tracking-wider">
             {t('dash.buildingBaseline')}
           </span>
         </div>
-        <p className="text-[11px] text-text-muted">
+        <p className="text-[0.6875rem] text-text-muted">
           {t('dash.baselineBody')}
         </p>
       </button>
@@ -100,11 +100,11 @@ export default function CrossDomainCard() {
       >
         <div className="flex items-center justify-between mb-1">
           <h2 className="font-heading font-semibold text-sm">{t('dash.lifePatterns')}</h2>
-          <span className="text-[10px] text-text-muted uppercase tracking-wider">
+          <span className="text-[0.625rem] text-text-muted uppercase tracking-wider">
             {t('dash.quietWeek')}
           </span>
         </div>
-        <p className="text-[11px] text-text-muted">
+        <p className="text-[0.6875rem] text-text-muted">
           {t('dash.quietBody')}
         </p>
       </button>
@@ -146,7 +146,7 @@ export default function CrossDomainCard() {
           <span aria-hidden className="me-1">{TONE_GLYPH[insight.tone]}</span>
           {insight.headline}
         </div>
-        <div className="text-[11px] text-text-muted">{insight.detail}</div>
+        <div className="text-[0.6875rem] text-text-muted">{insight.detail}</div>
       </div>
     </button>
   );

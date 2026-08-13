@@ -96,7 +96,7 @@ export default function YearReview() {
             {t('yearReview.step1Back')}
           </button>
           <div className="text-center">
-            <div className="text-[9px] uppercase tracking-[0.2em] text-text-muted">{t('yearReview.trailing12')}</div>
+            <div className="text-[0.5625rem] uppercase tracking-[0.2em] text-text-muted">{t('yearReview.trailing12')}</div>
             <div className="font-heading font-semibold text-sm">
               {formatDateRange(data.rangeStart, data.rangeEnd)}
             </div>
@@ -147,7 +147,7 @@ export default function YearReview() {
           )}
           {topCategoryNames.length > 0 && (
             <div className="mt-3 space-y-1">
-              <div className="text-[10px] uppercase tracking-wider text-text-muted">{t('yearReview.topCategories')}</div>
+              <div className="text-[0.625rem] uppercase tracking-wider text-text-muted">{t('yearReview.topCategories')}</div>
               {topCategoryNames.map((c, i) => (
                 <div key={i} className="flex items-center justify-between text-xs">
                   <span className="truncate">{c.name}</span>
@@ -180,7 +180,7 @@ export default function YearReview() {
             />
           )}
           {data.studies.coursesAdded > 0 && (
-            <div className="text-[10px] text-text-muted mt-2">
+            <div className="text-[0.625rem] text-text-muted mt-2">
               {t('yearReview.coursesAdded', { n: data.studies.coursesAdded })}
             </div>
           )}
@@ -209,7 +209,7 @@ export default function YearReview() {
           )}
           {data.fitness.topExercises.length > 0 && (
             <div className="mt-3 space-y-1">
-              <div className="text-[10px] uppercase tracking-wider text-text-muted">{t('yearReview.mostTrained')}</div>
+              <div className="text-[0.625rem] uppercase tracking-wider text-text-muted">{t('yearReview.mostTrained')}</div>
               {data.fitness.topExercises.map((ex, i) => (
                 <div key={i} className="flex items-center justify-between text-xs">
                   <span className="truncate">{ex.exercise}</span>
@@ -237,7 +237,7 @@ export default function YearReview() {
           )}
         </button>
 
-        <div className="card text-center text-[10px] text-text-muted">
+        <div className="card text-center text-[0.625rem] text-text-muted">
           {t('yearReview.footerRolling', { word: t('yearReview.rollingWord') })}
         </div>
       </div>
@@ -248,7 +248,7 @@ export default function YearReview() {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-sm border border-border bg-surface2/40 p-2">
-      <div className="text-[10px] uppercase tracking-wider text-text-muted">{label}</div>
+      <div className="text-[0.625rem] uppercase tracking-wider text-text-muted">{label}</div>
       <div className="font-heading font-bold text-base truncate">{value}</div>
     </div>
   );

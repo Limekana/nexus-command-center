@@ -51,7 +51,7 @@ export default function QuickLogBottomSheet({ open, onClose }: QuickLogBottomShe
       {tab === 'expense' && <QuickExpense onDone={onClose} />}
       {tab === 'work' && <QuickWork onDone={onClose} />}
       {tab === 'task' && <QuickTask onDone={onClose} />}
-      <div className="text-[10px] text-text-muted text-center mt-3">
+      <div className="text-[0.625rem] text-text-muted text-center mt-3">
         DIFS target &lt;15 sec · queued locally
       </div>
     </BottomSheet>

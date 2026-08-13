@@ -29,7 +29,7 @@ export default function ModuleSummaryCard({ title, icon, tag, to, children }: Mo
           <span aria-hidden>{icon}</span> {title}
         </span>
         {tag && (
-          <span className="inline-flex items-center h-6 px-2 rounded-pill text-[10px] font-heading uppercase tracking-wider text-primary border border-primary/45" style={{ background: 'rgba(0, 212, 255, 0.10)' }}>
+          <span className="inline-flex items-center h-6 px-2 rounded-pill text-[0.625rem] font-heading uppercase tracking-wider text-primary border border-primary/45" style={{ background: 'rgba(0, 212, 255, 0.10)' }}>
             {tag}
           </span>
         )}

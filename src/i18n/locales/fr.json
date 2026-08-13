@@ -35,7 +35,9 @@
     "home": "Accueil",
     "finance": "Finances",
     "life": "Vie",
-    "tasks": "Tâches"
+    "tasks": "Tâches",
+    "collapseSidebar": "Réduire la barre latérale",
+    "expandSidebar": "Développer la barre latérale"
   },
   "life": {
     "notCountedYet": "Pas encore compté",
@@ -265,7 +267,11 @@
     "deleteAccountFailed": "Échec de la suppression : {{msg}}",
     "support": "Soutien",
     "supportDev": "Soutenir le développement",
-    "supportDevSub": "Offrez-moi un café sur Ko-fi"
+    "supportDevSub": "Offrez-moi un café sur Ko-fi",
+    "textSize": "Taille du texte",
+    "textAuto": "Auto",
+    "textSizeSub": "S'applique partout, y compris sur votre téléphone.",
+    "textAutoSub": "{{pct}} % à cette taille d'écran — plus grand sur ordinateur, standard sur téléphone."
   },
   "days": {
     "long": {
@@ -521,6 +527,36 @@
     "forgotPin": "PIN oublié ? Réinitialisez via Paramètres → Effacer toutes les données"
   },
   "fin": {
+    "flow": {
+      "title": "Où est passé l'argent",
+      "empty": "Aucun revenu ni dépense pour cette période.",
+      "in": "Entrées",
+      "out": "Sorties",
+      "surplus": "{{amount}} restant",
+      "deficit": "{{amount}} financé par les réserves",
+      "otherIncome": "Autres revenus",
+      "uncategorised": "Sans catégorie",
+      "saved": "Épargné",
+      "debt": "Dette remboursée",
+      "leftover": "Restant",
+      "fromReserves": "Des réserves"
+    },
+    "tbl": {
+      "position": "Position",
+      "sector": "Secteur",
+      "shares": "Parts",
+      "cost": "Prix de revient",
+      "value": "Valeur de marché",
+      "day": "Jour",
+      "return": "Rendement total",
+      "allocation": "Répartition",
+      "total": "Total",
+      "positions_one": "{{count}} position",
+      "positions_other": "{{count}} positions",
+      "aria": "Portefeuille",
+      "filterSector": "Afficher uniquement {{sector}}",
+      "ofCount": "{{count}} positions"
+    },
     "finance": "Finances",
     "tx": {
       "expense": "💸 Dépense",
@@ -690,7 +726,8 @@
       "targetAboveHit": "Objectif ≥ atteint",
       "targetBelowHit": "Objectif ≤ atteint",
       "stopWatching": "Arrêter de suivre {{ticker}} ?",
-      "tickers_many": "{{count}} tickers"
+      "tickers_many": "{{count}} tickers",
+      "pickOne": "Choisissez un titre pour voir son détail."
     },
     "mh": {
       "title": "Gérer les positions",
@@ -895,6 +932,131 @@
       "set": "Définir",
       "amountIn": "Montant en {{cur}}",
       "unconvertable_many": "{{count}} éléments n’ont pas pu être convertis en {{cur}} (taux de change manquant)."
+    },
+    "imp": {
+      "entryTitle": "Import et export",
+      "entrySub": "Importer un CSV bancaire ou tout exporter",
+      "title": "Importer des transactions",
+      "stepFile": "Choisir un fichier",
+      "stepMap": "Associer les colonnes",
+      "stepReview": "Vérifier et importer",
+      "dropHere": "Déposez un CSV ici",
+      "dropHint": "Séparé par des virgules, des points-virgules ou des tabulations. Rien n'est enregistré avant votre confirmation.",
+      "chooseFile": "Choisir un fichier",
+      "clear": "Effacer",
+      "exportAll": "Exporter {{count}} transactions",
+      "rowsFound": "{{count}} lignes trouvées",
+      "tooBig": "Ce fichier dépasse {{mb}} Mo — un relevé bancaire fait normalement quelques centaines de kilo-octets.",
+      "unreadable": "Impossible de lire ce fichier comme du texte.",
+      "emptyFile": "Ce fichier ne contient aucune ligne.",
+      "columnN": "Colonne {{n}}",
+      "roleFor": "Rôle de {{column}}",
+      "role": {
+        "ignore": "Ignorer",
+        "date": "Date",
+        "description": "Libellé",
+        "amount": "Montant",
+        "debit": "Débit (sortie)",
+        "credit": "Crédit (entrée)",
+        "category": "Catégorie",
+        "notes": "Notes"
+      },
+      "account": "Importer dans",
+      "dateOrder": "Ordre de la date",
+      "dmy": "Jour / mois / année",
+      "mdy": "Mois / jour / année",
+      "ymd": "Année / mois / jour",
+      "decimal": "Séparateur décimal",
+      "decDot": "1234.56",
+      "decComma": "1234,56",
+      "delimiter": "Séparateur",
+      "tab": "Tabulation",
+      "firstRowHeader": "La première ligne est un en-tête",
+      "invertSign": "Les montants positifs sont des dépenses",
+      "createCategories": "Créer les catégories manquantes",
+      "dateAmbiguous": "Toutes les dates du fichier se lisent pareil dans les deux ordres, l'ordre n'a donc pas pu être déterminé. Vérifiez-le avant d'importer.",
+      "willCreate": "{{count}} nouvelles catégories seront créées : {{names}}",
+      "noTransfers": "Les virements ne sont pas importés : un CSV ne porte pas de compte de destination. Ajoutez-les à la main.",
+      "selected": "sélectionnées",
+      "duplicates": "doublons",
+      "skipped": "inutilisables",
+      "selectAll": "Tout sélectionner",
+      "selectNone": "Tout désélectionner",
+      "previewAria": "Aperçu de l'import",
+      "include": "Inclure",
+      "includeRow": "Inclure la ligne {{line}}",
+      "date": "Date",
+      "description": "Libellé",
+      "category": "Catégorie",
+      "amount": "Montant",
+      "status": "État",
+      "bad": "?",
+      "ok": "Nouvelle",
+      "problem": {
+        "date": "sans date",
+        "amount": "sans montant",
+        "description": "sans libellé"
+      },
+      "dup": {
+        "existing": "Déjà présente",
+        "file": "Répétée"
+      },
+      "truncated": "Affichage des {{shown}} premières lignes sur {{total}} — la sélection et l'import portent toujours sur les {{total}}.",
+      "importCount": "Importer {{count}}",
+      "importing": "Import en cours…",
+      "cancel": "Annuler",
+      "needAccount": "Créez d'abord un compte : chaque transaction doit aller quelque part.",
+      "doneCount": "{{count}} transactions importées."
+    },
+    "nwt": {
+      "title": "Patrimoine net dans le temps",
+      "empty": "Rien à tracer pour l'instant — ajoutez un compte ou une transaction.",
+      "aria": "Évolution du patrimoine net",
+      "overWindow": "sur {{count}} mois",
+      "months": "{{count}} m",
+      "currency": "Devise d'affichage",
+      "holdings": "Placements",
+      "fromSnapshot": "instantané",
+      "portfolioCash": "Liquidités du portefeuille",
+      "ledger": "registre",
+      "breakdownFor": "Détail — {{month}}",
+      "addedHere": "Ajouté ici : {{names}}",
+      "noSnapshotYet": "Aucun instantané du portefeuille ne remonte jusqu'ici, les placements sont donc absents plutôt que nuls.",
+      "nothingHere": "Aucun compte n'existait encore à ce moment-là.",
+      "total": "Total",
+      "fxCaveat": "Les soldes passés en devises étrangères sont convertis aux taux d'aujourd'hui.",
+      "historyCaveat": "L'historique commence à l'ajout de chaque compte — un solde d'ouverture n'a pas de date.",
+      "noRate": "Pas encore de taux pour {{currency}} — affichage en devise de base."
+    },
+    "bvt": {
+      "title": "Budget vs réel",
+      "empty": "Aucune dépense enregistrée sur cette période.",
+      "aria": "Budget par rapport au réel, par mois",
+      "category": "Catégorie",
+      "budget": "Budget",
+      "total": "Total",
+      "noLimit": "Pas de budget",
+      "noLimitsSet": "Aucune catégorie n'a encore de budget mensuel, il n'y a donc rien à comparer.",
+      "limitCaveat": "Comparé au budget actuel de chaque catégorie — les anciens plafonds ne sont pas conservés."
+    },
+    "dtg": {
+      "title": "Entre domaines",
+      "empty": "Pas encore assez de semaines.",
+      "noData": "aucune donnée",
+      "weekOf": "Semaine du {{date}}",
+      "scaleCaveat": "Chaque ligne est mise à l'échelle de sa propre plage : les hauteurs se comparent au sein d'une ligne, pas entre elles.",
+      "sessions": "{{count}} séances",
+      "minutes": "{{count}} min"
+    },
+    "qa": {
+      "title": "Ajout rapide",
+      "placeholder": "12,50 café #alimentation @courant",
+      "needAmount": "montant ?",
+      "needDescription": "pour quoi ?",
+      "noCategory": "sans catégorie",
+      "noAccount": "sans compte",
+      "save": "Enregistrer",
+      "hint": "#catégorie  @compte  today/yesterday  ·  Tab complète  ·  Entrée enregistre  ·  Échap ferme"
     }
   },
   "lifeProfile": {

@@ -24,6 +24,7 @@ import FinanceOverview from './screens/finance/FinanceOverview';
 import AddTransaction from './screens/finance/AddTransaction';
 import Portfolio from './screens/finance/Portfolio';
 import ManageBudgets from './screens/finance/ManageBudgets';
+import ImportTransactions from './screens/finance/ImportTransactions';
 import ManageHoldings from './screens/finance/ManageHoldings';
 import ManageLots from './screens/finance/ManageLots';
 import NetWorth from './screens/finance/NetWorth';
@@ -345,6 +346,8 @@ export default function App() {
           <Route path="/finance/account/:id" element={<AccountDetail />} />
           <Route path="/finance/whatif" element={<WhatIf />} />
           <Route path="/finance/budgets" element={<ManageBudgets />} />
+          {/* v1.9 Item 14b #4 — CSV import/export. */}
+          <Route path="/finance/import" element={<ImportTransactions />} />
           <Route path="/tasks" element={<TasksOverview />} />
           <Route path="/tasks/add" element={<AddTask />} />
           <Route path="/habits" element={<HabitsOverview />} />

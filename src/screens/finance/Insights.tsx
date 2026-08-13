@@ -179,11 +179,11 @@ export default function Insights() {
 
         {/* ─── Subhead ─────────────────────────────────────────────── */}
         <div className="glass-soft rounded-xl px-4 py-3">
-          <div className="text-[11px] text-text-muted leading-relaxed">
+          <div className="text-[0.6875rem] text-text-muted leading-relaxed">
             {activeTab === 'technical' ? t('fin.ins.techDesc') : t('fin.ins.fundDesc')}
           </div>
           {lastAt && (
-            <div className="text-[10px] text-text-muted/70 mt-1.5">
+            <div className="text-[0.625rem] text-text-muted/70 mt-1.5">
               {t('fin.ins.lastComputed', { time: new Date(lastAt).toLocaleTimeString() })}
               {failed.length > 0 && (
                 <span className="text-warning"> · {t('fin.ins.skipped', { count: failed.length })}</span>
@@ -229,13 +229,13 @@ export default function Insights() {
                 <div className="flex items-center gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="font-heading font-bold text-sm">{r.ticker}</div>
-                    <div className="text-[11px] text-text-muted truncate">
+                    <div className="text-[0.6875rem] text-text-muted truncate">
                       {nameFor.get(r.ticker) ?? r.ticker}
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     <RatingPill ticker={r.ticker} />
-                    <div className="text-[11px] font-medium text-text-muted">
+                    <div className="text-[0.6875rem] font-medium text-text-muted">
                       {t('fin.ins.composite', { score: `${r.score >= 0 ? '+' : ''}${r.score.toFixed(0)}` })}
                     </div>
                   </div>
@@ -248,7 +248,7 @@ export default function Insights() {
                   {Object.entries(r.breakdown).map(([key, signal]) => (
                     <span
                       key={key}
-                      className={`text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-sm ${
+                      className={`text-[0.5625rem] uppercase tracking-wider px-1.5 py-0.5 rounded-sm ${
                         !signal.available
                           ? 'text-text-muted/40 bg-surface2/30'
                           : signal.score > 5
