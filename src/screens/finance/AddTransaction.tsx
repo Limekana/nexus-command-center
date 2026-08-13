@@ -227,7 +227,7 @@ export default function AddTransaction() {
               an inline link below points them at /finance/net-worth where
               accounts are created). */}
           {accounts.length === 0 ? (
-            <div className="glass-soft rounded-md p-3 text-[11px] text-text-muted">
+            <div className="glass-soft rounded-md p-3 text-[0.6875rem] text-text-muted">
               {t('fin.tx.noAccounts1')}
               <button
                 type="button"
@@ -297,7 +297,7 @@ export default function AddTransaction() {
             {t('fin.tx.deleteTx')}
           </button>
         )}
-        <div className="text-[10px] text-text-muted text-center">
+        <div className="text-[0.625rem] text-text-muted text-center">
           {t('fin.tx.queued')}
         </div>
       </div>

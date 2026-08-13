@@ -46,7 +46,12 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     storageKey: 'nexus-supabase-session',
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false,
+    // Native handles the OAuth callback manually via the deep-link listener in
+    // App.tsx, so supabase-js must not race it. On WEB there is no deep-link
+    // listener — nothing else will ever consume the `?code=` — so leaving this
+    // false there meant the session was dropped even when the redirect was
+    // correct. The second half of the same bug as OAUTH_REDIRECT_URL below.
+    detectSessionInUrl: !Capacitor.isNativePlatform(),
     flowType: 'pkce',
   },
 });
@@ -76,6 +81,24 @@ if (Capacitor.isNativePlatform()) {
   });
 }
 
-// Custom URL scheme for OAuth deep-link return. Registered in
-// android/app/src/main/AndroidManifest.xml.
-export const OAUTH_REDIRECT_URL = 'com.limecore.nexus://login-callback';
+// Where Supabase sends the browser back to after Google sign-in.
+//
+// NATIVE: a custom URL scheme, registered in AndroidManifest.xml and caught by
+// the `appUrlOpen` listener in App.tsx, which then calls
+// exchangeCodeForSession.
+//
+// WEB: the app's own origin. This branch is why the owner's report happened —
+// the constant used to be the native scheme unconditionally, and a BROWSER
+// cannot navigate to `com.limecore.nexus://login-callback`. Supabase fell back
+// to the project's Site URL (limecore.dev/confirmed), which is where the
+// session landed instead of in the app, leaving the user signed out. It broke
+// on localhost and would have broken identically on any hosted web build.
+//
+// `window.location.origin` rather than a hardcoded host so dev
+// (http://localhost:5173) and any deployed origin both work without a build
+// flag — but note that EVERY origin still has to be listed in Supabase's
+// Auth → URL Configuration → Redirect URLs allowlist, or Supabase silently
+// falls back to the Site URL again and the symptom returns unchanged.
+export const OAUTH_REDIRECT_URL = Capacitor.isNativePlatform()
+  ? 'com.limecore.nexus://login-callback'
+  : `${window.location.origin}/`;

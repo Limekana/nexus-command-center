@@ -35,7 +35,9 @@
     "home": "Home",
     "finance": "Finance",
     "life": "Life",
-    "tasks": "Tasks"
+    "tasks": "Tasks",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar"
   },
   "life": {
     "notCountedYet": "Not counted yet",
@@ -265,7 +267,11 @@
     "deleteAccountFailed": "Deletion failed: {{msg}}",
     "support": "Support",
     "supportDev": "Support development",
-    "supportDevSub": "Buy me a coffee on Ko-fi"
+    "supportDevSub": "Buy me a coffee on Ko-fi",
+    "textSize": "Text size",
+    "textAuto": "Auto",
+    "textSizeSub": "Applies everywhere, including on your phone.",
+    "textAutoSub": "{{pct}}% on this screen size — larger on desktop, standard on a phone."
   },
   "days": {
     "long": {
@@ -521,6 +527,36 @@
     "forgotPin": "Forgot PIN? Reset in Settings → Clear All Data"
   },
   "fin": {
+    "flow": {
+      "title": "Where the money went",
+      "empty": "No income or spending recorded for this period.",
+      "in": "In",
+      "out": "Out",
+      "surplus": "{{amount}} left over",
+      "deficit": "{{amount}} funded from reserves",
+      "otherIncome": "Other income",
+      "uncategorised": "Uncategorised",
+      "saved": "Saved",
+      "debt": "Debt repaid",
+      "leftover": "Left over",
+      "fromReserves": "From reserves"
+    },
+    "tbl": {
+      "position": "Position",
+      "sector": "Sector",
+      "shares": "Shares",
+      "cost": "Cost basis",
+      "value": "Market value",
+      "day": "Day",
+      "return": "Total return",
+      "allocation": "Allocation",
+      "total": "Total",
+      "positions_one": "{{count}} position",
+      "positions_other": "{{count}} positions",
+      "aria": "Holdings",
+      "filterSector": "Show only {{sector}}",
+      "ofCount": "{{count}} positions"
+    },
     "finance": "Finance",
     "tx": {
       "expense": "💸 Expense",
@@ -687,7 +723,8 @@
       "empty": "No watchlist items yet. Tap + Watch to track a ticker without owning it.",
       "targetAboveHit": "Target ≥ hit",
       "targetBelowHit": "Target ≤ hit",
-      "stopWatching": "Stop watching {{ticker}}?"
+      "stopWatching": "Stop watching {{ticker}}?",
+      "pickOne": "Pick a ticker to see its detail."
     },
     "mh": {
       "title": "Manage Holdings",
@@ -889,6 +926,131 @@
       "add": "Add",
       "set": "Set",
       "amountIn": "Amount in {{cur}}"
+    },
+    "imp": {
+      "entryTitle": "Import & export",
+      "entrySub": "Bring in a bank CSV, or export everything",
+      "title": "Import transactions",
+      "stepFile": "Choose a file",
+      "stepMap": "Map the columns",
+      "stepReview": "Review and import",
+      "dropHere": "Drop a CSV here",
+      "dropHint": "Comma, semicolon or tab separated. Nothing is saved until you confirm.",
+      "chooseFile": "Choose file",
+      "clear": "Clear",
+      "exportAll": "Export {{count}} transactions",
+      "rowsFound": "{{count}} rows found",
+      "tooBig": "That file is over {{mb}} MB — a bank export is normally a few hundred kilobytes.",
+      "unreadable": "That file could not be read as text.",
+      "emptyFile": "That file has no rows.",
+      "columnN": "Column {{n}}",
+      "roleFor": "Role for {{column}}",
+      "role": {
+        "ignore": "Ignore",
+        "date": "Date",
+        "description": "Description",
+        "amount": "Amount",
+        "debit": "Debit (out)",
+        "credit": "Credit (in)",
+        "category": "Category",
+        "notes": "Notes"
+      },
+      "account": "Import into",
+      "dateOrder": "Date order",
+      "dmy": "Day / month / year",
+      "mdy": "Month / day / year",
+      "ymd": "Year / month / day",
+      "decimal": "Decimal mark",
+      "decDot": "1234.56",
+      "decComma": "1234,56",
+      "delimiter": "Separator",
+      "tab": "Tab",
+      "firstRowHeader": "First row is a header",
+      "invertSign": "Positive amounts are spending",
+      "createCategories": "Create missing categories",
+      "dateAmbiguous": "Every date in this file reads the same either way, so the order could not be worked out. Check it before importing.",
+      "willCreate": "Will create {{count}} new categories: {{names}}",
+      "noTransfers": "Transfers are not imported — a CSV carries no destination account. Add those by hand.",
+      "selected": "selected",
+      "duplicates": "duplicates",
+      "skipped": "unusable",
+      "selectAll": "Select all",
+      "selectNone": "Select none",
+      "previewAria": "Import preview",
+      "include": "Include",
+      "includeRow": "Include row {{line}}",
+      "date": "Date",
+      "description": "Description",
+      "category": "Category",
+      "amount": "Amount",
+      "status": "Status",
+      "bad": "?",
+      "ok": "New",
+      "problem": {
+        "date": "no date",
+        "amount": "no amount",
+        "description": "no description"
+      },
+      "dup": {
+        "existing": "Already have",
+        "file": "Repeat"
+      },
+      "truncated": "Showing the first {{shown}} of {{total}} rows — selection and import still cover all {{total}}.",
+      "importCount": "Import {{count}}",
+      "importing": "Importing…",
+      "cancel": "Cancel",
+      "needAccount": "Create an account first — every transaction has to land somewhere.",
+      "doneCount": "Imported {{count}} transactions."
+    },
+    "nwt": {
+      "title": "Net worth over time",
+      "empty": "Nothing to plot yet — add an account or a transaction.",
+      "aria": "Net worth trend",
+      "overWindow": "over {{count}} months",
+      "months": "{{count}}m",
+      "currency": "Display currency",
+      "holdings": "Holdings",
+      "fromSnapshot": "snapshot",
+      "portfolioCash": "Portfolio cash",
+      "ledger": "ledger",
+      "breakdownFor": "Breakdown — {{month}}",
+      "addedHere": "Added here: {{names}}",
+      "noSnapshotYet": "No portfolio snapshot reaches this far back, so holdings are missing here rather than zero.",
+      "nothingHere": "No accounts existed yet at this point.",
+      "total": "Total",
+      "fxCaveat": "Past balances in other currencies are restated at today's rates.",
+      "historyCaveat": "History starts when each account was added — an opening balance carries no date.",
+      "noRate": "No rate for {{currency}} yet — showing base currency."
+    },
+    "bvt": {
+      "title": "Budget vs actual",
+      "empty": "No spending recorded in this window.",
+      "aria": "Budget versus actual by month",
+      "category": "Category",
+      "budget": "Budget",
+      "total": "Total",
+      "noLimit": "No budget set",
+      "noLimitsSet": "No category has a monthly budget yet, so there is nothing to compare against.",
+      "limitCaveat": "Compared against each category's current budget — past limits are not kept."
+    },
+    "dtg": {
+      "title": "Across domains",
+      "empty": "Not enough weeks yet.",
+      "noData": "no data",
+      "weekOf": "Week of {{date}}",
+      "scaleCaveat": "Each row is scaled to its own range — heights compare within a row, not across rows.",
+      "sessions": "{{count}} sessions",
+      "minutes": "{{count}} min"
+    },
+    "qa": {
+      "title": "Quick add",
+      "placeholder": "12.50 coffee #food @checking",
+      "needAmount": "amount?",
+      "needDescription": "what for?",
+      "noCategory": "no category",
+      "noAccount": "no account",
+      "save": "Save",
+      "hint": "#category  @account  today/yesterday  ·  Tab completes  ·  Enter saves  ·  Esc closes"
     }
   },
   "lifeProfile": {

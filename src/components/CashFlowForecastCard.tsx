@@ -44,7 +44,7 @@ export default function CashFlowForecastCard() {
         <span className="font-heading font-semibold text-sm">Cash Flow Forecast</span>
         {/* 30 / 60d toggle — local only, no persistence. Mirrors the segmented
             pill language used by the Finance tab spine. */}
-        <div className="glass-soft rounded-pill p-0.5 flex text-[10px] font-heading font-semibold uppercase tracking-wider">
+        <div className="glass-soft rounded-pill p-0.5 flex text-[0.625rem] font-heading font-semibold uppercase tracking-wider">
           {([30, 60] as const).map((d) => (
             <button
               key={d}
@@ -63,7 +63,7 @@ export default function CashFlowForecastCard() {
       {!enough ? (
         <div className="text-xs text-text-muted text-center py-4">
           Not enough transaction history to forecast yet.
-          <div className="text-[10px] mt-1">
+          <div className="text-[0.625rem] mt-1">
             Patterns appear here after a few recurring payments land.
           </div>
         </div>
@@ -91,7 +91,7 @@ export default function CashFlowForecastCard() {
           <div className="h-px bg-border/50 my-3" />
 
           <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase tracking-[0.15em] text-text-muted">
+            <span className="text-[0.625rem] uppercase tracking-[0.15em] text-text-muted">
               Net projected · {forecastDays}d
             </span>
             <span
@@ -105,13 +105,13 @@ export default function CashFlowForecastCard() {
           <button
             type="button"
             onClick={() => setExpanded((e) => !e)}
-            className="w-full flex items-center justify-between mt-3 text-[11px] text-text-muted active:text-primary"
+            className="w-full flex items-center justify-between mt-3 text-[0.6875rem] text-text-muted active:text-primary"
           >
             <span>
               {projection.recurringItems.length} recurring item
               {projection.recurringItems.length === 1 ? '' : 's'} detected
             </span>
-            <span className="text-[10px] uppercase tracking-wider">{expanded ? '▲' : '▼'}</span>
+            <span className="text-[0.625rem] uppercase tracking-wider">{expanded ? '▲' : '▼'}</span>
           </button>
 
           {expanded && (
@@ -129,7 +129,7 @@ export default function CashFlowForecastCard() {
                   </span>
                   <div className="flex-1 min-w-0">
                     <div className="text-xs truncate">{r.label}</div>
-                    <div className="text-[10px] text-text-muted">
+                    <div className="text-[0.625rem] text-text-muted">
                       every {cadenceLabel(r.intervalDays)} · next {formatShortDate(r.nextExpected)}
                       {r.confidence === 'medium' && ' · low confidence'}
                     </div>

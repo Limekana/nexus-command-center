@@ -48,7 +48,7 @@ export default function DonutChart({
     return (
       <div
         style={{ width: size, height: size }}
-        className="flex items-center justify-center text-[10px] text-text-muted"
+        className="flex items-center justify-center text-[0.625rem] text-text-muted"
       >
         no data
       </div>
@@ -120,7 +120,7 @@ export default function DonutChart({
             <div className="font-heading font-semibold text-sm leading-tight">{centerTop}</div>
           )}
           {centerBottom && (
-            <div className="text-[9px] uppercase tracking-wider text-text-muted mt-0.5">
+            <div className="text-[0.5625rem] uppercase tracking-wider text-text-muted mt-0.5">
               {centerBottom}
             </div>
           )}

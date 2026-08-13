@@ -156,7 +156,7 @@ export default function HeatmapCalendar({
             {monthMarkers.map((m) => (
               <span
                 key={`${m.colIndex}-${m.label}`}
-                className="absolute text-[9px] uppercase tracking-wider text-text-muted/70"
+                className="absolute text-[0.5625rem] uppercase tracking-wider text-text-muted/70"
                 style={{ left: m.colIndex * colW }}
               >
                 {m.label}
@@ -206,7 +206,7 @@ export default function HeatmapCalendar({
         </div>
       </div>
       {/* Legend */}
-      <div className="flex items-center justify-between mt-2 text-[9px] uppercase tracking-wider text-text-muted">
+      <div className="flex items-center justify-between mt-2 text-[0.5625rem] uppercase tracking-wider text-text-muted">
         <span>{formatTotal(total)} last {weeks}w</span>
         <div className="flex items-center gap-1">
           <span>Less</span>

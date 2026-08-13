@@ -35,7 +35,9 @@
     "home": "主页",
     "finance": "财务",
     "life": "生活",
-    "tasks": "任务"
+    "tasks": "任务",
+    "collapseSidebar": "折叠侧边栏",
+    "expandSidebar": "展开侧边栏"
   },
   "life": {
     "notCountedYet": "尚未计入",
@@ -265,7 +267,11 @@
     "deleteAccountFailed": "删除失败：{{msg}}",
     "support": "支持",
     "supportDev": "支持开发",
-    "supportDevSub": "在 Ko-fi 上请我喝杯咖啡"
+    "supportDevSub": "在 Ko-fi 上请我喝杯咖啡",
+    "textSize": "文字大小",
+    "textAuto": "自动",
+    "textSizeSub": "在所有设备上生效，包括手机。",
+    "textAutoSub": "当前屏幕尺寸下为 {{pct}}% — 桌面更大，手机为标准。"
   },
   "days": {
     "long": {
@@ -521,6 +527,36 @@
     "forgotPin": "忘记 PIN？在 设置 → 清除所有数据 中重置"
   },
   "fin": {
+    "flow": {
+      "title": "钱去哪儿了",
+      "empty": "本期间没有收入或支出记录。",
+      "in": "收入",
+      "out": "支出",
+      "surplus": "结余 {{amount}}",
+      "deficit": "动用储备 {{amount}}",
+      "otherIncome": "其他收入",
+      "uncategorised": "未分类",
+      "saved": "储蓄",
+      "debt": "偿还债务",
+      "leftover": "结余",
+      "fromReserves": "来自储备"
+    },
+    "tbl": {
+      "position": "持仓",
+      "sector": "行业",
+      "shares": "份额",
+      "cost": "成本",
+      "value": "市值",
+      "day": "当日",
+      "return": "总回报",
+      "allocation": "占比",
+      "total": "合计",
+      "positions_one": "{{count}} 个持仓",
+      "positions_other": "{{count}} 个持仓",
+      "aria": "持仓明细",
+      "filterSector": "只显示{{sector}}",
+      "ofCount": "{{count}} 个持仓"
+    },
     "finance": "财务",
     "tx": {
       "expense": "💸 支出",
@@ -687,7 +723,8 @@
       "empty": "还没有关注项。点击 + 关注以关注一个代码而无需持有。",
       "targetAboveHit": "已达目标 ≥",
       "targetBelowHit": "已达目标 ≤",
-      "stopWatching": "停止关注 {{ticker}}？"
+      "stopWatching": "停止关注 {{ticker}}？",
+      "pickOne": "选择一个标的以查看详情。"
     },
     "mh": {
       "title": "管理持仓",
@@ -889,6 +926,131 @@
       "add": "增加",
       "set": "设为",
       "amountIn": "金额（{{cur}}）"
+    },
+    "imp": {
+      "entryTitle": "导入与导出",
+      "entrySub": "导入银行 CSV，或导出全部",
+      "title": "导入交易",
+      "stepFile": "选择文件",
+      "stepMap": "匹配列",
+      "stepReview": "核对并导入",
+      "dropHere": "把 CSV 拖到这里",
+      "dropHint": "支持逗号、分号或制表符分隔。确认前不会保存任何内容。",
+      "chooseFile": "选择文件",
+      "clear": "清除",
+      "exportAll": "导出 {{count}} 笔交易",
+      "rowsFound": "找到 {{count}} 行",
+      "tooBig": "文件超过 {{mb}} MB — 银行对账单通常只有几百 KB。",
+      "unreadable": "无法按文本读取该文件。",
+      "emptyFile": "该文件没有数据行。",
+      "columnN": "第 {{n}} 列",
+      "roleFor": "{{column}} 的用途",
+      "role": {
+        "ignore": "忽略",
+        "date": "日期",
+        "description": "摘要",
+        "amount": "金额",
+        "debit": "借记（支出）",
+        "credit": "贷记（收入）",
+        "category": "类别",
+        "notes": "备注"
+      },
+      "account": "导入到",
+      "dateOrder": "日期顺序",
+      "dmy": "日 / 月 / 年",
+      "mdy": "月 / 日 / 年",
+      "ymd": "年 / 月 / 日",
+      "decimal": "小数点符号",
+      "decDot": "1234.56",
+      "decComma": "1234,56",
+      "delimiter": "分隔符",
+      "tab": "制表符",
+      "firstRowHeader": "首行是表头",
+      "invertSign": "正数表示支出",
+      "createCategories": "创建缺少的类别",
+      "dateAmbiguous": "该文件中每个日期在两种顺序下读法相同，因此无法判断顺序。导入前请先确认。",
+      "willCreate": "将创建 {{count}} 个新类别：{{names}}",
+      "noTransfers": "不导入转账 — CSV 中没有目标账户。请手动添加。",
+      "selected": "已选",
+      "duplicates": "重复",
+      "skipped": "不可用",
+      "selectAll": "全选",
+      "selectNone": "全不选",
+      "previewAria": "导入预览",
+      "include": "包含",
+      "includeRow": "包含第 {{line}} 行",
+      "date": "日期",
+      "description": "摘要",
+      "category": "类别",
+      "amount": "金额",
+      "status": "状态",
+      "bad": "?",
+      "ok": "新增",
+      "problem": {
+        "date": "缺日期",
+        "amount": "缺金额",
+        "description": "缺摘要"
+      },
+      "dup": {
+        "existing": "已存在",
+        "file": "重复行"
+      },
+      "truncated": "仅显示 {{total}} 行中的前 {{shown}} 行 — 选择和导入仍涵盖全部 {{total}} 行。",
+      "importCount": "导入 {{count}} 笔",
+      "importing": "正在导入…",
+      "cancel": "取消",
+      "needAccount": "请先创建账户 — 每笔交易都得有归属。",
+      "doneCount": "已导入 {{count}} 笔交易。"
+    },
+    "nwt": {
+      "title": "净资产走势",
+      "empty": "暂时没有可绘制的数据 — 先添加账户或交易。",
+      "aria": "净资产走势",
+      "overWindow": "{{count}} 个月内",
+      "months": "{{count}}个月",
+      "currency": "显示货币",
+      "holdings": "持仓",
+      "fromSnapshot": "快照",
+      "portfolioCash": "投资组合现金",
+      "ledger": "流水",
+      "breakdownFor": "构成 — {{month}}",
+      "addedHere": "此处新增：{{names}}",
+      "noSnapshotYet": "没有这么早的投资组合快照，因此这里的持仓是缺失而非为零。",
+      "nothingHere": "此时还没有任何账户。",
+      "total": "合计",
+      "fxCaveat": "其他货币的历史余额按今天的汇率重新折算。",
+      "historyCaveat": "历史从每个账户被添加时开始 — 期初余额没有日期。",
+      "noRate": "暂无 {{currency}} 的汇率 — 显示基准货币。"
+    },
+    "bvt": {
+      "title": "预算与实际",
+      "empty": "此区间没有支出记录。",
+      "aria": "按月对比预算与实际",
+      "category": "类别",
+      "budget": "预算",
+      "total": "合计",
+      "noLimit": "未设预算",
+      "noLimitsSet": "还没有类别设置月度预算，因此无从比较。",
+      "limitCaveat": "与各类别当前预算对比 — 不保存历史限额。"
+    },
+    "dtg": {
+      "title": "跨领域",
+      "empty": "周数还不够。",
+      "noData": "无数据",
+      "weekOf": "{{date}} 当周",
+      "scaleCaveat": "每行按各自的范围缩放 — 高度只在行内可比，不能跨行比较。",
+      "sessions": "{{count}} 次",
+      "minutes": "{{count}} 分钟"
+    },
+    "qa": {
+      "title": "快速添加",
+      "placeholder": "12.50 咖啡 #餐饮 @活期",
+      "needAmount": "金额？",
+      "needDescription": "用途？",
+      "noCategory": "未分类",
+      "noAccount": "无账户",
+      "save": "保存",
+      "hint": "#类别  @账户  today/yesterday  ·  Tab 补全  ·  Enter 保存  ·  Esc 关闭"
     }
   },
   "lifeProfile": {

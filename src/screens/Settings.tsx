@@ -15,7 +15,8 @@ import pkg from '../../package.json';
 import { useAuthStore } from '../store/useAuthStore';
 import { useSyncStore } from '../store/useSyncStore';
 import { useSessionStore, userDisplayName } from '../store/useSessionStore';
-import { useSettingsStore, SUPPORTED_CURRENCIES, BaseCurrency } from '../store/useSettingsStore';
+import { useSettingsStore, SUPPORTED_CURRENCIES, BaseCurrency, UI_SCALES } from '../store/useSettingsStore';
+import { useShellTier } from '../lib/useShell';
 import { clearAllLocalData } from '../db/database';
 import { downloadExport, deleteAccount } from '../lib/dataRights';
 import { getApiKey, setApiKey, clearApiKey, maskKey } from '../api/keys';
@@ -59,6 +60,11 @@ export default function Settings() {
 
   const baseCurrency = useSettingsStore((s) => s.baseCurrency);
   const setBaseCurrency = useSettingsStore((s) => s.setBaseCurrency);
+  // v1.9 — text size. `autoScale` mirrors the tier default in index.css, so
+  // the Auto swatch previews what Auto will actually give you here.
+  const uiScale = useSettingsStore((s) => s.uiScale);
+  const setUiScale = useSettingsStore((s) => s.setUiScale);
+  const autoScale = useShellTier() === 'desktop' ? 1.2 : 1;
   const weeklyReminder = useSettingsStore((s) => s.weeklyReminder);
   const setWeeklyReminder = useSettingsStore((s) => s.setWeeklyReminder);
   const notifMasterEnabled = useSettingsStore((s) => s.notifMasterEnabled);
@@ -314,7 +320,7 @@ export default function Settings() {
           <div className="py-2 flex items-center justify-between gap-2">
             <div>
               <div className="text-sm">{t('settings.autoLock')}</div>
-              <div className="text-[10px] text-text-muted">{t('settings.autoLockSub')}</div>
+              <div className="text-[0.625rem] text-text-muted">{t('settings.autoLockSub')}</div>
             </div>
             <select
               className="input max-w-[220px] py-2"
@@ -368,7 +374,7 @@ export default function Settings() {
             </div>
           )}
           {itemErrors.length > 0 && (
-            <div className="text-[10px] text-text-muted mt-1 space-y-0.5 font-mono">
+            <div className="text-[0.625rem] text-text-muted mt-1 space-y-0.5 font-mono">
               {itemErrors.map((e, i) => (
                 <div key={i} className="truncate">
                   · {e.entityType}: {e.message}
@@ -396,7 +402,7 @@ export default function Settings() {
           <div className="py-2 flex items-center justify-between gap-2">
             <div>
               <div className="text-sm">{t('settings.baseCurrency')}</div>
-              <div className="text-[10px] text-text-muted">{t('settings.baseCurrencySub')}</div>
+              <div className="text-[0.625rem] text-text-muted">{t('settings.baseCurrencySub')}</div>
             </div>
             <select
               className="input max-w-[120px] py-2"
@@ -424,7 +430,7 @@ export default function Settings() {
           />
           {/* Free-tier disclosure. Consent has to be informed where it is
               given, so this sits on the switch and not only in the policy. */}
-          <div className="text-[10px] text-text-muted px-1 pb-1 leading-relaxed">
+          <div className="text-[0.625rem] text-text-muted px-1 pb-1 leading-relaxed">
             {t('settings.aiTrainingNote')}
           </div>
           <a
@@ -435,7 +441,7 @@ export default function Settings() {
           >
             <div className="min-w-0">
               <div className="text-sm">{t('settings.privacyPolicy')}</div>
-              <div className="text-[10px] text-text-muted">{t('settings.privacyPolicySub')}</div>
+              <div className="text-[0.625rem] text-text-muted">{t('settings.privacyPolicySub')}</div>
             </div>
             <span className="text-primary text-lg flex-shrink-0">›</span>
           </a>
@@ -445,7 +451,7 @@ export default function Settings() {
              Buttons rather than a "write to us" address: a right the user has
              to request is a right most of them never exercise. */}
         <Section title={t('settings.yourData')}>
-          <div className="text-[10px] text-text-muted px-1 pb-2 leading-relaxed">
+          <div className="text-[0.625rem] text-text-muted px-1 pb-2 leading-relaxed">
             {t('settings.yourDataNote')}
           </div>
           <button className="btn-ghost w-full" onClick={onExport} disabled={exporting}>
@@ -458,10 +464,10 @@ export default function Settings() {
           >
             {deleting ? t('settings.deletingAccount') : t('settings.deleteAccount')}
           </button>
-          <div className="text-[10px] text-text-muted px-1 pt-2 leading-relaxed">
+          <div className="text-[0.625rem] text-text-muted px-1 pt-2 leading-relaxed">
             {t('settings.deleteAccountNote')}
           </div>
-          {dataMsg && <div className="text-[10px] text-warning mt-1 px-1">{dataMsg}</div>}
+          {dataMsg && <div className="text-[0.625rem] text-warning mt-1 px-1">{dataMsg}</div>}
         </Section>
 
         {/* ── Support ────────────────────────────────────────────────────
@@ -477,7 +483,7 @@ export default function Settings() {
           >
             <div className="min-w-0">
               <div className="text-sm">{t('settings.supportDev')}</div>
-              <div className="text-[10px] text-text-muted">{t('settings.supportDevSub')}</div>
+              <div className="text-[0.625rem] text-text-muted">{t('settings.supportDevSub')}</div>
             </div>
             <span className="text-primary text-lg flex-shrink-0">›</span>
           </a>
@@ -490,7 +496,7 @@ export default function Settings() {
           >
             <div className="min-w-0">
               <div className="text-sm">{t(`lifeProfile.${lifeProfile.preset}`)}</div>
-              <div className="text-[10px] text-text-muted truncate">
+              <div className="text-[0.625rem] text-text-muted truncate">
                 {enabledDomains(lifeProfile)
                   .map((k) => `${t(`domains.${k}`)} ${lifeProfile.domains[k]}%`)
                   .join(' · ')}
@@ -498,13 +504,55 @@ export default function Settings() {
             </div>
             <span className="text-primary text-lg flex-shrink-0">›</span>
           </button>
-          <div className="text-[10px] text-text-muted px-1 pb-1">
+          <div className="text-[0.625rem] text-text-muted px-1 pb-1">
             {t('settings.lifeProfileBlurb')}
           </div>
         </Section>
 
         <Section title={t('settings.language')}>
           <LanguageGrid current={currentLang} variant="settings" />
+        </Section>
+
+        {/* v1.9 — text size. The type is sized for a phone at arm's length and
+            reads small on a monitor, so desktop already defaults larger; this
+            is the escape hatch in both directions. Each option previews itself
+            at its own scale, because a row of identical labels reading
+            "Larger" tells you nothing about what you are choosing. */}
+        <Section title={t('settings.textSize')}>
+          <div className="grid grid-cols-3 gap-2 py-1">
+            {UI_SCALES.map((s) => {
+              const active = uiScale === s;
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => void setUiScale(s)}
+                  aria-pressed={active}
+                  className={`rounded-md border px-2 py-2 flex flex-col items-center justify-center gap-0.5 transition-colors ${
+                    active
+                      ? 'border-primary/60 bg-primary/10 text-primary'
+                      : 'border-border text-text-muted active:bg-surface2/60'
+                  }`}
+                >
+                  <span
+                    aria-hidden
+                    className="font-heading leading-none"
+                    // Previews at the scale it sets. `auto` shows the tier
+                    // default rather than a made-up middle value.
+                    style={{ fontSize: `${(s === 'auto' ? autoScale : Number(s)) * 0.875}rem` }}
+                  >
+                    Aa
+                  </span>
+                  <span className="text-[0.625rem] uppercase tracking-wider">
+                    {s === 'auto' ? t('settings.textAuto') : `${Math.round(Number(s) * 100)}%`}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="text-[0.625rem] text-text-muted px-1 pb-1">
+            {uiScale === 'auto' ? t('settings.textAutoSub', { pct: Math.round(autoScale * 100) }) : t('settings.textSizeSub')}
+          </div>
         </Section>
 
         <Section title={t('settings.notifications')}>
@@ -517,7 +565,7 @@ export default function Settings() {
               permission state before scheduling, so a misleading "off" state
               never produces unwanted alerts. */}
           {!notifAvailable && (
-            <div className="text-[10px] text-warning px-1 py-1">
+            <div className="text-[0.625rem] text-warning px-1 py-1">
               {t('settings.notifPluginUnavail')}
             </div>
           )}
@@ -713,14 +761,14 @@ export default function Settings() {
             onChange={setNotifMacroKeywordsEnabled}
           />
           {notifMsg && (
-            <div className="text-[10px] text-warning mt-1">{notifMsg}</div>
+            <div className="text-[0.625rem] text-warning mt-1">{notifMsg}</div>
           )}
         </Section>
 
         <Section title={t('settings.apiKeys')}>
           {editingSlot ? (
             <div className="space-y-2 py-2">
-              <div className="text-[10px] uppercase tracking-wider text-text-muted">
+              <div className="text-[0.625rem] uppercase tracking-wider text-text-muted">
                 {editingSlot === 'finnhub' ? t('settings.finnhubSlot1') : t('settings.finnhubSlot2')}
               </div>
               <input
@@ -744,7 +792,7 @@ export default function Settings() {
                   {t('common.cancel')}
                 </button>
               </div>
-              <div className="text-[10px] text-text-muted">
+              <div className="text-[0.625rem] text-text-muted">
                 {t('settings.finnhubHelp')}
               </div>
             </div>
@@ -776,7 +824,7 @@ export default function Settings() {
                 }}
                 onClear={() => onClearKey('finnhub2')}
               />
-              <div className="text-[10px] text-text-muted py-1 px-1">
+              <div className="text-[0.625rem] text-text-muted py-1 px-1">
                 {t('settings.twoSlots')}
               </div>
               <ListRow label="CoinGecko" tag={{ text: t('settings.tagFree'), tone: 'green' }} />
@@ -807,7 +855,7 @@ export default function Settings() {
               </div>
             );
           })}
-          <div className="text-[10px] text-text-muted">
+          <div className="text-[0.625rem] text-text-muted">
             {t('settings.apiUsageResets')}
           </div>
         </Section>
@@ -839,7 +887,7 @@ export default function Settings() {
               >
                 {signOutBusy ? t('settings.working') : t('settings.keepLocal')}
               </button>
-              <p className="text-[10px] text-text-muted -mt-1 px-1">
+              <p className="text-[0.625rem] text-text-muted -mt-1 px-1">
                 {t('settings.keepLocalSub')}
               </p>
               <button
@@ -849,7 +897,7 @@ export default function Settings() {
               >
                 {t('settings.wipeLocal')}
               </button>
-              <p className="text-[10px] text-text-muted -mt-1 px-1">
+              <p className="text-[0.625rem] text-text-muted -mt-1 px-1">
                 {t('settings.wipeLocalSub')}
               </p>
               <button
@@ -968,21 +1016,21 @@ function FinnhubKeyRow({
     <div className="py-2 flex items-center justify-between gap-2">
       <div className="min-w-0">
         <div className="text-sm">{label}</div>
-        <div className={`text-[10px] ${value ? 'text-text-muted' : 'text-warning'}`}>
+        <div className={`text-[0.625rem] ${value ? 'text-text-muted' : 'text-warning'}`}>
           {value ? maskKey(value) : t('settings.notSet')}
         </div>
       </div>
       <div className="flex gap-1 flex-shrink-0">
         <button
           onClick={onEdit}
-          className="text-[10px] uppercase tracking-wider px-2 py-1 rounded-sm border border-primary/40 text-primary active:bg-primary/10"
+          className="text-[0.625rem] uppercase tracking-wider px-2 py-1 rounded-sm border border-primary/40 text-primary active:bg-primary/10"
         >
           {value ? t('common.edit') : t('settings.set')}
         </button>
         {value && (
           <button
             onClick={onClear}
-            className="text-[10px] uppercase tracking-wider px-2 py-1 rounded-sm border border-border text-text-muted active:text-danger active:border-danger"
+            className="text-[0.625rem] uppercase tracking-wider px-2 py-1 rounded-sm border border-border text-text-muted active:text-danger active:border-danger"
           >
             ✕
           </button>
@@ -1018,7 +1066,7 @@ function Toggle({
     <div className="py-2 flex items-center justify-between gap-3">
       <div className="min-w-0">
         <div className="text-sm">{label}</div>
-        {sub && <div className="text-[10px] text-text-muted">{sub}</div>}
+        {sub && <div className="text-[0.625rem] text-text-muted">{sub}</div>}
       </div>
       <button
         onClick={() => !locked && onChange(!value)}

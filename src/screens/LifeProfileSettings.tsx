@@ -148,11 +148,11 @@ export default function LifeProfileSettings() {
                       on ? 'border-primary bg-primary/15 text-primary' : 'border-glass-border text-transparent'
                     } ${on && !canDisable ? 'opacity-60' : ''}`}
                   >
-                    <span className="text-[11px] leading-none">✓</span>
+                    <span className="text-[0.6875rem] leading-none">✓</span>
                   </button>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm">{t(`domains.${key}`)}</div>
-                    <div className="text-[10px] text-text-muted">{t(DOMAIN_NOTE_KEY[key])}</div>
+                    <div className="text-[0.625rem] text-text-muted">{t(DOMAIN_NOTE_KEY[key])}</div>
                   </div>
                   <div className={`font-heading text-sm font-semibold tabular-nums ${on ? 'text-primary' : 'text-text-muted'}`}>
                     {weight}%
@@ -202,7 +202,7 @@ export default function LifeProfileSettings() {
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <div className="text-sm">{t('lifeProfile.workoutTarget')}</div>
-              <div className="text-[10px] text-text-muted">
+              <div className="text-[0.625rem] text-text-muted">
                 {t('lifeProfile.workoutTargetSub')}
               </div>
             </div>
@@ -232,7 +232,7 @@ export default function LifeProfileSettings() {
           </div>
         </div>
 
-        <p className="text-[10px] text-text-muted text-center px-2">
+        <p className="text-[0.625rem] text-text-muted text-center px-2">
           {t('lifeProfile.footer', { min: MIN_ENABLED_DOMAINS, weight: MIN_DOMAIN_WEIGHT })}
         </p>
       </div>

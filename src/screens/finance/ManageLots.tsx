@@ -242,7 +242,7 @@ export default function ManageLots() {
         <div className="card-elevated">
           <div className="flex items-center justify-between mb-2">
             <div>
-              <div className="text-[10px] uppercase tracking-[0.15em] text-text-muted">
+              <div className="text-[0.625rem] uppercase tracking-[0.15em] text-text-muted">
                 {holding.name}
               </div>
               <div className="font-heading font-semibold text-sm">
@@ -250,7 +250,7 @@ export default function ManageLots() {
               </div>
             </div>
             <div className="text-end">
-              <div className="text-[10px] uppercase tracking-wider text-text-muted">{t('fin.ml.totalUnits')}</div>
+              <div className="text-[0.625rem] uppercase tracking-wider text-text-muted">{t('fin.ml.totalUnits')}</div>
               <div className="font-heading font-bold text-lg">{formatNumber(holding.quantity)}</div>
             </div>
           </div>
@@ -325,7 +325,7 @@ export default function ManageLots() {
                 {t('common.cancel')}
               </button>
             </div>
-            <div className="text-[10px] text-text-muted">
+            <div className="text-[0.625rem] text-text-muted">
               {t('fin.ml.costHint')}
             </div>
           </div>
@@ -335,7 +335,7 @@ export default function ManageLots() {
         {selling && (
           <div className="card space-y-2">
             <div className="font-heading font-semibold text-sm">{t('fin.ml.recordSale')}</div>
-            <div className="text-[10px] text-text-muted">
+            <div className="text-[0.625rem] text-text-muted">
               {t('fin.ml.unitsAvailable', { units: formatNumber(remainingShares) })}
             </div>
             <div className="flex gap-2">
@@ -370,7 +370,7 @@ export default function ManageLots() {
               value={sellDate}
               onChange={(e) => setSellDate(e.target.value)}
             />
-            {saleError && <div className="text-[11px] text-danger">{saleError}</div>}
+            {saleError && <div className="text-[0.6875rem] text-danger">{saleError}</div>}
             {salePreview && (
               <div className="text-xs rounded-sm border border-border/60 bg-surface2/30 px-2.5 py-2 space-y-0.5">
                 <div className="flex justify-between">
@@ -413,7 +413,7 @@ export default function ManageLots() {
                 <div className="text-sm font-medium">
                   {t('fin.ml.unitsAt', { qty: formatNumber(lot.quantity), price: formatNumber(lot.costPerUnit), cur: lot.costCurrency })}
                 </div>
-                <div className="text-[10px] text-text-muted">
+                <div className="text-[0.625rem] text-text-muted">
                   {lot.purchaseDate ?? lot.createdAt.slice(0, 10)}
                   {' · '}{t('fin.ml.totalCost', { amount: formatNumber(lot.quantity * lot.costPerUnit, 2), cur: lot.costCurrency })}
                   {lot.notes && <> · {lot.notes}</>}

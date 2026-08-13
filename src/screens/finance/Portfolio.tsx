@@ -7,6 +7,8 @@ import SparkLine from '../../components/SparkLine';
 import DonutChart, { colorForIndex } from '../../components/DonutChart';
 import PortfolioValueChart from '../../components/PortfolioValueChart';
 import HoldingDetailSheet from '../../components/HoldingDetailSheet';
+import HoldingsTable from '../../components/HoldingsTable';
+import { useShellTier } from '../../lib/useShell';
 import EarningsStrip from '../../components/EarningsStrip';
 import DividendTracker from '../../components/DividendTracker';
 import { isHoldingClosed } from '../../lib/positionStatus';
@@ -20,6 +22,7 @@ import { useFinanceStore } from '../../store/useFinanceStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { formatCacheAge, formatLocale } from '../../utils/formatters';
 import { convertSync, normalizeCurrency } from '../../api/fxRates';
+import { holdingValueBase } from '../../lib/positionValue';
 import type { PortfolioHolding, PortfolioLot } from '../../types/finance';
 import type { QuoteResult } from '../../api/finnhub';
 import type { CryptoResult } from '../../api/coingecko';
@@ -127,8 +130,10 @@ function metricsFor(
         sparkKey: h.ticker.toUpperCase(),
       };
     }
+    // `native` survives only for the row's currency badge; the value itself
+    // comes from the shared helper so this and InsightsCard cannot drift.
     const native = normalizeCurrency(q.quote.c * h.quantity, q.currency);
-    const valueBase = convertSync(native.amount, native.currency, baseCurrency, rates);
+    const valueBase = holdingValueBase(h, stockQuotes, cryptoPrices, rates, baseCurrency);
     const dayNative = normalizeCurrency(q.quote.d * h.quantity, q.currency);
     const dayChangeBase = convertSync(dayNative.amount, dayNative.currency, baseCurrency, rates);
     const costBase = costBasisFromLots(h, lots, rates, baseCurrency);
@@ -163,9 +168,7 @@ function metricsFor(
       sparkKey: h.ticker.toLowerCase(),
     };
   }
-  const nativeEur = p.priceEur * h.quantity;
-  const valueBase =
-    baseCurrency === 'EUR' ? nativeEur : convertSync(nativeEur, 'EUR', baseCurrency, rates);
+  const valueBase = holdingValueBase(h, stockQuotes, cryptoPrices, rates, baseCurrency);
   // CoinGecko gives a 24h % directly. Approximate the 24h absolute change as
   // current_value × (pct/(100+pct)) so the math is consistent with how we'd
   // back out yesterday's price.
@@ -213,6 +216,9 @@ export default function Portfolio() {
   // id) keeps the sheet rendering its last frame during the slide-out
   // animation after onClose flips the parent's state.
   const [detailHolding, setDetailHolding] = useState<PortfolioHolding | null>(null);
+  // v1.9 Item 14b — the dense table is a desktop-tier surface; phone and
+  // tablet keep the card lists, which are the right shape for those widths.
+  const isDesktop = useShellTier() === 'desktop';
 
   // Helper used by all three Tier 2 surfaces — looks up a holding by ticker
   // (case-insensitive, equity bias) and opens the detail sheet.
@@ -415,7 +421,7 @@ export default function Portfolio() {
                   : t('fin.port.cacheAge', { age: formatCacheAge(oldestAge) })}
               </div>
               {refreshErrors.length === 0 && (
-                <div className="text-[10px] opacity-80">
+                <div className="text-[0.625rem] opacity-80">
                   {t('fin.port.cachedDataHint')}
                 </div>
               )}
@@ -424,7 +430,7 @@ export default function Portfolio() {
                   push the rest of the screen off; the adb logcat dump in
                   refreshPortfolio has the complete list for debugging. */}
               {refreshErrors.length > 0 && (
-                <div className="text-[10px] opacity-90 mt-1 space-y-0.5 font-mono">
+                <div className="text-[0.625rem] opacity-90 mt-1 space-y-0.5 font-mono">
                   {refreshErrors.slice(0, 8).map((e, i) => (
                     <div key={i} className="truncate">
                       · {e.provider}
@@ -447,7 +453,7 @@ export default function Portfolio() {
 
         {/* Totals card — value, day change, cost basis, P/L */}
         <div className="card-elevated">
-          <div className="text-[10px] uppercase tracking-[0.15em] text-text-muted mb-1">
+          <div className="text-[0.625rem] uppercase tracking-[0.15em] text-text-muted mb-1">
             {t('fin.port.totalValue')}
           </div>
           <div className="font-heading font-bold text-3xl tracking-tight">
@@ -461,18 +467,18 @@ export default function Portfolio() {
             </span>
           </div>
           {Math.abs(totals.cash) > 1e-9 && (
-            <div className="text-[10px] text-text-muted mt-1">
+            <div className="text-[0.625rem] text-text-muted mt-1">
               {t('fin.port.holdingsInclCash', { holdings: fmt(totals.positionsValue, baseCurrency), cash: fmt(totals.cash, baseCurrency) })}
             </div>
           )}
           {totals.hasCost && (
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/40 text-xs">
               <div>
-                <div className="text-[10px] uppercase tracking-wider text-text-muted">{t('fin.port.cost')}</div>
+                <div className="text-[0.625rem] uppercase tracking-wider text-text-muted">{t('fin.port.cost')}</div>
                 <div className="font-medium">{fmt(totals.cost, baseCurrency)}</div>
               </div>
               <div className="text-end">
-                <div className="text-[10px] uppercase tracking-wider text-text-muted">{t('fin.port.totalPL')}</div>
+                <div className="text-[0.625rem] uppercase tracking-wider text-text-muted">{t('fin.port.totalPL')}</div>
                 <div className={`font-medium ${totals.pl >= 0 ? 'text-success' : 'text-danger'}`}>
                   {totals.pl >= 0 ? '+' : '−'}{fmt(Math.abs(totals.pl), baseCurrency)}
                   {totals.plPct != null && (
@@ -482,7 +488,7 @@ export default function Portfolio() {
               </div>
             </div>
           )}
-          <div className="text-[10px] text-text-muted mt-2">
+          <div className="text-[0.625rem] text-text-muted mt-2">
             {totals.missingFx ? t('fin.port.partial') : ''}
             {t('fin.port.cached')}{oldestAge > 0 ? formatCacheAge(oldestAge) : t('fin.port.fresh')}
             {!totals.hasCost && holdings.length > 0 && (
@@ -508,7 +514,7 @@ export default function Portfolio() {
                   <button
                     key={v}
                     onClick={() => setAllocationView(v)}
-                    className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded-sm border ${
+                    className={`text-[0.625rem] uppercase tracking-wider px-1.5 py-0.5 rounded-sm border ${
                       allocationView === v
                         ? 'border-primary/40 bg-primary/5 text-primary'
                         : 'border-border text-text-muted'
@@ -537,7 +543,7 @@ export default function Portfolio() {
                         style={{ backgroundColor: colorForIndex(i) }}
                       />
                       <span className="flex-1 min-w-0 truncate">{t(`fin.port.cls${s.label}`, { defaultValue: s.label })}</span>
-                      <span className="text-text-muted text-[10px]">
+                      <span className="text-text-muted text-[0.625rem]">
                         {pct.toFixed(0)}%
                       </span>
                     </div>
@@ -565,11 +571,26 @@ export default function Portfolio() {
           onTapTicker={openDetailByTicker}
         />
 
+        {/* v1.9 Item 14b — at the desktop tier the two card lists collapse into
+            one dense table. The split into "Stocks + ETFs" and "Crypto" exists
+            because a phone can only show a handful of fields, so grouping is
+            how you tell positions apart; a table has a Sector column doing
+            that job, and splitting it would just mean two scroll regions and
+            two totals. Below 1201px nothing changes — the cards are untouched. */}
+        {isDesktop ? (
+          <HoldingsTable
+            rows={positions}
+            totalBase={totals.total}
+            baseCurrency={baseCurrency}
+            onSelect={setDetailHolding}
+          />
+        ) : (
+        <>
         {/* Stocks + ETFs list — value, P/L, sparkline */}
         <div className="card">
           <div className="flex items-center justify-between mb-3">
             <span className="font-heading font-semibold text-sm">{t('fin.port.stocksEtfs')}</span>
-            <span className="text-[9px] uppercase tracking-wider text-primary border border-primary/40 bg-primary/5 rounded-sm px-1.5 py-0.5">
+            <span className="text-[0.5625rem] uppercase tracking-wider text-primary border border-primary/40 bg-primary/5 rounded-sm px-1.5 py-0.5">
               {stockBadge}
             </span>
           </div>
@@ -594,7 +615,7 @@ export default function Portfolio() {
         <div className="card">
           <div className="flex items-center justify-between mb-3">
             <span className="font-heading font-semibold text-sm">{t('fin.port.crypto')}</span>
-            <span className="text-[9px] uppercase tracking-wider text-success border border-success/40 bg-success/5 rounded-sm px-1.5 py-0.5">
+            <span className="text-[0.5625rem] uppercase tracking-wider text-success border border-success/40 bg-success/5 rounded-sm px-1.5 py-0.5">
               CoinGecko
             </span>
           </div>
@@ -614,6 +635,8 @@ export default function Portfolio() {
             />
           ))}
         </div>
+        </>
+        )}
 
         {/* v1.3.2 — portfolio cash (proceeds + deposits − buys − withdrawals),
             with deposit/withdraw transfers to/from a liquid account. */}
@@ -668,7 +691,7 @@ function HoldingRow({
       <div className="flex items-center gap-2">
         <div className="flex flex-col min-w-0 w-[68px]">
           <span className="text-sm font-medium truncate">{holding.ticker.toUpperCase()}</span>
-          <span className="text-[9px] uppercase tracking-wider text-text-muted truncate">
+          <span className="text-[0.5625rem] uppercase tracking-wider text-text-muted truncate">
             {holding.assetType === 'etf' ? `ETF · ${currency}` : currency}
             {weightLabel && (
               <>
@@ -697,11 +720,11 @@ function HoldingRow({
           <span className="text-sm whitespace-nowrap">
             {valueBase != null ? fmtCompact(valueBase, baseCurrency) : '—'}
           </span>
-          <span className={`text-[10px] whitespace-nowrap ${dayChangePct >= 0 ? 'text-success' : 'text-danger'}`}>
+          <span className={`text-[0.625rem] whitespace-nowrap ${dayChangePct >= 0 ? 'text-success' : 'text-danger'}`}>
             {dayChangePct >= 0 ? '↑' : '↓'} {Math.abs(dayChangePct).toFixed(2)}%
           </span>
           {plBase != null && plPct != null && (
-            <span className={`text-[9px] whitespace-nowrap ${plBase >= 0 ? 'text-success' : 'text-danger'} opacity-80`}>
+            <span className={`text-[0.5625rem] whitespace-nowrap ${plBase >= 0 ? 'text-success' : 'text-danger'} opacity-80`}>
               {plBase >= 0 ? '+' : '−'}{fmtCompact(Math.abs(plBase), baseCurrency)}{' '}
               ({plBase >= 0 ? '+' : ''}{plPct.toFixed(1)}%)
             </span>

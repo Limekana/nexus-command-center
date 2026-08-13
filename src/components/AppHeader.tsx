@@ -26,7 +26,9 @@ export default function AppHeader({ title, back, backLabel, action, showAvatar =
     // the action area is wide (the Finance overview, with 5 action chips,
     // was the offender). Action area is `flex-shrink-0` so it takes only
     // its natural width and stops claiming title space.
-    <header className="flex items-center justify-between py-3 mb-3 gap-2">
+    // v1.9 — the gap below the header matches the desktop grid gap, so the
+    // first row of cards sits on the same rhythm as every row beneath it.
+    <header className="flex items-center justify-between py-3 mb-3 desktop:mb-4 gap-2">
       <div className="flex items-center gap-3 min-w-0 flex-1">
         {back && (
           <button
@@ -44,7 +46,7 @@ export default function AppHeader({ title, back, backLabel, action, showAvatar =
         {showAvatar && (
           <button
             onClick={() => navigate('/settings')}
-            className="w-9 h-9 rounded-full glass-soft flex items-center justify-center text-[10px] font-heading font-semibold text-primary press-spring flex-shrink-0"
+            className="w-9 h-9 rounded-full glass-soft flex items-center justify-center text-[0.625rem] font-heading font-semibold text-primary press-spring flex-shrink-0"
             aria-label="Account"
           >
             {initials}

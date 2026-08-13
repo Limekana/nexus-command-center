@@ -89,7 +89,9 @@
     "home": "Início",
     "finance": "Finanças",
     "life": "Vida",
-    "tasks": "Tarefas"
+    "tasks": "Tarefas",
+    "collapseSidebar": "Recolher barra lateral",
+    "expandSidebar": "Expandir barra lateral"
   },
   "life": {
     "notCountedYet": "Ainda não contabilizado",
@@ -326,7 +328,11 @@
     "deleteAccountFailed": "Falha na exclusão: {{msg}}",
     "support": "Apoio",
     "supportDev": "Apoiar o desenvolvimento",
-    "supportDevSub": "Pague-me um café no Ko-fi"
+    "supportDevSub": "Pague-me um café no Ko-fi",
+    "textSize": "Tamanho do texto",
+    "textAuto": "Auto",
+    "textSizeSub": "Aplica-se em todo o lado, incluindo no telemóvel.",
+    "textAutoSub": "{{pct}}% neste tamanho de ecrã — maior no computador, normal no telemóvel."
   },
   "lock": {
     "secureAccess": "Acesso seguro",
@@ -629,6 +635,36 @@
     "greed": "Ganância"
   },
   "fin": {
+    "flow": {
+      "title": "Para onde foi o dinheiro",
+      "empty": "Sem receitas ou despesas neste período.",
+      "in": "Entrada",
+      "out": "Saída",
+      "surplus": "{{amount}} sobrou",
+      "deficit": "{{amount}} coberto por reservas",
+      "otherIncome": "Outras receitas",
+      "uncategorised": "Sem categoria",
+      "saved": "Poupado",
+      "debt": "Dívida paga",
+      "leftover": "Sobrou",
+      "fromReserves": "Das reservas"
+    },
+    "tbl": {
+      "position": "Posição",
+      "sector": "Setor",
+      "shares": "Quotas",
+      "cost": "Custo de aquisição",
+      "value": "Valor de mercado",
+      "day": "Dia",
+      "return": "Retorno total",
+      "allocation": "Alocação",
+      "total": "Total",
+      "positions_one": "{{count}} posição",
+      "positions_other": "{{count}} posições",
+      "aria": "Carteira",
+      "filterSector": "Mostrar apenas {{sector}}",
+      "ofCount": "{{count}} posições"
+    },
     "finance": "Finanças",
     "tx": {
       "expense": "💸 Despesa",
@@ -798,7 +834,8 @@
       "empty": "Nenhum item acompanhado ainda. Toque em + Acompanhar para seguir um ticker sem possuí-lo.",
       "targetAboveHit": "Alvo ≥ atingido",
       "targetBelowHit": "Alvo ≤ atingido",
-      "stopWatching": "Parar de acompanhar {{ticker}}?"
+      "stopWatching": "Parar de acompanhar {{ticker}}?",
+      "pickOne": "Escolha um título para ver o detalhe."
     },
     "mh": {
       "title": "Gerenciar ativos",
@@ -1003,6 +1040,131 @@
       "add": "Adicionar",
       "set": "Definir",
       "amountIn": "Valor em {{cur}}"
+    },
+    "imp": {
+      "entryTitle": "Importar e exportar",
+      "entrySub": "Traga um CSV do banco ou exporte tudo",
+      "title": "Importar transações",
+      "stepFile": "Escolha um ficheiro",
+      "stepMap": "Mapeie as colunas",
+      "stepReview": "Reveja e importe",
+      "dropHere": "Largue um CSV aqui",
+      "dropHint": "Separado por vírgulas, pontos e vírgulas ou tabulações. Nada é guardado até confirmar.",
+      "chooseFile": "Escolher ficheiro",
+      "clear": "Limpar",
+      "exportAll": "Exportar {{count}} transações",
+      "rowsFound": "{{count}} linhas encontradas",
+      "tooBig": "O ficheiro tem mais de {{mb}} MB — um extrato bancário costuma ter algumas centenas de kilobytes.",
+      "unreadable": "Não foi possível ler o ficheiro como texto.",
+      "emptyFile": "O ficheiro não tem linhas.",
+      "columnN": "Coluna {{n}}",
+      "roleFor": "Função de {{column}}",
+      "role": {
+        "ignore": "Ignorar",
+        "date": "Data",
+        "description": "Descrição",
+        "amount": "Valor",
+        "debit": "Débito (saída)",
+        "credit": "Crédito (entrada)",
+        "category": "Categoria",
+        "notes": "Notas"
+      },
+      "account": "Importar para",
+      "dateOrder": "Ordem da data",
+      "dmy": "Dia / mês / ano",
+      "mdy": "Mês / dia / ano",
+      "ymd": "Ano / mês / dia",
+      "decimal": "Separador decimal",
+      "decDot": "1234.56",
+      "decComma": "1234,56",
+      "delimiter": "Separador",
+      "tab": "Tabulação",
+      "firstRowHeader": "A primeira linha é um cabeçalho",
+      "invertSign": "Valores positivos são despesas",
+      "createCategories": "Criar categorias em falta",
+      "dateAmbiguous": "Todas as datas do ficheiro leem-se igual nas duas ordens, por isso a ordem não pôde ser deduzida. Confirme antes de importar.",
+      "willCreate": "Serão criadas {{count}} categorias novas: {{names}}",
+      "noTransfers": "As transferências não são importadas — um CSV não traz conta de destino. Adicione-as à mão.",
+      "selected": "selecionadas",
+      "duplicates": "duplicadas",
+      "skipped": "inutilizáveis",
+      "selectAll": "Selecionar tudo",
+      "selectNone": "Não selecionar nada",
+      "previewAria": "Pré-visualização da importação",
+      "include": "Incluir",
+      "includeRow": "Incluir a linha {{line}}",
+      "date": "Data",
+      "description": "Descrição",
+      "category": "Categoria",
+      "amount": "Valor",
+      "status": "Estado",
+      "bad": "?",
+      "ok": "Nova",
+      "problem": {
+        "date": "sem data",
+        "amount": "sem valor",
+        "description": "sem descrição"
+      },
+      "dup": {
+        "existing": "Já existe",
+        "file": "Repetida"
+      },
+      "truncated": "A mostrar as primeiras {{shown}} de {{total}} linhas — a seleção e a importação continuam a abranger as {{total}}.",
+      "importCount": "Importar {{count}}",
+      "importing": "A importar…",
+      "cancel": "Cancelar",
+      "needAccount": "Crie primeiro uma conta — cada transação tem de ir para algum lado.",
+      "doneCount": "Importadas {{count}} transações."
+    },
+    "nwt": {
+      "title": "Património ao longo do tempo",
+      "empty": "Ainda não há nada para mostrar — adicione uma conta ou uma transação.",
+      "aria": "Evolução do património",
+      "overWindow": "em {{count}} meses",
+      "months": "{{count}} m",
+      "currency": "Moeda de apresentação",
+      "holdings": "Investimentos",
+      "fromSnapshot": "instantâneo",
+      "portfolioCash": "Dinheiro da carteira",
+      "ledger": "registo",
+      "breakdownFor": "Detalhe — {{month}}",
+      "addedHere": "Adicionado aqui: {{names}}",
+      "noSnapshotYet": "Nenhum instantâneo da carteira chega tão atrás, por isso os investimentos faltam aqui em vez de valerem zero.",
+      "nothingHere": "Ainda não existia nenhuma conta neste ponto.",
+      "total": "Total",
+      "fxCaveat": "Os saldos passados noutras moedas são reexpressos às taxas de hoje.",
+      "historyCaveat": "O histórico começa quando cada conta foi adicionada — um saldo inicial não tem data.",
+      "noRate": "Ainda não há taxa para {{currency}} — a mostrar a moeda base."
+    },
+    "bvt": {
+      "title": "Orçamento vs real",
+      "empty": "Sem despesas registadas neste período.",
+      "aria": "Orçamento face ao real por mês",
+      "category": "Categoria",
+      "budget": "Orçamento",
+      "total": "Total",
+      "noLimit": "Sem orçamento",
+      "noLimitsSet": "Nenhuma categoria tem ainda orçamento mensal, por isso não há termo de comparação.",
+      "limitCaveat": "Comparado com o orçamento atual de cada categoria — os limites anteriores não são guardados."
+    },
+    "dtg": {
+      "title": "Entre domínios",
+      "empty": "Ainda não há semanas suficientes.",
+      "noData": "sem dados",
+      "weekOf": "Semana de {{date}}",
+      "scaleCaveat": "Cada linha é escalada ao seu próprio intervalo — as alturas comparam-se dentro de uma linha, não entre linhas.",
+      "sessions": "{{count}} sessões",
+      "minutes": "{{count}} min"
+    },
+    "qa": {
+      "title": "Adição rápida",
+      "placeholder": "12,50 café #alimentação @conta",
+      "needAmount": "valor?",
+      "needDescription": "para quê?",
+      "noCategory": "sem categoria",
+      "noAccount": "sem conta",
+      "save": "Guardar",
+      "hint": "#categoria  @conta  today/yesterday  ·  Tab completa  ·  Enter guarda  ·  Esc fecha"
     }
   }
 }

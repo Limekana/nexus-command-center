@@ -35,7 +35,9 @@
     "home": "Koti",
     "finance": "Talous",
     "life": "Elämä",
-    "tasks": "Tehtävät"
+    "tasks": "Tehtävät",
+    "collapseSidebar": "Kutista sivupalkki",
+    "expandSidebar": "Laajenna sivupalkki"
   },
   "life": {
     "notCountedYet": "Ei vielä laskettu",
@@ -265,7 +267,11 @@
     "deleteAccountFailed": "Poisto epäonnistui: {{msg}}",
     "support": "Tuki",
     "supportDev": "Tue kehitystä",
-    "supportDevSub": "Tarjoa kahvit Ko-fissa"
+    "supportDevSub": "Tarjoa kahvit Ko-fissa",
+    "textSize": "Tekstin koko",
+    "textAuto": "Auto",
+    "textSizeSub": "Vaikuttaa kaikkialla, myös puhelimessa.",
+    "textAutoSub": "{{pct}} % tällä näytön koolla — suurempi työpöydällä, tavallinen puhelimessa."
   },
   "days": {
     "long": {
@@ -521,6 +527,36 @@
     "forgotPin": "Unohtuiko PIN? Nollaa kohdasta Asetukset → Tyhjennä kaikki tiedot"
   },
   "fin": {
+    "flow": {
+      "title": "Minne raha meni",
+      "empty": "Tältä jaksolta ei ole tuloja eikä menoja.",
+      "in": "Sisään",
+      "out": "Ulos",
+      "surplus": "{{amount}} jäi yli",
+      "deficit": "{{amount}} katettu säästöistä",
+      "otherIncome": "Muut tulot",
+      "uncategorised": "Luokittelematon",
+      "saved": "Säästöön",
+      "debt": "Velkaa maksettu",
+      "leftover": "Jäi yli",
+      "fromReserves": "Säästöistä"
+    },
+    "tbl": {
+      "position": "Positio",
+      "sector": "Toimiala",
+      "shares": "Osuudet",
+      "cost": "Hankintahinta",
+      "value": "Markkina-arvo",
+      "day": "Päivä",
+      "return": "Kokonaistuotto",
+      "allocation": "Jakauma",
+      "total": "Yhteensä",
+      "positions_one": "{{count}} positio",
+      "positions_other": "{{count}} positiota",
+      "aria": "Omistukset",
+      "filterSector": "Näytä vain {{sector}}",
+      "ofCount": "{{count}} positiota"
+    },
     "finance": "Talous",
     "tx": {
       "expense": "💸 Meno",
@@ -687,7 +723,8 @@
       "empty": "Ei vielä seurattavia. Napauta + Seuraa seurataksesi tikkeriä omistamatta sitä.",
       "targetAboveHit": "Tavoite ≥ saavutettu",
       "targetBelowHit": "Tavoite ≤ saavutettu",
-      "stopWatching": "Lopetetaanko seuranta {{ticker}}?"
+      "stopWatching": "Lopetetaanko seuranta {{ticker}}?",
+      "pickOne": "Valitse tikkeri nähdäksesi tiedot."
     },
     "mh": {
       "title": "Hallitse omistuksia",
@@ -889,6 +926,131 @@
       "add": "Lisää",
       "set": "Aseta",
       "amountIn": "Summa valuutassa {{cur}}"
+    },
+    "imp": {
+      "entryTitle": "Tuonti ja vienti",
+      "entrySub": "Tuo pankin CSV tai vie kaikki",
+      "title": "Tuo tapahtumat",
+      "stepFile": "Valitse tiedosto",
+      "stepMap": "Kohdista sarakkeet",
+      "stepReview": "Tarkista ja tuo",
+      "dropHere": "Pudota CSV tähän",
+      "dropHint": "Pilkulla, puolipisteellä tai sarkaimella eroteltu. Mitään ei tallenneta ennen vahvistusta.",
+      "chooseFile": "Valitse tiedosto",
+      "clear": "Tyhjennä",
+      "exportAll": "Vie {{count}} tapahtumaa",
+      "rowsFound": "{{count}} riviä löytyi",
+      "tooBig": "Tiedosto on yli {{mb}} Mt — pankin tiliote on yleensä muutama sata kilotavua.",
+      "unreadable": "Tiedostoa ei voitu lukea tekstinä.",
+      "emptyFile": "Tiedostossa ei ole rivejä.",
+      "columnN": "Sarake {{n}}",
+      "roleFor": "Sarakkeen {{column}} rooli",
+      "role": {
+        "ignore": "Ohita",
+        "date": "Päivä",
+        "description": "Kuvaus",
+        "amount": "Summa",
+        "debit": "Veloitus (ulos)",
+        "credit": "Hyvitys (sisään)",
+        "category": "Luokka",
+        "notes": "Muistiinpanot"
+      },
+      "account": "Tuo tilille",
+      "dateOrder": "Päivämäärän järjestys",
+      "dmy": "Päivä / kuukausi / vuosi",
+      "mdy": "Kuukausi / päivä / vuosi",
+      "ymd": "Vuosi / kuukausi / päivä",
+      "decimal": "Desimaalierotin",
+      "decDot": "1234.56",
+      "decComma": "1234,56",
+      "delimiter": "Erotin",
+      "tab": "Sarkain",
+      "firstRowHeader": "Ensimmäinen rivi on otsikko",
+      "invertSign": "Positiiviset summat ovat menoja",
+      "createCategories": "Luo puuttuvat luokat",
+      "dateAmbiguous": "Tiedoston jokainen päivä lukeutuu samoin kummassakin järjestyksessä, joten järjestystä ei voitu päätellä. Tarkista se ennen tuontia.",
+      "willCreate": "Luodaan {{count}} uutta luokkaa: {{names}}",
+      "noTransfers": "Siirtoja ei tuoda — CSV ei kerro kohdetiliä. Lisää ne käsin.",
+      "selected": "valittu",
+      "duplicates": "kaksoiskappaletta",
+      "skipped": "kelvotonta",
+      "selectAll": "Valitse kaikki",
+      "selectNone": "Poista valinnat",
+      "previewAria": "Tuonnin esikatselu",
+      "include": "Ota mukaan",
+      "includeRow": "Ota rivi {{line}} mukaan",
+      "date": "Päivä",
+      "description": "Kuvaus",
+      "category": "Luokka",
+      "amount": "Summa",
+      "status": "Tila",
+      "bad": "?",
+      "ok": "Uusi",
+      "problem": {
+        "date": "ei päivää",
+        "amount": "ei summaa",
+        "description": "ei kuvausta"
+      },
+      "dup": {
+        "existing": "On jo",
+        "file": "Toisto"
+      },
+      "truncated": "Näytetään ensimmäiset {{shown}} riviä {{total}}:sta — valinta ja tuonti koskevat silti kaikkia {{total}}.",
+      "importCount": "Tuo {{count}}",
+      "importing": "Tuodaan…",
+      "cancel": "Peruuta",
+      "needAccount": "Luo ensin tili — jokaisen tapahtuman on päädyttävä jonnekin.",
+      "doneCount": "Tuotiin {{count}} tapahtumaa."
+    },
+    "nwt": {
+      "title": "Nettovarallisuus ajan mittaan",
+      "empty": "Ei vielä piirrettävää — lisää tili tai tapahtuma.",
+      "aria": "Nettovarallisuuden kehitys",
+      "overWindow": "{{count}} kuukauden aikana",
+      "months": "{{count}} kk",
+      "currency": "Näyttövaluutta",
+      "holdings": "Sijoitukset",
+      "fromSnapshot": "tilannekuva",
+      "portfolioCash": "Salkun käteinen",
+      "ledger": "kirjanpito",
+      "breakdownFor": "Erittely — {{month}}",
+      "addedHere": "Lisätty tässä: {{names}}",
+      "noSnapshotYet": "Salkusta ei ole näin kaukaa tilannekuvaa, joten sijoitukset puuttuvat tästä eivätkä ole nolla.",
+      "nothingHere": "Tässä vaiheessa ei ollut vielä yhtään tiliä.",
+      "total": "Yhteensä",
+      "fxCaveat": "Muissa valuutoissa olevat menneet saldot on muunnettu tämän päivän kursseilla.",
+      "historyCaveat": "Historia alkaa siitä, kun tili lisättiin — alkusaldolla ei ole päivämäärää.",
+      "noRate": "Valuutalle {{currency}} ei ole vielä kurssia — näytetään perusvaluutta."
+    },
+    "bvt": {
+      "title": "Budjetti vs. toteuma",
+      "empty": "Tältä jaksolta ei ole kirjattuja menoja.",
+      "aria": "Budjetti ja toteuma kuukausittain",
+      "category": "Luokka",
+      "budget": "Budjetti",
+      "total": "Yhteensä",
+      "noLimit": "Ei budjettia",
+      "noLimitsSet": "Millekään luokalle ei ole vielä asetettu kuukausibudjettia, joten vertailukohtaa ei ole.",
+      "limitCaveat": "Verrataan kunkin luokan nykyiseen budjettiin — vanhoja rajoja ei säilytetä."
+    },
+    "dtg": {
+      "title": "Osa-alueiden välillä",
+      "empty": "Viikkoja ei ole vielä tarpeeksi.",
+      "noData": "ei tietoa",
+      "weekOf": "Viikko {{date}}",
+      "scaleCaveat": "Jokainen rivi skaalataan omaan vaihteluväliinsä — korkeuksia voi verrata rivin sisällä, ei rivien välillä.",
+      "sessions": "{{count}} kertaa",
+      "minutes": "{{count}} min"
+    },
+    "qa": {
+      "title": "Pikalisäys",
+      "placeholder": "12,50 kahvi #ruoka @käyttötili",
+      "needAmount": "summa?",
+      "needDescription": "mistä?",
+      "noCategory": "ei luokkaa",
+      "noAccount": "ei tiliä",
+      "save": "Tallenna",
+      "hint": "#luokka  @tili  today/yesterday  ·  Sarkain täydentää  ·  Enter tallentaa  ·  Esc sulkee"
     }
   },
   "lifeProfile": {

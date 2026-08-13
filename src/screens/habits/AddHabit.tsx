@@ -146,7 +146,7 @@ export default function AddHabit() {
               </Pill>
             ))}
           </div>
-          <div className="text-[10px] text-text-muted mt-1.5">
+          <div className="text-[0.625rem] text-text-muted mt-1.5">
             {t(TYPES.find((opt) => opt.key === type)?.hintKey ?? 'addhabit.binaryHint')}
           </div>
         </div>
@@ -192,7 +192,7 @@ export default function AddHabit() {
                 />
               </label>
             </div>
-            <div className="text-[10px] text-text-muted">
+            <div className="text-[0.625rem] text-text-muted">
               {t('addhabit.dayCountsWhen')}
             </div>
           </div>
@@ -234,7 +234,7 @@ export default function AddHabit() {
                 </Pill>
               ))}
             </div>
-            <div className="text-[10px] text-text-muted">
+            <div className="text-[0.625rem] text-text-muted">
               {t('addhabit.streakGrace')}
             </div>
           </div>
@@ -249,7 +249,7 @@ export default function AddHabit() {
             value={reminderTime}
             onChange={(e) => setReminderTime(e.target.value)}
           />
-          <div className="text-[10px] text-text-muted mt-1">
+          <div className="text-[0.625rem] text-text-muted mt-1">
             {reminderTime
               ? t('addhabit.reminderAt', { time: reminderTime })
               : t('addhabit.reminderBlank')}
@@ -281,7 +281,7 @@ export default function AddHabit() {
         </div>
 
         {validationMsg && (
-          <div className="glass-soft rounded-lg p-2 text-[11px] text-warning text-center">
+          <div className="glass-soft rounded-lg p-2 text-[0.6875rem] text-warning text-center">
             {validationMsg}
           </div>
         )}
@@ -301,7 +301,7 @@ export default function AddHabit() {
             {t('addhabit.deleteHabit')}
           </button>
         )}
-        <div className="text-[10px] text-text-muted text-center">
+        <div className="text-[0.625rem] text-text-muted text-center">
           {t('habits.syncedAcross')}
         </div>
       </div>

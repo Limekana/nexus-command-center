@@ -93,24 +93,41 @@ export default function Dashboard() {
           </>
         }
       />
-      <div className="space-y-3">
-        <SyncStatusChip />
+      {/* v1.9 Item 14 — desktop arrangement, not a desktop redesign.
+          Every card below is the same component with the same styling it has
+          on the phone; only their arrangement changes. Below 1201px this is
+          exactly the old single `space-y-3` stack, in the same order, because
+          the three groups render in sequence and each carries its own
+          `space-y-3`. At `desktop:` they become columns, so the width the
+          shell now has gets used by *more cards side by side* rather than by
+          stretching each card — which is what made the wide layout read as a
+          blown-up phone screen. Three groups rather than a generic auto-flow
+          so related things stay together: live signals, then the numbers,
+          then the module entry points.
+          `items-start` matters — without it the grid stretches every column to
+          the tallest one and the short cards grow dead space inside. */}
+      <div className="space-y-3 desktop:space-y-0 desk-grid">
+        <div className="desk-stack">
+          <SyncStatusChip />
 
-        {/* v1.2 — daily habits surface above the stat grid. The strip itself
-            handles all empty/eligible/all-rest-day states; we render it
-            unconditionally so the layout doesn't shift based on data. */}
-        <HabitsDashboardStrip />
+          {/* v1.2 — daily habits surface above the stat grid. The strip itself
+              handles all empty/eligible/all-rest-day states; we render it
+              unconditionally so the layout doesn't shift based on data. */}
+          <HabitsDashboardStrip />
 
-        {/* v1.5 — Work domain daily self-assessment. Self-gates: renders only
-            when the active Life Profile includes Work, on weekday afternoons. */}
-        <WorkRatingCard />
+          {/* v1.5 — Work domain daily self-assessment. Self-gates: renders only
+              when the active Life Profile includes Work, on weekday afternoons. */}
+          <WorkRatingCard />
 
-        {/* v1.2 — Cross-domain life-patterns rotator. Surfaces beneath the
-            habits strip; handles its own baseline/quiet/insight states. */}
-        <CrossDomainCard />
+          {/* v1.2 — Cross-domain life-patterns rotator. Surfaces beneath the
+              habits strip; handles its own baseline/quiet/insight states. */}
+          <CrossDomainCard />
+        </div>
 
-        <div>
+        <div className="desk-stack">
           <div className="sec mb-2">{t('dash.overview')}</div>
+          {/* Stays 2-up in its column at every width — these are four small
+              stat tiles and a 1×4 row of them reads as a strip, not a group. */}
           <div className="grid grid-cols-2 gap-2">
             <StatCard
               value={formatCurrency(Math.max(0, monthBudget - monthExpenses))}
@@ -139,6 +156,7 @@ export default function Dashboard() {
           </div>
         </div>
 
+        <div className="desk-stack">
         <div className="sec mb-2">{t('dash.modules')}</div>
         <div className="grid grid-cols-1 gap-2">
           <ModuleSummaryCard title={t('domains.finance')} icon="💰" tag={monthBudget > 0 ? t('dash.tagLive') : t('dash.tagIdle')} to="/finance">
@@ -181,11 +199,12 @@ export default function Dashboard() {
             {tasksOpen.length === 1 && <Empty msg=" " />}
           </ModuleSummaryCard>
         </div>
+        </div>
       </div>
     </>
   );
 }
 
 function Empty({ msg }: { msg: string }) {
-  return <div className="text-[11px] text-text-muted/70 italic">{msg}</div>;
+  return <div className="text-[0.6875rem] text-text-muted/70 italic">{msg}</div>;
 }

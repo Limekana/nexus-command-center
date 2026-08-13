@@ -109,7 +109,7 @@ export default function ShareModal({
             ✕
           </button>
         </div>
-        <p className="text-[10px] text-text-muted mb-3">
+        <p className="text-[0.625rem] text-text-muted mb-3">
           People you invite see this on their own sign-in. Invite limit: 50 per day.
         </p>
 
@@ -128,14 +128,14 @@ export default function ShareModal({
               key={s.user_id}
               className="flex items-center gap-2 py-1.5 border-b border-border/40 last:border-0"
             >
-              <div className="w-7 h-7 rounded-full bg-primary/15 text-primary flex items-center justify-center text-[10px] font-heading font-bold">
+              <div className="w-7 h-7 rounded-full bg-primary/15 text-primary flex items-center justify-center text-[0.625rem] font-heading font-bold">
                 {initialsOf(s.display_name)}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm truncate">
                   {s.display_name || 'User'}
                 </div>
-                <div className="text-[10px] text-text-muted">
+                <div className="text-[0.625rem] text-text-muted">
                   {s.permission === 'write' ? 'Can edit' : 'Read only'}
                 </div>
               </div>
@@ -196,7 +196,7 @@ export default function ShareModal({
           </div>
         )}
         {success && !error && (
-          <div className="text-[10px] text-success mt-2">{success}</div>
+          <div className="text-[0.625rem] text-success mt-2">{success}</div>
         )}
       </div>
     </div>

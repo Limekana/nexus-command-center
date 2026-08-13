@@ -252,18 +252,18 @@ export default function SavingsGoals() {
         <div className={`glass rounded-xl p-4 ${overAllocated ? 'border-warning/45' : ''}`}>
           <div className="flex items-baseline justify-between">
             <span className="sec">{t('fin.sg.availableToAllocate')}</span>
-            <span className="text-[10px] text-text-muted">{t('fin.sg.inCur', { cur: baseCurrency })}</span>
+            <span className="text-[0.625rem] text-text-muted">{t('fin.sg.inCur', { cur: baseCurrency })}</span>
           </div>
           <div className={`font-heading font-bold text-3xl tracking-tight mt-1 ${overAllocated ? 'text-warning' : 'text-text'}`}>
             {fmt(available.available, baseCurrency)}
           </div>
           {overAllocated && (
-            <div className="text-[11px] text-warning mt-1">
+            <div className="text-[0.6875rem] text-warning mt-1">
               {t('fin.sg.overAllocated', { amount: fmt(Math.abs(available.available), baseCurrency) })}
             </div>
           )}
           {noLiquidAssets && (
-            <div className="text-[11px] text-text-muted mt-1">
+            <div className="text-[0.6875rem] text-text-muted mt-1">
               {t('fin.sg.noLiquid1')}
               <span className="text-primary"> {t('fin.finance')} → {t('fin.ov.netWorth')}</span> {t('fin.sg.noLiquid2')}
             </div>
@@ -274,7 +274,7 @@ export default function SavingsGoals() {
             <Cell label={t('fin.sg.allocated')} value={fmtCompact(available.allocatedBase, baseCurrency)} tone="muted" />
           </div>
           {available.unconvertable.length > 0 && (
-            <div className="text-[10px] text-warning mt-2">
+            <div className="text-[0.625rem] text-warning mt-2">
               {t('fin.sg.unconvertable', { count: available.unconvertable.length, cur: baseCurrency })}
             </div>
           )}
@@ -290,7 +290,7 @@ export default function SavingsGoals() {
         {goals.length === 0 ? (
           <div className="glass rounded-xl p-6 text-center">
             <div className="font-heading font-semibold text-sm mb-1">{t('fin.sg.noGoals')}</div>
-            <div className="text-[11px] text-text-muted">
+            <div className="text-[0.6875rem] text-text-muted">
               {t('fin.sg.noGoalsSub')}
             </div>
           </div>
@@ -316,7 +316,7 @@ export default function SavingsGoals() {
           </div>
         )}
 
-        <div className="text-[10px] text-text-muted text-center">
+        <div className="text-[0.625rem] text-text-muted text-center">
           {t('fin.sg.localOnly')}
         </div>
       </div>
@@ -371,7 +371,7 @@ export default function SavingsGoals() {
               value={allocated}
               onChange={(e) => setAllocatedInput(e.target.value)}
             />
-            <div className="text-[10px] text-text-muted mt-1">
+            <div className="text-[0.625rem] text-text-muted mt-1">
               {t('fin.sg.allocatedHint')}
             </div>
           </div>
@@ -415,7 +415,7 @@ export default function SavingsGoals() {
         title={t('fin.sg.moveToInvest')}
       >
         <div className="space-y-3">
-          <div className="text-[11px] text-text-muted">
+          <div className="text-[0.6875rem] text-text-muted">
             {t('fin.sg.investHint')}
           </div>
           <div>
@@ -460,7 +460,7 @@ export default function SavingsGoals() {
               onChange={(e) => setInvestNavigateAfter(e.target.checked)}
               className="w-4 h-4"
             />
-            <span className="text-[11px] text-text-muted">
+            <span className="text-[0.6875rem] text-text-muted">
               {t('fin.sg.goToPortfolio')}
             </span>
           </label>
@@ -489,7 +489,7 @@ function Cell({ label, value, tone = 'default' }: {
 }) {
   return (
     <div>
-      <div className="text-[9px] uppercase tracking-wider text-text-muted">{label}</div>
+      <div className="text-[0.5625rem] uppercase tracking-wider text-text-muted">{label}</div>
       <div className={`text-sm font-medium ${tone === 'muted' ? 'text-text-muted' : 'text-text'}`}>{value}</div>
     </div>
   );
@@ -573,7 +573,7 @@ function GoalRow({ goal, onAllocate, onSet, onEdit, onDelete }: GoalRowProps) {
             {!isBuffer && completed && <span aria-hidden>✓</span>}
             <span className="truncate">{isBuffer ? t('fin.sg.emergencyBuffer') : goal.title}</span>
           </div>
-          <div className="text-[10px] text-text-muted truncate">
+          <div className="text-[0.625rem] text-text-muted truncate">
             {isBuffer ? (
               goal.targetAmount > 0 ? (
                 <>
@@ -620,9 +620,9 @@ function GoalRow({ goal, onAllocate, onSet, onEdit, onDelete }: GoalRowProps) {
         />
       </div>
       <div className="flex items-center justify-between mt-1">
-        <div className="text-[10px] text-text-muted">{pct.toFixed(0)}%</div>
+        <div className="text-[0.625rem] text-text-muted">{pct.toFixed(0)}%</div>
         {goal.notes && (
-          <div className="text-[10px] text-text-muted/80 italic truncate ms-2">{goal.notes}</div>
+          <div className="text-[0.625rem] text-text-muted/80 italic truncate ms-2">{goal.notes}</div>
         )}
       </div>
 

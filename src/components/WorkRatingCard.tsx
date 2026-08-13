@@ -76,7 +76,7 @@ export default function WorkRatingCard() {
         <span className="text-sm font-medium">
           {rating > 0 ? 'Work today — tap to change' : 'How was work today?'}
         </span>
-        <span className="text-[10px] uppercase tracking-wider text-text-muted">
+        <span className="text-[0.625rem] uppercase tracking-wider text-text-muted">
           {weekdayNames('short')[dow]}
         </span>
       </div>

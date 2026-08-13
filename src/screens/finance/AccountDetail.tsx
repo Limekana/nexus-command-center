@@ -192,7 +192,7 @@ export default function AccountDetail() {
       <div className="space-y-3">
         {/* Header card — derived balance + delta + opening */}
         <div className="card-elevated">
-          <div className="text-[10px] uppercase tracking-[0.15em] text-text-muted mb-1">
+          <div className="text-[0.625rem] uppercase tracking-[0.15em] text-text-muted mb-1">
             {isLiability ? t('fin.ad.amountOwed') : t('fin.ad.currentBalance')}
           </div>
           <div
@@ -204,7 +204,7 @@ export default function AccountDetail() {
           </div>
           <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border/40">
             <div>
-              <div className="text-[10px] uppercase tracking-wider text-text-muted">
+              <div className="text-[0.625rem] uppercase tracking-wider text-text-muted">
                 {t('fin.ad.opened')}
               </div>
               <div className="text-xs font-medium">
@@ -212,7 +212,7 @@ export default function AccountDetail() {
               </div>
             </div>
             <div>
-              <div className="text-[10px] uppercase tracking-wider text-text-muted">
+              <div className="text-[0.625rem] uppercase tracking-wider text-text-muted">
                 {t('fin.ad.netChange')}
               </div>
               <div
@@ -229,14 +229,14 @@ export default function AccountDetail() {
               </div>
             </div>
             <div>
-              <div className="text-[10px] uppercase tracking-wider text-text-muted">
+              <div className="text-[0.625rem] uppercase tracking-wider text-text-muted">
                 {t('fin.ad.transactions')}
               </div>
               <div className="text-xs font-medium">{rows.length}</div>
             </div>
           </div>
           {unconvertableCount > 0 && (
-            <div className="text-[10px] text-warning mt-2">
+            <div className="text-[0.625rem] text-warning mt-2">
               {t('fin.ad.unconvertable', { count: unconvertableCount, cur: account.currency })}
             </div>
           )}
@@ -279,7 +279,7 @@ export default function AccountDetail() {
                     <div className="text-sm font-medium truncate">
                       {r.txn.description}
                     </div>
-                    <div className="text-[10px] text-text-muted truncate">
+                    <div className="text-[0.625rem] text-text-muted truncate">
                       {r.txn.date}
                       {r.counterparty ? ` · ${r.counterparty}` : ''}
                     </div>
@@ -289,7 +289,7 @@ export default function AccountDetail() {
                       {r.delta >= 0 ? '+' : ''}
                       {fmt(r.delta, account.currency)}
                     </div>
-                    <div className="text-[10px] text-text-muted tabular-nums">
+                    <div className="text-[0.625rem] text-text-muted tabular-nums">
                       {fmt(r.runningBalance, account.currency)}
                     </div>
                   </div>

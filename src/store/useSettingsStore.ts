@@ -53,6 +53,35 @@ export type InsightsTab = 'technical' | 'fundamental';
 // Rather than reword the promise, this makes it true — nothing reaches Gemini
 // until the user turns this on.
 const AI_ENABLED_KEY = 'settings.ai.enabled';
+// v1.9 — UI scale. Stored as the string the user picked, or absent for
+// 'auto' (the per-tier default). See index.css's --ui-scale block.
+const UI_SCALE_KEY = 'settings.ui.scale';
+
+/**
+ * v1.9 — UI scale steps. `auto` defers to the per-tier default set in CSS
+ * (1.0 on phone/tablet, 1.2 on desktop); every other value is an explicit
+ * choice applied at every tier, including a deliberate 1.0 on desktop.
+ *
+ * Same 'auto until you touch it' semantics as the sidebar rail preference, so
+ * the two settings behave alike rather than each inventing a rule.
+ */
+export const UI_SCALES = ['auto', '1', '1.1', '1.2', '1.35', '1.5'] as const;
+export type UiScale = (typeof UI_SCALES)[number];
+
+/**
+ * Applies the choice by setting `--ui-scale` INLINE on <html>, which outranks
+ * the stylesheet's tier default in both directions. `auto` removes the inline
+ * property so the media query takes over again.
+ *
+ * Lives here rather than in a component so the value is applied by whoever
+ * loads settings first — including before the lock screen paints, which is
+ * itself a screen the user reads.
+ */
+export function applyUiScale(scale: UiScale): void {
+  const root = document.documentElement;
+  if (scale === 'auto') root.style.removeProperty('--ui-scale');
+  else root.style.setProperty('--ui-scale', scale);
+}
 
 interface SettingsStore {
   baseCurrency: BaseCurrency;
@@ -74,6 +103,9 @@ interface SettingsStore {
   insightsTab: InsightsTab;
   /** v1.8 — whether the cloud AI features may run. Gates the Life-tab
    *  narrative; when false nothing is sent to the `ai-generate` function. */
+  /** 'auto' follows the tier default (1.0 phone/tablet, 1.2 desktop); any
+   *  other value is an explicit user choice applied at every tier. */
+  uiScale: UiScale;
   aiEnabled: boolean;
   loaded: boolean;
   load: () => Promise<void>;
@@ -89,6 +121,7 @@ interface SettingsStore {
   setSavingsBufferAmount: (amount: number) => Promise<void>;
   setInsightsTab: (tab: InsightsTab) => Promise<void>;
   setAiEnabled: (on: boolean) => Promise<void>;
+  setUiScale: (s: UiScale) => Promise<void>;
 }
 
 async function readPref(key: string): Promise<string | null> {
@@ -133,6 +166,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   notifIntroSeen: false,
   savingsBufferAmount: 0,
   insightsTab: 'technical',
+  uiScale: 'auto',
   aiEnabled: false,
   loaded: false,
 
@@ -150,6 +184,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
       savingsBuffer,
       insightsTab,
       aiEnabled,
+      uiScale,
     ] = await Promise.all([
       readPref(CURRENCY_KEY),
       readPref(REMINDER_KEY),
@@ -163,6 +198,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
       readPref(SAVINGS_BUFFER_KEY),
       readPref(INSIGHTS_TAB_KEY),
       readBoolPref(AI_ENABLED_KEY),
+      readPref(UI_SCALE_KEY),
     ]);
     set({
       baseCurrency:
@@ -179,9 +215,18 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
       notifIntroSeen,
       savingsBufferAmount: savingsBuffer ? Math.max(0, parseFloat(savingsBuffer) || 0) : 0,
       insightsTab: insightsTab === 'fundamental' ? 'fundamental' : 'technical',
+      // An unrecognised stored value (hand-edited, or written by a future
+      // version) falls back to auto rather than being applied verbatim to a
+      // CSS property that would silently break every size in the app.
+      uiScale: (UI_SCALES as readonly string[]).includes(uiScale ?? '')
+        ? (uiScale as UiScale)
+        : 'auto',
       aiEnabled,
       loaded: true,
     });
+    applyUiScale(
+      (UI_SCALES as readonly string[]).includes(uiScale ?? '') ? (uiScale as UiScale) : 'auto',
+    );
   },
 
   async setBaseCurrency(c) {
@@ -243,5 +288,11 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   async setAiEnabled(on) {
     await writePref(AI_ENABLED_KEY, on ? '1' : '0');
     set({ aiEnabled: on });
+  },
+
+  async setUiScale(next) {
+    await writePref(UI_SCALE_KEY, next);
+    set({ uiScale: next });
+    applyUiScale(next);
   },
 }));

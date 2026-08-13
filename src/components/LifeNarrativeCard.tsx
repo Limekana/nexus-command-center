@@ -71,11 +71,11 @@ export default function LifeNarrativeCard({ input }: { input: NarrativeInput }) 
   return (
     <div className="glass rounded-xl p-4 border-s-2 border-primary/40">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] uppercase tracking-wider text-text-muted flex items-center gap-1.5">
+        <span className="text-[0.625rem] uppercase tracking-wider text-text-muted flex items-center gap-1.5">
           <span className="text-primary" aria-hidden>✦</span> This week, in a nutshell
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="text-[8px] uppercase tracking-[0.15em] text-primary border border-primary/40 rounded-sm px-1 py-0.5">
+          <span className="text-[0.5rem] uppercase tracking-[0.15em] text-primary border border-primary/40 rounded-sm px-1 py-0.5">
             AI
           </span>
           {text && (
@@ -84,7 +84,7 @@ export default function LifeNarrativeCard({ input }: { input: NarrativeInput }) 
               onClick={() => generate(true)}
               disabled={loading}
               aria-label="Regenerate summary"
-              className="text-[11px] text-text-muted active:text-primary disabled:opacity-40"
+              className="text-[0.6875rem] text-text-muted active:text-primary disabled:opacity-40"
             >
               ↻
             </button>
@@ -109,13 +109,13 @@ export default function LifeNarrativeCard({ input }: { input: NarrativeInput }) 
         <button
           type="button"
           onClick={() => generate(true)}
-          className="text-[11px] text-text-muted active:text-primary mt-1"
+          className="text-[0.6875rem] text-text-muted active:text-primary mt-1"
         >
           Couldn't generate a summary — tap to retry
         </button>
       )}
 
-      <div className="text-[9px] text-text-muted mt-2">
+      <div className="text-[0.5625rem] text-text-muted mt-2">
         Generated from your scores via Gemini. Not medical or financial advice.
       </div>
     </div>

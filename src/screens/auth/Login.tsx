@@ -99,11 +99,17 @@ export default function Login() {
 
   return (
     <div className="min-h-full bg-bg text-text flex flex-col">
-      <div className="flex-1 flex flex-col justify-center px-6 max-w-md mx-auto w-full">
+      {/* v1.9 Item 14 — Login renders outside AppShell (App.tsx returns it
+          instead of the shell when there is no session), so none of the
+          desktop shell work reached it and it stayed a 448px phone column.
+          Scales per tier now, same treatment as LockScreen. Stays centred
+          rather than going full-bleed: a sign-in form spread across 2560px
+          would be worse, not better — it needed presence, not width. */}
+      <div className="flex-1 flex flex-col justify-center px-6 max-w-md tablet:max-w-lg desktop:max-w-xl mx-auto w-full">
         {/* "Nexus" is the product name — deliberately not a translation key. */}
-        <div className="mb-8">
-          <h1 className="font-heading font-bold text-3xl tracking-tight">Nexus</h1>
-          <p className="text-sm text-text-muted mt-1">
+        <div className="mb-8 desktop:mb-12">
+          <h1 className="font-heading font-bold text-3xl desktop:text-5xl tracking-tight">Nexus</h1>
+          <p className="text-sm desktop:text-lg text-text-muted mt-1 desktop:mt-3">
             {firstRun ? t('auth.firstRunSubtitle') : t('auth.signInSubtitle')}
           </p>
           {/* ACT-3: on first run, lead with the local-first promise rather than
@@ -111,7 +117,7 @@ export default function Login() {
               account" has to land, and the guest control itself is the last
               thing on the page. */}
           {firstRun && (
-            <p className="text-xs text-primary/90 mt-2">{t('auth.firstRunPromise')}</p>
+            <p className="text-xs desktop:text-base text-primary/90 mt-2">{t('auth.firstRunPromise')}</p>
           )}
         </div>
 
@@ -120,7 +126,7 @@ export default function Login() {
           type="button"
           onClick={onGoogle}
           disabled={googleSubmitting}
-          className="btn w-full flex items-center justify-center gap-2"
+          className="btn w-full flex items-center justify-center gap-2 desktop:py-4 desktop:text-base"
         >
           <GoogleG />
           {googleSubmitting ? t('auth.googleOpening') : t('auth.google')}
@@ -134,7 +140,7 @@ export default function Login() {
           <button
             type="button"
             onClick={() => setShowEmail(true)}
-            className="w-full text-center text-xs text-text-muted mt-3 py-3 underline-offset-2 hover:underline rounded-md"
+            className="w-full text-center text-xs desktop:text-sm text-text-muted mt-3 py-3 underline-offset-2 hover:underline rounded-md"
           >
             {t('auth.useEmail')}
           </button>
@@ -142,7 +148,7 @@ export default function Login() {
           <>
             <div className="flex items-center gap-3 my-5">
               <div className="flex-1 h-px bg-border" />
-              <span className="text-[10px] uppercase tracking-wider text-text-muted">
+              <span className="text-[0.625rem] uppercase tracking-wider text-text-muted">
                 {t('auth.orUseEmail')}
               </span>
               <div className="flex-1 h-px bg-border" />
@@ -150,7 +156,7 @@ export default function Login() {
 
             <form onSubmit={onSubmit} className="space-y-3">
               <div>
-                <label className="block text-[10px] uppercase tracking-wider text-text-muted mb-1">
+                <label className="block text-[0.625rem] uppercase tracking-wider text-text-muted mb-1">
                   {t('auth.emailLabel')}
                 </label>
                 <input
@@ -164,7 +170,7 @@ export default function Login() {
                 />
               </div>
               <div>
-                <label className="block text-[10px] uppercase tracking-wider text-text-muted mb-1">
+                <label className="block text-[0.625rem] uppercase tracking-wider text-text-muted mb-1">
                   {t('auth.passwordLabel')}
                 </label>
                 <input
@@ -217,7 +223,7 @@ export default function Login() {
           >
             {t('auth.guest')}
           </button>
-          <p className="text-[11px] text-text-muted mt-1.5 text-center px-4 leading-relaxed">
+          <p className="text-[0.6875rem] text-text-muted mt-1.5 text-center px-4 leading-relaxed">
             {t('auth.guestCaption')}
           </p>
         </div>

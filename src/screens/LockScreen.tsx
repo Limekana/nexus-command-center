@@ -139,17 +139,24 @@ export default function LockScreen() {
     t('lock.confirmPin');
 
   return (
-    <div className="min-h-full flex flex-col items-center justify-center bg-bg p-6 safe-top safe-bottom">
-      <div className="w-full max-w-xs flex flex-col items-center gap-6">
-        <div className="text-center space-y-1">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-text-muted">{t('app.name')}</div>
-          <h1 className="font-heading font-bold text-2xl text-text">{t('lock.secureAccess')}</h1>
-          <div className="text-[10px] text-text-muted">{t('lock.deviceEncrypted')}</div>
+    // v1.9 Item 14 — the lock screen is outside AppShell (it renders instead
+    // of it, from App.tsx), so it never picked up any of the desktop shell
+    // work and stayed a 320px phone column marooned in the middle of a large
+    // dark window. It scales up per tier now. It stays centred rather than
+    // going full-bleed: a keypad stretched across 2560px would be worse than
+    // a small one, not better. What it gains is presence — a 576px column
+    // with 80px keys reads as a deliberate desktop lock, not a phone screenshot.
+    <div className="min-h-full flex flex-col items-center justify-center bg-bg p-6 desktop:p-10 safe-top safe-bottom">
+      <div className="w-full max-w-xs tablet:max-w-sm desktop:max-w-xl flex flex-col items-center gap-6 desktop:gap-9">
+        <div className="text-center space-y-1 desktop:space-y-2">
+          <div className="text-[0.625rem] desktop:text-xs uppercase tracking-[0.2em] text-text-muted">{t('app.name')}</div>
+          <h1 className="font-heading font-bold text-2xl desktop:text-4xl text-text">{t('lock.secureAccess')}</h1>
+          <div className="text-[0.625rem] desktop:text-sm text-text-muted">{t('lock.deviceEncrypted')}</div>
         </div>
 
         <button
           onClick={tryBiometric}
-          className={`w-16 h-16 rounded-full border-2 flex items-center justify-center text-2xl active:scale-95 ${
+          className={`w-16 h-16 desktop:w-24 desktop:h-24 rounded-full border-2 flex items-center justify-center text-2xl desktop:text-4xl active:scale-95 ${
             bioAvailable && biometricEnabled
               ? 'border-primary/60 bg-primary/10 shadow-glow'
               : 'border-border bg-surface opacity-50'
@@ -158,7 +165,7 @@ export default function LockScreen() {
         >
           👆
         </button>
-        <div className="text-[10px] text-text-muted -mt-2">
+        <div className="text-[0.625rem] desktop:text-sm text-text-muted -mt-2">
           {!biometricEnabled
             ? t('lock.bioDisabled')
             : bioAvailable
@@ -166,62 +173,62 @@ export default function LockScreen() {
             : bioReason || t('lock.usePin')}
         </div>
 
-        <div className={`flex flex-col items-center gap-4 w-full ${shake ? 'animate-pulse' : ''}`}>
-          <div className="text-xs text-text-muted">{subtitle}</div>
-          <div className="flex gap-3">
+        <div className={`flex flex-col items-center gap-4 desktop:gap-6 w-full ${shake ? 'animate-pulse' : ''}`}>
+          <div className="text-xs desktop:text-base text-text-muted">{subtitle}</div>
+          <div className="flex gap-3 desktop:gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
               <span
                 key={i}
-                className={`w-3 h-3 rounded-full border-2 ${
+                className={`w-3 h-3 desktop:w-4 desktop:h-4 rounded-full border-2 ${
                   i < code.length ? 'bg-primary border-primary' : 'border-border'
                 }`}
               />
             ))}
           </div>
           {isLockedOut ? (
-            <div className="text-xs text-danger text-center px-2">
+            <div className="text-xs desktop:text-sm text-danger text-center px-2">
               {t('lock.tooManyPrefix')}{' '}
               <span className="font-heading font-semibold">{secondsLeft}s</span>
             </div>
           ) : (
-            error && <div className="text-xs text-danger">{error}</div>
+            error && <div className="text-xs desktop:text-sm text-danger">{error}</div>
           )}
 
-          <div className={`grid grid-cols-3 gap-2 w-full mt-2 ${isLockedOut ? 'opacity-40 pointer-events-none' : ''}`}>
+          <div className={`grid grid-cols-3 gap-2 desktop:gap-4 w-full mt-2 ${isLockedOut ? 'opacity-40 pointer-events-none' : ''}`}>
             {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((d) => (
               <button
                 key={d}
                 onClick={() => press(d)}
                 disabled={isLockedOut}
-                className="h-12 rounded-md bg-surface border border-border font-heading font-semibold text-lg active:bg-surface2"
+                className="h-12 desktop:h-20 rounded-md desktop:rounded-lg bg-surface border border-border font-heading font-semibold text-lg desktop:text-3xl active:bg-surface2 desktop:hover:bg-surface2 desktop:hover:border-primary/40 transition-colors"
               >
                 {d}
               </button>
             ))}
             <button
               onClick={tryBiometric}
-              className="h-12 rounded-md bg-surface border border-border text-text-muted text-xs active:bg-surface2"
+              className="h-12 desktop:h-20 rounded-md desktop:rounded-lg bg-surface border border-border text-text-muted text-xs desktop:text-base active:bg-surface2 desktop:hover:bg-surface2 transition-colors"
             >
               {t('lock.bio')}
             </button>
             <button
               onClick={() => press('0')}
               disabled={isLockedOut}
-              className="h-12 rounded-md bg-surface border border-border font-heading font-semibold text-lg active:bg-surface2"
+              className="h-12 desktop:h-20 rounded-md desktop:rounded-lg bg-surface border border-border font-heading font-semibold text-lg desktop:text-3xl active:bg-surface2 desktop:hover:bg-surface2 desktop:hover:border-primary/40 transition-colors"
             >
               0
             </button>
             <button
               onClick={back}
               disabled={isLockedOut}
-              className="h-12 rounded-md bg-surface border border-border text-text-muted active:bg-surface2"
+              className="h-12 desktop:h-20 rounded-md desktop:rounded-lg bg-surface border border-border text-text-muted text-base desktop:text-2xl active:bg-surface2 desktop:hover:bg-surface2 transition-colors"
             >
               ⌫
             </button>
           </div>
         </div>
 
-        <div className="text-[10px] text-text-muted/60">{t('lock.forgotPin')}</div>
+        <div className="text-[0.625rem] desktop:text-xs text-text-muted/60">{t('lock.forgotPin')}</div>
       </div>
     </div>
   );

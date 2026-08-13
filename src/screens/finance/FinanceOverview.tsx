@@ -14,6 +14,12 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 import { convertSync, normalizeCurrency } from '../../api/fxRates';
 import { formatCurrency, formatShortDate, localDateKey, formatLocale } from '../../utils/formatters';
 import { computeAccountBalance } from '../../lib/accountBalance';
+import CashFlowDiagram from '../../components/CashFlowDiagram';
+import BudgetTrendTable from '../../components/BudgetTrendTable';
+import { buildCashFlow } from '../../lib/cashFlow';
+import { buildBudgetTrend } from '../../lib/budgetTrend';
+import { formatMoney } from '../../lib/currencies';
+import { useShellTier } from '../../lib/useShell';
 import { portfolioCashBalance } from '../../lib/portfolioCash';
 
 // v1.3 BUG-18 — Finance is split into two segments. "Balance" carries the
@@ -26,6 +32,33 @@ import { portfolioCashBalance } from '../../lib/portfolioCash';
 // runtime — no persistence.
 type FinanceTab = 'balance' | 'portfolio' | 'markets';
 const FINANCE_TABS: readonly FinanceTab[] = ['balance', 'portfolio', 'markets'];
+
+/**
+ * v1.9 Item 14b #3 — ONE filter for every drill-in on this screen.
+ *
+ * The cash-flow diagram and the budget grid both narrow the transaction list
+ * below them. Two independent filter states would let the two surfaces
+ * contradict each other on screen, with the list obeying whichever fired last
+ * and no way to tell which. Month is part of the filter because both sources
+ * are month-scoped — the diagram draws the current month, the grid draws one
+ * cell — and filtering a month-scoped click to all-time was the earlier
+ * version's mismatch.
+ *
+ * `categoryId: null` means uncategorised spending specifically, matching the
+ * budget grid's own uncategorised row.
+ */
+interface TxFilter {
+  categoryId: string | null;
+  /** `YYYY-MM`. */
+  month: string;
+  label: string;
+}
+
+function monthRange(key: string): { from: string; to: string } {
+  const [y, m] = key.split('-').map(Number);
+  const last = new Date(y, m, 0).getDate();
+  return { from: `${key}-01`, to: `${key}-${String(last).padStart(2, '0')}` };
+}
 
 export default function FinanceOverview() {
   const { t } = useTranslation();
@@ -99,6 +132,75 @@ export default function FinanceOverview() {
     };
   }, [holdings, stockQuotes, cryptoPrices, fxRates, manualAssets, transactions, portfolioCashEntries, baseCurrency]);
 
+  // v1.9 Item 14b #2 — cash-flow diagram, desktop tier only. The month bounds
+  // are ISO strings rather than Date objects: no timezone in play, so a
+  // transaction stays in the month the user filed it under.
+  const isDesktop = useShellTier() === 'desktop';
+  const [txFilter, setTxFilter] = useState<TxFilter | null>(null);
+  const [budgetMonths, setBudgetMonths] = useState(6);
+
+  const currentMonthKey = useMemo(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  }, []);
+
+  // Labels live here so both the diagram and the budget grid feed the same
+  // aggregation with the same names — `buildCashFlow` stays i18n-free.
+  const flowLabels = useMemo(
+    () => ({
+      otherIncome: t('fin.flow.otherIncome'),
+      uncategorised: t('fin.flow.uncategorised'),
+      saved: t('fin.flow.saved'),
+      debt: t('fin.flow.debt'),
+      leftover: t('fin.flow.leftover'),
+      deficit: t('fin.flow.fromReserves'),
+    }),
+    [t],
+  );
+
+  const cashFlow = useMemo(() => {
+    const { from, to } = monthRange(currentMonthKey);
+    return buildCashFlow({
+      transactions,
+      categories: budgetCategories,
+      accounts: manualAssets,
+      from,
+      to,
+      labels: flowLabels,
+    });
+  }, [transactions, budgetCategories, manualAssets, currentMonthKey, flowLabels]);
+
+  // v1.9 Item 14b #6 — same aggregation, run once per month. Built here rather
+  // than inside the table so the two desktop surfaces provably read one number.
+  const budgetTrend = useMemo(
+    () =>
+      buildBudgetTrend({
+        transactions,
+        categories: budgetCategories,
+        accounts: manualAssets,
+        months: budgetMonths,
+        today: new Date().toISOString().slice(0, 10),
+        labels: flowLabels,
+      }),
+    [transactions, budgetCategories, manualAssets, budgetMonths, flowLabels],
+  );
+
+  // Drill-down (plan requirement #3): clicking a band filters the transaction
+  // list below to exactly that flow. Only category-backed bands can filter —
+  // the synthetic ones ("Left over", "From reserves") are derived totals, not
+  // a set of transactions, so selecting them clears instead of filtering to
+  // nothing, which would read as "no data" rather than "not applicable".
+  const visibleTx = useMemo(() => {
+    if (!txFilter) return transactions;
+    const { from, to } = monthRange(txFilter.month);
+    return transactions.filter(
+      (tx) =>
+        tx.date >= from &&
+        tx.date <= to &&
+        (txFilter.categoryId === null ? !tx.categoryId : tx.categoryId === txFilter.categoryId),
+    );
+  }, [transactions, txFilter]);
+
   const { income, expenses } = useMemo(() => {
     const now = new Date();
     let inc = 0, exp = 0;
@@ -149,10 +251,17 @@ export default function FinanceOverview() {
           <IconChip emoji="+" label={t('fin.ov.addTransaction')} accent onClick={() => navigate('/finance/add')} />
         }
       />
-      <div className="space-y-3">
+      {/* v1.9 Item 14 — desktop arrangement. The tab bodies below are flat
+          fragments of sibling cards, so they tile straight into this grid at
+          `desktop:` with no change to any card. Below 1201px it stays the
+          single `space-y-3` stack it has always been. */}
+      <div className="space-y-3 desktop:space-y-0 desk-grid">
         {/* Segmented control — sliding cyan pill mirrors the BottomTabBar's
-            active-indicator language so the two feel like one system. */}
-        <div className="glass-soft rounded-pill p-1 flex relative">
+            active-indicator language so the two feel like one system.
+            Spans both columns and keeps a phone-ish width: it switches the
+            whole screen, and a 1680px-wide three-segment pill would read as a
+            banner rather than a control. */}
+        <div className="glass-soft rounded-pill p-1 flex relative desk-span desktop:max-w-lg">
           <span
             aria-hidden
             className="absolute top-1 bottom-1 start-1 rounded-pill transition-transform duration-300 ease-spring-soft"
@@ -200,7 +309,7 @@ export default function FinanceOverview() {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] uppercase tracking-[0.15em] text-text-muted">
+                  <div className="text-[0.625rem] uppercase tracking-[0.15em] text-text-muted">
                     {t('fin.ov.netWorth')}
                   </div>
                   <div className={`font-heading font-bold text-xl ${netWorth.total >= 0 ? 'text-text' : 'text-danger'}`}>
@@ -213,11 +322,11 @@ export default function FinanceOverview() {
                       : '—'}
                   </div>
                 </div>
-                <span className="text-[10px] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5">
+                <span className="text-[0.625rem] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5">
                   {t('fin.ov.manage')}
                 </span>
               </div>
-              <div className="text-[10px] text-text-muted mt-1">
+              <div className="text-[0.625rem] text-text-muted mt-1">
                 {netWorth.hasData
                   ? t('fin.ov.netWorthSub')
                   : t('fin.ov.netWorthEmpty')}
@@ -239,7 +348,7 @@ export default function FinanceOverview() {
             >
               <div>
                 <div className="font-heading font-semibold text-sm text-primary">{t('fin.ov.runScenario')}</div>
-                <div className="text-[11px] text-text-muted">{t('fin.ov.runScenarioSub')}</div>
+                <div className="text-[0.6875rem] text-text-muted">{t('fin.ov.runScenarioSub')}</div>
               </div>
               <span className="text-primary text-lg rtl-mirror" aria-hidden>→</span>
             </button>
@@ -254,7 +363,7 @@ export default function FinanceOverview() {
                 <span className="font-heading font-semibold text-sm">{t('fin.ov.budgetBreakdown')}</span>
                 <button
                   onClick={() => navigate('/finance/budgets')}
-                  className="text-[10px] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5 active:bg-primary/10"
+                  className="text-[0.625rem] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5 active:bg-primary/10"
                 >
                   {t('fin.ov.manage')}
                 </button>
@@ -277,37 +386,129 @@ export default function FinanceOverview() {
               </div>
             </div>
 
+            {/* v1.9 Item 14b #4 — CSV import/export. Not desktop-gated: the
+                mapping UI wants width and says so, but a phone can still take
+                a file and the export path is useful everywhere. */}
+            <EntryCard
+              emoji="🗒"
+              title={t('fin.imp.entryTitle')}
+              sub={t('fin.imp.entrySub')}
+              onClick={() => navigate('/finance/import')}
+            />
+
             {transactions.length > 0 && (
               <div className="card">
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-heading font-semibold text-sm">{t('fin.ov.spendPattern')}</span>
-                  <span className="text-[9px] uppercase tracking-wider text-text-muted">
+                  <span className="text-[0.5625rem] uppercase tracking-wider text-text-muted">
                     {t('fin.ov.spendDays', { cur: baseCurrency })}
                   </span>
                 </div>
                 <HeatmapCalendar data={spendByDay} tint="warning" unit={baseCurrency === 'EUR' ? '€' : baseCurrency} />
                 {spendByDay.size === 0 && (
-                  <div className="text-[10px] text-text-muted mt-2 text-center">
+                  <div className="text-[0.625rem] text-text-muted mt-2 text-center">
                     {t('fin.ov.spendEmpty')}
                   </div>
                 )}
               </div>
             )}
 
+            {/* v1.9 Item 14b #2 — spans the full grid: a Sankey needs width to
+                be readable, and halving it would defeat the point. Desktop
+                only; the phone keeps the stat cards above as its summary. */}
+            {isDesktop && (
+              <div className="desk-span">
+                <CashFlowDiagram
+                  model={cashFlow}
+                  baseCurrency={baseCurrency}
+                  onSelect={(node) =>
+                    setTxFilter((cur) =>
+                      // Synthetic nodes are derived totals with no transaction
+                      // set behind them, so they clear rather than filter to an
+                      // empty list that would read as "no data".
+                      !node.categoryId ||
+                      (cur?.categoryId === node.categoryId && cur.month === currentMonthKey)
+                        ? null
+                        : { categoryId: node.categoryId, month: currentMonthKey, label: node.label },
+                    )
+                  }
+                />
+              </div>
+            )}
+
+            {/* v1.9 Item 14b #6 — budget vs actual. Full grid width beside the
+                cash-flow diagram: the two answer "where did it go" and "versus
+                what you planned" off one aggregation, so they belong together
+                and both need the horizontal room. */}
+            {isDesktop && (
+              <div className="desk-span card">
+                <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+                  <span className="font-heading font-semibold text-sm">{t('fin.bvt.title')}</span>
+                  <div className="flex items-center gap-1.5">
+                    {[3, 6, 12].map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setBudgetMonths(m)}
+                        className={`text-[0.625rem] uppercase tracking-wider px-1.5 py-0.5 rounded-sm border ${
+                          budgetMonths === m
+                            ? 'border-primary/40 bg-primary/5 text-primary'
+                            : 'border-border text-text-muted'
+                        }`}
+                      >
+                        {t('fin.nwt.months', { count: m })}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => navigate('/finance/budgets')}
+                      className="text-[0.625rem] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5 active:bg-primary/10"
+                    >
+                      {t('fin.ov.manage')}
+                    </button>
+                  </div>
+                </div>
+                <BudgetTrendTable
+                  trend={budgetTrend}
+                  baseCurrency={baseCurrency}
+                  formatCurrency={(v, c) => formatMoney(v, c, { locale: formatLocale() })}
+                  selected={txFilter}
+                  onSelect={(categoryId, month, label) =>
+                    setTxFilter((cur) =>
+                      cur?.categoryId === categoryId && cur.month === month
+                        ? null
+                        : { categoryId, month, label },
+                    )
+                  }
+                />
+              </div>
+            )}
+
             <div className="card">
               <div className="flex items-center justify-between mb-3">
                 <span className="font-heading font-semibold text-sm">{t('fin.ov.recentTx')}</span>
-                <span className="text-[9px] uppercase tracking-wider text-text-muted">
-                  {t('fin.ov.txTotal', { count: transactions.length })}
+                <span className="text-[0.5625rem] uppercase tracking-wider text-text-muted">
+                  {t('fin.ov.txTotal', { count: visibleTx.length })}
                 </span>
               </div>
+              {txFilter && (
+                <button
+                  type="button"
+                  onClick={() => setTxFilter(null)}
+                  className="mb-2 inline-flex items-center gap-1.5 rounded-pill border border-primary/40 bg-primary/10 px-2.5 py-1 text-[0.6875rem] text-primary"
+                >
+                  {txFilter.label}
+                  <span className="text-primary/70">{txFilter.month}</span>
+                  <span aria-hidden>&times;</span>
+                </button>
+              )}
               <div className="space-y-1">
-                {transactions.slice(0, 12).map((tx) => (
+                {visibleTx.slice(0, 12).map((tx) => (
                   <div key={tx.id} className="flex items-center gap-2 py-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary/60 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="text-sm truncate">{tx.description}</div>
-                      <div className="text-[10px] text-text-muted">{formatShortDate(tx.date)}</div>
+                      <div className="text-[0.625rem] text-text-muted">{formatShortDate(tx.date)}</div>
                     </div>
                     <span
                       className={`text-sm whitespace-nowrap ${
@@ -416,7 +617,7 @@ function EntryCard({ emoji, title, sub, onClick }: {
       <span className="text-lg" aria-hidden>{emoji}</span>
       <div className="flex-1 min-w-0">
         <div className="font-heading font-semibold text-sm">{title}</div>
-        <div className="text-[11px] text-text-muted truncate">{sub}</div>
+        <div className="text-[0.6875rem] text-text-muted truncate">{sub}</div>
       </div>
       <span className="text-primary text-sm rtl-mirror" aria-hidden>→</span>
     </button>
