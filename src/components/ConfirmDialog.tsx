@@ -36,6 +36,7 @@ type Confirm = (opts: ConfirmOptions) => Promise<boolean>;
 
 const ConfirmContext = createContext<Confirm | null>(null);
 
+// eslint-disable-next-line react-refresh/only-export-components -- hook is tightly coupled to ConfirmContext defined above, not worth splitting into its own file
 export function useConfirm(): Confirm {
   const ctx = useContext(ConfirmContext);
   if (!ctx) throw new Error('useConfirm must be used inside <ConfirmProvider>');

@@ -31,6 +31,7 @@ const DONUT_PALETTE = [
   '#7D8590', // muted grey — reserved for "Other"
 ];
 
+// eslint-disable-next-line react-refresh/only-export-components -- palette helper shares DONUT_PALETTE above, kept with the chart it colors
 export function colorForIndex(i: number): string {
   return DONUT_PALETTE[i % DONUT_PALETTE.length];
 }

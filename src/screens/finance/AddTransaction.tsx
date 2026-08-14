@@ -82,7 +82,7 @@ export default function AddTransaction() {
   // logged since the app opened (without this, chips lag by one app session).
   useEffect(() => {
     void refreshTemplates();
-  }, []);
+  }, [refreshTemplates]);
 
   const submit = async () => {
     const n = parseFloat(amount);

@@ -42,6 +42,7 @@ interface Tab {
 // Exported (v1.9 Item 14) so `SideNav` renders the same sections rather than
 // keeping a second copy of this list — two navigation components that can
 // drift apart is exactly the bug the desktop shell would otherwise introduce.
+// eslint-disable-next-line react-refresh/only-export-components -- deliberate cross-component data export, see above
 export const tabs: Tab[] = [
   { to: '/', labelKey: 'nav.home', Icon: LayoutGrid, match: (p) => p === '/' },
   { to: '/finance', labelKey: 'nav.finance', Icon: Wallet, match: (p) => p === '/finance' || p.startsWith('/finance/') },

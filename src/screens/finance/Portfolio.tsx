@@ -232,7 +232,7 @@ export default function Portfolio() {
 
   useEffect(() => {
     refreshPortfolio();
-  }, []);
+  }, [refreshPortfolio]);
 
   const oldestAge = useMemo(() => {
     const ages: number[] = [];

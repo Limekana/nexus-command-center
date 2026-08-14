@@ -56,7 +56,7 @@ export async function finnhubGet<T>(
   }
 
   if (Capacitor.isNativePlatform()) {
-    const url = `https://finnhub.io/api/v1${path}`;
+    const url = `${BASE_URL}${path}`;
     const res = await CapacitorHttp.request({
       method: 'GET',
       url,
@@ -83,7 +83,7 @@ export async function finnhubGet<T>(
 
   // Web dev preview: through Vite's /fh proxy so CORS is handled at the
   // dev-server layer and the browser sees a same-origin request.
-  const { data } = await axios.get<T>(`/fh/api/v1${path}`, {
+  const { data } = await axios.get<T>(`${BASE_URL}${path}`, {
     params: cleanParams,
     headers: { 'X-Finnhub-Token': apiKey },
     timeout,

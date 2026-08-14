@@ -56,7 +56,7 @@ export default function AddTask() {
 
   useEffect(() => {
     void refreshTemplates();
-  }, []);
+  }, [refreshTemplates]);
 
   const submit = async () => {
     if (!title.trim()) return;

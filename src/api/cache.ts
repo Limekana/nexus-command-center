@@ -77,7 +77,7 @@ const softIntervalMs: Record<string, number> = {
   'yahoo-summary': 24 * 60 * 60_000,          // 24h international fallback
 };
 
-function setSoftInterval(bucket: string, ms: number): void {
+export function setSoftInterval(bucket: string, ms: number): void {
   softIntervalMs[bucket] = ms;
 }
 

@@ -35,9 +35,6 @@ const TIER_FILTERS: { key: InsightTier | 'all'; labelKey: string }[] = [
   { key: 'strong_sell',  labelKey: 'fin.ins.tierStrongSell' },
 ];
 
-// Active-tab type used internally — same union as InsightsTab from settings.
-type Tab = 'technical' | 'fundamental';
-
 // Polymorphic rating type held by the breakdown-sheet state.
 type BreakdownTarget =
   | { kind: 'technical'; rating: CompositeRating }

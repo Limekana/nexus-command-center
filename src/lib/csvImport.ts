@@ -131,8 +131,10 @@ export function detectDelimiter(text: string): string {
   return best;
 }
 
+/* eslint-disable no-irregular-whitespace -- the doc comment below deliberately embeds a literal BOM character to illustrate the corruption */
 /** Strips a UTF-8 BOM, which Excel writes and which otherwise corrupts the
- *  first header name (`﻿Date` never matches `date`). */
+ *  first header name (literal `﻿Date` never matches `date`). */
+/* eslint-enable no-irregular-whitespace */
 export function stripBom(text: string): string {
   return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
 }
