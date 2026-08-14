@@ -15,11 +15,11 @@ import pkg from '../../package.json';
 import { useAuthStore } from '../store/useAuthStore';
 import { useSyncStore } from '../store/useSyncStore';
 import { useSessionStore, userDisplayName } from '../store/useSessionStore';
-import { useSettingsStore, SUPPORTED_CURRENCIES, BaseCurrency, UI_SCALES } from '../store/useSettingsStore';
+import { useSettingsStore, BaseCurrency, UI_SCALES } from '../store/useSettingsStore';
 import { useShellTier } from '../lib/useShell';
 import { clearAllLocalData } from '../db/database';
 import { downloadExport, deleteAccount } from '../lib/dataRights';
-import { getApiKey, setApiKey, clearApiKey, maskKey } from '../api/keys';
+import { setApiKey, clearApiKey, maskKey } from '../api/keys';
 import { allBudgetStats, type BudgetStats } from '../api/cache';
 import { biometricCapability } from '../utils/biometric';
 import {
@@ -133,7 +133,7 @@ export default function Settings() {
     // sees usage tick up as the app fires background refreshes.
     const id = setInterval(() => setBudgets(allBudgetStats()), 5000);
     return () => clearInterval(id);
-  }, []);
+  }, [refreshPending]);
 
   const onSaveKey = async () => {
     if (!editingSlot || !keyDraft.trim()) return;

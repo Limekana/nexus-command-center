@@ -106,7 +106,6 @@ export default function HoldingDetailSheet({ holding, onClose, inline = false }:
         {/* Identity row — logo, name, current price + day change */}
         <div className="flex items-start gap-3">
           {profile?.logo ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={profile.logo}
               alt=""

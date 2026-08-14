@@ -57,7 +57,7 @@ export default function LockScreen() {
     return () => {
       cancelled = true;
     };
-  }, [mode, biometricEnabled, bioAvailable, hasPin]);
+  }, [mode, biometricEnabled, bioAvailable, hasPin, unlock]);
 
   const press = (digit: string) => {
     if (isLockedOut) return; // no-op while in cooldown
@@ -110,6 +110,7 @@ export default function LockScreen() {
         }
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deliberately keyed on `code` only: this effect calls setMode()/setFirst() itself mid-run, so adding `mode`/`first` would make it re-trigger on its own state transitions rather than on new digit entry. unlock/verifyPin/setPin are stable actions, t is stable from i18next.
   }, [code]);
 
   const tryBiometric = async () => {

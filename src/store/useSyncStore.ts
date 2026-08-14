@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { db } from '../db/database';
 import { listPending } from '../db/syncQueue';
 import { fullSync, PushResult, PullResult } from '../lib/cloudSync';
 import { useSessionStore } from './useSessionStore';

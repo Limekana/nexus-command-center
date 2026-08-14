@@ -141,6 +141,7 @@ export default function AppShell() {
       // a safety net; the heavier work happens after refreshPortfolio.
       void runNewsAlertsTick();
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deliberate mount-only cold-start hydration sequence; all referenced load*/refresh* are stable Zustand actions, adding them wouldn't change behavior but the `[]` documents the "runs once per AppShell mount" intent
   }, []);
 
   // ─── Portfolio auto-refresh on cold start ────────────────────────────
@@ -230,6 +231,7 @@ export default function AppShell() {
   // Track activity
   useEffect(() => {
     bumpActivity();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally keyed on route change only; bumpActivity is a stable Zustand action
   }, [location.pathname]);
 
   useEffect(() => {
@@ -240,6 +242,7 @@ export default function AppShell() {
       window.removeEventListener('pointerdown', onAct);
       window.removeEventListener('keydown', onAct);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only listener registration; bumpActivity is a stable Zustand action
   }, []);
 
   // ─── v1.9 Item 14b #9 — keyboard-driven transaction entry ─────────────

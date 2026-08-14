@@ -103,6 +103,7 @@ export default function App() {
       // populates the history table + fires tier-change pushes correctly.
       installRatingHistory();
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deliberate mount-only bootstrap sequence; store actions are stable Zustand references, re-running this on their identity would re-fire the whole app-init chain
   }, []);
 
   // Listen for guest-mode toggle events fired by Login.tsx and Settings.tsx.
@@ -236,6 +237,7 @@ export default function App() {
       // queue + pull transactions/portfolio/tasks/etc.).
       void syncNow();
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deliberately narrowed to the user id: the `session` object is recreated on every token refresh, and re-running this hydration+sync chain on that churn (rather than on an actual user change) is the bug this narrowing prevents. syncNow is a stable Zustand action.
   }, [session?.user?.id]);
 
   // OAuth deep-link handler: when Supabase redirects back via
