@@ -68,7 +68,7 @@ export function rsiSignal(bars: YahooHistoryBar[]): SignalResult {
 
   // Map to score with inverted semantics — low RSI = bullish.
   // RSI 30 → 0 boundary; RSI 50 → 0 baseline; RSI 70 → 0 boundary.
-  let score = 0;
+  let score: number;
   let label = 'RSI(14) neutral';
   if (rsi <= 30) {
     // 10 → +100, 30 → 0

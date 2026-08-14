@@ -183,6 +183,7 @@ export default function DomainTrendGrid({ weekStarts, series }: Props) {
 
 /** Palette assignment kept here so the grid matches the Life-score ring's
  *  domain colours rather than inventing a second mapping. */
+// eslint-disable-next-line react-refresh/only-export-components -- deliberate co-location, see comment above
 export const DOMAIN_COLOURS = {
   life: PRIMARY,
   fitness: SUCCESS,

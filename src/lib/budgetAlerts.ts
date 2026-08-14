@@ -102,17 +102,17 @@ export async function checkBudgetThresholds(
     // Below 80%? Wipe the tracker so a future re-cross can fire again.
     // Without this, a user who deletes a big expense to drop under 80%
     // and then re-spends would silently miss the alert.
-    if (pct < 80) {
+    if (pct < THRESHOLDS[0]) {
       if (localStorage.getItem(trackerKey)) localStorage.removeItem(trackerKey);
       continue;
     }
 
-    const highestCrossed: Threshold = pct >= 100 ? 100 : 80;
+    const highestCrossed: Threshold = pct >= THRESHOLDS[1] ? THRESHOLDS[1] : THRESHOLDS[0];
     const lastFiredRaw = localStorage.getItem(trackerKey);
     const lastFired = lastFiredRaw ? parseInt(lastFiredRaw, 10) : 0;
     if (lastFired >= highestCrossed) continue; // already alerted at this tier
 
-    const title = highestCrossed === 100 ? 'Over budget' : 'Approaching budget';
+    const title = highestCrossed === THRESHOLDS[1] ? 'Over budget' : 'Approaching budget';
     const body =
       `${cat.icon ? cat.icon + ' ' : ''}${cat.name}: ${formatAmount(spent)} / ${formatAmount(cat.monthlyLimit)}` +
       ` (${Math.round(pct)}%)`;

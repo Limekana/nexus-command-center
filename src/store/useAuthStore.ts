@@ -360,7 +360,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       plaintextHash = unwrapped;
     }
 
-    let matched = false;
+    let matched: boolean;
 
     if (isLegacyHash(plaintextHash)) {
       // v1 path: legacy unsalted SHA-256. Verify, and on success transparently

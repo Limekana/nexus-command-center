@@ -34,8 +34,9 @@ const TIER_WEEKLY_MS = 7 * 24 * 60 * 60 * 1000;
 const TIER_DAILY_MS  = 24 * 60 * 60 * 1000;
 /** "On open" isn't strictly a Dexie cache value — quotes refresh via the
  *  existing portfolio refresh flow (60s soft floor + 20min resume tick).
- *  Exposed here for documentation symmetry. */
-const TIER_ONOPEN_MS = 60 * 1000;
+ *  Exposed here for documentation symmetry (kept, unused by design — `_`
+ *  prefix silences the lint gate rather than deleting the documentation). */
+const _TIER_ONOPEN_MS = 60 * 1000;
 
 // ── Sweep timestamps (localStorage) ───────────────────────────────────────
 //

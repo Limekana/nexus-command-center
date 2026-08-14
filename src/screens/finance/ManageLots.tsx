@@ -44,6 +44,30 @@ export default function ManageLots() {
     [allLots, holdingId],
   );
 
+  // Per-currency totals for the summary card. Hoisted above the `!holding`
+  // early return (HYG-2 — react-hooks/rules-of-hooks flagged this as
+  // conditional when it lived further down, past the return; it only
+  // depends on `lots`, so it's safe here regardless of whether `holding`
+  // resolves). If the user buys in mixed currencies (e.g. some EUR, some
+  // USD), we surface each separately so the math is legible instead of
+  // fudging an FX conversion here. The Portfolio screen does the
+  // cross-currency aggregation via fxRates.
+  const totalsByCurrency = useMemo(() => {
+    const map = new Map<string, { qty: number; cost: number }>();
+    for (const l of lots) {
+      const e = map.get(l.costCurrency) ?? { qty: 0, cost: 0 };
+      e.qty += l.quantity;
+      e.cost += l.quantity * l.costPerUnit;
+      map.set(l.costCurrency, e);
+    }
+    return Array.from(map.entries()).map(([cur, v]) => ({
+      currency: cur,
+      qty: v.qty,
+      cost: v.cost,
+      avgPrice: v.qty > 0 ? v.cost / v.qty : 0,
+    }));
+  }, [lots]);
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [qty, setQty] = useState('');
@@ -160,26 +184,6 @@ export default function ManageLots() {
       alert((e as Error).message);
     }
   };
-
-  // Per-currency totals for the summary card. If the user buys in mixed
-  // currencies (e.g. some EUR, some USD), we surface each separately so the
-  // math is legible instead of fudging an FX conversion here. The Portfolio
-  // screen does the cross-currency aggregation via fxRates.
-  const totalsByCurrency = useMemo(() => {
-    const map = new Map<string, { qty: number; cost: number }>();
-    for (const l of lots) {
-      const e = map.get(l.costCurrency) ?? { qty: 0, cost: 0 };
-      e.qty += l.quantity;
-      e.cost += l.quantity * l.costPerUnit;
-      map.set(l.costCurrency, e);
-    }
-    return Array.from(map.entries()).map(([cur, v]) => ({
-      currency: cur,
-      qty: v.qty,
-      cost: v.cost,
-      avgPrice: v.qty > 0 ? v.cost / v.qty : 0,
-    }));
-  }, [lots]);
 
   const editingNow = adding || editingId != null;
 

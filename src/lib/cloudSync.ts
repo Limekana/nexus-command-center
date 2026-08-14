@@ -661,11 +661,13 @@ async function fetchWithSoftDeleteFallback(
 ): Promise<{ data: any[] | null; error: string | null }> {
   // Try with `deleted_at IS NULL` first. If the column doesn't exist on
   // StudyDesk's side, retry without that filter and post-filter in JS.
-  let { data, error } = await supabase
+  const initial = await supabase
     .from(table)
     .select('*')
     .eq('user_id', userId)
     .is('deleted_at', null);
+  let data = initial.data;
+  const error = initial.error;
   if (error) {
     const msg = error.message ?? '';
     // PostgREST returns "column does not exist" / 42703. Be generous in the

@@ -56,9 +56,12 @@ function typedAmount(token: string): number | null {
 
 /** A token is an amount only if it is mostly digits — `#food` and `2for1`
  *  should not be swallowed as the amount just because a number is in there. */
+/* eslint-disable no-irregular-whitespace -- the character classes below intentionally include a non-breaking space, a real thousands-separator in several supported locales */
 function looksNumeric(token: string): boolean {
   return /^[+-]?[\d.,\s' ]*\d[\d.,\s' ]*$/.test(token.replace(/^[€$£¥]|[€$£¥]$/g, ''));
 }
+
+/* eslint-enable no-irregular-whitespace */
 
 export function parseQuickEntry(
   input: string,

@@ -98,7 +98,7 @@ export function startRealtime(userId: string): void {
   const c = supabase.channel('nexus-sync');
   for (const table of USER_SCOPED_TABLES) {
     c.on(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       'postgres_changes' as any,
       { event: '*', schema: 'public', table, filter: `user_id=eq.${userId}` },
       () => schedulePull()
@@ -106,7 +106,7 @@ export function startRealtime(userId: string): void {
   }
   for (const table of SHARING_AWARE_TABLES) {
     c.on(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       'postgres_changes' as any,
       { event: '*', schema: 'public', table },
       () => schedulePull()
