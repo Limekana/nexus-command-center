@@ -16,7 +16,8 @@
     "cap:open": "cap open android",
     "icons": "node scripts/build-icons.mjs && capacitor-assets generate --android",
     "electron:dev": "electron .",
-    "electron:build": "npm run build && electron-builder --win"
+    "electron:build": "npm run build && electron-builder --win && npm run electron:zip",
+    "electron:zip": "node electron/package-zip.cjs"
   },
   "dependencies": {
     "@aparajita/capacitor-biometric-auth": "^9.1.2",
