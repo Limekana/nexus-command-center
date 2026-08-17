@@ -332,7 +332,24 @@
     "textSize": "Tamanho do texto",
     "textAuto": "Auto",
     "textSizeSub": "Aplica-se em todo o lado, incluindo no telemóvel.",
-    "textAutoSub": "{{pct}}% neste tamanho de ecrã — maior no computador, normal no telemóvel."
+    "textAutoSub": "{{pct}}% neste tamanho de ecrã — maior no computador, normal no telemóvel.",
+    "feedback": "Comentários",
+    "feedbackBlurb": "Diga ao desenvolvedor o que funciona e o que não funciona. Enviado com a versão do app e a plataforma para rastrear o relato.",
+    "feedbackCategory": "Categoria",
+    "feedbackRating": "Avaliação",
+    "feedbackRatingN": "{{n}} de 5",
+    "feedbackPlaceholder": "O que aconteceu, ou o que você gostaria de ver?",
+    "feedbackSend": "Enviar comentários",
+    "feedbackThanks": "Obrigado — já está a caminho.",
+    "feedbackEmpty": "Escreva uma mensagem primeiro.",
+    "feedbackSignIn": "Entre para enviar comentários.",
+    "feedbackMeta": "Enviado com {{app}} v{{version}}.",
+    "fbCat": {
+      "bug": "Erro",
+      "idea": "Ideia",
+      "praise": "Elogio",
+      "other": "Outro"
+    }
   },
   "lock": {
     "secureAccess": "Acesso seguro",

@@ -271,7 +271,24 @@
     "textSize": "Taille du texte",
     "textAuto": "Auto",
     "textSizeSub": "S'applique partout, y compris sur votre téléphone.",
-    "textAutoSub": "{{pct}} % à cette taille d'écran — plus grand sur ordinateur, standard sur téléphone."
+    "textAutoSub": "{{pct}} % à cette taille d'écran — plus grand sur ordinateur, standard sur téléphone.",
+    "feedback": "Commentaires",
+    "feedbackBlurb": "Dites au développeur ce qui fonctionne et ce qui ne fonctionne pas. Envoyé avec la version de l'app et la plateforme pour faciliter le suivi.",
+    "feedbackCategory": "Catégorie",
+    "feedbackRating": "Note",
+    "feedbackRatingN": "{{n}} sur 5",
+    "feedbackPlaceholder": "Que s'est-il passé, ou que souhaiteriez-vous voir ?",
+    "feedbackSend": "Envoyer",
+    "feedbackThanks": "Merci — c'est en route.",
+    "feedbackEmpty": "Écrivez d'abord un message.",
+    "feedbackSignIn": "Connectez-vous pour envoyer un commentaire.",
+    "feedbackMeta": "Envoyé avec {{app}} v{{version}}.",
+    "fbCat": {
+      "bug": "Bug",
+      "idea": "Idée",
+      "praise": "Compliment",
+      "other": "Autre"
+    }
   },
   "days": {
     "long": {

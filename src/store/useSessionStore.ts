@@ -113,7 +113,7 @@ export const useSessionStore = create<SessionState>((set) => ({
     } catch (e) {
       console.warn('[auth] signOut: syncQueue drain failed:', (e as Error).message);
     }
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: 'local' });
     // v1.1 auth UX — clear the guest-mode flag so the next render lands
     // on the Login screen rather than back into a half-authenticated guest
     // state. App.tsx listens for the change event below.

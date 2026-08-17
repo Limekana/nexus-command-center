@@ -389,6 +389,36 @@ async function pushGrade(item: SyncQueueItem, ctx: PushContext): Promise<void> {
 // parent goes; we still push the children's local tombstones via the queue
 // for completeness so a partial outage doesn't leave them orphaned in our
 // view (the DB cascade just makes it idempotent).
+// v1.10 - in-app feedback.
+//
+// INSERT rather than UPSERT on purpose: `feedback` deliberately has no UPDATE
+// policy, because a submitted report should not be silently editable, and an
+// UPSERT onto an existing row becomes an UPDATE that RLS would then refuse. A
+// 23505 means the first attempt actually landed, so it is success from the
+// queue's point of view - swallowing it is what makes the retry idempotent.
+async function pushFeedback(item: SyncQueueItem, ctx: PushContext): Promise<void> {
+  if (item.operation === 'delete') return; // feedback is append-only
+  const local = JSON.parse(item.payload) as {
+    id: string;
+    category: string;
+    rating: number | null;
+    message: string;
+    appVersion: string;
+    platform: string;
+  };
+  const { error } = await supabase.from('feedback').insert({
+    id: local.id,
+    user_id: ctx.userId,
+    app: 'ncc',
+    app_version: local.appVersion || null,
+    platform: local.platform || null,
+    category: local.category,
+    rating: local.rating,
+    message: local.message,
+  });
+  if (error && (error as { code?: string }).code !== '23505') throw error;
+}
+
 async function pushHabit(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (item.operation === 'delete') {
     const uuid = legacyIdToUuid(item.entityId);
@@ -499,6 +529,7 @@ const pushHandlers: Record<SyncQueueItem['entityType'], (item: SyncQueueItem, ct
     /* discarded — see note above */
   },
   habit: pushHabit,
+  feedback: pushFeedback,
   habit_completion: pushHabitCompletion,
   work_quality_log: pushWorkQualityLog,
   // grade_import is a local-only snapshot concept — courses sync individually.
@@ -524,6 +555,8 @@ export interface PushResult {
 // study_session.subject_id is a nullable FK to subjects, so courses (which
 // push subjects) need to land first.
 const ENTITY_PRIORITY: Record<SyncQueueItem['entityType'], number> = {
+  // Independent of everything else; last so real data syncs first.
+  feedback: 9,
   budget_category: 1,
   portfolio_holding: 1,
   workout_session: 1,

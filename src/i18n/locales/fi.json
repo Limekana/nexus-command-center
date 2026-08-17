@@ -271,7 +271,24 @@
     "textSize": "Tekstin koko",
     "textAuto": "Auto",
     "textSizeSub": "Vaikuttaa kaikkialla, myös puhelimessa.",
-    "textAutoSub": "{{pct}} % tällä näytön koolla — suurempi työpöydällä, tavallinen puhelimessa."
+    "textAutoSub": "{{pct}} % tällä näytön koolla — suurempi työpöydällä, tavallinen puhelimessa.",
+    "feedback": "Palaute",
+    "feedbackBlurb": "Kerro kehittäjälle mikä toimii ja mikä ei. Lähetetään sovellusversion ja alustan kanssa, jotta raportti voidaan jäljittää.",
+    "feedbackCategory": "Luokka",
+    "feedbackRating": "Arvosana",
+    "feedbackRatingN": "{{n}} / 5",
+    "feedbackPlaceholder": "Mitä tapahtui, tai mitä haluaisit nähdä?",
+    "feedbackSend": "Lähetä palaute",
+    "feedbackThanks": "Kiitos — palaute on matkalla.",
+    "feedbackEmpty": "Kirjoita ensin viesti.",
+    "feedbackSignIn": "Kirjaudu sisään lähettääksesi palautetta.",
+    "feedbackMeta": "Lähetetään tiedolla {{app}} v{{version}}.",
+    "fbCat": {
+      "bug": "Vika",
+      "idea": "Idea",
+      "praise": "Kehu",
+      "other": "Muu"
+    }
   },
   "days": {
     "long": {

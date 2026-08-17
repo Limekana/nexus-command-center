@@ -332,7 +332,24 @@
     "textSize": "Ukuran teks",
     "textAuto": "Otomatis",
     "textSizeSub": "Berlaku di mana saja, termasuk di ponsel.",
-    "textAutoSub": "{{pct}}% pada ukuran layar ini — lebih besar di desktop, standar di ponsel."
+    "textAutoSub": "{{pct}}% pada ukuran layar ini — lebih besar di desktop, standar di ponsel.",
+    "feedback": "Masukan",
+    "feedbackBlurb": "Beri tahu pengembang apa yang berhasil dan apa yang tidak. Dikirim dengan versi aplikasi dan platform agar laporan bisa ditelusuri.",
+    "feedbackCategory": "Kategori",
+    "feedbackRating": "Penilaian",
+    "feedbackRatingN": "{{n}} dari 5",
+    "feedbackPlaceholder": "Apa yang terjadi, atau apa yang ingin kamu lihat?",
+    "feedbackSend": "Kirim masukan",
+    "feedbackThanks": "Terima kasih — sudah dikirim.",
+    "feedbackEmpty": "Tulis pesan dulu.",
+    "feedbackSignIn": "Masuk untuk mengirim masukan.",
+    "feedbackMeta": "Dikirim dengan {{app}} v{{version}}.",
+    "fbCat": {
+      "bug": "Bug",
+      "idea": "Ide",
+      "praise": "Pujian",
+      "other": "Lainnya"
+    }
   },
   "lock": {
     "secureAccess": "Akses aman",

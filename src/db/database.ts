@@ -81,7 +81,10 @@ export interface SyncQueueItem {
     | 'habit_completion'
     | 'stock_sale'
     | 'portfolio_cash_entry'
-    | 'work_quality_log';
+    | 'work_quality_log'
+    // v1.10 - in-app feedback. Insert-only; the client supplies the uuid so a
+    // queue retry files the same report rather than a second one.
+    | 'feedback';
   entityId: string;
   operation: 'insert' | 'update' | 'delete';
   payload: string;

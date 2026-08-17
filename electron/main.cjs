@@ -4,23 +4,60 @@
 // in a real installable Windows window rather than "download a zip, open
 // index.html yourself."
 //
-// Serves dist/ over a local HTTP server instead of loading file:// directly.
-// vite.config.ts doesn't set `base`, so the production build emits
-// root-absolute asset paths (`/assets/...`). Those resolve fine over http
-// but break under file://, which resolves `/assets/...` from the filesystem
-// root, not the html file's directory. Changing `base` globally would risk
-// the live web deployment (limecore.dev) and the GitHub Pages site instead —
-// so the fix lives here, in the Electron-only wrapper, touching nothing
-// shared with the web build.
+// Serves dist/ through a custom `nexus://` scheme rather than file:// or a
+// localhost HTTP server. vite.config.ts doesn't set `base`, so the production
+// build emits root-absolute asset paths (`/assets/...`). Those break under
+// file://, which resolves `/assets/...` from the filesystem root rather than
+// the html file's directory. Changing `base` globally would risk the live web
+// deployment (limecore.dev) and the GitHub Pages site instead — so the fix
+// lives here, in the Electron-only wrapper, touching nothing shared with the
+// web build.
+//
+// ── Why a custom scheme and not http://127.0.0.1 (v1.10, forced-logout bug) ──
+// This previously ran a local static server on `server.listen(0, ...)`, which
+// asks the OS for a RANDOM free port, and loaded `http://127.0.0.1:<port>/`.
+// The page therefore had a different ORIGIN on every single launch, and
+// localStorage — where supabase-js persists the session on non-Capacitor
+// platforms — is partitioned per origin. So every launch opened an empty
+// storage bucket, the stored session was unreachable, and the user had to sign
+// in again. It looked like "my session expired"; nothing had expired at all,
+// and the server-side evidence agrees: of the desktop sessions on the owner's
+// account, not one was ever revoked — they were simply abandoned, four of them
+// without a single token refresh.
+//
+// A fixed port would restore a stable origin but reintroduces the same class
+// of bug the moment that port is taken and the code falls back to another one.
+// A registered scheme has no port to collide, so the origin is stable by
+// construction. `secure: true` also keeps the page a secure context, which
+// supabase-js's PKCE flow needs for crypto.subtle.
+//
+// NOTE: `nexus://app/` is the app's web origin now. Any Supabase redirect-URL
+// allowlist entry for the desktop build must use it — the old random-port
+// 127.0.0.1 URLs could never have been allowlisted, which is why OAuth was
+// never usable here and email sign-in is the desktop path.
 'use strict';
 
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, protocol, net } = require('electron');
 const path = require('node:path');
-const http = require('node:http');
 const fs = require('node:fs');
+const { pathToFileURL } = require('node:url');
 
 const DIST_DIR = path.join(__dirname, '..', 'dist');
 const ICON_PATH = path.join(__dirname, '..', 'resources', 'icon.ico');
+
+const SCHEME = 'nexus';
+const APP_ORIGIN = `${SCHEME}://app`;
+
+// Must run before app.whenReady(). `standard` gives the scheme normal URL
+// parsing (host + path) so `nexus://app/assets/x.js` resolves the way the
+// build's root-absolute paths expect; `secure` grants secure-context powers
+// (crypto.subtle, and storage that isn't treated as third-party).
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: SCHEME,
+    privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true },
+  },
+]);
 
 // Verification-pass diagnostics (2026-08-14) — a packaged build launched
 // three live processes with no visible window and no listening server, with
@@ -51,48 +88,46 @@ const MIME_TYPES = {
   '.ico': 'image/x-icon',
 };
 
-// Minimal static file server — no extra dependency, no network exposure
-// (bound to 127.0.0.1 only). SPA fallback: any path that doesn't resolve to
-// a real file under dist/ serves index.html so client-side routing (React
-// Router) works exactly like it does on the live web deployment.
-function startStaticServer() {
-  return new Promise((resolve, reject) => {
-    const server = http.createServer((req, res) => {
-      let urlPath = decodeURIComponent(req.url.split('?')[0]);
-      let filePath = path.join(DIST_DIR, urlPath);
+// Resolve a request URL to a real file under dist/, with the same SPA
+// fallback the old static server had: anything that isn't a real file serves
+// index.html so React Router works exactly as it does on the live web build.
+function resolveRequest(requestUrl) {
+  const { pathname } = new URL(requestUrl);
+  const filePath = path.join(DIST_DIR, decodeURIComponent(pathname));
 
-      // Guard against path traversal escaping dist/.
-      if (!filePath.startsWith(DIST_DIR)) {
-        res.writeHead(403);
-        res.end();
-        return;
-      }
+  // Guard against path traversal escaping dist/. path.join has already
+  // normalised away `..`, so this compares the resolved result.
+  if (filePath !== DIST_DIR && !filePath.startsWith(DIST_DIR + path.sep)) return null;
 
-      fs.stat(filePath, (err, stats) => {
-        if (err || !stats.isFile()) {
-          filePath = path.join(DIST_DIR, 'index.html');
-        }
-        const ext = path.extname(filePath);
-        res.writeHead(200, { 'Content-Type': MIME_TYPES[ext] ?? 'application/octet-stream' });
-        fs.createReadStream(filePath).pipe(res);
-      });
+  try {
+    if (fs.statSync(filePath).isFile()) return filePath;
+  } catch {
+    // Falls through to the SPA entry point below.
+  }
+  return path.join(DIST_DIR, 'index.html');
+}
+
+function registerProtocolHandler() {
+  protocol.handle(SCHEME, async (request) => {
+    const filePath = resolveRequest(request.url);
+    if (!filePath) return new Response('Forbidden', { status: 403 });
+
+    const response = await net.fetch(pathToFileURL(filePath).toString());
+    // Set Content-Type explicitly rather than trusting inference — a wrong or
+    // missing type on the module scripts is a blank window with no error.
+    return new Response(response.body, {
+      status: 200,
+      headers: {
+        'Content-Type': MIME_TYPES[path.extname(filePath)] ?? 'application/octet-stream',
+      },
     });
-
-    server.listen(0, '127.0.0.1', () => {
-      const { port } = server.address();
-      resolve({ server, port });
-    });
-    server.on('error', reject);
   });
 }
 
 let mainWindow = null;
 
-async function createWindow() {
+function createWindow() {
   try {
-    const { port } = await startStaticServer();
-    log(`static server listening on 127.0.0.1:${port}`);
-
     mainWindow = new BrowserWindow({
       width: 1440,
       height: 900,
@@ -118,7 +153,7 @@ async function createWindow() {
       log(`render-process-gone: ${JSON.stringify(details)}`);
     });
 
-    mainWindow.loadURL(`http://127.0.0.1:${port}/`);
+    mainWindow.loadURL(`${APP_ORIGIN}/`);
 
     mainWindow.on('closed', () => {
       mainWindow = null;
@@ -130,6 +165,8 @@ async function createWindow() {
 
 app.whenReady().then(() => {
   log('app.whenReady resolved');
+  registerProtocolHandler();
+  log(`serving ${DIST_DIR} at ${APP_ORIGIN}/ (stable origin)`);
   createWindow();
 });
 

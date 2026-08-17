@@ -271,7 +271,24 @@
     "textSize": "文字大小",
     "textAuto": "自动",
     "textSizeSub": "在所有设备上生效，包括手机。",
-    "textAutoSub": "当前屏幕尺寸下为 {{pct}}% — 桌面更大，手机为标准。"
+    "textAutoSub": "当前屏幕尺寸下为 {{pct}}% — 桌面更大，手机为标准。",
+    "feedback": "反馈",
+    "feedbackBlurb": "告诉开发者哪些好用、哪些不好用。会附带应用版本和平台，便于追踪问题。",
+    "feedbackCategory": "分类",
+    "feedbackRating": "评分",
+    "feedbackRatingN": "5 分中的 {{n}} 分",
+    "feedbackPlaceholder": "发生了什么，或者你希望看到什么？",
+    "feedbackSend": "发送反馈",
+    "feedbackThanks": "谢谢 — 已发送。",
+    "feedbackEmpty": "请先写一条消息。",
+    "feedbackSignIn": "登录后即可发送反馈。",
+    "feedbackMeta": "随 {{app}} v{{version}} 一起发送。",
+    "fbCat": {
+      "bug": "缺陷",
+      "idea": "建议",
+      "praise": "表扬",
+      "other": "其他"
+    }
   },
   "days": {
     "long": {

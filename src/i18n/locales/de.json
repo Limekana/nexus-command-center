@@ -271,7 +271,24 @@
     "textSize": "Schriftgröße",
     "textAuto": "Auto",
     "textSizeSub": "Gilt überall, auch auf dem Telefon.",
-    "textAutoSub": "{{pct}} % bei dieser Bildschirmgröße — größer am Desktop, normal am Telefon."
+    "textAutoSub": "{{pct}} % bei dieser Bildschirmgröße — größer am Desktop, normal am Telefon.",
+    "feedback": "Feedback",
+    "feedbackBlurb": "Sag dem Entwickler, was funktioniert und was nicht. Wird mit App-Version und Plattform gesendet, damit Meldungen nachvollziehbar sind.",
+    "feedbackCategory": "Kategorie",
+    "feedbackRating": "Bewertung",
+    "feedbackRatingN": "{{n}} von 5",
+    "feedbackPlaceholder": "Was ist passiert, oder was wünschst du dir?",
+    "feedbackSend": "Feedback senden",
+    "feedbackThanks": "Danke — es ist unterwegs.",
+    "feedbackEmpty": "Schreib zuerst eine Nachricht.",
+    "feedbackSignIn": "Melde dich an, um Feedback zu senden.",
+    "feedbackMeta": "Gesendet mit {{app}} v{{version}}.",
+    "fbCat": {
+      "bug": "Fehler",
+      "idea": "Idee",
+      "praise": "Lob",
+      "other": "Sonstiges"
+    }
   },
   "days": {
     "long": {

@@ -271,7 +271,24 @@
     "textSize": "Text size",
     "textAuto": "Auto",
     "textSizeSub": "Applies everywhere, including on your phone.",
-    "textAutoSub": "{{pct}}% on this screen size — larger on desktop, standard on a phone."
+    "textAutoSub": "{{pct}}% on this screen size — larger on desktop, standard on a phone.",
+    "feedback": "Feedback",
+    "feedbackBlurb": "Tell the developer what's working and what isn't. Sent with your app version and platform so a report can be traced.",
+    "feedbackCategory": "Category",
+    "feedbackRating": "Rating",
+    "feedbackRatingN": "{{n}} out of 5",
+    "feedbackPlaceholder": "What happened, or what would you like to see?",
+    "feedbackSend": "Send feedback",
+    "feedbackThanks": "Thanks — that's on its way.",
+    "feedbackEmpty": "Write a message first.",
+    "feedbackSignIn": "Sign in to send feedback.",
+    "feedbackMeta": "Sent with {{app}} v{{version}}.",
+    "fbCat": {
+      "bug": "Bug",
+      "idea": "Idea",
+      "praise": "Praise",
+      "other": "Other"
+    }
   },
   "days": {
     "long": {

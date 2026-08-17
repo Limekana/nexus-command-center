@@ -332,7 +332,24 @@
     "textSize": "حجم النص",
     "textAuto": "تلقائي",
     "textSizeSub": "يُطبَّق في كل مكان، بما في ذلك هاتفك.",
-    "textAutoSub": "{{pct}}% على هذا الحجم من الشاشة — أكبر على سطح المكتب، وقياسي على الهاتف."
+    "textAutoSub": "{{pct}}% على هذا الحجم من الشاشة — أكبر على سطح المكتب، وقياسي على الهاتف.",
+    "feedback": "الملاحظات",
+    "feedbackBlurb": "أخبر المطوّر بما ينجح وما لا ينجح. تُرسل مع إصدار التطبيق والمنصّة حتى يمكن تتبّع البلاغ.",
+    "feedbackCategory": "الفئة",
+    "feedbackRating": "التقييم",
+    "feedbackRatingN": "{{n}} من 5",
+    "feedbackPlaceholder": "ماذا حدث، أو ما الذي تودّ رؤيته؟",
+    "feedbackSend": "إرسال الملاحظات",
+    "feedbackThanks": "شكرًا — تم الإرسال.",
+    "feedbackEmpty": "اكتب رسالة أولاً.",
+    "feedbackSignIn": "سجّل الدخول لإرسال الملاحظات.",
+    "feedbackMeta": "تُرسل مع {{app}} v{{version}}.",
+    "fbCat": {
+      "bug": "خلل",
+      "idea": "فكرة",
+      "praise": "إشادة",
+      "other": "أخرى"
+    }
   },
   "lock": {
     "secureAccess": "وصول آمن",
