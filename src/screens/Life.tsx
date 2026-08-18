@@ -50,7 +50,7 @@ import {
   type DomainKey,
 } from '../lib/lifeProfile';
 import { dateKey } from '../lib/habitStreaks';
-import { PRIMARY, SUCCESS, WARNING, VIOLET, WORK_PINK } from '../lib/themeColors';
+import { DOMAIN } from '../lib/themeColors';
 
 const TONE_BORDER: Record<Insight['tone'], string> = {
   positive: 'border-success/40',
@@ -76,11 +76,11 @@ const DOMAIN_LABEL_KEY: Record<Insight['domain'], string> = {
 
 // Per-domain ring/card accent + which LifeScore field holds its sub-score.
 const DOMAIN_COLOR: Record<DomainKey, string> = {
-  finance: WARNING,
-  fitness: PRIMARY,
-  studies: VIOLET,
-  work: WORK_PINK,
-  habits: SUCCESS,
+  finance: DOMAIN.finance,
+  fitness: DOMAIN.fitness,
+  studies: DOMAIN.study,
+  work: DOMAIN.work,
+  habits: DOMAIN.habits,
 };
 const DOMAIN_SUBSCORE: Record<DomainKey, keyof Pick<LifeScore, 'workouts' | 'study' | 'habits' | 'budget' | 'work'>> = {
   finance: 'budget',
@@ -276,14 +276,14 @@ export default function Life() {
             {t('life.thisWeek')}
           </h2>
           {!report.ready ? (
-            <div className="glass rounded-xl p-6 text-center">
+            <div className="panel p-6 text-center">
               <div className="font-heading text-base font-semibold mb-1">{t('life.buildingBaseline')}</div>
               <div className="text-xs text-text-muted">
                 {t('life.buildingBaselineSub')}
               </div>
             </div>
           ) : (
-            <div className="glass rounded-xl p-4 flex flex-col items-center">
+            <div className="panel p-4 flex flex-col items-center">
               <LifeScoreRing segments={ringSegments} size={200}>
                 <div className="flex flex-col items-center leading-none">
                   <span className="font-heading text-5xl font-bold">{thisWeek.score}</span>
@@ -388,13 +388,13 @@ export default function Life() {
               {t('life.patterns')}
             </h2>
             {report.insights.length === 0 ? (
-              <div className="glass-soft rounded-xl p-4 text-center text-xs text-text-muted">
+              <div className="panel-2 p-4 text-center text-xs text-text-muted">
                 {t('life.patternsEmpty')}
               </div>
             ) : (
               <div className="space-y-2 stagger-children">
                 {report.insights.map((ins) => (
-                  <article key={ins.id} className={`glass rounded-xl p-4 border-s-2 ${TONE_BORDER[ins.tone]}`}>
+                  <article key={ins.id} className={`panel p-4 border-s-2 ${TONE_BORDER[ins.tone]}`}>
                     <div className="text-[0.625rem] uppercase tracking-wider text-text-muted mb-1">
                       {t(DOMAIN_LABEL_KEY[ins.domain])}
                     </div>
@@ -430,7 +430,7 @@ export default function Life() {
             </h2>
             <div ref={historyScrollRef} className="flex gap-2 overflow-x-auto no-scrollbar px-1 stagger-children">
               {[...report.weeks.lifeScores].reverse().map((w) => (
-                <div key={w.weekStart} className="glass-soft rounded-xl p-3 flex-shrink-0 w-20 flex flex-col items-center">
+                <div key={w.weekStart} className="panel-2 p-3 flex-shrink-0 w-20 flex flex-col items-center">
                   <div className="text-[0.5625rem] uppercase tracking-wider text-text-muted">{w.weekStart.slice(5)}</div>
                   <div className="font-heading text-xl font-bold mt-1">{w.score}</div>
                   <div className="text-[0.5625rem] text-text-muted mt-0.5">{t('life.per100')}</div>
@@ -451,22 +451,16 @@ export default function Life() {
 
 function DomainCard({ domain, score, sub, measured = true }: { domain: DomainKey; score: number; sub?: string; measured?: boolean }) {
   const { t } = useTranslation();
-  const isWork = domain === 'work';
+  // The work tile used to get a pink wash on top of its pink domain dot, which
+  // said the same thing twice and put a sixth surface colour on the screen.
+  // The dot carries domain identity; the tile is just a panel.
   return (
-    <div
-      className={`rounded-xl p-3 border ${
-        !measured
-          ? 'border-glass-border bg-white/[0.01] opacity-60'
-          : isWork
-            ? 'border-[#F778BA]/30 bg-[#F778BA]/[0.06]'
-            : 'border-glass-border bg-white/[0.02]'
-      }`}
-    >
+    <div className={`panel p-3 ${measured ? '' : 'opacity-60'}`}>
       <div className="flex items-center gap-1.5">
-        <span aria-hidden className="w-2 h-2 rounded-full" style={{ background: measured ? DOMAIN_COLOR[domain] : 'rgba(168,178,188,0.4)' }} />
-        <div className="text-[0.625rem] uppercase tracking-wider text-text-muted">{t(`domains.${domain}`)}</div>
+        <span aria-hidden className="w-2 h-2 rounded-full" style={{ background: measured ? DOMAIN_COLOR[domain] : 'rgba(169,174,180,0.4)' }} />
+        <div className="sec">{t(`domains.${domain}`)}</div>
       </div>
-      <div className="font-heading text-xl font-bold mt-0.5">{measured ? score : '—'}</div>
+      <div className="readout mt-1 text-xl">{measured ? score : '—'}</div>
       {sub && <div className="text-[0.625rem] text-text-muted mt-0.5">{sub}</div>}
     </div>
   );

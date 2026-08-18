@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1" />
-    <meta name="theme-color" content="#0D1117" />
+    <meta name="theme-color" content="#0B0C0E" />
     <!--
       Content Security Policy. Restricts what the WebView/browser is allowed to
       execute and connect to, so an XSS or compromised CDN can't exfiltrate the
@@ -31,7 +31,7 @@
     <title>Nexus Command Center</title>
     <!--
       Fonts are self-hosted (see @font-face in src/index.css). We used to pull
-      Space Grotesk / Inter from fonts.googleapis.com, but that render-blocking
+      IBM Plex from fonts.googleapis.com, but that render-blocking
       <link rel="stylesheet"> made the WebView's first paint depend on reaching
       Google — a device that's offline, or an F-Droid user who firewalls
       Google, could stall on it. Self-hosting also removes the third-party
@@ -50,14 +50,14 @@
       <div style="
         position: fixed;
         inset: 0;
-        background: #0D1117;
+        background: #0B0C0E;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #7D8590;
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        color: #7C828A;
+        font-family: 'IBM Plex Mono', ui-monospace, monospace;
         font-size: 12px;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.16em;
         text-transform: uppercase;
         font-weight: 500;
       ">Loading</div>

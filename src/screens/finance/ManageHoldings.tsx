@@ -159,7 +159,7 @@ export default function ManageHoldings() {
         </div>
         <button
           onClick={() => navigate(`/finance/portfolio/lots/${h.id}`)}
-          className="text-[0.625rem] uppercase tracking-wider px-1.5 py-0.5 rounded-sm border border-border text-text-muted active:border-primary active:text-primary flex-shrink-0"
+          className="text-[0.625rem] uppercase tracking-wider px-1.5 py-0.5 rounded-sm border border-border text-text-muted active:border-border active:text-text flex-shrink-0"
         >
           📦 {lotCount}
         </button>
@@ -183,7 +183,7 @@ export default function ManageHoldings() {
           !editingNow && (
             <button
               onClick={startAdd}
-              className="text-xs px-2 py-1 rounded-sm border border-primary text-primary active:bg-primary/10"
+              className="chip press-spring"
             >
               {t('fin.mh.new')}
             </button>

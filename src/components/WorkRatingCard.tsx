@@ -9,7 +9,7 @@
 //   - only from noon onward — no point rating the day at 7am
 //   - hidden on weekends (default off; work-life ratings are a weekday ritual)
 //
-// Cyber Slate Glass: glass card, cyan-lit selected circle with spring press,
+// Cyber Slate Glass: panel card, cyan-lit selected circle with spring press,
 // inline note that collapses when empty.
 
 import { useEffect, useRef, useState } from 'react';
@@ -71,7 +71,7 @@ export default function WorkRatingCard() {
   };
 
   return (
-    <div className="glass rounded-xl p-4">
+    <div className="panel p-4">
       <div className="flex items-center justify-between mb-3">
         <span className="text-sm font-medium">
           {rating > 0 ? 'Work today — tap to change' : 'How was work today?'}
@@ -90,10 +90,10 @@ export default function WorkRatingCard() {
               onClick={() => onPickRating(n)}
               aria-pressed={on}
               aria-label={`${n} out of 5`}
-              className={`press-spring flex-1 h-11 rounded-xl border text-lg font-heading font-semibold transition-colors ${
+              className={`press-spring flex-1 h-11 rounded-md border text-lg font-heading font-semibold transition-colors ${
                 on
-                  ? 'border-primary/60 bg-primary/12 text-primary shadow-glow'
-                  : 'border-glass-border text-text-muted'
+                  ? 'border-primary/60 bg-primary/10 text-primary'
+                  : 'border-border text-text-muted'
               }`}
             >
               {n}
@@ -115,7 +115,7 @@ export default function WorkRatingCard() {
       ) : (
         <button
           onClick={() => setNoteOpen(true)}
-          className="mt-3 text-xs text-text-muted/80 active:text-primary"
+          className="mt-3 text-xs text-text-muted/80 active:text-text"
         >
           {todayLog?.note ? `“${todayLog.note}”` : '+ Add a note'}
         </button>

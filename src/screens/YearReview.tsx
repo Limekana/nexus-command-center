@@ -91,7 +91,7 @@ export default function YearReview() {
         <div className="card flex items-center justify-between">
           <button
             onClick={() => setMonthsBack((m) => m + 1)}
-            className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary"
+            className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-text active:border-border"
           >
             {t('yearReview.step1Back')}
           </button>
@@ -104,7 +104,7 @@ export default function YearReview() {
           <button
             onClick={() => setMonthsBack((m) => Math.max(0, m - 1))}
             disabled={monthsBack <= 0}
-            className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary disabled:opacity-30"
+            className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-text active:border-border disabled:opacity-30"
           >
             {t('yearReview.step1Fwd')}
           </button>

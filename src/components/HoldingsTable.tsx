@@ -163,20 +163,20 @@ export default function HoldingsTable({ rows, totalBase, baseCurrency, onSelect 
         <button
           type="button"
           onClick={() => setSectorFilter(null)}
-          className="mb-2 inline-flex items-center gap-1.5 rounded-pill border border-primary/40 bg-primary/10 px-2.5 py-1 text-[0.6875rem] text-primary"
+          className="mb-2 inline-flex items-center gap-1.5 rounded-sm border border-primary/40 bg-primary/10 px-2.5 py-1 text-[0.6875rem] text-primary"
         >
           {sectorFilter}
           <span className="text-primary/70">{t('fin.tbl.ofCount', { count: visible.length })}</span>
           <span aria-hidden>&times;</span>
         </button>
       )}
-    <div className="glass rounded-lg overflow-hidden" role="table" aria-label={t('fin.tbl.aria')}>
+    <div className="panel overflow-hidden" role="table" aria-label={t('fin.tbl.aria')}>
       {/* Header — mono micro-labels, sticky so the columns stay named while a
           long portfolio scrolls. The active column goes cyan and carries the
           caret; that is the whole sort affordance. */}
       <div
         role="row"
-        className={`grid ${GRID} gap-x-3 px-4 py-2.5 sticky top-0 z-10 glass-strong border-b border-glass-border`}
+        className={`grid ${GRID} gap-x-3 px-4 py-2.5 sticky top-0 z-10 panel border-b border-border`}
       >
         {columns.map((c) => {
           const active = sort.key === c.key;
@@ -210,7 +210,7 @@ export default function HoldingsTable({ rows, totalBase, baseCurrency, onSelect 
               tabIndex={0}
               onClick={() => onSelect(r.holding)}
               onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onSelect(r.holding)}
-              className={`relative grid ${GRID} gap-x-3 px-4 py-2.5 cursor-pointer border-b border-glass-border/60 last:border-b-0 transition-colors hover:bg-glass-highlight focus-visible:bg-glass-highlight outline-none group`}
+              className={`relative grid ${GRID} gap-x-3 px-4 py-2.5 cursor-pointer border-b border-border/60 last:border-b-0 transition-colors hover:bg-surface-highlight focus-visible:bg-surface-highlight outline-none group`}
             >
               {/* The allocation wash. Sits behind the row's content, width is
                   the position's share of the portfolio — so scanning down the
@@ -283,7 +283,7 @@ export default function HoldingsTable({ rows, totalBase, baseCurrency, onSelect 
           summary, not a position. No allocation figure: it is always 100%. */}
       <div
         role="row"
-        className={`grid ${GRID} gap-x-3 px-4 py-3 glass-strong border-t border-glass-border-strong`}
+        className={`grid ${GRID} gap-x-3 px-4 py-3 panel border-t border-border`}
       >
         <div role="cell" className="font-heading font-semibold text-xs uppercase tracking-[0.12em] text-text-muted self-center">
           {t('fin.tbl.total')}

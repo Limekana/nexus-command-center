@@ -185,7 +185,7 @@ export default function AddTransaction() {
 
         <div>
           <div className="sec mb-2">{t('fin.tx.amount')}</div>
-          <div className="bg-surface border-2 border-primary/40 rounded-md p-4 flex items-center gap-2 shadow-glow">
+          <div className="bg-surface border border-primary rounded-md p-4 flex items-center gap-2">
             <span className="text-text-muted font-heading text-2xl">€</span>
             <input
               className="bg-transparent flex-1 outline-none text-text font-heading font-bold text-3xl tracking-tight"
@@ -227,7 +227,7 @@ export default function AddTransaction() {
               an inline link below points them at /finance/net-worth where
               accounts are created). */}
           {accounts.length === 0 ? (
-            <div className="glass-soft rounded-md p-3 text-[0.6875rem] text-text-muted">
+            <div className="panel-2 p-3 text-[0.6875rem] text-text-muted">
               {t('fin.tx.noAccounts1')}
               <button
                 type="button"

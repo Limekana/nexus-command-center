@@ -13,6 +13,7 @@ import BottomSheet from './BottomSheet';
 import SparkLine from './SparkLine';
 import { useFinanceStore } from '../store/useFinanceStore';
 import type { PortfolioHolding } from '../types/finance';
+import { SUCCESS, DANGER, INK_MUTE } from '../lib/themeColors';
 
 interface Props {
   holding: PortfolioHolding | null;
@@ -199,11 +200,16 @@ export default function HoldingDetailSheet({ holding, onClose, inline = false }:
               </div>
             </div>
             <div className="flex w-full h-3 rounded-sm overflow-hidden">
-              <RecSeg n={latestRec.strongBuy} total={recTotal} color="#16A34A" />
-              <RecSeg n={latestRec.buy} total={recTotal} color="#3FB950" />
-              <RecSeg n={latestRec.hold} total={recTotal} color="#D29922" />
-              <RecSeg n={latestRec.sell} total={recTotal} color="#EF4444" />
-              <RecSeg n={latestRec.strongSell} total={recTotal} color="#991B1B" />
+              {/* Diverging scale: deep green -> green -> NEUTRAL -> red -> deep
+                  red. Hold used to be amber, which read as a caution rather
+                  than as the middle of a scale — and amber is now reserved for
+                  the live reading. Neutral grey is what "no opinion" looks
+                  like. */}
+              <RecSeg n={latestRec.strongBuy} total={recTotal} color="#3D7A55" />
+              <RecSeg n={latestRec.buy} total={recTotal} color={SUCCESS} />
+              <RecSeg n={latestRec.hold} total={recTotal} color={INK_MUTE} />
+              <RecSeg n={latestRec.sell} total={recTotal} color={DANGER} />
+              <RecSeg n={latestRec.strongSell} total={recTotal} color="#8F3A33" />
             </div>
             <div className="flex justify-between text-[0.5625rem] mt-1 text-text-muted">
               <span>Strong Buy {latestRec.strongBuy}</span>

@@ -101,7 +101,7 @@ export default function Goals() {
           !editingNow && (
             <button
               onClick={() => setAdding(true)}
-              className="text-xs px-2 py-1 rounded-sm border border-primary text-primary active:bg-primary/10"
+              className="chip press-spring"
             >
               + {t('goals.new')}
             </button>
@@ -259,7 +259,7 @@ function GoalRow({
           {goal.completed && (
             <button
               onClick={onComplete}
-              className="text-[0.625rem] mt-2 px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary"
+              className="text-[0.625rem] mt-2 px-2 py-1 rounded-sm border border-border text-text-muted active:text-text"
             >
               {t('goals.reopen')}
             </button>

@@ -18,7 +18,7 @@ export default function RowActions({ onEdit, onDelete, onShare, confirmMsg }: Ro
             e.stopPropagation();
             onShare();
           }}
-          className="text-text-muted hover:text-primary active:text-primary text-xs px-2 py-1 rounded-sm border border-border active:bg-surface2"
+          className="text-text-muted hover:text-primary active:text-text text-xs px-2 py-1 rounded-sm border border-border active:bg-surface2"
           aria-label="Share"
         >
           ⇆
@@ -30,7 +30,7 @@ export default function RowActions({ onEdit, onDelete, onShare, confirmMsg }: Ro
             e.stopPropagation();
             onEdit();
           }}
-          className="text-text-muted hover:text-primary active:text-primary text-xs px-2 py-1 rounded-sm border border-border active:bg-surface2"
+          className="text-text-muted hover:text-primary active:text-text text-xs px-2 py-1 rounded-sm border border-border active:bg-surface2"
           aria-label="Edit"
         >
           ✎

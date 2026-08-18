@@ -291,7 +291,7 @@ export default function AppShell() {
         <OfflineBanner />
         {/* pb-32 (128px) gives clear space below the last card so it isn't clipped
           * by the fixed BottomTabBar (which is ~80px + its own safe-bottom inset). */}
-        {/* v1.2 follow-up — pb-32 → pb-44. The floating glass tab bar sits
+        {/* v1.2 follow-up — pb-32 → pb-44. The floating panel tab bar sits
             ~80px above the safe-area inset; pb-32 (128px) left only ~16px of
             clearance, so the last row of any screen got clipped or hidden
             behind the bar. pb-44 (176px) gives generous breathing room so

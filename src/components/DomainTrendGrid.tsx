@@ -22,7 +22,7 @@
 
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { PRIMARY, SUCCESS, WARNING, VIOLET } from '../lib/themeColors';
+import { DOMAIN } from '../lib/themeColors';
 
 export interface DomainSeries {
   key: string;
@@ -185,9 +185,9 @@ export default function DomainTrendGrid({ weekStarts, series }: Props) {
  *  domain colours rather than inventing a second mapping. */
 // eslint-disable-next-line react-refresh/only-export-components -- deliberate co-location, see comment above
 export const DOMAIN_COLOURS = {
-  life: PRIMARY,
-  fitness: SUCCESS,
-  study: VIOLET,
-  habits: WARNING,
-  finance: PRIMARY,
+  life: DOMAIN.life,
+  fitness: DOMAIN.fitness,
+  study: DOMAIN.study,
+  habits: DOMAIN.habits,
+  finance: DOMAIN.finance,
 } as const;

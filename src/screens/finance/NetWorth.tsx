@@ -346,13 +346,13 @@ export default function NetWorth() {
             <>
               <button
                 onClick={() => navigate('/finance/whatif')}
-                className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary"
+                className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-text active:border-border"
               >
                 {t('fin.nw.whatIf')}
               </button>
               <button
                 onClick={startAdd}
-                className="text-xs px-2 py-1 rounded-sm border border-primary text-primary active:bg-primary/10"
+                className="chip press-spring"
               >
                 {t('fin.nw.addAsset')}
               </button>

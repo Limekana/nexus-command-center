@@ -387,19 +387,19 @@ export default function Portfolio() {
           <>
             <button
               onClick={() => navigate('/finance/portfolio/watchlist')}
-              className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary"
+              className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-text active:border-border"
             >
               👁
             </button>
             <button
               onClick={() => navigate('/finance/portfolio/manage')}
-              className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary"
+              className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-text active:border-border"
             >
               {t('fin.ov.manage')}
             </button>
             <button
               onClick={() => refreshPortfolio()}
-              className="text-xs px-2 py-1 rounded-sm border border-primary/40 text-primary"
+              className="chip press-spring"
               disabled={refreshing}
             >
               {refreshing ? '…' : '↻'}

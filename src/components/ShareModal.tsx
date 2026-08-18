@@ -97,7 +97,7 @@ export default function ShareModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-bg/90 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
+    <div className="fixed inset-0 bg-bg/90 z-50 flex items-end sm:items-center justify-center p-4">
       <div className="card-elevated w-full max-w-sm">
         <div className="flex items-start justify-between mb-2">
           <h2 className="font-heading font-bold text-base">{title}</h2>

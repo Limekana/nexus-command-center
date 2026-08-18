@@ -356,7 +356,7 @@ export default function Settings() {
             locked
           />
           <button
-            className="btn-ghost w-full mt-2 text-warning border-warning/40"
+            className="btn-ghost w-full mt-2"
             onClick={lock}
           >
             {t('settings.lockNow')}
@@ -404,7 +404,7 @@ export default function Settings() {
             {syncing ? t('settings.syncing') : isOnline ? t('settings.syncNow') : t('settings.offline')}
           </button>
           <button
-            className="btn-ghost w-full mt-2 text-warning border-warning/40"
+            className="btn-ghost w-full mt-2"
             onClick={onForceResync}
             disabled={!user || !isOnline || syncing}
           >
@@ -457,7 +457,7 @@ export default function Settings() {
               <div className="text-sm">{t('settings.privacyPolicy')}</div>
               <div className="text-[0.625rem] text-text-muted">{t('settings.privacyPolicySub')}</div>
             </div>
-            <span className="text-primary text-lg flex-shrink-0">›</span>
+            <span className="text-text-muted text-lg flex-shrink-0">›</span>
           </a>
         </Section>
 
@@ -499,7 +499,7 @@ export default function Settings() {
               <div className="text-sm">{t('settings.supportDev')}</div>
               <div className="text-[0.625rem] text-text-muted">{t('settings.supportDevSub')}</div>
             </div>
-            <span className="text-primary text-lg flex-shrink-0">›</span>
+            <span className="text-text-muted text-lg flex-shrink-0">›</span>
           </a>
         </Section>
 
@@ -516,7 +516,7 @@ export default function Settings() {
                   .join(' · ')}
               </div>
             </div>
-            <span className="text-primary text-lg flex-shrink-0">›</span>
+            <span className="text-text-muted text-lg flex-shrink-0">›</span>
           </button>
           <div className="text-[0.625rem] text-text-muted px-1 pb-1">
             {t('settings.lifeProfileBlurb')}
@@ -862,7 +862,7 @@ export default function Settings() {
                 </div>
                 <div className="h-1 bg-surface2 rounded-sm mt-1 overflow-hidden">
                   <div
-                    className={`h-full ${exhausted ? 'bg-danger' : pct > 75 ? 'bg-warning' : 'bg-primary'}`}
+                    className={`h-full ${exhausted ? 'bg-danger' : pct > 75 ? 'bg-warning' : 'bg-text-muted'}`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>
@@ -964,7 +964,7 @@ export default function Settings() {
         </Section>
       </div>
       {signOutOpen && createPortal(
-        <div className="fixed inset-0 bg-bg/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-bg/90 z-50 flex items-center justify-center p-4">
           <div className="card-elevated max-w-sm w-full max-h-[90vh] overflow-y-auto">
             <h2 className="font-heading font-bold text-base mb-1">{t('settings.signOutTitle')}</h2>
             <p className="text-xs text-text-muted mb-4">
@@ -1115,7 +1115,7 @@ function FinnhubKeyRow({
       <div className="flex gap-1 flex-shrink-0">
         <button
           onClick={onEdit}
-          className="text-[0.625rem] uppercase tracking-wider px-2 py-1 rounded-sm border border-primary/40 text-primary active:bg-primary/10"
+          className="chip-micro py-1 press-spring"
         >
           {value ? t('common.edit') : t('settings.set')}
         </button>
@@ -1160,17 +1160,23 @@ function Toggle({
         <div className="text-sm">{label}</div>
         {sub && <div className="text-[0.625rem] text-text-muted">{sub}</div>}
       </div>
+      {/* The track stays neutral and the KNOB carries the accent. Settings
+          has a dozen of these; filling each whole track amber put a dozen
+          accent slabs on one screen and made the accent mean "a switch exists"
+          rather than "this is live". A 20px amber dot still reads as on at a
+          glance, and ten of them read as a panel of switches rather than as
+          ten alarms. */}
       <button
         onClick={() => !locked && onChange(!value)}
-        className={`w-11 h-6 rounded-full p-0.5 transition-colors flex-shrink-0 ${
-          value ? 'bg-primary' : 'bg-surface2 border border-border'
+        className={`w-11 h-6 rounded-full p-0.5 bg-surface2 border transition-colors flex-shrink-0 ${
+          value ? 'border-primary' : 'border-border'
         } ${locked ? 'opacity-60' : ''}`}
         disabled={locked}
         aria-pressed={value}
       >
         <div
-          className={`w-5 h-5 rounded-full bg-bg shadow transition-transform ${
-            value ? 'translate-x-5' : ''
+          className={`w-5 h-5 rounded-full transition-transform ${
+            value ? 'translate-x-5 bg-primary' : 'bg-text-faint'
           }`}
         />
       </button>

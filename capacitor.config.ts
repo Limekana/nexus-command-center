@@ -8,7 +8,7 @@ const config: CapacitorConfig = {
     androidScheme: 'https',
   },
   android: {
-    backgroundColor: '#0D1117',
+    backgroundColor: '#0B0C0E',
   },
   plugins: {
     // CapacitorHttp's global fetch/XHR patch is OFF because it interferes with

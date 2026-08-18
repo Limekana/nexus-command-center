@@ -69,7 +69,7 @@ export default function LifeNarrativeCard({ input }: { input: NarrativeInput }) 
   if (!text && !loading) return null;
 
   return (
-    <div className="glass rounded-xl p-4 border-s-2 border-primary/40">
+    <div className="panel p-4 border-s-2 border-primary/40">
       <div className="flex items-center justify-between mb-2">
         <span className="text-[0.625rem] uppercase tracking-wider text-text-muted flex items-center gap-1.5">
           <span className="text-primary" aria-hidden>✦</span> This week, in a nutshell
@@ -84,7 +84,7 @@ export default function LifeNarrativeCard({ input }: { input: NarrativeInput }) 
               onClick={() => generate(true)}
               disabled={loading}
               aria-label="Regenerate summary"
-              className="text-[0.6875rem] text-text-muted active:text-primary disabled:opacity-40"
+              className="text-[0.6875rem] text-text-muted active:text-text disabled:opacity-40"
             >
               ↻
             </button>
@@ -109,7 +109,7 @@ export default function LifeNarrativeCard({ input }: { input: NarrativeInput }) 
         <button
           type="button"
           onClick={() => generate(true)}
-          className="text-[0.6875rem] text-text-muted active:text-primary mt-1"
+          className="text-[0.6875rem] text-text-muted active:text-text mt-1"
         >
           Couldn't generate a summary — tap to retry
         </button>

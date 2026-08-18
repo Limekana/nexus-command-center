@@ -190,7 +190,7 @@ export default function AdoptionPrompt() {
   };
 
   return (
-    <div className="fixed inset-0 bg-bg/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-bg/90 z-50 flex items-center justify-center p-4">
       <div className="card-elevated max-w-sm w-full">
         <h2 className="font-heading font-bold text-lg mb-2">Existing data found</h2>
         <p className="text-sm text-text-muted mb-4">

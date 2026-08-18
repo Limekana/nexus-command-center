@@ -14,6 +14,7 @@
 
 import { useEffect, useMemo, useRef } from 'react';
 import { localDateKey, monthNames, formatLocale } from '../utils/formatters';
+import { PRIMARY, SUCCESS, WARNING, DANGER, RULE } from '../lib/themeColors';
 
 type HeatmapTint = 'primary' | 'success' | 'warning' | 'danger';
 
@@ -34,20 +35,21 @@ interface HeatmapCalendarProps {
 }
 
 const TINT_HEX: Record<HeatmapTint, string> = {
-  primary: '#00D4FF',
-  success: '#3FB950',
-  warning: '#D29922',
-  danger: '#F85149',
+  primary: PRIMARY,
+  success: SUCCESS,
+  warning: WARNING,
+  danger: DANGER,
 };
 
-// 4 active levels + level 0 (empty). Opacities tuned for the Cyber Slate bg.
-// Level 1 starts at 0.28 so the first tier of activity is clearly visible
-// against the card surface (was 0.18, which got lost in dim card lighting).
+// 4 active levels + level 0 (empty). Level 1 starts at 0.28 so the first tier
+// of activity is clearly visible against the panel fill (was 0.18, which got
+// lost in dim card lighting).
 const LEVEL_OPACITY = [0, 0.28, 0.5, 0.75, 1.0];
-// Empty-day fill is brighter than surface2 (#1C2128) so the grid stays
-// visible even when every cell is zero — otherwise an all-empty heatmap
-// blends into the card bg (#161B22) and looks broken.
-const EMPTY_FILL = '#262C34';
+// Empty-day fill is the rule colour: when every cell is zero the heatmap still
+// reads as a grid rather than blending into the panel behind it. That is the
+// same job a rule does everywhere else — showing structure where there is no
+// data.
+const EMPTY_FILL = RULE;
 
 
 
@@ -190,7 +192,7 @@ export default function HeatmapCalendar({
                     ry={2}
                     fill={fill}
                     fillOpacity={level === 0 ? 1 : LEVEL_OPACITY[level]}
-                    stroke={cell.isFuture ? 'transparent' : '#30363D'}
+                    stroke={cell.isFuture ? 'transparent' : RULE}
                     strokeOpacity={0.4}
                     strokeWidth={0.5}
                   >

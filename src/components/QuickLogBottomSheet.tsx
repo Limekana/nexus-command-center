@@ -221,8 +221,8 @@ function QuickWork({ onDone }: { onDone: () => void }) {
                 onClick={() => setRatingState(n)}
                 aria-pressed={on}
                 aria-label={`${n} out of 5`}
-                className={`press-spring flex-1 h-11 rounded-xl border text-lg font-heading font-semibold transition-colors ${
-                  on ? 'border-primary/60 bg-primary/12 text-primary shadow-glow' : 'border-glass-border text-text-muted'
+                className={`press-spring flex-1 h-11 rounded-md border text-lg font-heading font-semibold transition-colors ${
+                  on ? 'border-primary/60 bg-primary/10 text-primary' : 'border-border text-text-muted'
                 }`}
               >
                 {n}

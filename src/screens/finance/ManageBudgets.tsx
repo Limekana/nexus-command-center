@@ -109,7 +109,7 @@ export default function ManageBudgets() {
           !editingNow && (
             <button
               onClick={startAdd}
-              className="text-xs px-2 py-1 rounded-sm border border-primary text-primary active:bg-primary/10"
+              className="chip press-spring"
             >
               {t('fin.budg.new')}
             </button>

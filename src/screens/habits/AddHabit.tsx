@@ -13,6 +13,7 @@ import AppHeader from '../../components/AppHeader';
 import { Pill } from '../../components/ui/Pill';
 import { useHabitsStore } from '../../store/useHabitsStore';
 import type { HabitType, HabitFrequencyKind } from '../../types/habits';
+import { CATEGORICAL } from '../../lib/themeColors';
 
 const TYPES: { key: HabitType; labelKey: string; hintKey: string }[] = [
   { key: 'binary', labelKey: 'addhabit.binary', hintKey: 'addhabit.binaryHint' },
@@ -27,17 +28,11 @@ const FREQS: { key: HabitFrequencyKind; labelKey: string }[] = [
 const DAY_IDX = [0, 1, 2, 3, 4, 5, 6];
 const DAY_SLUGS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
 
-// Pre-curated palette pulled from the Cyber Slate Glass tokens. Keeps
-// things harmonious — the user can't pick a clashing color.
-const COLORS = [
-  '#00D4FF', // primary cyan
-  '#3FB950', // success green
-  '#D29922', // warning amber
-  '#F85149', // danger red
-  '#A78BFA', // soft violet
-  '#F472B6', // soft pink
-  '#94A3B8', // slate neutral
-];
+// The shared categorical ramp. Every swatch holds roughly the same chroma and
+// value, so whichever the user picks the habit list stays coherent — and none
+// of them collides with the semantic red/green a habit row uses to report
+// streak state, which the old picker's red and green both did.
+const COLORS = CATEGORICAL;
 
 export default function AddHabit() {
   const { t } = useTranslation();
@@ -169,7 +164,7 @@ export default function AddHabit() {
             so the amount + unit each announce their own header in screen
             readers. The glass-card wrapper is purely visual. */}
         {type === 'quantified' && (
-          <div className="glass rounded-xl p-3 space-y-2 animate-fade-in-up">
+          <div className="panel p-3 space-y-2 animate-fade-in-up">
             <div className="sec">{t('addhabit.dailyTarget')}</div>
             <div className="flex gap-2">
               <label className="flex-1 block">
@@ -216,7 +211,7 @@ export default function AddHabit() {
 
         {/* Specific-day picker */}
         {frequencyKind === 'specific_days' && (
-          <div className="glass rounded-xl p-3 space-y-2 animate-fade-in-up">
+          <div className="panel p-3 space-y-2 animate-fade-in-up">
             <div className="sec">{t('addhabit.daysOfWeek')}</div>
             {/* v1.2 UI/UX review #5 — default-size Pill keeps the touch
                 target ≥40px (the .pill base height). size="sm" rendered
@@ -272,7 +267,7 @@ export default function AddHabit() {
                 className={`w-11 h-11 rounded-full press-spring border-2 transition-transform ${
                   color === c
                     ? 'border-text scale-110'
-                    : 'border-glass-border scale-100'
+                    : 'border-border scale-100'
                 }`}
                 style={{ background: c }}
               />
@@ -281,7 +276,7 @@ export default function AddHabit() {
         </div>
 
         {validationMsg && (
-          <div className="glass-soft rounded-lg p-2 text-[0.6875rem] text-warning text-center">
+          <div className="panel-2 p-2 text-[0.6875rem] text-warning text-center">
             {validationMsg}
           </div>
         )}

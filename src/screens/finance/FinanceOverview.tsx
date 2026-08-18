@@ -256,23 +256,24 @@ export default function FinanceOverview() {
           `desktop:` with no change to any card. Below 1201px it stays the
           single `space-y-3` stack it has always been. */}
       <div className="space-y-3 desktop:space-y-0 desk-grid">
-        {/* Segmented control — sliding cyan pill mirrors the BottomTabBar's
-            active-indicator language so the two feel like one system.
+        {/* Segmented control — the sliding fill plus its 2px index mark
+            mirrors the BottomTabBar's language so the two feel like one
+            system.
             Spans both columns and keeps a phone-ish width: it switches the
             whole screen, and a 1680px-wide three-segment pill would read as a
             banner rather than a control. */}
-        <div className="glass-soft rounded-pill p-1 flex relative desk-span desktop:max-w-lg">
+        <div className="panel-2 p-1 flex relative desk-span desktop:max-w-lg">
           <span
             aria-hidden
-            className="absolute top-1 bottom-1 start-1 rounded-pill transition-transform duration-300 ease-spring-soft"
+            className="absolute top-1 bottom-1 start-1 rounded-sm transition-transform duration-300 ease-spring-soft"
             style={{
               width: 'calc((100% - 0.5rem) / 3)',
               // --dir is 1 in LTR and -1 in RTL (set in index.css). translateX has no
               // logical form, so without this the pill slides away from the
               // active tab once the axis flips.
               transform: `translateX(calc(var(--dir) * ${FINANCE_TABS.indexOf(tab) * 100}%))`,
-              background: 'rgba(0, 212, 255, 0.14)',
-              boxShadow: '0 0 0 1px rgba(0, 212, 255, 0.45)',
+              background: 'var(--panel)',
+              boxShadow: 'inset 0 -2px 0 var(--signal)',
             }}
           />
           {FINANCE_TABS.map((tb) => (
@@ -281,8 +282,8 @@ export default function FinanceOverview() {
               type="button"
               onClick={() => setTab(tb)}
               aria-current={tab === tb ? 'true' : undefined}
-              className={`relative z-10 flex-1 py-2 rounded-pill text-xs font-heading font-semibold uppercase tracking-wider transition-colors duration-200 active:scale-[0.97] ${
-                tab === tb ? 'text-primary' : 'text-text-muted'
+              className={`relative z-10 flex-1 py-2 rounded-sm font-mono text-[0.6875rem] font-medium uppercase tracking-[0.14em] transition-colors duration-200 ${
+                tab === tb ? 'text-text' : 'text-text-muted'
               }`}
             >
               {tb === 'balance' ? t('fin.ov.balance') : tb === 'portfolio' ? t('fin.ov.portfolio') : t('fin.ov.markets')}
@@ -293,7 +294,10 @@ export default function FinanceOverview() {
         {tab === 'balance' && (
           <>
             <div className="grid grid-cols-2 gap-2">
-              <StatCard value={formatCurrency(income)} label={t('fin.ov.income')} highlight />
+              {/* Neither figure is highlighted: income and expenses are a
+                  pair, and marking one of them live said the other was not
+                  being reported, which is not what the screen means. */}
+              <StatCard value={formatCurrency(income)} label={t('fin.ov.income')} />
               <StatCard
                 value={formatCurrency(expenses)}
                 label={t('fin.ov.expenses')}
@@ -322,7 +326,7 @@ export default function FinanceOverview() {
                       : '—'}
                   </div>
                 </div>
-                <span className="text-[0.625rem] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5">
+                <span className="chip-micro">
                   {t('fin.ov.manage')}
                 </span>
               </div>
@@ -340,17 +344,20 @@ export default function FinanceOverview() {
               onClick={() => navigate('/finance/savings')}
             />
 
-            {/* What-If — prominent accent entry per BUG-18 */}
+            {/* What-If — BUG-18 asked for this entry to stand out from the
+                rows above it. It did that with a cyan tinted frame; it does it
+                now with the lighter panel fill, which is the flat system's way
+                of saying "one step forward" without spending the accent on a
+                navigation row. */}
             <button
               onClick={() => navigate('/finance/whatif')}
-              className="card w-full text-start press-spring flex items-center justify-between"
-              style={{ borderColor: 'rgba(0, 212, 255, 0.4)', background: 'rgba(0, 212, 255, 0.05)' }}
+              className="panel-2 p-3 w-full text-start press-spring flex items-center justify-between"
             >
               <div>
-                <div className="font-heading font-semibold text-sm text-primary">{t('fin.ov.runScenario')}</div>
+                <div className="font-heading font-semibold text-sm text-text">{t('fin.ov.runScenario')}</div>
                 <div className="text-[0.6875rem] text-text-muted">{t('fin.ov.runScenarioSub')}</div>
               </div>
-              <span className="text-primary text-lg rtl-mirror" aria-hidden>→</span>
+              <span className="text-text-muted text-lg rtl-mirror" aria-hidden>→</span>
             </button>
 
             {/* v1.4 — projected income vs expenses from detected recurring
@@ -363,7 +370,7 @@ export default function FinanceOverview() {
                 <span className="font-heading font-semibold text-sm">{t('fin.ov.budgetBreakdown')}</span>
                 <button
                   onClick={() => navigate('/finance/budgets')}
-                  className="text-[0.625rem] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5 active:bg-primary/10"
+                  className="chip-micro press-spring"
                 >
                   {t('fin.ov.manage')}
                 </button>
@@ -462,7 +469,7 @@ export default function FinanceOverview() {
                     <button
                       type="button"
                       onClick={() => navigate('/finance/budgets')}
-                      className="text-[0.625rem] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5 active:bg-primary/10"
+                      className="chip-micro press-spring"
                     >
                       {t('fin.ov.manage')}
                     </button>
@@ -495,7 +502,7 @@ export default function FinanceOverview() {
                 <button
                   type="button"
                   onClick={() => setTxFilter(null)}
-                  className="mb-2 inline-flex items-center gap-1.5 rounded-pill border border-primary/40 bg-primary/10 px-2.5 py-1 text-[0.6875rem] text-primary"
+                  className="mb-2 inline-flex items-center gap-1.5 rounded-sm border border-primary/40 bg-primary/10 px-2.5 py-1 text-[0.6875rem] text-primary"
                 >
                   {txFilter.label}
                   <span className="text-primary/70">{txFilter.month}</span>
@@ -505,7 +512,7 @@ export default function FinanceOverview() {
               <div className="space-y-1">
                 {visibleTx.slice(0, 12).map((tx) => (
                   <div key={tx.id} className="flex items-center gap-2 py-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary/60 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-text-faint flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="text-sm truncate">{tx.description}</div>
                       <div className="text-[0.625rem] text-text-muted">{formatShortDate(tx.date)}</div>
@@ -572,7 +579,7 @@ export default function FinanceOverview() {
 }
 
 /**
- * v1.2 follow-up — compact icon-only header chip. 32×32 square, glass-soft
+ * v1.2 follow-up — compact icon-only header chip. 32×32 square, panel-2
  * background by default, accent variant for the primary "+ Add" action.
  * Emoji is centered (not text) so we stay flexible to whatever the user's
  * font fallback renders. aria-label carries the semantic name for screen
@@ -587,12 +594,13 @@ function IconChip({ emoji, label, onClick, accent }: {
       onClick={onClick}
       aria-label={label}
       title={label}
-      className={`w-8 h-8 rounded-pill flex items-center justify-center text-sm press-spring ${
-        accent
-          ? 'border border-primary/55 text-primary'
-          : 'glass-soft text-text-muted active:text-primary'
+      // `accent` now separates the primary header action from its siblings by
+      // ink weight alone. It used to add a cyan wash, which made a small square
+      // button the brightest thing in a header that also carries the screen
+      // title.
+      className={`w-8 h-8 rounded-sm flex items-center justify-center text-sm press-spring panel-2 ${
+        accent ? 'text-text' : 'text-text-muted active:text-text'
       }`}
-      style={accent ? { background: 'rgba(0, 212, 255, 0.10)' } : undefined}
     >
       <span aria-hidden>{emoji}</span>
     </button>
@@ -619,7 +627,7 @@ function EntryCard({ emoji, title, sub, onClick }: {
         <div className="font-heading font-semibold text-sm">{title}</div>
         <div className="text-[0.6875rem] text-text-muted truncate">{sub}</div>
       </div>
-      <span className="text-primary text-sm rtl-mirror" aria-hidden>→</span>
+      <span className="text-text-muted text-sm rtl-mirror" aria-hidden>→</span>
     </button>
   );
 }

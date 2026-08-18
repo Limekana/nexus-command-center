@@ -15,71 +15,77 @@ export default {
         wide: '1600px',
       },
       colors: {
-        // ─── v1.0 Cyber Slate base ─────────────────────────────────────────
-        bg: '#0D1117',
-        surface: '#161B22',
-        surface2: '#1C2128',
-        border: '#30363D',
+        // ─── v1.10 "Precision instrument" palette ──────────────────────────
+        // Seven values, and that is the whole palette. The design identity is
+        // STRUCTURAL — hairline rules, a strict grid, tabular figures — not
+        // chromatic. Colour is reserved for meaning, so adding an eighth
+        // value here is almost always the wrong fix for a layout problem.
+        //
+        // The semantic names are unchanged from the Cyber Slate era on
+        // purpose: ~300 call sites already say `text-text-muted` /
+        // `border-border` / `bg-surface`, and re-pointing the names re-skins
+        // all of them at once instead of touching every file.
+        bg: '#0B0C0E',        // page ground — near-black, faint cool bias
+        surface: '#141618',   // panel fill — flat, never translucent
+        surface2: '#191C1F',  // nested / hovered panel
+        border: '#23262A',    // hairline rule and grid line
+        'border-soft': '#1A1D20', // internal row divider (lighter than a rule)
         primary: {
-          DEFAULT: '#00D4FF',
-          dim: '#00A8CC',
+          // The instrument colour. Marks the LIVE reading, the current value,
+          // the emphasised endpoint of a series — nothing else. If more than
+          // roughly two amber elements are on one screen, one of them is wrong.
+          DEFAULT: '#E8A33D',
+          dim: '#A8752A',
         },
         text: {
-          DEFAULT: '#E6EDF3',
-          muted: '#7D8590',
+          // Warm-tinted ink against cool-tinted neutrals. That asymmetry is
+          // what makes the palette read as chosen rather than inherited —
+          // do not "clean it up" to pure greys / pure white.
+          DEFAULT: '#E8E6E1',
+          muted: '#A9AEB4',
+          faint: '#7C828A',   // micro-labels, units, axis
         },
-        danger: '#F85149',
-        success: '#3FB950',
-        warning: '#D29922',
-        // ─── v1.2 Glass layer ──────────────────────────────────────────────
-        // Use as backgrounds via `bg-glass`, `bg-glass-strong`, etc. The
-        // values are pre-mixed rgba so they composite with whatever sits
-        // behind (ambient mesh on the root, or other glass panes for the
-        // sheet-over-card case).
-        glass: {
-          DEFAULT: 'rgba(28, 33, 40, 0.55)',  // panel / card
-          strong: 'rgba(22, 27, 34, 0.78)',   // modal / sheet / nav
-          soft:   'rgba(28, 33, 40, 0.38)',   // floating chip / hover
-          border: 'rgba(125, 133, 144, 0.18)',
-          'border-strong': 'rgba(125, 133, 144, 0.28)',
-          highlight: 'rgba(255, 255, 255, 0.06)',
-        },
+        // Semantic pair, deliberately desaturated so they never fight the
+        // signal amber when a screen shows both.
+        danger: '#C4544B',
+        success: '#4E9A6B',
+        // Advisory amber: same family as the signal, visibly dimmer. Kept
+        // distinct so a caution state cannot be mistaken for a live reading.
+        warning: '#B98A3C',
       },
       fontFamily: {
-        heading: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
-        body: ['Inter', 'system-ui', 'sans-serif'],
+        // IBM Plex — engineering lineage, true tabular figures, SIL OFL so it
+        // self-hosts cleanly (F-Droid builds forbid the Google CDN call).
+        // Replaces Space Grotesk + Inter, which were part of why the app read
+        // as generated. Mono carries every numeric and every micro-label.
+        heading: ['"IBM Plex Sans"', 'system-ui', 'sans-serif'],
+        body: ['"IBM Plex Sans"', 'system-ui', 'sans-serif'],
+        mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace'],
       },
       borderRadius: {
-        sm: '4px',
-        md: '8px',
-        lg: '14px',
-        xl: '20px',
-        pill: '999px',
-      },
-      backdropBlur: {
-        // Named tiers so usage reads intent ("nav" / "panel" / "sheet")
-        // rather than a magic px value. S24 chews through all three at 60fps.
-        nav: '14px',
-        glass: '18px',
-        sheet: '28px',
+        // Near-square. An instrument face has edges, not pebbles. `pill`
+        // collapses too — the pill shape had stopped distinguishing anything,
+        // so it had stopped meaning anything. Tailwind's own `rounded-full`
+        // is untouched, which keeps genuinely circular things (rings, dots,
+        // avatars) circular: that distinction now carries information.
+        sm: '2px',
+        md: '2px',
+        lg: '3px',
+        xl: '3px',
+        pill: '2px',
       },
       boxShadow: {
-        // Pre-existing — kept for any caller still using shadow-glow.
-        glow: '0 0 0 1px rgba(0, 212, 255, 0.2), 0 0 24px -4px rgba(0, 212, 255, 0.25)',
-        // v1.2 glass shadow stack — inset hairline + outer drop. The inset
-        // gives the "lit top edge" that sells the glass illusion; the outer
-        // drop gives separation from the ambient mesh underneath.
-        glass: '0 1px 0 inset rgba(255,255,255,0.06), 0 8px 24px -12px rgba(0,0,0,0.5)',
-        'glass-lg': '0 1px 0 inset rgba(255,255,255,0.08), 0 16px 48px -16px rgba(0,0,0,0.6)',
-        // Accent-lit variant for active/highlighted glass (selected tab, hot
-        // signal pill in Insights). Cyan inner glow instead of white.
-        'glass-glow': '0 1px 0 inset rgba(0, 212, 255, 0.22), 0 8px 32px -10px rgba(0, 212, 255, 0.22), 0 0 0 1px rgba(0, 212, 255, 0.32)',
+        // No drop shadows anywhere. Depth comes from rules and fills.
+        // `glow` and the `glass*` stack are gone; `shadow-none` is the answer
+        // for anything that used to reach for them. `signal` is the one
+        // survivor: a 1px amber ring for the active/live element, which is a
+        // border-weight statement rather than a bloom.
+        signal: '0 0 0 1px #E8A33D',
       },
       transitionTimingFunction: {
-        // Overshoot spring — for press feedback, pill toggles, FAB pop.
+        // Overshoot spring — for press feedback and toggles.
         spring: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
         // Smooth exponential — for page fades, list staggers, sheet slide.
-        // No overshoot; ends with a soft glide.
         'spring-soft': 'cubic-bezier(0.16, 1, 0.3, 1)',
         // Quick decel — for taps and state flips that need to land fast.
         decel: 'cubic-bezier(0, 0, 0.2, 1)',
@@ -102,17 +108,12 @@ export default {
           '0%':   { transform: 'translateY(0)' },
           '100%': { transform: 'translateY(100%)' },
         },
-        'glow-pulse': {
-          '0%, 100%': { boxShadow: '0 0 0 1px rgba(0, 212, 255, 0.20), 0 0 18px -4px rgba(0, 212, 255, 0.20)' },
-          '50%':      { boxShadow: '0 0 0 1px rgba(0, 212, 255, 0.40), 0 0 28px -2px rgba(0, 212, 255, 0.40)' },
-        },
       },
       animation: {
         'fade-in-up': 'fade-in-up 420ms cubic-bezier(0.16, 1, 0.3, 1) both',
         'pop-in':     'pop-in 360ms cubic-bezier(0.34, 1.56, 0.64, 1) both',
         'sheet-up':   'sheet-up 340ms cubic-bezier(0.16, 1, 0.3, 1) both',
         'sheet-down': 'sheet-down 240ms cubic-bezier(0.4, 0, 1, 1) both',
-        'glow-pulse': 'glow-pulse 2.4s ease-in-out infinite',
       },
     },
   },

@@ -116,7 +116,7 @@ interface SignalRowProps {
 function SignalRow({ label, signal }: SignalRowProps) {
   if (!signal.available) {
     return (
-      <div className="glass-soft rounded-lg p-3 opacity-60">
+      <div className="panel-2 p-3 opacity-60">
         <div className="flex items-baseline justify-between">
           <div className="font-heading font-semibold text-sm">{label}</div>
           <div className="text-text-muted text-xs">—</div>
@@ -140,7 +140,7 @@ function SignalRow({ label, signal }: SignalRowProps) {
       : 'text-text-muted';
 
   return (
-    <div className="glass rounded-lg p-3">
+    <div className="panel p-3">
       <div className="flex items-baseline justify-between">
         <div className="font-heading font-semibold text-sm">{label}</div>
         <div className={`text-xs font-medium ${scoreText}`}>

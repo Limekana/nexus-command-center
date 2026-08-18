@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Target, BarChart3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import AppHeader from '../components/AppHeader';
@@ -78,17 +79,20 @@ export default function Dashboard() {
         title="NEXUS HQ"
         action={
           <>
-            <button
-              onClick={() => navigate('/goals')}
-              className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary"
-            >
-              🎯 {t('dash.goals')}
+            {/* Both header actions are neutral chips. Review used to carry
+                the accent border, which put a second amber element beside the
+                live budget readout for no reason — it is a link to a screen,
+                not a reading. The lucide glyphs replace the emoji: an emoji
+                renders in the system's colour font, so no palette reaches it
+                and it stayed cheerfully multicoloured against everything
+                else. */}
+            <button onClick={() => navigate('/goals')} className="chip press-spring">
+              <Target size={12} strokeWidth={2} aria-hidden />
+              {t('dash.goals')}
             </button>
-            <button
-              onClick={() => navigate('/review')}
-              className="text-xs px-2 py-1 rounded-sm border border-primary/60 text-primary active:bg-primary/10"
-            >
-              📊 {t('dash.review')}
+            <button onClick={() => navigate('/review')} className="chip press-spring">
+              <BarChart3 size={12} strokeWidth={2} aria-hidden />
+              {t('dash.review')}
             </button>
           </>
         }

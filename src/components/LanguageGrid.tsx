@@ -18,18 +18,18 @@ import { useEffect, useRef } from 'react';
 import { setLanguage, SUPPORTED_LANGS, LANGUAGE_NAMES, type Lang } from '../i18n';
 
 // Onboarding and Settings had different button treatments before this was
-// extracted (glass card vs. flat left-aligned row). Both are preserved rather
+// extracted (panel card vs. flat left-aligned row). Both are preserved rather
 // than flattened to one — the two screens read differently on purpose.
 const VARIANTS = {
   onboarding: {
-    base: 'glass-soft rounded-xl p-3 text-sm border transition-colors',
+    base: 'panel-2 p-3 text-sm border transition-colors',
     on: 'border-primary bg-primary/10 text-primary font-semibold',
-    off: 'border-glass-border',
+    off: 'border-border',
   },
   settings: {
-    base: 'rounded-lg p-2.5 text-sm border transition-colors text-start',
+    base: 'rounded-md p-2.5 text-sm border transition-colors text-start',
     on: 'border-primary bg-primary/10 text-primary font-semibold',
-    off: 'border-glass-border text-text',
+    off: 'border-border text-text',
   },
 } as const;
 

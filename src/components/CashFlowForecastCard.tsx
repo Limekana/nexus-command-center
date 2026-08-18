@@ -44,14 +44,14 @@ export default function CashFlowForecastCard() {
         <span className="font-heading font-semibold text-sm">Cash Flow Forecast</span>
         {/* 30 / 60d toggle — local only, no persistence. Mirrors the segmented
             pill language used by the Finance tab spine. */}
-        <div className="glass-soft rounded-pill p-0.5 flex text-[0.625rem] font-heading font-semibold uppercase tracking-wider">
+        <div className="panel-2 p-0.5 flex text-[0.625rem] font-heading font-semibold uppercase tracking-wider">
           {([30, 60] as const).map((d) => (
             <button
               key={d}
               type="button"
               onClick={() => setForecastDays(d)}
-              className={`px-2.5 py-1 rounded-pill transition-colors duration-200 ${
-                forecastDays === d ? 'bg-primary/15 text-primary' : 'text-text-muted'
+              className={`px-2.5 py-1 rounded-sm transition-colors duration-200 ${
+                forecastDays === d ? 'bg-surface2 text-text shadow-[inset_0_-2px_0_var(--signal)]' : 'text-text-muted'
               }`}
             >
               {d}d
@@ -105,7 +105,7 @@ export default function CashFlowForecastCard() {
           <button
             type="button"
             onClick={() => setExpanded((e) => !e)}
-            className="w-full flex items-center justify-between mt-3 text-[0.6875rem] text-text-muted active:text-primary"
+            className="w-full flex items-center justify-between mt-3 text-[0.6875rem] text-text-muted active:text-text"
           >
             <span>
               {projection.recurringItems.length} recurring item

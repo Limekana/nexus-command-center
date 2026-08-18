@@ -159,7 +159,7 @@ export default function LockScreen() {
           onClick={tryBiometric}
           className={`w-16 h-16 desktop:w-24 desktop:h-24 rounded-full border-2 flex items-center justify-center text-2xl desktop:text-4xl active:scale-95 ${
             bioAvailable && biometricEnabled
-              ? 'border-primary/60 bg-primary/10 shadow-glow'
+              ? 'border-border bg-surface2'
               : 'border-border bg-surface opacity-50'
           }`}
           aria-label={t('lock.bioAria')}
@@ -201,28 +201,28 @@ export default function LockScreen() {
                 key={d}
                 onClick={() => press(d)}
                 disabled={isLockedOut}
-                className="h-12 desktop:h-20 rounded-md desktop:rounded-lg bg-surface border border-border font-heading font-semibold text-lg desktop:text-3xl active:bg-surface2 desktop:hover:bg-surface2 desktop:hover:border-primary/40 transition-colors"
+                className="h-12 desktop:h-20 rounded-md desktop:rounded-md bg-surface border border-border font-mono tabular-nums font-medium text-lg desktop:text-3xl active:bg-surface2 desktop:hover:bg-surface2 desktop:hover:border-primary/40 transition-colors"
               >
                 {d}
               </button>
             ))}
             <button
               onClick={tryBiometric}
-              className="h-12 desktop:h-20 rounded-md desktop:rounded-lg bg-surface border border-border text-text-muted text-xs desktop:text-base active:bg-surface2 desktop:hover:bg-surface2 transition-colors"
+              className="h-12 desktop:h-20 rounded-md desktop:rounded-md bg-surface border border-border text-text-muted text-xs desktop:text-base active:bg-surface2 desktop:hover:bg-surface2 transition-colors"
             >
               {t('lock.bio')}
             </button>
             <button
               onClick={() => press('0')}
               disabled={isLockedOut}
-              className="h-12 desktop:h-20 rounded-md desktop:rounded-lg bg-surface border border-border font-heading font-semibold text-lg desktop:text-3xl active:bg-surface2 desktop:hover:bg-surface2 desktop:hover:border-primary/40 transition-colors"
+              className="h-12 desktop:h-20 rounded-md desktop:rounded-md bg-surface border border-border font-mono tabular-nums font-medium text-lg desktop:text-3xl active:bg-surface2 desktop:hover:bg-surface2 desktop:hover:border-primary/40 transition-colors"
             >
               0
             </button>
             <button
               onClick={back}
               disabled={isLockedOut}
-              className="h-12 desktop:h-20 rounded-md desktop:rounded-lg bg-surface border border-border text-text-muted text-base desktop:text-2xl active:bg-surface2 desktop:hover:bg-surface2 transition-colors"
+              className="h-12 desktop:h-20 rounded-md desktop:rounded-md bg-surface border border-border text-text-muted text-base desktop:text-2xl active:bg-surface2 desktop:hover:bg-surface2 transition-colors"
             >
               ⌫
             </button>

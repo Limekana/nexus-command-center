@@ -26,6 +26,7 @@ import { useTranslation } from 'react-i18next';
 import { colorForIndex } from './DonutChart';
 import { formatMoney } from '../lib/currencies';
 import type { CashFlowModel, CashFlowNode } from '../lib/cashFlow';
+import { PRIMARY, SUCCESS, WARNING, DANGER, INK_MUTE } from '../lib/themeColors';
 
 interface Props {
   model: CashFlowModel;
@@ -44,12 +45,12 @@ const LABEL_PAD = 10;
 /** Semantic colour for the synthetic nodes; palette colour for real ones. */
 function colorFor(node: CashFlowNode, paletteIndex: number): string {
   switch (node.synthetic) {
-    case 'saved': return '#00D4FF';     // primary — the good outcome
-    case 'leftover': return '#3FB950';  // success
-    case 'debt': return '#D29922';      // warning
-    case 'deficit': return '#F85149';   // danger — funded from reserves
+    case 'saved': return PRIMARY;      // the live reading — the good outcome
+    case 'leftover': return SUCCESS;
+    case 'debt': return WARNING;
+    case 'deficit': return DANGER;     // funded from reserves
     case 'otherIncome':
-    case 'uncategorised': return '#7D8590'; // muted — unnamed money
+    case 'uncategorised': return INK_MUTE; // unnamed money
     default: return colorForIndex(paletteIndex);
   }
 }
@@ -200,7 +201,7 @@ export default function CashFlowDiagram({ model, baseCurrency, onSelect }: Props
           </g>
 
           {/* The trunk — one solid cyan column. Everything passes through it. */}
-          <rect x={trunkX} y={0} width={BAR} height={H} rx={2} fill="#00D4FF" fillOpacity={0.9} />
+          <rect x={trunkX} y={0} width={BAR} height={H} fill={PRIMARY} fillOpacity={0.9} />
 
           {/* Node bars + labels. Buttons rather than decoration: the plan wants
               every band drillable, and the bar is the easiest target. */}

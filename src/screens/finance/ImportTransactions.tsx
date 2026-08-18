@@ -9,7 +9,7 @@
 // Wizards hide the thing you are reasoning about. Here every stage stays on
 // screen once reached: change the date order at the top and the preview at the
 // bottom re-reads instantly, which is the whole feedback loop this screen
-// exists to provide. The three stages read as one column of glass panels with
+// exists to provide. The three stages read as one column of panel panels with
 // cyan step markers, matching the Cyber Slate language rather than inventing a
 // second one.
 //
@@ -595,7 +595,7 @@ export default function ImportTransactions() {
   );
 }
 
-/** Numbered glass panel. The step marker is the only chrome — it carries the
+/** Numbered panel. The step marker is the only chrome — it carries the
  *  sequence without a wizard's forced linearity. */
 function Panel({ step, title, children }: { step: number; title: string; children: React.ReactNode }) {
   return (
@@ -652,7 +652,7 @@ function Tally({ value, label, tone }: { value: number; label: string; tone: 'pr
           ? 'text-danger border-danger/40 bg-danger/5'
           : 'text-text-muted border-border';
   return (
-    <span className={`inline-flex items-baseline gap-1.5 rounded-pill border px-2.5 py-1 text-[0.625rem] uppercase tracking-wider ${cls}`}>
+    <span className={`inline-flex items-baseline gap-1.5 rounded-sm border px-2.5 py-1 text-[0.625rem] uppercase tracking-wider ${cls}`}>
       <b className="font-heading text-xs tabular-nums">{value}</b>
       {label}
     </span>

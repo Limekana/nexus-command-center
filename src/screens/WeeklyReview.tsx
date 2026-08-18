@@ -116,7 +116,7 @@ export default function WeeklyReview() {
         <div className="card flex items-center justify-between">
           <button
             onClick={() => setWeekOffset((w) => w - 1)}
-            className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary"
+            className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-text active:border-border"
           >
             {t('weeklyReview.prev')}
           </button>
@@ -131,7 +131,7 @@ export default function WeeklyReview() {
           <button
             onClick={() => setWeekOffset((w) => Math.min(0, w + 1))}
             disabled={weekOffset >= 0}
-            className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary disabled:opacity-30"
+            className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-text active:border-border disabled:opacity-30"
           >
             {t('weeklyReview.next')}
           </button>
@@ -290,7 +290,7 @@ export default function WeeklyReview() {
                 {t('weeklyReview.yearInReviewSub')}
               </div>
             </div>
-            <span className="text-[0.625rem] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5">
+            <span className="chip-micro">
               {t('weeklyReview.open')}
             </span>
           </div>

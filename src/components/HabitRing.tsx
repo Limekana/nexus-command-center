@@ -130,7 +130,7 @@ export default function HabitRing({
               // don't need a one-off Tailwind utility.
               transition: 'stroke-dashoffset 360ms cubic-bezier(0.16, 1, 0.3, 1)',
               // A subtle drop-shadow on the arc makes the cyan / green
-              // pop against the glass-strong backdrop on the Today cards.
+              // pop against the panel backdrop on the Today cards.
               filter: state === 'done'
                 ? `drop-shadow(0 0 4px ${SUCCESS}66)`
                 : `drop-shadow(0 0 3px ${arcColor}55)`,

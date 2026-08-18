@@ -5,6 +5,8 @@
 //
 // No legend rendering here — the parent owns layout. We expose the palette
 // so the parent can render swatches that match the slice colors.
+import { CATEGORICAL } from '../lib/themeColors';
+
 
 interface DonutSlice {
   label: string;
@@ -19,17 +21,10 @@ interface DonutProps {
   centerBottom?: string; // small caption, e.g. "across 6 assets"
 }
 
-// Eyeballed palette — primary + 6 distinguishable tones, sequential enough
-// to read as "different categories" without clashing on the dark background.
-const DONUT_PALETTE = [
-  '#00D4FF', // primary cyan
-  '#3FB950', // success green
-  '#D29922', // warning amber
-  '#A371F7', // violet
-  '#F778BA', // pink
-  '#FB8500', // orange
-  '#7D8590', // muted grey — reserved for "Other"
-];
+// The shared categorical ramp, not a palette of this chart's own. It used to
+// be seven eyeballed tones picked per-chart, which is why a donut slice and a
+// cash-flow band for the same category could disagree.
+const DONUT_PALETTE = CATEGORICAL;
 
 // eslint-disable-next-line react-refresh/only-export-components -- palette helper shares DONUT_PALETTE above, kept with the chart it colors
 export function colorForIndex(i: number): string {

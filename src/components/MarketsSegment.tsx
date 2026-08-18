@@ -38,7 +38,7 @@ export default function MarketsSegment() {
           type="button"
           onClick={() => fetchMarkets({ force: true })}
           disabled={isLoading}
-          className="text-[0.625rem] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5 active:bg-primary/10 disabled:opacity-40"
+          className="chip-micro press-spring disabled:opacity-40"
         >
           {isLoading ? '…' : `↻ ${t('markets.refresh')}`}
         </button>

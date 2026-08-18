@@ -21,7 +21,7 @@ export default function ListRow({ label, value, tag, leading, onClick }: ListRow
       className={`flex items-center gap-3 py-1.5 ${onClick ? 'cursor-pointer active:bg-surface2 -mx-1 px-1 rounded' : ''}`}
       onClick={onClick}
     >
-      {leading ?? <span className="w-1.5 h-1.5 rounded-full bg-primary/60 flex-shrink-0" />}
+      {leading ?? <span className="w-1.5 h-1.5 rounded-full bg-text-faint flex-shrink-0" />}
       <div className="flex-1 text-sm text-text truncate">{label}</div>
       {value && <div className="text-sm text-text-muted whitespace-nowrap">{value}</div>}
       {tag && (
