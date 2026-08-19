@@ -27,6 +27,7 @@ import type { PortfolioHolding, PortfolioLot } from '../../types/finance';
 import type { QuoteResult } from '../../api/finnhub';
 import type { CryptoResult } from '../../api/coingecko';
 import type { CompanyProfile } from '../../api/companyProfile';
+import Glyph from '../../components/Glyph';
 
 
 function fmt(amount: number, currency: string): string {
@@ -389,7 +390,7 @@ export default function Portfolio() {
               onClick={() => navigate('/finance/portfolio/watchlist')}
               className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-text active:border-border"
             >
-              👁
+              <Glyph name="watch" size={13} />
             </button>
             <button
               onClick={() => navigate('/finance/portfolio/manage')}

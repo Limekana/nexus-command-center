@@ -22,6 +22,7 @@ import { useSettingsStore } from '../store/useSettingsStore';
 import { formatMoney } from '../lib/currencies';
 import { formatLocale } from '../utils/formatters';
 import { isComplete, parseQuickEntry, rankMatches } from '../lib/quickEntry';
+import Glyph from './Glyph';
 
 interface Props {
   open: boolean;
@@ -237,7 +238,7 @@ export default function QuickAddOverlay({ open, onClose }: Props) {
         <div className="mt-2 flex items-center justify-between gap-2">
           <span className="text-[0.625rem] text-text-muted">{t('fin.qa.hint')}</span>
           <div className="flex items-center gap-2">
-            {saved && <span className="text-[0.6875rem] text-success truncate max-w-[240px]">✓ {saved}</span>}
+            {saved && <span className="text-[0.6875rem] text-success truncate max-w-[240px] inline-flex items-center gap-1"><Glyph name="check" size={11} />{saved}</span>}
             <button type="button" className="btn btn-sm" disabled={!complete || !resolvedAccount || busy} onClick={() => void save()}>
               {t('fin.qa.save')}
             </button>

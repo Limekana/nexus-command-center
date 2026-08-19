@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/useAuthStore';
 import { authenticateBiometric, biometricCapability } from '../utils/biometric';
+import Glyph from '../components/Glyph';
 
 export default function LockScreen() {
   const { t } = useTranslation();
@@ -164,7 +165,7 @@ export default function LockScreen() {
           }`}
           aria-label={t('lock.bioAria')}
         >
-          👆
+          <Glyph name="biometric" size={26} strokeWidth={1.5} className="text-text-muted" />
         </button>
         <div className="text-[0.625rem] desktop:text-sm text-text-muted -mt-2">
           {!biometricEnabled

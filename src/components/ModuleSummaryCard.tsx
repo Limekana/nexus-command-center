@@ -1,8 +1,10 @@
 import { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Glyph from './Glyph';
 
 interface ModuleSummaryCardProps {
   title: string;
+  /** A Glyph name (see components/Glyph.tsx), not a character. */
   icon: string;
   tag?: string;
   to: string;
@@ -10,12 +12,10 @@ interface ModuleSummaryCardProps {
 }
 
 /**
- * v1.2 — promoted from flat .card to .panel + rounded-md. This component is
- * the Dashboard's primary visual repeated 5–6 times, so it's the dominant
- * carrier of the v1.2 vibe. The press-spring on tap gives the surface a
- * tactile feel when entering a module.
- *
- * Tag chip migrated to .pill so it reads as part of the v1.2 vocabulary.
+ * The Dashboard's primary visual, repeated 5–6 times, so it carries the look
+ * more than any other component. Flat panel, rule, micro-label tag chip, and a
+ * stroke icon that takes its colour from the row rather than from the
+ * platform's emoji font.
  */
 export default function ModuleSummaryCard({ title, icon, tag, to, children }: ModuleSummaryCardProps) {
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ export default function ModuleSummaryCard({ title, icon, tag, to, children }: Mo
     >
       <div className="flex items-center justify-between mb-2">
         <span className="font-heading font-semibold text-sm flex items-center gap-2">
-          <span aria-hidden>{icon}</span> {title}
+          <Glyph name={icon} size={15} className="text-text-muted" /> {title}
         </span>
         {tag && (
           <span className="chip-micro h-6">{tag}</span>

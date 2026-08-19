@@ -10,6 +10,7 @@ import type { TFunction } from 'i18next';
 import SparkLine from './SparkLine';
 import { useMarketsStore, type MacroRate, type SentimentGauge } from '../store/useMarketsStore';
 import { upcomingEvents, EVENT_ICONS } from '../data/economicCalendar';
+import Glyph from './Glyph';
 
 export default function MarketsSegment() {
   const { t } = useTranslation();
@@ -32,7 +33,11 @@ export default function MarketsSegment() {
             : isLoading
               ? t('markets.loading')
               : t('markets.title')}
-          {stale && <span className="text-warning"> · ⚠ {t('markets.cached')}</span>}
+          {stale && (
+            <span className="text-warning inline-flex items-center gap-1 align-middle">
+              {' · '}<Glyph name="warning" size={11} />{t('markets.cached')}
+            </span>
+          )}
         </span>
         <button
           type="button"
@@ -40,7 +45,7 @@ export default function MarketsSegment() {
           disabled={isLoading}
           className="chip-micro press-spring disabled:opacity-40"
         >
-          {isLoading ? '…' : `↻ ${t('markets.refresh')}`}
+          {isLoading ? '…' : <><Glyph name="refresh" size={11} />{t('markets.refresh')}</>}
         </button>
       </div>
 
@@ -94,7 +99,7 @@ export default function MarketsSegment() {
         {events.map((e) => (
           <div key={`${e.date}-${e.label}`} className="flex items-center gap-2 py-1.5 border-b border-border/30 last:border-0">
             <CountdownBadge daysUntil={e.daysUntil} isToday={e.isToday} />
-            <span className="text-sm" aria-hidden>{EVENT_ICONS[e.type]}</span>
+            <Glyph name={EVENT_ICONS[e.type]} size={14} className="text-text-muted" />
             <div className="flex-1 min-w-0">
               <div className="text-xs truncate">{e.label}</div>
               <div className="text-[0.625rem] text-text-muted">{fmtEventDate(e.date)}</div>

@@ -33,6 +33,7 @@ import {
 } from '../lib/lifeProfile';
 import { startOfWeek } from '../lib/crossDomainSignals';
 import { dateKey } from '../lib/habitStreaks';
+import Glyph from '../components/Glyph';
 
 const PRESETS: { key: LifeProfilePreset; labelKey: string }[] = [
   { key: 'student', labelKey: 'lifeProfile.student' },
@@ -148,7 +149,7 @@ export default function LifeProfileSettings() {
                       on ? 'border-primary bg-primary/15 text-primary' : 'border-border text-transparent'
                     } ${on && !canDisable ? 'opacity-60' : ''}`}
                   >
-                    <span className="text-[0.6875rem] leading-none">✓</span>
+                    <Glyph name="check" size={11} />
                   </button>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm">{t(`domains.${key}`)}</div>

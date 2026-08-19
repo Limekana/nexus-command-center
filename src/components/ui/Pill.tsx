@@ -28,7 +28,7 @@ interface PillProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: PillSize;
   /** When true, the element is a static <span>, not a clickable <button>. */
   asLabel?: boolean;
-  /** Optional leading icon — usually 1 char (emoji or unicode glyph). */
+  /** Optional leading icon — a <Glyph>, or a short character such as '+'. */
   icon?: ReactNode;
   children?: ReactNode;
 }

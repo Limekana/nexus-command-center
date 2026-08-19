@@ -4,7 +4,7 @@
 //   • subject id
 //   • a list/invite/revoke function trio so the modal stays resource-agnostic
 //
-// The modal shows current shares with a revoke (✕) button, plus an
+// The modal shows current shares with a revoke button, plus an
 // invite-by-email row. All server errors are surfaced inline.
 
 import { useEffect, useState } from 'react';
@@ -15,6 +15,7 @@ import {
   SharePermission,
   describeShareError,
 } from '../lib/sharing';
+import Glyph from './Glyph';
 
 interface Props {
   title: string;
@@ -106,7 +107,7 @@ export default function ShareModal({
             aria-label="Close"
             className="text-text-muted active:text-text px-2 -me-2"
           >
-            ✕
+            <Glyph name="close" size={14} />
           </button>
         </div>
         <p className="text-[0.625rem] text-text-muted mb-3">
@@ -145,7 +146,7 @@ export default function ShareModal({
                 disabled={working}
                 className="text-danger px-2 py-1 text-sm active:bg-danger/10 rounded-sm"
               >
-                ✕
+                <Glyph name="close" size={14} />
               </button>
             </div>
           ))}

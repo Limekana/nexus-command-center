@@ -43,6 +43,7 @@ import {
   type DecimalSeparator,
   type ImportRow,
 } from '../../lib/csvImport';
+import Glyph from '../../components/Glyph';
 
 /** A bank export is tens of kilobytes. Anything past this is a wrong file, and
  *  parsing it would lock the tab rather than fail usefully. */
@@ -320,7 +321,7 @@ export default function ImportTransactions() {
       <div className="space-y-3 desktop:max-w-[1100px]">
         {imported != null && (
           <div className="alert alert-ok" role="status">
-            <span aria-hidden>✓</span>
+            <Glyph name="check" size={12} />
             {t('fin.imp.doneCount', { count: imported })}
           </div>
         )}
@@ -349,8 +350,8 @@ export default function ImportTransactions() {
               dragging ? 'border-primary bg-primary/10' : 'border-border bg-surface2/40'
             }`}
           >
-            <div className="text-2xl mb-1" aria-hidden>
-              {fileName ? '🗒' : '⬇'}
+            <div className="mb-1.5 flex justify-center text-text-muted">
+              <Glyph name={fileName ? 'file' : 'download'} size={22} strokeWidth={1.5} />
             </div>
             <div className="text-sm font-heading font-semibold">
               {fileName ?? t('fin.imp.dropHere')}
@@ -474,7 +475,7 @@ export default function ImportTransactions() {
               {/* The one guess we refuse to make silently. */}
               {dateAmbiguous && (
                 <div className="alert alert-warn mt-3">
-                  <span aria-hidden>⚠</span>
+                  <Glyph name="warning" size={12} />
                   {t('fin.imp.dateAmbiguous')}
                 </div>
               )}

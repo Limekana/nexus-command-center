@@ -21,6 +21,7 @@ import { buildBudgetTrend } from '../../lib/budgetTrend';
 import { formatMoney } from '../../lib/currencies';
 import { useShellTier } from '../../lib/useShell';
 import { portfolioCashBalance } from '../../lib/portfolioCash';
+import Glyph from '../../components/Glyph';
 
 // v1.3 BUG-18 — Finance is split into two segments. "Balance" carries the
 // cash-flow + net-worth + budgeting surface; "Portfolio" carries the
@@ -338,7 +339,7 @@ export default function FinanceOverview() {
             </button>
 
             <EntryCard
-              emoji="🎯"
+              icon="goals"
               title={t('fin.ov.savingsBuffer')}
               sub={t('fin.ov.savingsSub')}
               onClick={() => navigate('/finance/savings')}
@@ -397,7 +398,7 @@ export default function FinanceOverview() {
                 mapping UI wants width and says so, but a phone can still take
                 a file and the export path is useful everywhere. */}
             <EntryCard
-              emoji="🗒"
+              icon="file"
               title={t('fin.imp.entryTitle')}
               sub={t('fin.imp.entrySub')}
               onClick={() => navigate('/finance/import')}
@@ -543,7 +544,7 @@ export default function FinanceOverview() {
         {tab === 'portfolio' && (
           <>
             <EntryCard
-              emoji="📈"
+              icon="holdings"
               title={t('fin.ov.holdings')}
               sub={
                 holdings.length > 0
@@ -553,13 +554,13 @@ export default function FinanceOverview() {
               onClick={() => navigate('/finance/portfolio')}
             />
             <EntryCard
-              emoji="👁"
+              icon="watch"
               title={t('fin.ov.watchlist')}
               sub={t('fin.ov.watchlistSub')}
               onClick={() => navigate('/finance/portfolio/watchlist')}
             />
             <EntryCard
-              emoji="📊"
+              icon="inflation"
               title={t('fin.ov.insights')}
               sub={t('fin.ov.insightsSub')}
               onClick={() => navigate('/finance/insights')}
@@ -609,12 +610,12 @@ function IconChip({ emoji, label, onClick, accent }: {
 
 /**
  * v1.3 BUG-18 — labelled navigation row used inside the Balance + Portfolio
- * segments. Glass card surface, emoji + title + sub on the left, a cyan
- * chevron on the right. Replaces the cramped icon-only header chips with
- * something that actually says where it goes.
+ * segments. Panel, icon + title + sub on the left, a chevron on the right.
+ * Replaces the cramped icon-only header chips with something that actually
+ * says where it goes.
  */
-function EntryCard({ emoji, title, sub, onClick }: {
-  emoji: string; title: string; sub: string; onClick: () => void;
+function EntryCard({ icon, title, sub, onClick }: {
+  icon: string; title: string; sub: string; onClick: () => void;
 }) {
   return (
     <button
@@ -622,7 +623,7 @@ function EntryCard({ emoji, title, sub, onClick }: {
       onClick={onClick}
       className="card w-full text-start flex items-center gap-3 active:bg-surface2/40 press-spring"
     >
-      <span className="text-lg" aria-hidden>{emoji}</span>
+      <Glyph name={icon} size={17} className="text-text-muted" />
       <div className="flex-1 min-w-0">
         <div className="font-heading font-semibold text-sm">{title}</div>
         <div className="text-[0.6875rem] text-text-muted truncate">{sub}</div>

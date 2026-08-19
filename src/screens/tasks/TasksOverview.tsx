@@ -11,6 +11,7 @@ import { useSessionStore } from '../../store/useSessionStore';
 import { isOverdue, isToday, formatShortDate, localDateKey, formatLocale } from '../../utils/formatters';
 import { Task } from '../../types/tasks';
 import { listTaskShares, shareTaskByEmail, revokeTaskShare } from '../../lib/sharing';
+import Glyph from '../../components/Glyph';
 
 const filterKeys: { key: TaskFilter; labelKey: string }[] = [
   { key: 'all', labelKey: 'tasks.filterAll' },
@@ -248,7 +249,7 @@ function TaskItem({
         }`}
         aria-label={task.completed ? t('tasks.markIncomplete') : t('tasks.completeTask')}
       >
-        {task.completed && '✓'}
+        {task.completed && <Glyph name="check" size={12} />}
       </button>
       <span className={`flex-1 text-sm truncate ${task.completed ? 'line-through text-text-muted' : ''}`}>
         {task.title}

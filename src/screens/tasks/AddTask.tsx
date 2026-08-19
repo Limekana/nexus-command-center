@@ -9,10 +9,15 @@ import { useTemplatesStore } from '../../store/useTemplatesStore';
 import type { TaskTemplate } from '../../types/templates';
 import { TaskCategory, TaskPriority } from '../../types/tasks';
 
-const priorities: { key: TaskPriority; labelKey: string }[] = [
-  { key: 'high', labelKey: 'addtask.prHigh' },
-  { key: 'medium', labelKey: 'addtask.prMedium' },
-  { key: 'low', labelKey: 'addtask.prLow' },
+// `dot` restores what the labels lost. The three tiers used to be spelled with
+// red/yellow/green emoji circles baked into the translated strings, which meant
+// the one part of the UI that encoded severity was also the one part no palette
+// could reach. The word carries the tier and a semantic dot carries the colour,
+// in the app's own red/amber/green rather than the platform's.
+const priorities: { key: TaskPriority; labelKey: string; dot: string }[] = [
+  { key: 'high', labelKey: 'addtask.prHigh', dot: 'bg-danger' },
+  { key: 'medium', labelKey: 'addtask.prMedium', dot: 'bg-warning' },
+  { key: 'low', labelKey: 'addtask.prLow', dot: 'bg-success' },
 ];
 
 const categories: { key: TaskCategory; labelKey: string }[] = [
@@ -140,6 +145,7 @@ export default function AddTask() {
                 onClick={() => setPriority(p.key)}
                 className={`chip ${priority === p.key ? 'chip-on' : ''}`}
               >
+                <span aria-hidden className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${p.dot}`} />
                 {t(p.labelKey)}
               </button>
             ))}

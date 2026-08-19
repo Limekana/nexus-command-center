@@ -66,10 +66,10 @@ export interface Goal {
 
 // Labels for each goal type used in the form chips and result rows.
 export const GOAL_TYPE_LABELS: Record<GoalType, { label: string; unit: string; icon: string }> = {
-  net_worth: { label: 'Net Worth', unit: '€', icon: '💰' },
-  task_count: { label: 'Tasks', unit: 'tasks', icon: '✓' },
-  workout_count: { label: 'Workouts', unit: 'workouts', icon: '🏋️' },
+  net_worth: { label: 'Net Worth', unit: '€', icon: 'finance' },
+  task_count: { label: 'Tasks', unit: 'tasks', icon: 'tasks' },
+  workout_count: { label: 'Workouts', unit: 'workouts', icon: 'fitness' },
   study_hours: { label: 'Study Hours', unit: 'hours', icon: '⏱️' },
-  lift_pr: { label: 'Lift PR', unit: 'kg', icon: '💪' },
-  gpa: { label: 'GPA', unit: '', icon: '🎓' },
+  lift_pr: { label: 'Lift PR', unit: 'kg', icon: 'fitness' },
+  gpa: { label: 'GPA', unit: '', icon: 'studies' },
 };

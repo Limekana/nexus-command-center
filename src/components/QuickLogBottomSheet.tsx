@@ -6,6 +6,7 @@ import { useTaskStore } from '../store/useTaskStore';
 import { useTemplatesStore } from '../store/useTemplatesStore';
 import { useWorkQualityStore, todayKey } from '../store/useWorkQualityStore';
 import { localDateKey } from '../utils/formatters';
+import Glyph from './Glyph';
 
 // v1.5.2 — Quick Log is NCC-native only. Grade (StudyDesk), study Session
 // (StudyDesk) and workout Set (LimeLog) were removed: cramming stripped-down
@@ -18,10 +19,12 @@ interface QuickLogBottomSheetProps {
   onClose: () => void;
 }
 
-const tabs: { key: QuickTab; label: string }[] = [
-  { key: 'expense', label: '💸 Expense' },
-  { key: 'work', label: '💼 Work' },
-  { key: 'task', label: '✅ Task' },
+// `icon` is a Glyph name; it used to be an emoji baked into the label string,
+// which meant the glyph could never take the label's colour.
+const tabs: { key: QuickTab; label: string; icon: string }[] = [
+  { key: 'expense', label: 'Expense', icon: 'expense' },
+  { key: 'work', label: 'Work', icon: 'work' },
+  { key: 'task', label: 'Task', icon: 'tasks' },
 ];
 
 export default function QuickLogBottomSheet({ open, onClose }: QuickLogBottomSheetProps) {
@@ -44,7 +47,7 @@ export default function QuickLogBottomSheet({ open, onClose }: QuickLogBottomShe
             onClick={() => setTab(t.key)}
             className={`chip flex-shrink-0 ${tab === t.key ? 'chip-on' : ''}`}
           >
-            {t.label}
+            <Glyph name={t.icon} size={12} />{t.label}
           </button>
         ))}
       </div>

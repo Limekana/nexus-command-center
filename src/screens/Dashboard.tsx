@@ -163,7 +163,7 @@ export default function Dashboard() {
         <div className="desk-stack">
         <div className="sec mb-2">{t('dash.modules')}</div>
         <div className="grid grid-cols-1 gap-2">
-          <ModuleSummaryCard title={t('domains.finance')} icon="💰" tag={monthBudget > 0 ? t('dash.tagLive') : t('dash.tagIdle')} to="/finance">
+          <ModuleSummaryCard title={t('domains.finance')} icon="finance" tag={monthBudget > 0 ? t('dash.tagLive') : t('dash.tagIdle')} to="/finance">
             {monthBudget > 0 ? (
               <ProgressBar
                 label={t('dash.budgetUsed')}
@@ -184,7 +184,7 @@ export default function Dashboard() {
             )}
           </ModuleSummaryCard>
 
-          <ModuleSummaryCard title={t('nav.tasks')} icon="✅" tag={tasksOverdue > 0 ? t('dash.tagOverdue') : tasksOpen.length > 0 ? t('dash.tagOpen') : t('dash.tagClear')} to="/tasks">
+          <ModuleSummaryCard title={t('nav.tasks')} icon="tasks" tag={tasksOverdue > 0 ? t('dash.tagOverdue') : tasksOpen.length > 0 ? t('dash.tagOpen') : t('dash.tagClear')} to="/tasks">
             {tasksOpen.length > 0 ? (
               tasksOpen.slice(0, 2).map((task) => (
                 <ListRow

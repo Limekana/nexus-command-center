@@ -14,11 +14,13 @@ import {
   shareBudgetCategoryByEmail,
   revokeBudgetCategoryShare,
 } from '../../lib/sharing';
+import Glyph, { CATEGORY_ICON_KEYS } from '../../components/Glyph';
 
-// Presets, not the whole set. A budget category the twelve don't cover used to
-// force a wrong icon; the picker now carries a free-text field beside them, the
-// same escape hatch the v1.8 assignment-type fix added in StudyDesk.
-const ICONS = ['🏠', '🍱', '🚆', '🎬', '📚', '💪', '🛒', '☕', '✈', '💡', '💊', '🎁'];
+// The picker's whole set, defined once in components/Glyph.tsx alongside the
+// icon each identifier renders as. Twelve presets plus a free-text field became
+// twenty-five presets: see the note on CATEGORY_ICON_KEYS for why the text
+// field could not survive the move to stroke icons.
+const ICONS = CATEGORY_ICON_KEYS;
 
 export default function ManageBudgets() {
   const { t } = useTranslation();
@@ -143,22 +145,16 @@ export default function ManageBudgets() {
                   <button
                     key={i}
                     onClick={() => setIcon(i)}
-                    className={`w-9 h-9 rounded-md border text-lg ${
-                      icon === i ? 'border-primary bg-primary/10' : 'border-border'
+                    aria-pressed={icon === i}
+                    className={`w-9 h-9 rounded-sm border flex items-center justify-center ${
+                      icon === i
+                        ? 'bg-surface2 text-text border-border shadow-[inset_0_-2px_0_var(--signal)]'
+                        : 'border-border text-text-muted'
                     }`}
                   >
-                    {i}
+                    <Glyph name={i} size={16} />
                   </button>
                 ))}
-                {/* Escape hatch: any emoji or character the presets don't cover. */}
-                <input
-                  className="input w-16 h-9 text-center text-lg py-0"
-                  value={ICONS.includes(icon) ? '' : icon}
-                  onChange={(e) => setIcon([...e.target.value].slice(-2).join(''))}
-                  placeholder="＋"
-                  aria-label={t('fin.budg.customIcon')}
-                  maxLength={4}
-                />
               </div>
             </div>
             {/* v1.2 follow-up — BUG-6. Linked account picker. When set, every
@@ -214,7 +210,9 @@ export default function ManageBudgets() {
               : null;
             return (
               <div key={c.id} className="flex items-center gap-2 py-2 border-b border-border/40 last:border-0">
-                <span className="text-lg w-7 text-center">{c.icon ?? '•'}</span>
+                <span className="w-7 flex justify-center text-text-muted">
+                  <Glyph name={c.icon} size={15} />
+                </span>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm flex items-center gap-1.5">
                     <span className="truncate">{c.name}</span>

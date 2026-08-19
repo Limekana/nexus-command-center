@@ -26,6 +26,7 @@ import {
 import { setOnboarded } from '../lib/onboarding';
 import { type Lang } from '../i18n';
 import LanguageGrid from '../components/LanguageGrid';
+import Glyph from '../components/Glyph';
 
 interface Props {
   /** Called when the wizard finishes or is skipped. Parent flips the gate. */
@@ -108,8 +109,8 @@ export default function Onboarding({ onDone }: Props) {
 
           {step === 1 && (
             <div className="space-y-4 text-center">
-              <div className="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto">
-                <span aria-hidden className="text-2xl leading-none">✦</span>
+              <div className="w-14 h-14 rounded-full bg-surface2 border border-border text-primary flex items-center justify-center mx-auto">
+                <Glyph name="sparkle" size={22} strokeWidth={1.5} />
               </div>
               <h1 className="font-heading text-2xl font-bold">{t('onboarding.welcomeTitle')}</h1>
               <p className="text-sm text-text-muted leading-relaxed">{t('onboarding.welcomeBody')}</p>
@@ -135,7 +136,7 @@ export default function Onboarding({ onDone }: Props) {
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-semibold">{t(`onboarding.preset_${p.key}`)}</span>
-                      {picked === p.key && <span aria-hidden className="text-primary text-sm">✓</span>}
+                      {picked === p.key && <Glyph name="check" size={13} className="text-primary" />}
                     </div>
                     <div className="text-[0.6875rem] text-text-muted mt-0.5">{t(p.descKey)}</div>
                   </button>
@@ -165,7 +166,7 @@ export default function Onboarding({ onDone }: Props) {
                           on ? 'border-primary bg-primary/15 text-primary' : 'border-border text-transparent'
                         }`}
                       >
-                        <span aria-hidden className="text-[0.6875rem] leading-none">✓</span>
+                        <Glyph name="check" size={11} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm">{t(`domains.${key}`)}</div>

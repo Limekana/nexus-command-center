@@ -14,6 +14,7 @@ import SparkLine from './SparkLine';
 import { useFinanceStore } from '../store/useFinanceStore';
 import type { PortfolioHolding } from '../types/finance';
 import { SUCCESS, DANGER, INK_MUTE } from '../lib/themeColors';
+import Glyph from './Glyph';
 
 interface Props {
   holding: PortfolioHolding | null;
@@ -115,7 +116,10 @@ export default function HoldingDetailSheet({ holding, onClose, inline = false }:
             />
           ) : (
             <div className="w-12 h-12 rounded-md bg-surface2 border border-border/40 flex items-center justify-center text-text-muted text-xs">
-              {holding.assetType === 'crypto' ? '₿' : holding.assetType === 'etf' ? '🧺' : '📈'}
+              <Glyph
+                name={holding.assetType === 'crypto' ? 'crypto' : holding.assetType === 'etf' ? 'etf' : 'stock'}
+                size={20}
+              />
             </div>
           )}
           <div className="flex-1 min-w-0">

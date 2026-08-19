@@ -13,6 +13,7 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 import { computeAvailableCash } from '../../lib/savingsAvailableCash';
 import { convertSync } from '../../api/fxRates';
 import type { SavingsGoal, ManualAsset } from '../../types/finance';
+import Glyph from '../../components/Glyph';
 
 /**
  * v1.2 — Savings Goals.
@@ -569,8 +570,8 @@ function GoalRow({ goal, onAllocate, onSet, onEdit, onDelete }: GoalRowProps) {
       <div className="flex items-start gap-2">
         <div className="flex-1 min-w-0">
           <div className="font-heading font-semibold text-sm flex items-center gap-1.5">
-            {isBuffer && <span aria-hidden className="text-warning">🛟</span>}
-            {!isBuffer && completed && <span aria-hidden>✓</span>}
+            {isBuffer && <Glyph name="buffer" size={13} className="text-warning" />}
+            {!isBuffer && completed && <Glyph name="check" size={13} className="text-success" />}
             <span className="truncate">{isBuffer ? t('fin.sg.emergencyBuffer') : goal.title}</span>
           </div>
           <div className="text-[0.625rem] text-text-muted truncate">
@@ -635,7 +636,7 @@ function GoalRow({ goal, onAllocate, onSet, onEdit, onDelete }: GoalRowProps) {
           <Pill size="sm" onClick={() => onAllocate(quickStep)} icon="+">
             {quickStep}
           </Pill>
-          <Pill size="sm" onClick={() => setCustomOpen(true)} icon="✎">
+          <Pill size="sm" onClick={() => setCustomOpen(true)} icon={<Glyph name="edit" size={11} />}>
             {t('fin.sg.custom')}
           </Pill>
           <div className="ms-auto flex items-center gap-1.5">

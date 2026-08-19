@@ -23,7 +23,7 @@
 //     without lighting up the whole bar.
 //   - Tab labels stay 11px (UI/UX review v1.1 #4 settled this).
 //
-// v1.9 (Item 6) — the four emoji glyphs (⊞ 💰 ◎ ✅) are gone. Two were
+// v1.9 (Item 6) — the four emoji glyphs are gone. Two were
 // geometric symbols and two were full-colour emoji, so the row mixed a
 // monochrome accent with vendor artwork that renders differently on every
 // device and ignores the cyan accent entirely. Replaced with lucide line

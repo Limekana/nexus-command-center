@@ -23,6 +23,7 @@ import HabitRing from '../../components/HabitRing';
 import { useHabitsStore } from '../../store/useHabitsStore';
 import { isEligibleOn, dateKey } from '../../lib/habitStreaks';
 import type { Habit } from '../../types/habits';
+import Glyph from '../../components/Glyph';
 
 export default function HabitsOverview() {
   const { t } = useTranslation();
@@ -235,7 +236,7 @@ export default function HabitsOverview() {
                         </div>
                         <div className="text-[0.625rem] text-text-muted mb-2">
                           {streak.current > 0 ? (
-                            <>🔥 {streak.current}d</>
+                            <><Glyph name="streak" size={11} className="inline-block align-[-1px] me-1" />{streak.current}d</>
                           ) : (
                             <>{t('habits.noStreak')}</>
                           )}
@@ -332,7 +333,7 @@ export default function HabitsOverview() {
                             {h.title}
                           </div>
                           <div className="text-[0.625rem] text-text-muted">
-                            🔥 {streak.current}d {t('habits.streakSuffix')}
+                            <Glyph name="streak" size={11} className="inline-block align-[-1px] me-1" />{streak.current}d {t('habits.streakSuffix')}
                           </div>
                         </div>
                         <button
@@ -387,7 +388,7 @@ export default function HabitsOverview() {
                             {h.title}
                           </div>
                           <div className="text-[0.625rem] text-text-muted truncate">
-                            {dayLabels || t('habits.specificDays')} · 🔥 {streak.current}d
+                            {dayLabels || t('habits.specificDays')} · <Glyph name="streak" size={10} className="inline-block align-[-1px] me-1" />{streak.current}d
                           </div>
                         </div>
                         <button
@@ -416,7 +417,7 @@ export default function HabitsOverview() {
               type="button"
             >
               <span className="font-heading font-semibold text-sm">
-                📦 {t('habits.archivedLabel')} ({archived.length})
+                <Glyph name="archive" size={11} className="inline-block align-[-1px] me-1" />{t('habits.archivedLabel')} ({archived.length})
               </span>
               <span className="text-text-muted">{showArchived ? '▲' : '▼'}</span>
             </button>
@@ -493,7 +494,7 @@ export default function HabitsOverview() {
                 const s = streakFor(menuHabit.id);
                 return (
                   <div>
-                    🔥 {t('habits.current')} {s.current}d · {t('habits.longest')} {s.longest}d
+                    <Glyph name="streak" size={10} className="inline-block align-[-1px] me-1" />{t('habits.current')} {s.current}d · {t('habits.longest')} {s.longest}d
                   </div>
                 );
               })()}
@@ -538,7 +539,7 @@ export default function HabitsOverview() {
                           {isToday ? t('days.todayShort') : dMini(d.getDay())}
                         </span>
                         <span className="text-sm font-heading font-semibold leading-none">
-                          {done ? '✓' : d.getDate()}
+                          {done ? <Glyph name="check" size={11} /> : d.getDate()}
                         </span>
                       </button>
                     );

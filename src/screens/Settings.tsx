@@ -37,6 +37,7 @@ import { runPortfolioEodTick } from '../lib/portfolioEod';
 import { runNewsAlertsTick } from '../lib/newsAlerts';
 import { supabase } from '../lib/supabase';
 import { setGuestMode } from '../lib/guestMode';
+import Glyph from '../components/Glyph';
 
 // Auto-lock intervals. The "Never" option was removed deliberately — leaving
 // a phone permanently unlocked defeats the purpose of the PIN/biometric gate.
@@ -901,7 +902,7 @@ export default function Settings() {
                 aria-label={t('settings.feedbackRatingN', { n })}
                 aria-pressed={n <= fbRating}
               >
-                {n <= fbRating ? '★' : '☆'}
+                <Glyph name="star" size={18} filled={n <= fbRating} />
               </button>
             ))}
           </div>
@@ -1122,9 +1123,9 @@ function FinnhubKeyRow({
         {value && (
           <button
             onClick={onClear}
-            className="text-[0.625rem] uppercase tracking-wider px-2 py-1 rounded-sm border border-border text-text-muted active:text-danger active:border-danger"
+            className="chip-micro py-1 active:text-danger active:border-danger"
           >
-            ✕
+            <Glyph name="close" size={11} />
           </button>
         )}
       </div>

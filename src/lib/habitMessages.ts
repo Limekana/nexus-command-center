@@ -17,25 +17,31 @@ function fill(s: string, habit: string, streak: number): string {
 }
 
 // Pools. Each entry is [title, body]. Title is short; body carries personality.
+//
+// v1.10: the emoji are gone from these titles. An Android notification renders
+// them in the system's colour font, so the one place the app could not style a
+// glyph was also the place it showed up beside the app icon. The copy carries
+// the tone on its own; the milestone tiers below say what they mean in words
+// rather than leaning on a trophy to grade them.
 const PRIMARY_STREAK: [string, string][] = [
-  ['🔥 {n}-day streak', "Keep it alive — time for {h}."],
+  ['{n}-day streak', "Keep it alive — time for {h}."],
   ['Day {n} done?', "Don't break the chain. {h} is calling."],
-  ['{n} days strong 💪', '{h} — same time, same energy.'],
+  ['{n} days strong', '{h} — same time, same energy.'],
   ['Streak watch: {n} days', 'One rep of consistency: {h}.'],
 ];
 const PRIMARY_FRESH: [string, string][] = [
   ['Time for {h}', 'Small step now, big momentum later.'],
-  ['{h} 🎯', 'Start a streak today — just begin.'],
+  ['{h} today', 'Start a streak today — just begin.'],
   ['Quick win available', '{h}. Two minutes of effort, all-day pride.'],
   ['Your move', '{h} is waiting. Make today count.'],
 ];
 const EVENING_STREAK: [string, string][] = [
-  ['Streak at risk 🌙', "Your {n}-day run on {h} isn't logged yet — still time."],
+  ['Streak at risk', "Your {n}-day run on {h} isn't logged yet — still time."],
   ["Don't lose {n} days", '{h} before bed keeps the streak alive.'],
   ['Last call for {h}', "{n}-day streak on the line. You've got this."],
 ];
 const MORNING_CATCHUP: [string, string][] = [
-  ['Log last night? 📖', 'Did you do {h}? Tap to mark it.'],
+  ['Log last night?', 'Did you do {h}? Tap to mark it.'],
   ['Catch-up', "{h} yesterday — tap to log it if you did."],
   ['Morning check-in', 'Forgot to log {h} last night? Tap to fix it.'],
 ];
@@ -60,9 +66,14 @@ export function habitMessage(kind: HabitMsgKind, habit: string, streak: number, 
 }
 
 function milestoneMessage(habit: string, streak: number): Msg {
-  const flair = streak >= 365 ? '🏆' : streak >= 100 ? '💯' : streak >= 30 ? '⭐' : '🔥';
+  // Was a trophy / 100 / star / flame tier. The word grades the milestone
+  // just as well and survives a notification shade that has no colour font.
+  const flair =
+    streak >= 365 ? 'A full year' :
+    streak >= 100 ? 'Triple digits' :
+    streak >= 30 ? 'One month' : 'Milestone';
   return {
-    title: `${flair} ${streak}-day streak!`,
+    title: `${flair} — ${streak}-day streak!`,
     body: `${streak} days of ${habit}. That's a real habit now — keep going.`,
   };
 }

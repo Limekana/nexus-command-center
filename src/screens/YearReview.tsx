@@ -18,6 +18,7 @@ import { useFitnessStore } from '../store/useFitnessStore';
 import { useTaskStore } from '../store/useTaskStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { buildYearReview } from '../lib/yearReview';
+import Glyph from '../components/Glyph';
 
 const TONE_STYLES = {
   positive: 'border-success/40 bg-success/5 text-success',
@@ -131,7 +132,7 @@ export default function YearReview() {
           className="card text-start w-full active:bg-surface2/40"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="font-heading font-semibold text-sm">💰 {t('yearReview.finance')}</span>
+            <span className="font-heading font-semibold text-sm inline-flex items-center gap-1.5"><Glyph name="finance" size={13} className="text-text-muted" />{t('yearReview.finance')}</span>
           </div>
           <div className="grid grid-cols-3 gap-2 mb-3">
             <Stat label={t('yearReview.spend')} value={fmtMoney(data.finance.totalSpend)} />
@@ -162,7 +163,7 @@ export default function YearReview() {
             the v1.3 scope reduction; this stays as a signal recap). */}
         <div className="card">
           <div className="flex items-center justify-between mb-2">
-            <span className="font-heading font-semibold text-sm">📚 {t('yearReview.studies')}</span>
+            <span className="font-heading font-semibold text-sm inline-flex items-center gap-1.5"><Glyph name="studies" size={13} className="text-text-muted" />{t('yearReview.studies')}</span>
           </div>
           <div className="grid grid-cols-3 gap-2 mb-3">
             <Stat
@@ -190,7 +191,7 @@ export default function YearReview() {
             the v1.3 scope reduction; this stays as a signal recap). */}
         <div className="card">
           <div className="flex items-center justify-between mb-2">
-            <span className="font-heading font-semibold text-sm">🏋️ {t('yearReview.fitness')}</span>
+            <span className="font-heading font-semibold text-sm inline-flex items-center gap-1.5"><Glyph name="fitness" size={13} className="text-text-muted" />{t('yearReview.fitness')}</span>
           </div>
           <div className="grid grid-cols-3 gap-2 mb-3">
             <Stat label={t('yearReview.workouts')} value={String(data.fitness.workoutCount)} />
@@ -226,7 +227,7 @@ export default function YearReview() {
           className="card text-start w-full active:bg-surface2/40"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="font-heading font-semibold text-sm">✓ {t('yearReview.tasks')}</span>
+            <span className="font-heading font-semibold text-sm inline-flex items-center gap-1.5"><Glyph name="tasks" size={13} className="text-text-muted" />{t('yearReview.tasks')}</span>
           </div>
           <div className="grid grid-cols-2 gap-2 mb-3">
             <Stat label={t('yearReview.completed')} value={String(data.tasks.completed)} />

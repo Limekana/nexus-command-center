@@ -117,7 +117,7 @@ export default function Login() {
               account" has to land, and the guest control itself is the last
               thing on the page. */}
           {firstRun && (
-            <p className="text-xs desktop:text-base text-primary/90 mt-2">{t('auth.firstRunPromise')}</p>
+            <p className="text-xs desktop:text-base text-text-muted mt-2">{t('auth.firstRunPromise')}</p>
           )}
         </div>
 

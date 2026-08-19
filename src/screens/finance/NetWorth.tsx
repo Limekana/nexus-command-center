@@ -33,6 +33,7 @@ import { portfolioCashBalance } from '../../lib/portfolioCash';
 import { buildNetWorthTrend } from '../../lib/netWorthTrend';
 import NetWorthTrendChart, { NetWorthBreakdown } from '../../components/NetWorthTrendChart';
 import { useShellTier } from '../../lib/useShell';
+import Glyph from '../../components/Glyph';
 
 
 
@@ -46,16 +47,18 @@ function fmt(amount: number, currency: string): string {
 // editor — the full Account-aware UI lands in the dedicated AccountDetail
 // refactor pass.
 const ASSET_META: Record<ManualAssetType, { icon: string; label: string }> = {
-  checking: { icon: '🏦', label: 'Checking' },
-  savings: { icon: '💰', label: 'Savings' },
-  cash: { icon: '💵', label: 'Cash' },
-  credit_card: { icon: '💳', label: 'Credit Card' },
-  investment: { icon: '📈', label: 'Investment' },
-  property: { icon: '🏠', label: 'Property' },
-  vehicle: { icon: '🚗', label: 'Vehicle' },
-  loan: { icon: '🧾', label: 'Loan' },
-  other: { icon: '📦', label: 'Other' },
-  custom: { icon: '🏷️', label: 'Custom' },
+  // `icon` is a Glyph name (components/Glyph.tsx), not a character. This map
+  // is keyed by account type and never persisted, so it takes clean names.
+  checking: { icon: 'bank', label: 'Checking' },
+  savings: { icon: 'savings', label: 'Savings' },
+  cash: { icon: 'cash', label: 'Cash' },
+  credit_card: { icon: 'card', label: 'Credit Card' },
+  investment: { icon: 'investment', label: 'Investment' },
+  property: { icon: 'property', label: 'Property' },
+  vehicle: { icon: 'vehicle', label: 'Vehicle' },
+  loan: { icon: 'loan', label: 'Loan' },
+  other: { icon: 'other', label: 'Other' },
+  custom: { icon: 'custom', label: 'Custom' },
 };
 
 // Cash-ish account types that count toward the "Liquid" breakdown cell.
@@ -517,7 +520,7 @@ export default function NetWorth() {
                   onClick={() => setAssetType(ty)}
                   className={`chip flex-col gap-0.5 py-2 ${assetType === ty ? 'chip-on' : ''}`}
                 >
-                  <span className="text-sm">{ASSET_META[ty].icon}</span>
+                  <Glyph name={ASSET_META[ty].icon} size={15} />
                   <span className="text-[0.5625rem] uppercase tracking-wider">{t(`fin.acctType.${ty}`)}</span>
                 </button>
               ))}
@@ -602,7 +605,8 @@ export default function NetWorth() {
             <div key={type} className="card">
               <div className="flex items-center justify-between mb-2">
                 <span className="font-heading font-semibold text-sm">
-                  {meta.icon} {t(`fin.acctType.${type}`)}
+                  <Glyph name={meta.icon} size={14} className="text-text-muted inline-block align-[-2px] me-1.5" />
+                  {t(`fin.acctType.${type}`)}
                 </span>
                 <span className={`text-xs ${isLiability ? 'text-danger' : 'text-text-muted'}`}>
                   {isLiability ? '−' : ''}{fmt(groupTotal, baseCurrency)}
