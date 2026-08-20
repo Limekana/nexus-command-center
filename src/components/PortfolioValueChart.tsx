@@ -8,6 +8,7 @@
 
 import { useState } from 'react';
 import type { PortfolioSnapshot } from '../types/finance';
+import { SUCCESS, DANGER } from '../lib/themeColors';
 
 interface Props {
   snapshots: PortfolioSnapshot[];
@@ -74,8 +75,8 @@ export default function PortfolioValueChart({ snapshots, baseCurrency, formatCur
   });
   const linePath = points.map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(' ');
   const areaPath = `${linePath} L ${W} ${H} L 0 ${H} Z`;
-  const strokeColor = trendUp ? '#3FB950' : '#F85149';
-  const areaColor = trendUp ? 'rgba(63, 185, 80, 0.12)' : 'rgba(248, 81, 73, 0.12)';
+  const strokeColor = trendUp ? SUCCESS : DANGER;
+  const areaColor = trendUp ? 'rgba(78, 154, 107, 0.12)' : 'rgba(196, 84, 75, 0.12)';
   const endPoint = points[points.length - 1];
 
   return (

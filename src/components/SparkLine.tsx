@@ -6,6 +6,8 @@
 // Stroke is 1.5px which renders crisply at the typical 60-80px width without
 // needing a viewBox-to-device-pixel math dance.
 
+import { SUCCESS, DANGER, INK_MUTE } from '../lib/themeColors';
+
 interface SparkLineProps {
   data: number[];
   height?: number;
@@ -33,11 +35,10 @@ export default function SparkLine({ data, height = 24, trend, className }: Spark
 
   const inferredTrend: 'up' | 'down' | 'flat' =
     trend ?? (data[data.length - 1] > data[0] ? 'up' : data[data.length - 1] < data[0] ? 'down' : 'flat');
-  // Hardcoded — mirrors tailwind.config.js (success / danger / text-muted).
   const stroke =
-    inferredTrend === 'up' ? '#3FB950' :
-    inferredTrend === 'down' ? '#F85149' :
-    '#7D8590';
+    inferredTrend === 'up' ? SUCCESS :
+    inferredTrend === 'down' ? DANGER :
+    INK_MUTE;
 
   return (
     <svg

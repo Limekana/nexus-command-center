@@ -332,7 +332,24 @@
     "textSize": "حجم النص",
     "textAuto": "تلقائي",
     "textSizeSub": "يُطبَّق في كل مكان، بما في ذلك هاتفك.",
-    "textAutoSub": "{{pct}}% على هذا الحجم من الشاشة — أكبر على سطح المكتب، وقياسي على الهاتف."
+    "textAutoSub": "{{pct}}% على هذا الحجم من الشاشة — أكبر على سطح المكتب، وقياسي على الهاتف.",
+    "feedback": "الملاحظات",
+    "feedbackBlurb": "أخبر المطوّر بما ينجح وما لا ينجح. تُرسل مع إصدار التطبيق والمنصّة حتى يمكن تتبّع البلاغ.",
+    "feedbackCategory": "الفئة",
+    "feedbackRating": "التقييم",
+    "feedbackRatingN": "{{n}} من 5",
+    "feedbackPlaceholder": "ماذا حدث، أو ما الذي تودّ رؤيته؟",
+    "feedbackSend": "إرسال الملاحظات",
+    "feedbackThanks": "شكرًا — تم الإرسال.",
+    "feedbackEmpty": "اكتب رسالة أولاً.",
+    "feedbackSignIn": "سجّل الدخول لإرسال الملاحظات.",
+    "feedbackMeta": "تُرسل مع {{app}} v{{version}}.",
+    "fbCat": {
+      "bug": "خلل",
+      "idea": "فكرة",
+      "praise": "إشادة",
+      "other": "أخرى"
+    }
   },
   "lock": {
     "secureAccess": "وصول آمن",
@@ -362,7 +379,7 @@
     "filterDone": "منجزة",
     "dueToday": "مستحقة اليوم",
     "overdue": "متأخرة",
-    "actionNeeded": "⚠ تحتاج إلى إجراء",
+    "actionNeeded": "تحتاج إلى إجراء",
     "allClear": "كل شيء منجز",
     "completionStreak": "سلسلة الإنجاز",
     "days365": "٣٦٥ يومًا",
@@ -384,13 +401,13 @@
     "dueDateTime": "تاريخ الاستحقاق ووقته",
     "priority": "الأولوية",
     "category": "الفئة",
-    "prHigh": "🔴 عالية",
-    "prMedium": "🟡 متوسطة",
-    "prLow": "🟢 منخفضة",
-    "catStudy": "📚 الدراسة",
-    "catPersonal": "🏠 شخصي",
-    "catFinance": "💰 المال",
-    "catWork": "💼 العمل",
+    "prHigh": "عالية",
+    "prMedium": "متوسطة",
+    "prLow": "منخفضة",
+    "catStudy": "الدراسة",
+    "catPersonal": "شخصي",
+    "catFinance": "المال",
+    "catWork": "العمل",
     "notes": "ملاحظات",
     "notesPlaceholder": "ملاحظات اختيارية…",
     "saving": "جارٍ الحفظ…",
@@ -534,7 +551,7 @@
     "deleteConfirm": "حذف «{{title}}»؟",
     "daysLeft": "بقي {{days}} يوم",
     "noDeadline": "بلا موعد نهائي",
-    "markComplete": "✓ وضع علامة مكتمل",
+    "markComplete": "وضع علامة مكتمل",
     "reopen": "↩ إعادة الفتح",
     "editGoal": "تعديل الهدف",
     "newGoal": "هدف جديد",
@@ -667,9 +684,9 @@
     },
     "finance": "المال",
     "tx": {
-      "expense": "💸 مصروف",
-      "income": "💰 دخل",
-      "transfer": "📈 تحويل",
+      "expense": "مصروف",
+      "income": "دخل",
+      "transfer": "تحويل",
       "editTitle": "تعديل المعاملة",
       "addTitle": "إضافة معاملة",
       "pickDest": "اختر حساب الوجهة للتحويل.",
@@ -765,7 +782,7 @@
       "custom": "مخصّص"
     },
     "nw": {
-      "whatIf": "🔮 ماذا لو؟",
+      "whatIf": "ماذا لو؟",
       "addAsset": "+ أصل",
       "totalNetWorth": "إجمالي صافي الثروة",
       "otherAssets": "أصول أخرى",
@@ -813,8 +830,8 @@
       "toOther": "إلى حساب آخر"
     },
     "assetClass": {
-      "stock": "📈 سهم",
-      "etf": "🧺 ETF",
+      "stock": "سهم",
+      "etf": "ETF",
       "crypto": "₿ عملة رقمية"
     },
     "assetAbbr": {

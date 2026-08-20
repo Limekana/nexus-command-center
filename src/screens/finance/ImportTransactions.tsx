@@ -9,7 +9,7 @@
 // Wizards hide the thing you are reasoning about. Here every stage stays on
 // screen once reached: change the date order at the top and the preview at the
 // bottom re-reads instantly, which is the whole feedback loop this screen
-// exists to provide. The three stages read as one column of glass panels with
+// exists to provide. The three stages read as one column of panel panels with
 // cyan step markers, matching the Cyber Slate language rather than inventing a
 // second one.
 //
@@ -43,6 +43,7 @@ import {
   type DecimalSeparator,
   type ImportRow,
 } from '../../lib/csvImport';
+import Glyph from '../../components/Glyph';
 
 /** A bank export is tens of kilobytes. Anything past this is a wrong file, and
  *  parsing it would lock the tab rather than fail usefully. */
@@ -320,7 +321,7 @@ export default function ImportTransactions() {
       <div className="space-y-3 desktop:max-w-[1100px]">
         {imported != null && (
           <div className="alert alert-ok" role="status">
-            <span aria-hidden>✓</span>
+            <Glyph name="check" size={12} />
             {t('fin.imp.doneCount', { count: imported })}
           </div>
         )}
@@ -349,8 +350,8 @@ export default function ImportTransactions() {
               dragging ? 'border-primary bg-primary/10' : 'border-border bg-surface2/40'
             }`}
           >
-            <div className="text-2xl mb-1" aria-hidden>
-              {fileName ? '🗒' : '⬇'}
+            <div className="mb-1.5 flex justify-center text-text-muted">
+              <Glyph name={fileName ? 'file' : 'download'} size={22} strokeWidth={1.5} />
             </div>
             <div className="text-sm font-heading font-semibold">
               {fileName ?? t('fin.imp.dropHere')}
@@ -474,7 +475,7 @@ export default function ImportTransactions() {
               {/* The one guess we refuse to make silently. */}
               {dateAmbiguous && (
                 <div className="alert alert-warn mt-3">
-                  <span aria-hidden>⚠</span>
+                  <Glyph name="warning" size={12} />
                   {t('fin.imp.dateAmbiguous')}
                 </div>
               )}
@@ -595,7 +596,7 @@ export default function ImportTransactions() {
   );
 }
 
-/** Numbered glass panel. The step marker is the only chrome — it carries the
+/** Numbered panel. The step marker is the only chrome — it carries the
  *  sequence without a wizard's forced linearity. */
 function Panel({ step, title, children }: { step: number; title: string; children: React.ReactNode }) {
   return (
@@ -652,7 +653,7 @@ function Tally({ value, label, tone }: { value: number; label: string; tone: 'pr
           ? 'text-danger border-danger/40 bg-danger/5'
           : 'text-text-muted border-border';
   return (
-    <span className={`inline-flex items-baseline gap-1.5 rounded-pill border px-2.5 py-1 text-[0.625rem] uppercase tracking-wider ${cls}`}>
+    <span className={`inline-flex items-baseline gap-1.5 rounded-sm border px-2.5 py-1 text-[0.625rem] uppercase tracking-wider ${cls}`}>
       <b className="font-heading text-xs tabular-nums">{value}</b>
       {label}
     </span>

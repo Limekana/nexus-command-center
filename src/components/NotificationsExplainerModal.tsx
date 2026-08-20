@@ -183,7 +183,7 @@ export default function NotificationsExplainerModal() {
   };
 
   return (
-    <div className="fixed inset-0 bg-bg/90 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
+    <div className="fixed inset-0 bg-bg/90 z-50 flex items-end sm:items-center justify-center p-4">
       <div className="card-elevated max-w-sm w-full">
         <h2 className="font-heading font-bold text-base mb-1">Stay in the loop</h2>
         <p className="text-xs text-text-muted mb-4">

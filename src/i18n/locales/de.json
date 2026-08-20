@@ -271,7 +271,24 @@
     "textSize": "Schriftgröße",
     "textAuto": "Auto",
     "textSizeSub": "Gilt überall, auch auf dem Telefon.",
-    "textAutoSub": "{{pct}} % bei dieser Bildschirmgröße — größer am Desktop, normal am Telefon."
+    "textAutoSub": "{{pct}} % bei dieser Bildschirmgröße — größer am Desktop, normal am Telefon.",
+    "feedback": "Feedback",
+    "feedbackBlurb": "Sag dem Entwickler, was funktioniert und was nicht. Wird mit App-Version und Plattform gesendet, damit Meldungen nachvollziehbar sind.",
+    "feedbackCategory": "Kategorie",
+    "feedbackRating": "Bewertung",
+    "feedbackRatingN": "{{n}} von 5",
+    "feedbackPlaceholder": "Was ist passiert, oder was wünschst du dir?",
+    "feedbackSend": "Feedback senden",
+    "feedbackThanks": "Danke — es ist unterwegs.",
+    "feedbackEmpty": "Schreib zuerst eine Nachricht.",
+    "feedbackSignIn": "Melde dich an, um Feedback zu senden.",
+    "feedbackMeta": "Gesendet mit {{app}} v{{version}}.",
+    "fbCat": {
+      "bug": "Fehler",
+      "idea": "Idee",
+      "praise": "Lob",
+      "other": "Sonstiges"
+    }
   },
   "days": {
     "long": {
@@ -399,7 +416,7 @@
     "filterDone": "Erledigt",
     "dueToday": "Heute fällig",
     "overdue": "Überfällig",
-    "actionNeeded": "⚠ Handlung nötig",
+    "actionNeeded": "Handlung nötig",
     "allClear": "Alles erledigt",
     "completionStreak": "Erledigungs-Serie",
     "days365": "365 Tage",
@@ -421,13 +438,13 @@
     "dueDateTime": "Fälligkeitsdatum & -zeit",
     "priority": "Priorität",
     "category": "Kategorie",
-    "prHigh": "🔴 Hoch",
-    "prMedium": "🟡 Mittel",
-    "prLow": "🟢 Niedrig",
-    "catStudy": "📚 Studium",
-    "catPersonal": "🏠 Privat",
-    "catFinance": "💰 Finanzen",
-    "catWork": "💼 Arbeit",
+    "prHigh": "Hoch",
+    "prMedium": "Mittel",
+    "prLow": "Niedrig",
+    "catStudy": "Studium",
+    "catPersonal": "Privat",
+    "catFinance": "Finanzen",
+    "catWork": "Arbeit",
     "notes": "Notizen",
     "notesPlaceholder": "Optionale Notizen…",
     "saving": "Speichern…",
@@ -483,7 +500,7 @@
     "deleteConfirm": "\"{{title}}\" löschen?",
     "daysLeft": "{{days}} Tage übrig",
     "noDeadline": "keine Frist",
-    "markComplete": "✓ Als erledigt markieren",
+    "markComplete": "Als erledigt markieren",
     "reopen": "↩ Wieder öffnen",
     "editGoal": "Ziel bearbeiten",
     "newGoal": "Neues Ziel",
@@ -559,9 +576,9 @@
     },
     "finance": "Finanzen",
     "tx": {
-      "expense": "💸 Ausgabe",
-      "income": "💰 Einnahme",
-      "transfer": "📈 Überweisung",
+      "expense": "Ausgabe",
+      "income": "Einnahme",
+      "transfer": "Überweisung",
       "editTitle": "Transaktion bearbeiten",
       "addTitle": "Transaktion hinzufügen",
       "pickDest": "Wähle ein Zielkonto für die Überweisung.",
@@ -653,7 +670,7 @@
       "custom": "Benutzerdef."
     },
     "nw": {
-      "whatIf": "🔮 Was wäre wenn?",
+      "whatIf": "Was wäre wenn?",
       "addAsset": "+ Posten",
       "totalNetWorth": "Gesamtvermögen",
       "otherAssets": "Sonstige Vermögenswerte",
@@ -697,8 +714,8 @@
       "toOther": "auf ein anderes Konto"
     },
     "assetClass": {
-      "stock": "📈 Aktie",
-      "etf": "🧺 ETF",
+      "stock": "Aktie",
+      "etf": "ETF",
       "crypto": "₿ Krypto"
     },
     "assetAbbr": {

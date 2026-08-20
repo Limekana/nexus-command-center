@@ -9,7 +9,7 @@ interface BottomSheetProps {
 }
 
 /**
- * BottomSheet — v1.2 glass-strong sheet with spring slide.
+ * BottomSheet — v1.2 panel sheet with spring slide.
  *
  * Animation contract:
  *   - Backdrop fades over the existing transition-opacity (220ms).
@@ -19,12 +19,13 @@ interface BottomSheetProps {
  *     on bottom sheets reads as a glitch.
  *
  * Visual contract:
- *   - Switched from solid bg-surface + cyan top accent to glass-strong with
- *     a rounded-t-2xl. The top accent is replaced by the glass inset-top
- *     highlight, which reads as the lit edge of a window panel rising up.
- *   - Backdrop alpha bumped to 65% from 60% to ensure the sheet sits in clear
- *     focus over the ambient mesh. The mesh's cyan/teal radials are visually
- *     dense enough that 60% wasn't enough separation on busy screens.
+ *   - A flat panel that rises from the bottom edge, with its own rule around
+ *     it. No blur, no lit edge, no accent stripe: the sheet is separated from
+ *     the screen behind it by the dimmed backdrop, which is the one job a
+ *     backdrop has.
+ *   - Backdrop is a flat 65% black. It used to also blur, which existed to
+ *     push back the ambient cyan mesh; the mesh is gone, so the blur was
+ *     paying GPU cost on the S24 to obscure a flat field.
  *
  * v1.2 follow-up — Portal to document.body.
  *
@@ -66,13 +67,13 @@ export default function BottomSheet({ open, onClose, title, children }: BottomSh
   return createPortal(
     <>
       <div
-        className={`fixed inset-0 bg-black/65 backdrop-blur-sm z-40 transition-opacity duration-[220ms] ${
+        className={`fixed inset-0 bg-black/65 z-40 transition-opacity duration-[220ms] ${
           open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
       />
       <div
-        className={`fixed bottom-0 left-0 right-0 glass-strong rounded-t-2xl z-50 safe-bottom max-w-md mx-auto transition-transform duration-[340ms] ease-spring-soft ${
+        className={`fixed bottom-0 left-0 right-0 panel rounded-t-sm z-50 safe-bottom max-w-md mx-auto transition-transform duration-[340ms] ease-spring-soft ${
           open ? 'translate-y-0' : 'translate-y-full'
         }`}
       >
@@ -93,13 +94,13 @@ export default function BottomSheet({ open, onClose, title, children }: BottomSh
           <div className="font-heading font-bold text-base">{title}</div>
           {/* v1.2 follow-up — w-11 h-11 = 44px, the WCAG 2.5.5 touch-target
               minimum. The old w-8 h-8 (32px) was below threshold and got
-              especially mushy on the glass-strong backdrop blur where
+              especially mushy on the panel backdrop blur where
               touch precision drops. `touchAction: manipulation` disables
               double-tap-zoom delay so the dismiss feels snappy. */}
           <button
             onClick={onClose}
             aria-label="Close"
-            className="text-text-muted text-3xl leading-none active:text-primary press-spring w-11 h-11 flex items-center justify-center rounded-pill -me-2"
+            className="text-text-muted text-3xl leading-none active:text-text press-spring w-11 h-11 flex items-center justify-center rounded-sm -me-2"
             style={{ touchAction: 'manipulation' }}
           >
             ×

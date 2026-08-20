@@ -47,10 +47,10 @@ function cellStyle(cell: BudgetCell, hasLimit: boolean, rowMax: number): React.C
       return { background: `rgba(248, 81, 73, ${(0.10 + over * 0.22).toFixed(3)})` };
     }
     if (ratio > 0.8) return { background: `rgba(210, 153, 34, ${(ratio * 0.16).toFixed(3)})` };
-    return { background: `rgba(0, 212, 255, ${(ratio * 0.07).toFixed(3)})` };
+    return { background: `rgba(169, 174, 180, ${(ratio * 0.07).toFixed(3)})` };
   }
   const share = rowMax > 0 ? cell.actual / rowMax : 0;
-  return { background: `rgba(0, 212, 255, ${(share * 0.07).toFixed(3)})` };
+  return { background: `rgba(169, 174, 180, ${(share * 0.07).toFixed(3)})` };
 }
 
 export default function BudgetTrendTable({

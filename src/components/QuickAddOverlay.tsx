@@ -22,6 +22,7 @@ import { useSettingsStore } from '../store/useSettingsStore';
 import { formatMoney } from '../lib/currencies';
 import { formatLocale } from '../utils/formatters';
 import { isComplete, parseQuickEntry, rankMatches } from '../lib/quickEntry';
+import Glyph from './Glyph';
 
 interface Props {
   open: boolean;
@@ -159,7 +160,7 @@ export default function QuickAddOverlay({ open, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh] px-4 bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh] px-4 bg-black/50"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -167,7 +168,7 @@ export default function QuickAddOverlay({ open, onClose }: Props) {
       aria-modal="true"
       aria-label={t('fin.qa.title')}
     >
-      <div className="glass-strong rounded-lg w-full max-w-2xl p-3 shadow-2xl">
+      <div className="panel w-full max-w-2xl p-3 shadow-2xl">
         <input
           ref={inputRef}
           value={text}
@@ -198,7 +199,7 @@ export default function QuickAddOverlay({ open, onClose }: Props) {
                     acceptSuggestion(s.label);
                   }}
                   className={`w-full text-start px-2 py-1.5 rounded-sm text-sm flex items-center gap-2 ${
-                    i === highlight ? 'bg-primary/12 text-primary' : 'text-text-muted'
+                    i === highlight ? 'bg-surface2 text-text shadow-[inset_0_-2px_0_var(--signal)]' : 'text-text-muted'
                   }`}
                 >
                   {s.icon && <span aria-hidden>{s.icon}</span>}
@@ -237,7 +238,7 @@ export default function QuickAddOverlay({ open, onClose }: Props) {
         <div className="mt-2 flex items-center justify-between gap-2">
           <span className="text-[0.625rem] text-text-muted">{t('fin.qa.hint')}</span>
           <div className="flex items-center gap-2">
-            {saved && <span className="text-[0.6875rem] text-success truncate max-w-[240px]">✓ {saved}</span>}
+            {saved && <span className="text-[0.6875rem] text-success truncate max-w-[240px] inline-flex items-center gap-1"><Glyph name="check" size={11} />{saved}</span>}
             <button type="button" className="btn btn-sm" disabled={!complete || !resolvedAccount || busy} onClick={() => void save()}>
               {t('fin.qa.save')}
             </button>
@@ -262,7 +263,7 @@ function Chip({ label, tone }: { label: string; tone: 'primary' | 'success' | 'd
               ? 'border-border text-text-muted'
               : 'border-dashed border-border text-text-muted/70';
   return (
-    <span className={`inline-flex items-center rounded-pill border px-2 py-0.5 max-w-[240px] truncate ${cls}`}>
+    <span className={`inline-flex items-center rounded-sm border px-2 py-0.5 max-w-[240px] truncate ${cls}`}>
       {label}
     </span>
   );

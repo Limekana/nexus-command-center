@@ -1,21 +1,23 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 
 /**
- * Pill — v1.2 chip primitive. Touch-friendly (>=32px, >=40px when size='lg'),
- * always pill-shaped, always glass-backed.
+ * Pill — the chip primitive. Touch-friendly (>=32px, >=40px when size='lg'),
+ * flat, near-square. The name is historical: v1.10 collapsed the pill radius
+ * along with every other radius, because an always-rounded always-translucent
+ * chip had stopped distinguishing anything and so had stopped meaning
+ * anything. Shape is now reserved for round things that are genuinely round.
  *
  * Use for: filter chips, sort selectors, segmented controls, signal/rating
- * badges in Insights, status indicators that sit over the mesh.
+ * badges in Insights, status indicators.
  *
- * Don't use for: large primary CTAs (use .btn), table-row dense badges where
- * a rectangular .chip-on reads cleaner (kept around).
+ * Don't use for: large primary CTAs (use .btn).
  *
- * Active state via `on` prop — same semantics as v1.0's .chip-on, but the
- * pill shape + glass blur stays consistent with v1.2 vocabulary.
+ * Active state via `on` prop. It takes the signal amber, so it is the one
+ * chip on a screen reporting a current selection — if several chips are `on`
+ * at once, they are probably a set of filters and want a neutral treatment.
  *
  * `tone` controls semantic color — `danger`/`success`/`warning` are reserved
- * for signal/rating use (Strong Sell pill is danger, Strong Buy is success).
- * Default tone is neutral; cyan accent only when `on` is true.
+ * for signal/rating use (Strong Sell is danger, Strong Buy is success).
  */
 type PillTone = 'neutral' | 'danger' | 'success' | 'warning';
 type PillSize = 'sm' | 'md' | 'lg';
@@ -26,7 +28,7 @@ interface PillProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: PillSize;
   /** When true, the element is a static <span>, not a clickable <button>. */
   asLabel?: boolean;
-  /** Optional leading icon — usually 1 char (emoji or unicode glyph). */
+  /** Optional leading icon — a <Glyph>, or a short character such as '+'. */
   icon?: ReactNode;
   children?: ReactNode;
 }
@@ -50,8 +52,8 @@ export const Pill = forwardRef<HTMLButtonElement | HTMLSpanElement, PillProps>(
     ref,
   ) {
     // Active+tone interaction: when explicit tone is set, prefer the tone
-    // class so the pill reads as "this rating tier" regardless of selected
-    // state. Cyan `on` accent only kicks in for neutral pills (filter chips,
+    // class so the chip reads as "this rating tier" regardless of selected
+    // state. The `on` accent only kicks in for neutral chips (filter chips,
     // sort toggles) where the active concept is "this filter is selected."
     const stateClass = on && tone === 'neutral' ? 'pill-on' : TONE_CLASS[tone];
     const cls = ['pill', SIZE_CLASS[size], stateClass, className]

@@ -332,7 +332,24 @@
     "textSize": "पाठ का आकार",
     "textAuto": "स्वतः",
     "textSizeSub": "हर जगह लागू होता है, फ़ोन पर भी।",
-    "textAutoSub": "इस स्क्रीन आकार पर {{pct}}% — डेस्कटॉप पर बड़ा, फ़ोन पर सामान्य।"
+    "textAutoSub": "इस स्क्रीन आकार पर {{pct}}% — डेस्कटॉप पर बड़ा, फ़ोन पर सामान्य।",
+    "feedback": "प्रतिक्रिया",
+    "feedbackBlurb": "डेवलपर को बताएं कि क्या काम कर रहा है और क्या नहीं। ऐप संस्करण और प्लेटफ़ॉर्म के साथ भेजा जाता है ताकि रिपोर्ट ट्रैक की जा सके।",
+    "feedbackCategory": "श्रेणी",
+    "feedbackRating": "रेटिंग",
+    "feedbackRatingN": "5 में से {{n}}",
+    "feedbackPlaceholder": "क्या हुआ, या आप क्या देखना चाहेंगे?",
+    "feedbackSend": "प्रतिक्रिया भेजें",
+    "feedbackThanks": "धन्यवाद — भेज दिया गया है।",
+    "feedbackEmpty": "पहले एक संदेश लिखें।",
+    "feedbackSignIn": "प्रतिक्रिया भेजने के लिए साइन इन करें।",
+    "feedbackMeta": "{{app}} v{{version}} के साथ भेजा गया।",
+    "fbCat": {
+      "bug": "बग",
+      "idea": "सुझाव",
+      "praise": "प्रशंसा",
+      "other": "अन्य"
+    }
   },
   "lock": {
     "secureAccess": "सुरक्षित पहुँच",
@@ -362,7 +379,7 @@
     "filterDone": "पूरे",
     "dueToday": "आज देने हैं",
     "overdue": "बकाया",
-    "actionNeeded": "⚠ ध्यान चाहिए",
+    "actionNeeded": "ध्यान चाहिए",
     "allClear": "सब ठीक है",
     "completionStreak": "पूर्णता शृंखला",
     "days365": "365 दिन",
@@ -384,13 +401,13 @@
     "dueDateTime": "तारीख़ और समय",
     "priority": "प्राथमिकता",
     "category": "श्रेणी",
-    "prHigh": "🔴 उच्च",
-    "prMedium": "🟡 मध्यम",
-    "prLow": "🟢 निम्न",
-    "catStudy": "📚 पढ़ाई",
-    "catPersonal": "🏠 निजी",
-    "catFinance": "💰 वित्त",
-    "catWork": "💼 काम",
+    "prHigh": "उच्च",
+    "prMedium": "मध्यम",
+    "prLow": "निम्न",
+    "catStudy": "पढ़ाई",
+    "catPersonal": "निजी",
+    "catFinance": "वित्त",
+    "catWork": "काम",
     "notes": "नोट्स",
     "notesPlaceholder": "वैकल्पिक नोट्स…",
     "saving": "सहेजा जा रहा है…",
@@ -534,7 +551,7 @@
     "deleteConfirm": "\"{{title}}\" मिटाएँ?",
     "daysLeft": "{{days}} दिन बचे",
     "noDeadline": "कोई समय-सीमा नहीं",
-    "markComplete": "✓ पूरा चिह्नित करें",
+    "markComplete": "पूरा चिह्नित करें",
     "reopen": "↩ फिर खोलें",
     "editGoal": "लक्ष्य बदलें",
     "newGoal": "नया लक्ष्य",
@@ -667,9 +684,9 @@
     },
     "finance": "वित्त",
     "tx": {
-      "expense": "💸 ख़र्च",
-      "income": "💰 आय",
-      "transfer": "📈 स्थानांतरण",
+      "expense": "ख़र्च",
+      "income": "आय",
+      "transfer": "स्थानांतरण",
       "editTitle": "लेन-देन बदलें",
       "addTitle": "लेन-देन जोड़ें",
       "pickDest": "स्थानांतरण के लिए गंतव्य खाता चुनें।",
@@ -761,7 +778,7 @@
       "custom": "कस्टम"
     },
     "nw": {
-      "whatIf": "🔮 क्या हो अगर?",
+      "whatIf": "क्या हो अगर?",
       "addAsset": "+ संपत्ति",
       "totalNetWorth": "कुल शुद्ध संपत्ति",
       "otherAssets": "अन्य संपत्तियाँ",
@@ -805,8 +822,8 @@
       "toOther": "किसी दूसरे खाते को"
     },
     "assetClass": {
-      "stock": "📈 शेयर",
-      "etf": "🧺 ETF",
+      "stock": "शेयर",
+      "etf": "ETF",
       "crypto": "₿ क्रिप्टो"
     },
     "assetAbbr": {

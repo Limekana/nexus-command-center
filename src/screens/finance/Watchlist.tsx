@@ -198,14 +198,14 @@ export default function Watchlist() {
             <>
               <button
                 onClick={() => refreshPortfolio()}
-                className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary"
+                className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-text active:border-border"
                 disabled={refreshing}
               >
                 {refreshing ? '…' : '↻'}
               </button>
               <button
                 onClick={startAdd}
-                className="text-xs px-2 py-1 rounded-sm border border-primary text-primary active:bg-primary/10"
+                className="chip press-spring"
               >
                 {t('fin.wl.add')}
               </button>

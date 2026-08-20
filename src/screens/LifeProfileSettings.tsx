@@ -9,7 +9,7 @@
 //     the other enabled domains so the total always lands on 100% — so there's
 //     no invalid state to "save"; changes persist (debounced) automatically.
 //
-// Cyber Slate Glass — pill selector, glass rows, cyan accents.
+// Cyber Slate Glass — pill selector, panel rows, cyan accents.
 
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -33,6 +33,7 @@ import {
 } from '../lib/lifeProfile';
 import { startOfWeek } from '../lib/crossDomainSignals';
 import { dateKey } from '../lib/habitStreaks';
+import Glyph from '../components/Glyph';
 
 const PRESETS: { key: LifeProfilePreset; labelKey: string }[] = [
   { key: 'student', labelKey: 'lifeProfile.student' },
@@ -124,7 +125,7 @@ export default function LifeProfileSettings() {
         </div>
 
         {/* Domain editor */}
-        <div className="glass rounded-xl p-4 space-y-4">
+        <div className="panel p-4 space-y-4">
           {DOMAIN_KEYS.map((key) => {
             const weight = draft.domains[key];
             const on = weight > 0;
@@ -145,10 +146,10 @@ export default function LifeProfileSettings() {
                     aria-pressed={on}
                     aria-label={`${t(`domains.${key}`)} ${on ? t('lifeProfile.enabled') : t('lifeProfile.disabled')}`}
                     className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 transition-colors ${
-                      on ? 'border-primary bg-primary/15 text-primary' : 'border-glass-border text-transparent'
+                      on ? 'border-primary bg-primary/15 text-primary' : 'border-border text-transparent'
                     } ${on && !canDisable ? 'opacity-60' : ''}`}
                   >
-                    <span className="text-[0.6875rem] leading-none">✓</span>
+                    <Glyph name="check" size={11} />
                   </button>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm">{t(`domains.${key}`)}</div>
@@ -176,7 +177,7 @@ export default function LifeProfileSettings() {
             );
           })}
 
-          <div className="flex items-center justify-between pt-2 border-t border-glass-border">
+          <div className="flex items-center justify-between pt-2 border-t border-border">
             <span className="sec">{t('lifeProfile.total')}</span>
             <span className="font-heading text-sm font-semibold text-success">100%</span>
           </div>

@@ -12,6 +12,9 @@ import ListRow from '../components/ListRow';
 import { useLifeProfileStore } from '../store/useLifeProfileStore';
 import { enabledDomains } from '../lib/lifeProfile';
 import pkg from '../../package.json';
+import { Capacitor } from '@capacitor/core';
+import { enqueue } from '../db/syncQueue';
+import { generateId } from '../utils/uuid';
 import { useAuthStore } from '../store/useAuthStore';
 import { useSyncStore } from '../store/useSyncStore';
 import { useSessionStore, userDisplayName } from '../store/useSessionStore';
@@ -34,6 +37,7 @@ import { runPortfolioEodTick } from '../lib/portfolioEod';
 import { runNewsAlertsTick } from '../lib/newsAlerts';
 import { supabase } from '../lib/supabase';
 import { setGuestMode } from '../lib/guestMode';
+import Glyph from '../components/Glyph';
 
 // Auto-lock intervals. The "Never" option was removed deliberately — leaving
 // a phone permanently unlocked defeats the purpose of the PIN/biometric gate.
@@ -46,6 +50,17 @@ export default function Settings() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const currentLang = (i18n.language || 'en').split('-')[0] as Lang;
+  // ── Feedback (v1.10) ──────────────────────────────────────────────────
+  // Queued through the existing syncQueue rather than posted directly, so a
+  // report written with no signal survives to the next drain. enqueue() is
+  // fire-and-forget by design; a delivery problem surfaces in the sync banner
+  // like every other queued write.
+  const FEEDBACK_CATEGORIES = ['bug', 'idea', 'praise', 'other'] as const;
+  const FEEDBACK_MAX = 4000;
+  const [fbCategory, setFbCategory] = useState<string>('bug');
+  const [fbRating, setFbRating] = useState(0);
+  const [fbMessage, setFbMessage] = useState('');
+  const [fbNotice, setFbNotice] = useState<string | null>(null);
   const lifeProfile = useLifeProfileStore((s) => s.profile);
   const biometricEnabled = useAuthStore((s) => s.biometricEnabled);
   const setBiometric = useAuthStore((s) => s.setBiometric);
@@ -342,7 +357,7 @@ export default function Settings() {
             locked
           />
           <button
-            className="btn-ghost w-full mt-2 text-warning border-warning/40"
+            className="btn-ghost w-full mt-2"
             onClick={lock}
           >
             {t('settings.lockNow')}
@@ -390,7 +405,7 @@ export default function Settings() {
             {syncing ? t('settings.syncing') : isOnline ? t('settings.syncNow') : t('settings.offline')}
           </button>
           <button
-            className="btn-ghost w-full mt-2 text-warning border-warning/40"
+            className="btn-ghost w-full mt-2"
             onClick={onForceResync}
             disabled={!user || !isOnline || syncing}
           >
@@ -443,7 +458,7 @@ export default function Settings() {
               <div className="text-sm">{t('settings.privacyPolicy')}</div>
               <div className="text-[0.625rem] text-text-muted">{t('settings.privacyPolicySub')}</div>
             </div>
-            <span className="text-primary text-lg flex-shrink-0">›</span>
+            <span className="text-text-muted text-lg flex-shrink-0">›</span>
           </a>
         </Section>
 
@@ -485,7 +500,7 @@ export default function Settings() {
               <div className="text-sm">{t('settings.supportDev')}</div>
               <div className="text-[0.625rem] text-text-muted">{t('settings.supportDevSub')}</div>
             </div>
-            <span className="text-primary text-lg flex-shrink-0">›</span>
+            <span className="text-text-muted text-lg flex-shrink-0">›</span>
           </a>
         </Section>
 
@@ -502,7 +517,7 @@ export default function Settings() {
                   .join(' · ')}
               </div>
             </div>
-            <span className="text-primary text-lg flex-shrink-0">›</span>
+            <span className="text-text-muted text-lg flex-shrink-0">›</span>
           </button>
           <div className="text-[0.625rem] text-text-muted px-1 pb-1">
             {t('settings.lifeProfileBlurb')}
@@ -848,7 +863,7 @@ export default function Settings() {
                 </div>
                 <div className="h-1 bg-surface2 rounded-sm mt-1 overflow-hidden">
                   <div
-                    className={`h-full ${exhausted ? 'bg-danger' : pct > 75 ? 'bg-warning' : 'bg-primary'}`}
+                    className={`h-full ${exhausted ? 'bg-danger' : pct > 75 ? 'bg-warning' : 'bg-text-muted'}`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>
@@ -858,6 +873,83 @@ export default function Settings() {
           <div className="text-[0.625rem] text-text-muted">
             {t('settings.apiUsageResets')}
           </div>
+        </Section>
+
+        <Section title={t('settings.feedback')}>
+          <p className="text-sm text-muted mb-3">{t('settings.feedbackBlurb')}</p>
+
+          <div className="flex flex-wrap gap-2 mb-3" role="group" aria-label={t('settings.feedbackCategory')}>
+            {FEEDBACK_CATEGORIES.map((c) => (
+              <button
+                key={c}
+                type="button"
+                className={fbCategory === c ? 'pill pill-active' : 'pill'}
+                onClick={() => setFbCategory(c)}
+                aria-pressed={fbCategory === c}
+              >
+                {t(`settings.fbCat.${c}`)}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex gap-1 mb-3" role="group" aria-label={t('settings.feedbackRating')}>
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                key={n}
+                type="button"
+                className={n <= fbRating ? 'text-xl text-accent' : 'text-xl text-muted'}
+                onClick={() => setFbRating(n === fbRating ? 0 : n)}
+                aria-label={t('settings.feedbackRatingN', { n })}
+                aria-pressed={n <= fbRating}
+              >
+                <Glyph name="star" size={18} filled={n <= fbRating} />
+              </button>
+            ))}
+          </div>
+
+          <textarea
+            className="input w-full min-h-[98px] resize-y"
+            value={fbMessage}
+            maxLength={FEEDBACK_MAX}
+            onChange={(e) => {
+              setFbMessage(e.target.value);
+              if (fbNotice) setFbNotice(null);
+            }}
+            placeholder={t('settings.feedbackPlaceholder')}
+            aria-label={t('settings.feedback')}
+          />
+          <div className="text-xs text-muted text-right mt-1">
+            {fbMessage.length}/{FEEDBACK_MAX}
+          </div>
+
+          <button
+            className="btn-ghost w-full mt-2"
+            disabled={!fbMessage.trim()}
+            onClick={() => {
+              const body = fbMessage.trim();
+              if (!body) { setFbNotice(t('settings.feedbackEmpty')); return; }
+              if (!user) { setFbNotice(t('settings.feedbackSignIn')); return; }
+              const id = generateId();
+              void enqueue('feedback', id, 'insert', {
+                id,
+                category: fbCategory,
+                rating: fbRating || null,
+                message: body,
+                appVersion: pkg.version,
+                platform: Capacitor.getPlatform(),
+              });
+              setFbMessage('');
+              setFbRating(0);
+              setFbNotice(t('settings.feedbackThanks'));
+            }}
+          >
+            {t('settings.feedbackSend')}
+          </button>
+
+          {fbNotice && <p className="text-sm text-muted mt-2">{fbNotice}</p>}
+          <p className="text-xs text-muted mt-2">
+            {t('settings.feedbackMeta', { app: 'Nexus Command Center', version: pkg.version })}
+          </p>
         </Section>
 
         <Section title={t('settings.about')}>
@@ -873,7 +965,7 @@ export default function Settings() {
         </Section>
       </div>
       {signOutOpen && createPortal(
-        <div className="fixed inset-0 bg-bg/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-bg/90 z-50 flex items-center justify-center p-4">
           <div className="card-elevated max-w-sm w-full max-h-[90vh] overflow-y-auto">
             <h2 className="font-heading font-bold text-base mb-1">{t('settings.signOutTitle')}</h2>
             <p className="text-xs text-text-muted mb-4">
@@ -1012,6 +1104,7 @@ function FinnhubKeyRow({
   onClear: () => void;
 }) {
   const { t } = useTranslation();
+
   return (
     <div className="py-2 flex items-center justify-between gap-2">
       <div className="min-w-0">
@@ -1023,16 +1116,16 @@ function FinnhubKeyRow({
       <div className="flex gap-1 flex-shrink-0">
         <button
           onClick={onEdit}
-          className="text-[0.625rem] uppercase tracking-wider px-2 py-1 rounded-sm border border-primary/40 text-primary active:bg-primary/10"
+          className="chip-micro py-1 press-spring"
         >
           {value ? t('common.edit') : t('settings.set')}
         </button>
         {value && (
           <button
             onClick={onClear}
-            className="text-[0.625rem] uppercase tracking-wider px-2 py-1 rounded-sm border border-border text-text-muted active:text-danger active:border-danger"
+            className="chip-micro py-1 active:text-danger active:border-danger"
           >
-            ✕
+            <Glyph name="close" size={11} />
           </button>
         )}
       </div>
@@ -1068,17 +1161,23 @@ function Toggle({
         <div className="text-sm">{label}</div>
         {sub && <div className="text-[0.625rem] text-text-muted">{sub}</div>}
       </div>
+      {/* The track stays neutral and the KNOB carries the accent. Settings
+          has a dozen of these; filling each whole track amber put a dozen
+          accent slabs on one screen and made the accent mean "a switch exists"
+          rather than "this is live". A 20px amber dot still reads as on at a
+          glance, and ten of them read as a panel of switches rather than as
+          ten alarms. */}
       <button
         onClick={() => !locked && onChange(!value)}
-        className={`w-11 h-6 rounded-full p-0.5 transition-colors flex-shrink-0 ${
-          value ? 'bg-primary' : 'bg-surface2 border border-border'
+        className={`w-11 h-6 rounded-full p-0.5 bg-surface2 border transition-colors flex-shrink-0 ${
+          value ? 'border-primary' : 'border-border'
         } ${locked ? 'opacity-60' : ''}`}
         disabled={locked}
         aria-pressed={value}
       >
         <div
-          className={`w-5 h-5 rounded-full bg-bg shadow transition-transform ${
-            value ? 'translate-x-5' : ''
+          className={`w-5 h-5 rounded-full transition-transform ${
+            value ? 'translate-x-5 bg-primary' : 'bg-text-faint'
           }`}
         />
       </button>

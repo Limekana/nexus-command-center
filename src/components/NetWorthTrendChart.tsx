@@ -23,6 +23,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { NetWorthPoint, NetWorthTrend } from '../lib/netWorthTrend';
+import { PRIMARY, GROUND } from '../lib/themeColors';
 
 interface Props {
   trend: NetWorthTrend;
@@ -149,7 +150,7 @@ export default function NetWorthTrendChart({
                 strokeDasharray="3 3"
               />
             )}
-            {areaPath && <path d={areaPath} fill="rgba(0, 212, 255, 0.10)" />}
+            {areaPath && <path d={areaPath} fill="rgba(232, 163, 61, 0.10)" />}
             {segments
               .filter((s) => s.to > s.from)
               .map((s, i) => (
@@ -157,7 +158,7 @@ export default function NetWorthTrendChart({
                   key={i}
                   d={path(s.from, s.to)}
                   fill="none"
-                  stroke="#00D4FF"
+                  stroke={PRIMARY}
                   strokeWidth="2"
                   strokeLinejoin="round"
                   strokeLinecap="round"
@@ -184,8 +185,8 @@ export default function NetWorthTrendChart({
                     cx={geom.x(i)}
                     cy={geom.y(p.total)}
                     r={isSel ? 4.5 : 2.5}
-                    fill={isSel ? '#00D4FF' : '#0B0F14'}
-                    stroke="#00D4FF"
+                    fill={isSel ? PRIMARY : GROUND}
+                    stroke={PRIMARY}
                     strokeWidth={isSel ? 0 : 1.5}
                   />
                   {/* Generous invisible hit target — a 2.5px dot is not a

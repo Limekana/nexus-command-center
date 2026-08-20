@@ -13,7 +13,7 @@ export default function OfflineBanner() {
   return (
     <div className="px-3 pt-2 safe-top">
       <div className="max-w-md mx-auto">
-        <div className="glass rounded-pill text-warning text-xs py-1.5 px-4 text-center border border-warning/40 animate-fade-in-up" style={{ background: 'rgba(210, 153, 34, 0.08)' }}>
+        <div className="panel text-warning text-xs py-1.5 px-4 text-center border border-warning/40 animate-fade-in-up" style={{ background: 'rgba(210, 153, 34, 0.08)' }}>
           Offline — showing local data · writes queued for sync
         </div>
       </div>

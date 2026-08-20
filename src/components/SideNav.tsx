@@ -9,9 +9,9 @@
 // same route matching, so the two navs cannot drift.
 //
 // Design is NCC's own idiom rather than a copy of StudyDesk's paper sidebar:
-// glass-strong panel, cyan accent, and an active treatment that reads as the
+// panel, cyan accent, and an active treatment that reads as the
 // sidebar analogue of the bottom bar's sliding pill — a cyan edge rail plus a
-// soft glass field, instead of a pill that slides between four fixed slots.
+// soft panel field, instead of a pill that slides between four fixed slots.
 
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -38,7 +38,7 @@ export default function SideNav({ rail, onToggle }: SideNavProps) {
       // `h-screen self-start` rather than letting the flex row stretch it: the
       // main column scrolls internally, so the shell itself never scrolls and
       // the rail should simply be viewport-tall.
-      className="relative z-30 flex h-screen shrink-0 self-start flex-col glass-strong border-e border-glass-border transition-[width] duration-200 ease-spring-soft motion-reduce:transition-none"
+      className="relative z-30 flex h-screen shrink-0 self-start flex-col panel border-e border-border transition-[width] duration-200 ease-spring-soft motion-reduce:transition-none"
       style={{ width: rail ? WIDTH_RAIL : WIDTH_FULL }}
       aria-label={t('nav.home')}
     >
@@ -46,13 +46,13 @@ export default function SideNav({ rail, onToggle }: SideNavProps) {
           is typographic anyway — a cyan monogram plus Space Grotesk does the
           work, and the monogram alone survives the rail. */}
       <div
-        className={`safe-top flex items-center border-b border-glass-border pb-4 pt-5 ${
+        className={`safe-top flex items-center border-b border-border pb-4 pt-5 ${
           rail ? 'justify-center px-0' : 'gap-3 px-4'
         }`}
       >
         <span
           aria-hidden
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-primary/15 font-heading text-sm font-bold text-primary ring-1 ring-primary/40"
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-surface2 border border-border font-mono text-sm font-medium text-text"
         >
           N
         </span>
@@ -79,15 +79,14 @@ export default function SideNav({ rail, onToggle }: SideNavProps) {
               aria-label={label}
               aria-current={isActive ? 'page' : undefined}
               title={rail ? label : undefined}
-              className={`press-spring relative flex items-center rounded-lg py-2.5 transition-colors duration-200 ease-spring-soft ${
+              className={`press-spring relative flex items-center rounded-md py-2.5 transition-colors duration-200 ease-spring-soft ${
                 rail ? 'justify-center px-0' : 'gap-3 px-3'
-              } ${isActive ? 'glass-soft text-primary' : 'text-text-muted hover:text-text'}`}
+              } ${isActive ? 'panel-2 text-text' : 'text-text-muted hover:text-text'}`}
             >
               {isActive && (
                 <span
                   aria-hidden
-                  className="absolute inset-y-1 start-0 w-0.5 rounded-pill bg-primary"
-                  style={{ boxShadow: '0 0 12px -2px rgba(0, 212, 255, 0.7)' }}
+                  className="absolute inset-y-1 start-0 w-0.5 bg-primary"
                 />
               )}
               <Icon size={20} strokeWidth={1.75} aria-hidden="true" />
@@ -97,14 +96,14 @@ export default function SideNav({ rail, onToggle }: SideNavProps) {
         })}
       </nav>
 
-      <div className="border-t border-glass-border p-2">
+      <div className="border-t border-border p-2">
         <button
           type="button"
           onClick={onToggle}
           aria-expanded={!rail}
           aria-label={toggleLabel}
           title={toggleLabel}
-          className={`press-spring flex w-full items-center rounded-lg py-2.5 text-text-muted transition-colors duration-200 hover:text-text ${
+          className={`press-spring flex w-full items-center rounded-md py-2.5 text-text-muted transition-colors duration-200 hover:text-text ${
             rail ? 'justify-center px-0' : 'gap-3 px-3'
           }`}
         >

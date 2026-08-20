@@ -3,20 +3,23 @@ interface QuickLogFABProps {
 }
 
 /**
- * v1.2 FAB — pop-in on mount, spring scale on press, cyan-glow halo.
+ * FAB — the app's one primary action, and the one element that earns a solid
+ * fill of the signal amber.
  *
- * Visual: keeps the cyan circle but layers an outer halo via shadow-glass-glow
- * + a brief pop-in animation when first painted (after the user navigates to
- * a FAB-eligible route). On press, the spring scale-down (.press-spring) reads
- * as the surface compressing rather than the flat scale-95 v1.0 had.
+ * v1.10: the cyan glow halo is gone. A circle of the accent colour on a flat
+ * ground is already the loudest thing on screen; a bloom around it was adding
+ * emphasis to something that had no competition. Still circular — under the
+ * instrument system `rounded-full` is reserved for genuinely round objects
+ * (rings, dots, this), which is what makes the distinction carry meaning now
+ * that panels and chips are square.
  */
 export default function QuickLogFAB({ onClick }: QuickLogFABProps) {
   return (
     <button
       onClick={onClick}
-      // bottom = glass nav-bar height (~5.5rem) + safe-area-inset + 1rem gap
+      // bottom = nav-bar height (~5.5rem) + safe-area-inset + 1rem gap
       style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 7rem)' }}
-      className="fixed end-5 w-14 h-14 rounded-full bg-primary text-bg z-20 flex items-center justify-center shadow-glass-glow animate-pop-in press-spring"
+      className="fixed end-5 w-14 h-14 rounded-full bg-primary text-bg z-20 flex items-center justify-center animate-pop-in press-spring"
       aria-label="Quick log"
     >
       <svg

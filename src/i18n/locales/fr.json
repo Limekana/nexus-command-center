@@ -271,7 +271,24 @@
     "textSize": "Taille du texte",
     "textAuto": "Auto",
     "textSizeSub": "S'applique partout, y compris sur votre téléphone.",
-    "textAutoSub": "{{pct}} % à cette taille d'écran — plus grand sur ordinateur, standard sur téléphone."
+    "textAutoSub": "{{pct}} % à cette taille d'écran — plus grand sur ordinateur, standard sur téléphone.",
+    "feedback": "Commentaires",
+    "feedbackBlurb": "Dites au développeur ce qui fonctionne et ce qui ne fonctionne pas. Envoyé avec la version de l'app et la plateforme pour faciliter le suivi.",
+    "feedbackCategory": "Catégorie",
+    "feedbackRating": "Note",
+    "feedbackRatingN": "{{n}} sur 5",
+    "feedbackPlaceholder": "Que s'est-il passé, ou que souhaiteriez-vous voir ?",
+    "feedbackSend": "Envoyer",
+    "feedbackThanks": "Merci — c'est en route.",
+    "feedbackEmpty": "Écrivez d'abord un message.",
+    "feedbackSignIn": "Connectez-vous pour envoyer un commentaire.",
+    "feedbackMeta": "Envoyé avec {{app}} v{{version}}.",
+    "fbCat": {
+      "bug": "Bug",
+      "idea": "Idée",
+      "praise": "Compliment",
+      "other": "Autre"
+    }
   },
   "days": {
     "long": {
@@ -399,7 +416,7 @@
     "filterDone": "Faites",
     "dueToday": "Pour aujourd'hui",
     "overdue": "En retard",
-    "actionNeeded": "⚠ action requise",
+    "actionNeeded": "action requise",
     "allClear": "Rien à signaler",
     "completionStreak": "Série de réussites",
     "days365": "365 jours",
@@ -421,13 +438,13 @@
     "dueDateTime": "Date & heure d'échéance",
     "priority": "Priorité",
     "category": "Catégorie",
-    "prHigh": "🔴 Haute",
-    "prMedium": "🟡 Moyenne",
-    "prLow": "🟢 Basse",
-    "catStudy": "📚 Études",
-    "catPersonal": "🏠 Personnel",
-    "catFinance": "💰 Finance",
-    "catWork": "💼 Travail",
+    "prHigh": "Haute",
+    "prMedium": "Moyenne",
+    "prLow": "Basse",
+    "catStudy": "Études",
+    "catPersonal": "Personnel",
+    "catFinance": "Finance",
+    "catWork": "Travail",
     "notes": "Notes",
     "notesPlaceholder": "Notes facultatives…",
     "saving": "Enregistrement…",
@@ -483,7 +500,7 @@
     "deleteConfirm": "Supprimer \"{{title}}\" ?",
     "daysLeft": "{{days}} j restants",
     "noDeadline": "pas d'échéance",
-    "markComplete": "✓ Marquer terminé",
+    "markComplete": "Marquer terminé",
     "reopen": "↩ Rouvrir",
     "editGoal": "Modifier l'objectif",
     "newGoal": "Nouvel objectif",
@@ -559,9 +576,9 @@
     },
     "finance": "Finances",
     "tx": {
-      "expense": "💸 Dépense",
-      "income": "💰 Revenu",
-      "transfer": "📈 Virement",
+      "expense": "Dépense",
+      "income": "Revenu",
+      "transfer": "Virement",
       "editTitle": "Modifier la transaction",
       "addTitle": "Ajouter une transaction",
       "pickDest": "Choisissez un compte de destination pour le virement.",
@@ -654,7 +671,7 @@
       "custom": "Personnalisé"
     },
     "nw": {
-      "whatIf": "🔮 Et si ?",
+      "whatIf": "Et si ?",
       "addAsset": "+ Actif",
       "totalNetWorth": "Patrimoine total",
       "otherAssets": "Autres actifs",
@@ -699,8 +716,8 @@
       "unconvertable_many": "{{count}} transactions n’ont pas pu être converties en {{cur}} ; le solde peut être sous-estimé."
     },
     "assetClass": {
-      "stock": "📈 Action",
-      "etf": "🧺 ETF",
+      "stock": "Action",
+      "etf": "ETF",
       "crypto": "₿ Crypto"
     },
     "assetAbbr": {

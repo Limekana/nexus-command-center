@@ -54,7 +54,7 @@ import { useBodyMetricsStore } from './store/useBodyMetricsStore';
 import { useWorkQualityStore } from './store/useWorkQualityStore';
 import { useLifeProfileStore } from './store/useLifeProfileStore';
 import { useFinanceStore } from './store/useFinanceStore';
-import { isOnboarded, setOnboarded } from './lib/onboarding';
+import { isOnboarded, setOnboarded, hydrateOnboardedFromCloud, markOnboardedCloud } from './lib/onboarding';
 
 export default function App() {
   const unlocked = useAuthStore((s) => s.unlocked);
@@ -76,6 +76,23 @@ export default function App() {
   // v1.6 — first-run onboarding gate. `onboarded` flips when the wizard
   // finishes/skips; seeded from the local flag (or a pre-1.6 saved profile).
   const [onboarded, setOnboardedState] = useState<boolean>(() => isOnboarded());
+  const [onboardChecked, setOnboardChecked] = useState(false);
+
+  // v1.10 - ask the ACCOUNT whether onboarding is already done, not just this
+  // device. Gated behind `onboardChecked` so a signed-in user never sees a
+  // frame of the wizard before the answer arrives; a guest resolves instantly
+  // because there is no account to ask.
+  useEffect(() => {
+    if (!session) { setOnboardChecked(true); return; }
+    let cancelled = false;
+    setOnboardChecked(false);
+    void hydrateOnboardedFromCloud().then((done) => {
+      if (cancelled) return;
+      if (done) setOnboardedState(true);
+      setOnboardChecked(true);
+    });
+    return () => { cancelled = true; };
+  }, [session]);
   const lifeProfileLoaded = useLifeProfileStore((s) => s.loaded);
 
   useEffect(() => {
@@ -310,11 +327,12 @@ export default function App() {
   // guests have no cloud load, so the local check stands alone. Re-checking
   // isOnboarded() here catches the case where the cloud load just wrote a
   // profile into local storage.
-  if (!onboarded && (!session || lifeProfileLoaded) && !isOnboarded()) {
+  if (!onboarded && (!session || (lifeProfileLoaded && onboardChecked)) && !isOnboarded()) {
     return (
       <Onboarding
         onDone={() => {
           setOnboarded();
+          void markOnboardedCloud();
           setOnboardedState(true);
         }}
       />

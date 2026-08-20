@@ -68,7 +68,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
       {children}
       {pending && (
         <div
-          className="fixed inset-0 bg-bg/90 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center p-4"
+          className="fixed inset-0 bg-bg/90 z-[60] flex items-end sm:items-center justify-center p-4"
           role="dialog"
           aria-modal="true"
           // Dismissing by backdrop is a cancel, matching the native dialog.
@@ -90,7 +90,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
                 {pending.cancelLabel ?? t('common.cancel')}
               </button>
               <button
-                className={`px-4 py-2 text-sm rounded-lg font-medium ${
+                className={`px-4 py-2 text-sm rounded-md font-medium ${
                   pending.destructive === false
                     ? 'bg-primary text-bg'
                     : 'bg-danger text-white'

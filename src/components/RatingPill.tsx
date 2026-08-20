@@ -19,7 +19,7 @@ import { TIER_LABEL, type InsightTier } from '../lib/insightsScore';
 const TIER_TONE: Record<InsightTier, { bg: string; text: string; border: string }> = {
   strong_buy:  { bg: 'rgba(63, 185, 80, 0.18)',  text: 'text-success', border: 'border-success/55' },
   buy:         { bg: 'rgba(63, 185, 80, 0.10)',  text: 'text-success', border: 'border-success/35' },
-  hold:        { bg: 'rgba(125, 133, 144, 0.10)', text: 'text-text-muted', border: 'border-glass-border' },
+  hold:        { bg: 'rgba(125, 133, 144, 0.10)', text: 'text-text-muted', border: 'border-border' },
   sell:        { bg: 'rgba(248, 81, 73, 0.10)',   text: 'text-danger',  border: 'border-danger/35' },
   strong_sell: { bg: 'rgba(248, 81, 73, 0.18)',   text: 'text-danger',  border: 'border-danger/55' },
 };
@@ -52,7 +52,7 @@ export default function RatingPill({ ticker, compact = false, className = '' }: 
   if (!rating) {
     return (
       <span
-        className={`inline-flex items-center h-5 px-2 rounded-pill border border-glass-border text-text-muted/50 text-[0.625rem] uppercase tracking-wide ${className}`}
+        className={`inline-flex items-center h-5 px-2 rounded-sm border border-border text-text-muted/50 text-[0.625rem] uppercase tracking-wide ${className}`}
         style={{ background: 'rgba(28, 33, 40, 0.30)' }}
       >
         —
@@ -67,7 +67,7 @@ export default function RatingPill({ ticker, compact = false, className = '' }: 
   const tabPrefix = insightsTab === 'fundamental' ? 'Fundamental' : 'Technical';
   return (
     <span
-      className={`inline-flex items-center gap-1 h-5 px-2 rounded-pill border ${tone.text} ${tone.border} text-[0.625rem] uppercase tracking-wide font-medium ${className}`}
+      className={`inline-flex items-center gap-1 h-5 px-2 rounded-sm border ${tone.text} ${tone.border} text-[0.625rem] uppercase tracking-wide font-medium ${className}`}
       style={{ background: tone.bg }}
       title={`${tabPrefix} · Composite ${rating.score.toFixed(0)} · ${TIER_LABEL[rating.tier]}${rating.partial ? ' (partial coverage)' : ''}`}
     >

@@ -14,7 +14,7 @@
 // Center slot shows the composite score number — the page's hero metric.
 
 import { ReactNode } from 'react';
-import { PRIMARY, SUCCESS, WARNING, VIOLET, TRACK_DEFAULT } from '../lib/themeColors';
+import { DOMAIN, TRACK_DEFAULT } from '../lib/themeColors';
 
 export interface RingSegment {
   key: string;
@@ -78,10 +78,10 @@ export default function LifeScoreRing({
   } else {
     const quadrant = circ / 4;
     const legacy: [number, string, string][] = [
-      [workouts, PRIMARY, 'workouts'],
-      [study, VIOLET, 'study'],
-      [habits, SUCCESS, 'habits'],
-      [budget, WARNING, 'budget'],
+      [workouts, DOMAIN.fitness, 'workouts'],
+      [study, DOMAIN.study, 'study'],
+      [habits, DOMAIN.habits, 'habits'],
+      [budget, DOMAIN.finance, 'budget'],
     ];
     legacy.forEach(([score, color, key], idx) => {
       const clamped = Math.max(0, Math.min(100, score));

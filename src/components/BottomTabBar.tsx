@@ -7,8 +7,10 @@
 // Pure <button> elements never trigger the URL preview, so this is the
 // reliable cross-platform fix.
 //
-// v1.2 visual upgrade — promoted from a flat bg-surface bar to a glass-strong
-// nav with a pill-shaped active indicator that springs into place.
+// v1.10 — a flat panel with a 2px amber index mark on the top edge of the
+// active tab, in place of the glowing cyan pill that used to slide behind it.
+// The mark is the same device the tick strips use: a position on a scale. It
+// still slides, because the movement is what tells you which way you went.
 //
 // Design notes:
 //   - The active pill is a positioned, animated background layer that slides
@@ -21,7 +23,7 @@
 //     without lighting up the whole bar.
 //   - Tab labels stay 11px (UI/UX review v1.1 #4 settled this).
 //
-// v1.9 (Item 6) — the four emoji glyphs (⊞ 💰 ◎ ✅) are gone. Two were
+// v1.9 (Item 6) — the four emoji glyphs are gone. Two were
 // geometric symbols and two were full-colour emoji, so the row mixed a
 // monochrome accent with vendor artwork that renders differently on every
 // device and ignores the cyan accent entirely. Replaced with lucide line
@@ -69,26 +71,26 @@ export default function BottomTabBar() {
           the entire bottom strip swallowed touches. Even with pb-44 on
           main, the 16px vertical gutters above/below the pill were
           intercepting touch attempts. Move pointer-events-auto down to
-          the actual `.glass-strong` pill so only the pill itself blocks
-          touch — gutters now pass through to whatever's behind. */}
+          the panel itself so only the panel blocks touch — gutters now
+          pass through to whatever's behind. */}
       <div className="max-w-md mx-auto">
-        <div className="glass-strong rounded-pill px-1.5 py-1.5 relative pointer-events-auto">
-          {/* Sliding active pill — absolutely positioned, transitions its
-              translate to follow the active tab index. Width is computed via
-              CSS calc on the flex parent's effective tab width. */}
+        <div className="panel px-1.5 py-1.5 relative pointer-events-auto overflow-hidden">
+          {/* Sliding index mark — absolutely positioned on the panel's top
+              edge, transitions its translate to follow the active tab index.
+              Width is computed via CSS calc on the flex parent's effective
+              tab width. */}
           {activeIdx >= 0 && (
             <span
               data-active-pill
               aria-hidden
-              className="absolute top-1.5 bottom-1.5 start-1.5 rounded-pill pointer-events-none transition-transform duration-300 ease-spring-soft"
+              className="absolute top-0 h-[2px] start-1.5 pointer-events-none transition-transform duration-300 ease-spring-soft"
               style={{
                 // 4 tabs evenly fill the inner space (width minus left+right
-                // 1.5 padding on the .glass-strong). Each tab occupies 1/4 of
-                // that, so translateX = activeIdx * 100%.
+                // 1.5 padding on the panel). Each tab occupies 1/4 of that,
+                // so translateX = activeIdx * 100%.
                 width: 'calc((100% - 0.75rem) / 4)',
                 transform: `translateX(calc(${activeIdx} * 100%))`,
-                background: 'rgba(0, 212, 255, 0.14)',
-                boxShadow: '0 0 0 1px rgba(0, 212, 255, 0.55), 0 0 18px -6px rgba(0, 212, 255, 0.5)',
+                background: 'var(--signal)',
               }}
             />
           )}
@@ -102,18 +104,17 @@ export default function BottomTabBar() {
                   onClick={() => navigate(tab.to)}
                   aria-label={t(tab.labelKey)}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2 rounded-pill relative z-10 transition-colors duration-200 ease-spring-soft active:scale-[0.94] ${
+                  className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2 relative z-10 transition-colors duration-200 ${
                     isActive ? 'text-primary' : 'text-text-muted'
                   }`}
                 >
-                  <span
-                    className={`leading-none transition-transform duration-300 ease-spring ${
-                      isActive ? 'scale-110' : 'scale-100'
-                    }`}
-                  >
+                  {/* No scale-up on the active icon. The index mark above
+                      already says which tab is current, and a springing icon
+                      said it a second time in a softer vocabulary. */}
+                  <span className="leading-none">
                     <Icon size={20} strokeWidth={1.75} aria-hidden="true" />
                   </span>
-                  <span className="text-[0.6875rem] font-medium tracking-wide leading-tight">{t(tab.labelKey)}</span>
+                  <span className="font-mono text-[0.625rem] uppercase tracking-[0.12em] leading-tight">{t(tab.labelKey)}</span>
                 </button>
               );
             })}

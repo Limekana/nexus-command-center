@@ -1,0 +1,7 @@
+Une nouvelle apparence, et la fin des déconnexions permanentes.
+
+L'interface a été refaite : surfaces plates, filets fins et une seule couleur d'accent, réservée à une valeur en direct. Les chiffres sont composés en chasse fixe pour que les colonnes s'alignent.
+
+La déconnexion tous les un ou deux jours est corrigée — chaque application gère désormais sa propre session.
+
+Vous pouvez aussi envoyer un retour depuis les réglages, et la configuration ne réapparaît plus sur un compte déjà configuré.

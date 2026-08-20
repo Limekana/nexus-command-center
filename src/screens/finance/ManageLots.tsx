@@ -15,6 +15,7 @@ import { useFinanceStore } from '../../store/useFinanceStore';
 import { computeSale, totalRemainingShares, saleCostBasisInCurrency } from '../../lib/stockSaleFifo';
 import { convertSync } from '../../api/fxRates';
 import type { PortfolioLot } from '../../types/finance';
+import Glyph from '../../components/Glyph';
 
 
 
@@ -226,14 +227,14 @@ export default function ManageLots() {
               {holding.quantity > 0 && (
                 <button
                   onClick={startSell}
-                  className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary"
+                  className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-text active:border-border"
                 >
                   {t('fin.ml.sell')}
                 </button>
               )}
               <button
                 onClick={startAdd}
-                className="text-xs px-2 py-1 rounded-sm border border-primary text-primary active:bg-primary/10"
+                className="chip press-spring"
               >
                 {t('fin.ml.purchase')}
               </button>
@@ -250,7 +251,11 @@ export default function ManageLots() {
                 {holding.name}
               </div>
               <div className="font-heading font-semibold text-sm">
-                {holding.assetType === 'crypto' ? '₿' : holding.assetType === 'etf' ? '🧺' : '📈'} {holding.ticker.toUpperCase()}
+                <Glyph
+                  name={holding.assetType === 'crypto' ? 'crypto' : holding.assetType === 'etf' ? 'etf' : 'stock'}
+                  size={13}
+                  className="text-text-muted"
+                />{' '}{holding.ticker.toUpperCase()}
               </div>
             </div>
             <div className="text-end">

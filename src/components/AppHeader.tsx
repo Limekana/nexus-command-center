@@ -11,9 +11,12 @@ interface AppHeaderProps {
 }
 
 /**
- * v1.2 AppHeader — title text floats over the mesh (no card frame, keeps
- * visual lightness). Avatar is now a glass-soft pill with a cyan-tinted
- * initial. Back-button is a pill-shaped hit zone for thumb reach.
+ * AppHeader — the title sits directly on the ground with no frame around it,
+ * and a rule underneath separates it from the content instead. That rule is
+ * doing the job the old floating-over-a-mesh treatment did, with one line.
+ *
+ * Neither the back chip nor the avatar takes the accent: they are navigation,
+ * not readings.
  */
 export default function AppHeader({ title, back, backLabel, action, showAvatar = true }: AppHeaderProps) {
   const navigate = useNavigate();
@@ -28,12 +31,12 @@ export default function AppHeader({ title, back, backLabel, action, showAvatar =
     // its natural width and stops claiming title space.
     // v1.9 — the gap below the header matches the desktop grid gap, so the
     // first row of cards sits on the same rhythm as every row beneath it.
-    <header className="flex items-center justify-between py-3 mb-3 desktop:mb-4 gap-2">
+    <header className="flex items-center justify-between py-3 mb-3 desktop:mb-4 gap-2 border-b border-border-soft">
       <div className="flex items-center gap-3 min-w-0 flex-1">
         {back && (
           <button
             onClick={() => navigate(back)}
-            className="glass-soft rounded-pill text-text-muted text-xs flex items-center gap-1 px-3 h-8 active:text-primary press-spring flex-shrink-0"
+            className="chip h-8 press-spring flex-shrink-0"
             aria-label={backLabel ?? 'Back'}
           >
             <span aria-hidden>←</span> {backLabel ?? 'Back'}
@@ -46,7 +49,7 @@ export default function AppHeader({ title, back, backLabel, action, showAvatar =
         {showAvatar && (
           <button
             onClick={() => navigate('/settings')}
-            className="w-9 h-9 rounded-full glass-soft flex items-center justify-center text-[0.625rem] font-heading font-semibold text-primary press-spring flex-shrink-0"
+            className="w-9 h-9 rounded-full bg-surface2 border border-border flex items-center justify-center font-mono text-[0.625rem] font-medium tracking-wider text-text-muted press-spring flex-shrink-0"
             aria-label="Account"
           >
             {initials}

@@ -75,7 +75,7 @@ export default function CrossDomainCard() {
       <button
         type="button"
         onClick={() => navigate('/life')}
-        className="glass rounded-xl p-4 text-start w-full press-spring"
+        className="panel p-4 text-start w-full press-spring"
       >
         <div className="flex items-center justify-between mb-1">
           <h2 className="font-heading font-semibold text-sm">{t('dash.lifePatterns')}</h2>
@@ -96,7 +96,7 @@ export default function CrossDomainCard() {
       <button
         type="button"
         onClick={() => navigate('/life')}
-        className="glass rounded-xl p-4 text-start w-full press-spring"
+        className="panel p-4 text-start w-full press-spring"
       >
         <div className="flex items-center justify-between mb-1">
           <h2 className="font-heading font-semibold text-sm">{t('dash.lifePatterns')}</h2>
@@ -120,7 +120,7 @@ export default function CrossDomainCard() {
       onBlur={() => setPaused(false)}
       onPointerEnter={() => setPaused(true)}
       onPointerLeave={() => setPaused(false)}
-      className="glass rounded-xl p-4 text-start w-full press-spring"
+      className="panel p-4 text-start w-full press-spring"
       aria-label={t('dash.openLifePatterns')}
     >
       <div className="flex items-center justify-between mb-2">

@@ -76,7 +76,8 @@ export function upcomingEvents(count = 5, now: number = Date.now()): UpcomingEve
 export const EVENT_ICONS: Record<CalendarEventType, string> = {
   ecb: '🇪🇺',
   fomc: '🇺🇸',
-  cpi: '📊',
-  nfp: '💼',
-  gdp: '📈',
+  // Glyph names (components/Glyph.tsx), not characters to render.
+  cpi: 'inflation',
+  nfp: 'employment',
+  gdp: 'growth',
 };

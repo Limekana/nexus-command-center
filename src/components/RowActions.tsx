@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useConfirm } from './ConfirmDialog';
+import Glyph from './Glyph';
 interface RowActionsProps {
   onEdit?: () => void;
   onDelete?: () => void;
@@ -18,7 +19,7 @@ export default function RowActions({ onEdit, onDelete, onShare, confirmMsg }: Ro
             e.stopPropagation();
             onShare();
           }}
-          className="text-text-muted hover:text-primary active:text-primary text-xs px-2 py-1 rounded-sm border border-border active:bg-surface2"
+          className="text-text-muted hover:text-primary active:text-text text-xs px-2 py-1 rounded-sm border border-border active:bg-surface2"
           aria-label="Share"
         >
           ⇆
@@ -30,10 +31,10 @@ export default function RowActions({ onEdit, onDelete, onShare, confirmMsg }: Ro
             e.stopPropagation();
             onEdit();
           }}
-          className="text-text-muted hover:text-primary active:text-primary text-xs px-2 py-1 rounded-sm border border-border active:bg-surface2"
+          className="text-text-muted hover:text-primary active:text-text text-xs px-2 py-1 rounded-sm border border-border active:bg-surface2"
           aria-label="Edit"
         >
-          ✎
+          <Glyph name="edit" size={12} />
         </button>
       )}
       {onDelete && (
@@ -49,7 +50,7 @@ export default function RowActions({ onEdit, onDelete, onShare, confirmMsg }: Ro
           className="text-text-muted hover:text-danger active:text-danger text-xs px-2 py-1 rounded-sm border border-border active:bg-danger/10"
           aria-label="Delete"
         >
-          ✕
+          <Glyph name="close" size={12} />
         </button>
       )}
     </div>

@@ -1,0 +1,7 @@
+Ein neues Erscheinungsbild – und Schluss mit den ständigen Abmeldungen.
+
+Die Oberfläche wurde neu gebaut: flache Flächen, feine Linien und eine Akzentfarbe, die nur einen aktuellen Wert markiert. Zahlen stehen in einer dicktengleichen Schrift, sodass Spalten sauber fluchten.
+
+Das Abmelden alle ein bis zwei Tage ist behoben – jede App hält jetzt ihre eigene Sitzung.
+
+Zudem: Feedback direkt aus den Einstellungen, und die Einrichtung erscheint auf einem bekannten Konto nicht erneut.

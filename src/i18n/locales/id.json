@@ -332,7 +332,24 @@
     "textSize": "Ukuran teks",
     "textAuto": "Otomatis",
     "textSizeSub": "Berlaku di mana saja, termasuk di ponsel.",
-    "textAutoSub": "{{pct}}% pada ukuran layar ini — lebih besar di desktop, standar di ponsel."
+    "textAutoSub": "{{pct}}% pada ukuran layar ini — lebih besar di desktop, standar di ponsel.",
+    "feedback": "Masukan",
+    "feedbackBlurb": "Beri tahu pengembang apa yang berhasil dan apa yang tidak. Dikirim dengan versi aplikasi dan platform agar laporan bisa ditelusuri.",
+    "feedbackCategory": "Kategori",
+    "feedbackRating": "Penilaian",
+    "feedbackRatingN": "{{n}} dari 5",
+    "feedbackPlaceholder": "Apa yang terjadi, atau apa yang ingin kamu lihat?",
+    "feedbackSend": "Kirim masukan",
+    "feedbackThanks": "Terima kasih — sudah dikirim.",
+    "feedbackEmpty": "Tulis pesan dulu.",
+    "feedbackSignIn": "Masuk untuk mengirim masukan.",
+    "feedbackMeta": "Dikirim dengan {{app}} v{{version}}.",
+    "fbCat": {
+      "bug": "Bug",
+      "idea": "Ide",
+      "praise": "Pujian",
+      "other": "Lainnya"
+    }
   },
   "lock": {
     "secureAccess": "Akses aman",
@@ -362,7 +379,7 @@
     "filterDone": "Selesai",
     "dueToday": "Jatuh tempo hari ini",
     "overdue": "Terlambat",
-    "actionNeeded": "⚠ perlu tindakan",
+    "actionNeeded": "perlu tindakan",
     "allClear": "Semua beres",
     "completionStreak": "Rentetan penyelesaian",
     "days365": "365 hari",
@@ -384,13 +401,13 @@
     "dueDateTime": "Tanggal & waktu tenggat",
     "priority": "Prioritas",
     "category": "Kategori",
-    "prHigh": "🔴 Tinggi",
-    "prMedium": "🟡 Sedang",
-    "prLow": "🟢 Rendah",
-    "catStudy": "📚 Studi",
-    "catPersonal": "🏠 Pribadi",
-    "catFinance": "💰 Keuangan",
-    "catWork": "💼 Pekerjaan",
+    "prHigh": "Tinggi",
+    "prMedium": "Sedang",
+    "prLow": "Rendah",
+    "catStudy": "Studi",
+    "catPersonal": "Pribadi",
+    "catFinance": "Keuangan",
+    "catWork": "Pekerjaan",
     "notes": "Catatan",
     "notesPlaceholder": "Catatan opsional…",
     "saving": "Menyimpan…",
@@ -534,7 +551,7 @@
     "deleteConfirm": "Hapus \"{{title}}\"?",
     "daysLeft": "sisa {{days}} hr",
     "noDeadline": "tanpa tenggat",
-    "markComplete": "✓ Tandai selesai",
+    "markComplete": "Tandai selesai",
     "reopen": "↩ Buka lagi",
     "editGoal": "Ubah target",
     "newGoal": "Target baru",
@@ -667,9 +684,9 @@
     },
     "finance": "Keuangan",
     "tx": {
-      "expense": "💸 Pengeluaran",
-      "income": "💰 Pemasukan",
-      "transfer": "📈 Transfer",
+      "expense": "Pengeluaran",
+      "income": "Pemasukan",
+      "transfer": "Transfer",
       "editTitle": "Ubah transaksi",
       "addTitle": "Tambah transaksi",
       "pickDest": "Pilih akun tujuan untuk transfer.",
@@ -760,7 +777,7 @@
       "custom": "Kustom"
     },
     "nw": {
-      "whatIf": "🔮 Bagaimana jika?",
+      "whatIf": "Bagaimana jika?",
       "addAsset": "+ Aset",
       "totalNetWorth": "Total kekayaan bersih",
       "otherAssets": "Aset lain",
@@ -803,8 +820,8 @@
       "toOther": "ke akun lain"
     },
     "assetClass": {
-      "stock": "📈 Saham",
-      "etf": "🧺 ETF",
+      "stock": "Saham",
+      "etf": "ETF",
       "crypto": "₿ Kripto"
     },
     "assetAbbr": {

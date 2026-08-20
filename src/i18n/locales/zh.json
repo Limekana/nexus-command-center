@@ -271,7 +271,24 @@
     "textSize": "文字大小",
     "textAuto": "自动",
     "textSizeSub": "在所有设备上生效，包括手机。",
-    "textAutoSub": "当前屏幕尺寸下为 {{pct}}% — 桌面更大，手机为标准。"
+    "textAutoSub": "当前屏幕尺寸下为 {{pct}}% — 桌面更大，手机为标准。",
+    "feedback": "反馈",
+    "feedbackBlurb": "告诉开发者哪些好用、哪些不好用。会附带应用版本和平台，便于追踪问题。",
+    "feedbackCategory": "分类",
+    "feedbackRating": "评分",
+    "feedbackRatingN": "5 分中的 {{n}} 分",
+    "feedbackPlaceholder": "发生了什么，或者你希望看到什么？",
+    "feedbackSend": "发送反馈",
+    "feedbackThanks": "谢谢 — 已发送。",
+    "feedbackEmpty": "请先写一条消息。",
+    "feedbackSignIn": "登录后即可发送反馈。",
+    "feedbackMeta": "随 {{app}} v{{version}} 一起发送。",
+    "fbCat": {
+      "bug": "缺陷",
+      "idea": "建议",
+      "praise": "表扬",
+      "other": "其他"
+    }
   },
   "days": {
     "long": {
@@ -399,7 +416,7 @@
     "filterDone": "已完成",
     "dueToday": "今日到期",
     "overdue": "逾期",
-    "actionNeeded": "⚠ 需要处理",
+    "actionNeeded": "需要处理",
     "allClear": "全部完成",
     "completionStreak": "完成连续记录",
     "days365": "365 天",
@@ -421,13 +438,13 @@
     "dueDateTime": "截止日期和时间",
     "priority": "优先级",
     "category": "类别",
-    "prHigh": "🔴 高",
-    "prMedium": "🟡 中",
-    "prLow": "🟢 低",
-    "catStudy": "📚 学习",
-    "catPersonal": "🏠 个人",
-    "catFinance": "💰 财务",
-    "catWork": "💼 工作",
+    "prHigh": "高",
+    "prMedium": "中",
+    "prLow": "低",
+    "catStudy": "学习",
+    "catPersonal": "个人",
+    "catFinance": "财务",
+    "catWork": "工作",
     "notes": "备注",
     "notesPlaceholder": "可选备注…",
     "saving": "保存中…",
@@ -483,7 +500,7 @@
     "deleteConfirm": "删除“{{title}}”？",
     "daysLeft": "还剩 {{days}} 天",
     "noDeadline": "无截止日期",
-    "markComplete": "✓ 标记完成",
+    "markComplete": "标记完成",
     "reopen": "↩ 重新打开",
     "editGoal": "编辑目标",
     "newGoal": "新建目标",
@@ -559,9 +576,9 @@
     },
     "finance": "财务",
     "tx": {
-      "expense": "💸 支出",
-      "income": "💰 收入",
-      "transfer": "📈 转账",
+      "expense": "支出",
+      "income": "收入",
+      "transfer": "转账",
       "editTitle": "编辑交易",
       "addTitle": "添加交易",
       "pickDest": "请为转账选择目标账户。",
@@ -653,7 +670,7 @@
       "custom": "自定义"
     },
     "nw": {
-      "whatIf": "🔮 假如？",
+      "whatIf": "假如？",
       "addAsset": "+ 资产",
       "totalNetWorth": "净资产总额",
       "otherAssets": "其他资产",
@@ -697,8 +714,8 @@
       "toOther": "转入另一个账户"
     },
     "assetClass": {
-      "stock": "📈 股票",
-      "etf": "🧺 ETF",
+      "stock": "股票",
+      "etf": "ETF",
       "crypto": "₿ 加密货币"
     },
     "assetAbbr": {

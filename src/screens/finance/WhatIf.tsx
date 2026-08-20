@@ -22,6 +22,7 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 import { convertSync, normalizeCurrency } from '../../api/fxRates';
 import { LIABILITY_TYPES } from '../../types/finance';
 import { project, yearReachingMilestone } from '../../lib/projection';
+import { RULE, INK_MUTE, SUCCESS } from '../../lib/themeColors';
 
 // Milestones are derived from the user's current net worth rather than fixed,
 // because a fixed euro ladder is meaningless at other currency scales. In IDR
@@ -444,13 +445,13 @@ function ProjectionChart({
           x2={W - PAD_R}
           y1={PAD_T + innerH / 2}
           y2={PAD_T + innerH / 2}
-          stroke="#30363D"
+          stroke={RULE}
           strokeDasharray="2 3"
           strokeWidth={0.5}
         />
-        <path d={bandPath} fill="rgba(63, 185, 80, 0.10)" />
-        <path d={consPath} fill="none" stroke="#7D8590" strokeWidth={1.5} strokeLinejoin="round" />
-        <path d={optPath} fill="none" stroke="#3FB950" strokeWidth={2} strokeLinejoin="round" />
+        <path d={bandPath} fill="rgba(78, 154, 107, 0.10)" />
+        <path d={consPath} fill="none" stroke={INK_MUTE} strokeWidth={1.5} strokeLinejoin="round" />
+        <path d={optPath} fill="none" stroke={SUCCESS} strokeWidth={2} strokeLinejoin="round" />
       </svg>
       <div className="flex justify-between text-[0.5625rem] text-text-muted mt-1">
         <span>{t('fin.wi.today')}</span>

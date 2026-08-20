@@ -13,6 +13,7 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 import { computeAvailableCash } from '../../lib/savingsAvailableCash';
 import { convertSync } from '../../api/fxRates';
 import type { SavingsGoal, ManualAsset } from '../../types/finance';
+import Glyph from '../../components/Glyph';
 
 /**
  * v1.2 — Savings Goals.
@@ -21,7 +22,7 @@ import type { SavingsGoal, ManualAsset } from '../../types/finance';
  *   1. Header card "Available cash" — big number, breakdown of liquid /
  *      buffer / allocated, soft warning when over-allocated.
  *   2. Buffer setting — emergency reserve excluded from goal allocations.
- *      Sits in a glass-soft strip below the header card to keep it
+ *      Sits in a panel-2 strip below the header card to keep it
  *      adjacent to the available-cash context.
  *   3. Goal list — one row per goal with progress bar, allocate +/- pills,
  *      edit + delete via RowActions. Completed goals collapse to the bottom
@@ -233,7 +234,7 @@ export default function SavingsGoals() {
             >
               {t('fin.sg.invest')}
             </Pill>
-            <Pill on size="sm" onClick={openAdd} icon="+">
+            <Pill size="sm" onClick={openAdd} icon="+">
               {t('fin.sg.goal')}
             </Pill>
           </>
@@ -243,13 +244,13 @@ export default function SavingsGoals() {
       <div className="space-y-3">
         {/* Flash banner for invest-move confirmations / FX warnings. */}
         {flashMessage && (
-          <div className="glass rounded-pill px-4 py-2 text-xs text-primary animate-fade-in-up border border-primary/45" style={{ background: 'rgba(0, 212, 255, 0.08)' }}>
+          <div className="panel-2 px-4 py-2 text-xs text-text animate-fade-in-up">
             {flashMessage}
           </div>
         )}
 
         {/* ─── Available cash header ──────────────────────────────────── */}
-        <div className={`glass rounded-xl p-4 ${overAllocated ? 'border-warning/45' : ''}`}>
+        <div className={`panel p-4 ${overAllocated ? 'border-warning/45' : ''}`}>
           <div className="flex items-baseline justify-between">
             <span className="sec">{t('fin.sg.availableToAllocate')}</span>
             <span className="text-[0.625rem] text-text-muted">{t('fin.sg.inCur', { cur: baseCurrency })}</span>
@@ -265,7 +266,7 @@ export default function SavingsGoals() {
           {noLiquidAssets && (
             <div className="text-[0.6875rem] text-text-muted mt-1">
               {t('fin.sg.noLiquid1')}
-              <span className="text-primary"> {t('fin.finance')} → {t('fin.ov.netWorth')}</span> {t('fin.sg.noLiquid2')}
+              <span className="text-text"> {t('fin.finance')} → {t('fin.ov.netWorth')}</span> {t('fin.sg.noLiquid2')}
             </div>
           )}
           <div className="grid grid-cols-3 gap-2 mt-3">
@@ -288,7 +289,7 @@ export default function SavingsGoals() {
 
         {/* ─── Goal list ──────────────────────────────────────────────── */}
         {goals.length === 0 ? (
-          <div className="glass rounded-xl p-6 text-center">
+          <div className="panel p-6 text-center">
             <div className="font-heading font-semibold text-sm mb-1">{t('fin.sg.noGoals')}</div>
             <div className="text-[0.6875rem] text-text-muted">
               {t('fin.sg.noGoalsSub')}
@@ -563,14 +564,14 @@ function GoalRow({ goal, onAllocate, onSet, onEdit, onDelete }: GoalRowProps) {
   return (
     <div
       className={`${isBuffer
-        ? 'glass rounded-xl p-3 border border-warning/40'
-        : completed ? 'glass-soft rounded-xl p-3 opacity-70' : 'glass rounded-xl p-3'}`}
+        ? 'panel p-3 border border-warning/40'
+        : completed ? 'panel-2 p-3 opacity-70' : 'panel p-3'}`}
     >
       <div className="flex items-start gap-2">
         <div className="flex-1 min-w-0">
           <div className="font-heading font-semibold text-sm flex items-center gap-1.5">
-            {isBuffer && <span aria-hidden className="text-warning">🛟</span>}
-            {!isBuffer && completed && <span aria-hidden>✓</span>}
+            {isBuffer && <Glyph name="buffer" size={13} className="text-warning" />}
+            {!isBuffer && completed && <Glyph name="check" size={13} className="text-success" />}
             <span className="truncate">{isBuffer ? t('fin.sg.emergencyBuffer') : goal.title}</span>
           </div>
           <div className="text-[0.625rem] text-text-muted truncate">
@@ -635,7 +636,7 @@ function GoalRow({ goal, onAllocate, onSet, onEdit, onDelete }: GoalRowProps) {
           <Pill size="sm" onClick={() => onAllocate(quickStep)} icon="+">
             {quickStep}
           </Pill>
-          <Pill size="sm" onClick={() => setCustomOpen(true)} icon="✎">
+          <Pill size="sm" onClick={() => setCustomOpen(true)} icon={<Glyph name="edit" size={11} />}>
             {t('fin.sg.custom')}
           </Pill>
           <div className="ms-auto flex items-center gap-1.5">

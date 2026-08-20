@@ -23,6 +23,7 @@ import { useFitnessStore } from '../store/useFitnessStore';
 import { useTaskStore } from '../store/useTaskStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { buildWeeklyReview, startOfWeek } from '../lib/weeklyReview';
+import Glyph from '../components/Glyph';
 
 function formatRange(start: Date, end: Date): string {
   const sameMonth = start.getMonth() === end.getMonth();
@@ -116,7 +117,7 @@ export default function WeeklyReview() {
         <div className="card flex items-center justify-between">
           <button
             onClick={() => setWeekOffset((w) => w - 1)}
-            className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary"
+            className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-text active:border-border"
           >
             {t('weeklyReview.prev')}
           </button>
@@ -131,7 +132,7 @@ export default function WeeklyReview() {
           <button
             onClick={() => setWeekOffset((w) => Math.min(0, w + 1))}
             disabled={weekOffset >= 0}
-            className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary disabled:opacity-30"
+            className="text-xs px-2 py-1 rounded-sm border border-border text-text-muted active:text-text active:border-border disabled:opacity-30"
           >
             {t('weeklyReview.next')}
           </button>
@@ -160,7 +161,7 @@ export default function WeeklyReview() {
           className="card text-start w-full active:bg-surface2/40"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="font-heading font-semibold text-sm">💰 {t('weeklyReview.finance')}</span>
+            <span className="font-heading font-semibold text-sm inline-flex items-center gap-1.5"><Glyph name="finance" size={13} className="text-text-muted" />{t('weeklyReview.finance')}</span>
             <span className="text-[0.5625rem] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-1.5 py-0.5">
               {t('weeklyReview.open')}
             </span>
@@ -191,7 +192,7 @@ export default function WeeklyReview() {
             the v1.3 scope reduction; this stays as a signal recap). */}
         <div className="card">
           <div className="flex items-center justify-between mb-2">
-            <span className="font-heading font-semibold text-sm">📚 {t('weeklyReview.studies')}</span>
+            <span className="font-heading font-semibold text-sm inline-flex items-center gap-1.5"><Glyph name="studies" size={13} className="text-text-muted" />{t('weeklyReview.studies')}</span>
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div>
@@ -218,7 +219,7 @@ export default function WeeklyReview() {
             the v1.3 scope reduction; this stays as a signal recap). */}
         <div className="card">
           <div className="flex items-center justify-between mb-2">
-            <span className="font-heading font-semibold text-sm">🏋️ {t('weeklyReview.fitness')}</span>
+            <span className="font-heading font-semibold text-sm inline-flex items-center gap-1.5"><Glyph name="fitness" size={13} className="text-text-muted" />{t('weeklyReview.fitness')}</span>
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div>
@@ -252,7 +253,7 @@ export default function WeeklyReview() {
           className="card text-start w-full active:bg-surface2/40"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="font-heading font-semibold text-sm">✓ {t('weeklyReview.tasks')}</span>
+            <span className="font-heading font-semibold text-sm inline-flex items-center gap-1.5"><Glyph name="tasks" size={13} className="text-text-muted" />{t('weeklyReview.tasks')}</span>
             <span className="text-[0.5625rem] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-1.5 py-0.5">
               {t('weeklyReview.open')}
             </span>
@@ -274,7 +275,7 @@ export default function WeeklyReview() {
           </div>
           {data.tasks.overdue > 0 && (
             <div className="text-[0.625rem] text-danger mt-2">
-              ⚠ {t('weeklyReview.overdue', { n: data.tasks.overdue })}
+              <Glyph name="warning" size={12} className="inline-block align-[-1px] me-1" />{t('weeklyReview.overdue', { n: data.tasks.overdue })}
             </div>
           )}
         </button>
@@ -285,12 +286,12 @@ export default function WeeklyReview() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <div className="font-heading font-semibold text-sm">📅 {t('weeklyReview.yearInReview')}</div>
+              <div className="font-heading font-semibold text-sm inline-flex items-center gap-1.5"><Glyph name="calendar" size={13} className="text-text-muted" />{t('weeklyReview.yearInReview')}</div>
               <div className="text-[0.625rem] text-text-muted mt-0.5">
                 {t('weeklyReview.yearInReviewSub')}
               </div>
             </div>
-            <span className="text-[0.625rem] uppercase tracking-wider text-primary border border-primary/40 rounded-sm px-2 py-0.5">
+            <span className="chip-micro">
               {t('weeklyReview.open')}
             </span>
           </div>

@@ -92,7 +92,7 @@ export default function PortfolioCashCard() {
             <button
               onClick={() => open('withdraw')}
               disabled={cash <= 0}
-              className="text-xs px-2.5 py-1 rounded-sm border border-border text-text-muted active:text-primary active:border-primary disabled:opacity-40"
+              className="text-xs px-2.5 py-1 rounded-sm border border-border text-text-muted active:text-text active:border-border disabled:opacity-40"
             >
               Withdraw
             </button>

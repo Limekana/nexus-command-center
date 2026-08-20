@@ -62,7 +62,7 @@ export async function scheduleTaskReminder(task: Task): Promise<void> {
   if (!at) return;
   // Build body: priority tag + optional first-line notes preview, trimmed
   // so the system doesn't truncate a long URL or paragraph.
-  const priorityTag = task.priority === 'high' ? '⚠ High priority · ' : '';
+  const priorityTag = task.priority === 'high' ? 'High priority · ' : '';
   const notesPreview = task.notes ? ' — ' + task.notes.split('\n')[0].slice(0, 80) : '';
   try {
     await scheduleNotification({

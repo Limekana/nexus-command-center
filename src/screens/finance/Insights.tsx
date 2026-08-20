@@ -141,16 +141,16 @@ export default function Insights() {
       />
       <div className="space-y-3">
         {/* ─── Tab toggle ──────────────────────────────────────────── */}
-        <div className="glass-strong rounded-pill p-1 flex">
+        <div className="panel p-1 flex">
           <button
             type="button"
             onClick={() => void setActiveTab('technical')}
-            className={`flex-1 rounded-pill text-xs font-heading font-semibold py-2 min-h-11 press-spring transition-colors duration-200 ${
-              activeTab === 'technical' ? 'text-primary' : 'text-text-muted'
+            className={`flex-1 rounded-sm text-xs font-heading font-semibold py-2 min-h-11 press-spring transition-colors duration-200 ${
+              activeTab === 'technical' ? 'text-text' : 'text-text-muted'
             }`}
             style={
               activeTab === 'technical'
-                ? { background: 'rgba(0, 212, 255, 0.14)', boxShadow: '0 0 0 1px rgba(0, 212, 255, 0.55) inset' }
+                ? { background: 'var(--panel-2)', boxShadow: 'inset 0 -2px 0 var(--signal)' }
                 : undefined
             }
             aria-pressed={activeTab === 'technical'}
@@ -160,12 +160,12 @@ export default function Insights() {
           <button
             type="button"
             onClick={() => void setActiveTab('fundamental')}
-            className={`flex-1 rounded-pill text-xs font-heading font-semibold py-2 min-h-11 press-spring transition-colors duration-200 ${
-              activeTab === 'fundamental' ? 'text-primary' : 'text-text-muted'
+            className={`flex-1 rounded-sm text-xs font-heading font-semibold py-2 min-h-11 press-spring transition-colors duration-200 ${
+              activeTab === 'fundamental' ? 'text-text' : 'text-text-muted'
             }`}
             style={
               activeTab === 'fundamental'
-                ? { background: 'rgba(0, 212, 255, 0.14)', boxShadow: '0 0 0 1px rgba(0, 212, 255, 0.55) inset' }
+                ? { background: 'var(--panel-2)', boxShadow: 'inset 0 -2px 0 var(--signal)' }
                 : undefined
             }
             aria-pressed={activeTab === 'fundamental'}
@@ -175,7 +175,7 @@ export default function Insights() {
         </div>
 
         {/* ─── Subhead ─────────────────────────────────────────────── */}
-        <div className="glass-soft rounded-xl px-4 py-3">
+        <div className="panel-2 px-4 py-3">
           <div className="text-[0.6875rem] text-text-muted leading-relaxed">
             {activeTab === 'technical' ? t('fin.ins.techDesc') : t('fin.ins.fundDesc')}
           </div>
@@ -205,7 +205,7 @@ export default function Insights() {
 
         {/* ─── Rating rows ─────────────────────────────────────────── */}
         {rows.length === 0 ? (
-          <div className="glass rounded-xl p-6 text-center">
+          <div className="panel p-6 text-center">
             <div className="text-xs text-text-muted">
               {isLoadingActive
                 ? t('fin.ins.computingSignals')
@@ -221,7 +221,7 @@ export default function Insights() {
                 key={r.ticker}
                 type="button"
                 onClick={() => openBreakdown(r)}
-                className="glass rounded-xl p-3 w-full text-start press-spring"
+                className="panel p-3 w-full text-start press-spring"
               >
                 <div className="flex items-center gap-3">
                   <div className="flex-1 min-w-0">

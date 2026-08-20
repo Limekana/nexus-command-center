@@ -1,0 +1,7 @@
+Tampilan baru, dan akhir dari keluar akun terus-menerus.
+
+Antarmuka dibangun ulang: panel datar, garis tipis, dan satu warna aksen yang hanya menandai nilai yang sedang berjalan. Angka memakai huruf monospasi agar kolom sejajar.
+
+Keluar akun setiap satu dua hari sudah diperbaiki — kini tiap aplikasi memegang sesinya sendiri.
+
+Kamu juga bisa mengirim masukan dari Pengaturan, dan penyiapan awal tidak muncul lagi di akun yang sudah menyelesaikannya.

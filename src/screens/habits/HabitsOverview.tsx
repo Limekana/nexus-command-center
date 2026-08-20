@@ -23,6 +23,7 @@ import HabitRing from '../../components/HabitRing';
 import { useHabitsStore } from '../../store/useHabitsStore';
 import { isEligibleOn, dateKey } from '../../lib/habitStreaks';
 import type { Habit } from '../../types/habits';
+import Glyph from '../../components/Glyph';
 
 export default function HabitsOverview() {
   const { t } = useTranslation();
@@ -117,7 +118,7 @@ export default function HabitsOverview() {
         action={
           <button
             onClick={() => navigate('/habits/add')}
-            className="pill pill-on pill-lg press-spring"
+            className="chip h-8 press-spring"
             type="button"
           >
             + {t('habits.addHabit')}
@@ -126,7 +127,7 @@ export default function HabitsOverview() {
       />
       <div className="space-y-5">
         {active.length === 0 ? (
-          <div className="glass rounded-xl p-8 text-center stagger-children">
+          <div className="panel p-8 text-center stagger-children">
             <div className="font-heading text-base font-semibold mb-1">
               {t('habits.noHabitsTitle')}
             </div>
@@ -135,7 +136,7 @@ export default function HabitsOverview() {
             </div>
             <button
               onClick={() => navigate('/habits/add')}
-              className="pill pill-on pill-lg press-spring"
+              className="btn btn-sm press-spring"
               type="button"
             >
               + {t('habits.firstHabit')}
@@ -156,12 +157,12 @@ export default function HabitsOverview() {
                 )}
               </div>
               {todayLeft.length === 0 && doneToday.length === 0 && (
-                <div className="glass-soft rounded-xl p-4 text-center text-xs text-text-muted">
+                <div className="panel-2 p-4 text-center text-xs text-text-muted">
                   {t('habits.nothingToday')}
                 </div>
               )}
               {todayLeft.length === 0 && doneToday.length > 0 && (
-                <div className="glass-soft rounded-xl p-4 text-center text-xs text-success">
+                <div className="panel-2 p-4 text-center text-xs text-success">
                   {t('habits.cleared')}
                 </div>
               )}
@@ -177,7 +178,7 @@ export default function HabitsOverview() {
                     return (
                       <div
                         key={h.id}
-                        className="glass rounded-xl p-3 flex flex-col items-center text-center"
+                        className="panel p-3 flex flex-col items-center text-center"
                       >
                         {/* v1.2 hotfix — ring tap behaviour by type:
                               binary    → toggle done/undone (an amount=1 row).
@@ -235,7 +236,7 @@ export default function HabitsOverview() {
                         </div>
                         <div className="text-[0.625rem] text-text-muted mb-2">
                           {streak.current > 0 ? (
-                            <>🔥 {streak.current}d</>
+                            <><Glyph name="streak" size={11} className="inline-block align-[-1px] me-1" />{streak.current}d</>
                           ) : (
                             <>{t('habits.noStreak')}</>
                           )}
@@ -252,7 +253,7 @@ export default function HabitsOverview() {
                           <div className="flex gap-1.5 w-full items-stretch">
                             <button
                               onClick={() => toggle(h.id)}
-                              className="pill pill-on flex-1 press-spring min-h-11"
+                              className="pill flex-1 press-spring min-h-11 bg-surface2 text-text"
                               type="button"
                             >
                               {t('habits.markDone')}
@@ -283,7 +284,7 @@ export default function HabitsOverview() {
                                 carries the unit for screen readers. */}
                             <button
                               onClick={() => addToCompletion(h.id, step)}
-                              className="pill pill-on flex-1 press-spring min-h-11 inline-flex items-center justify-center whitespace-nowrap"
+                              className="pill flex-1 press-spring min-h-11 inline-flex items-center justify-center whitespace-nowrap bg-surface2 text-text"
                               type="button"
                               aria-label={t('habits.addToHabit', { amt: `${step}${h.unit ? ` ${h.unit}` : ''}`, title: h.title })}
                             >
@@ -318,7 +319,7 @@ export default function HabitsOverview() {
                     return (
                       <div
                         key={h.id}
-                        className="glass-soft rounded-xl p-2.5 flex items-center gap-3"
+                        className="panel-2 p-2.5 flex items-center gap-3"
                       >
                         <HabitRing
                           progress={1}
@@ -332,7 +333,7 @@ export default function HabitsOverview() {
                             {h.title}
                           </div>
                           <div className="text-[0.625rem] text-text-muted">
-                            🔥 {streak.current}d {t('habits.streakSuffix')}
+                            <Glyph name="streak" size={11} className="inline-block align-[-1px] me-1" />{streak.current}d {t('habits.streakSuffix')}
                           </div>
                         </div>
                         <button
@@ -374,7 +375,7 @@ export default function HabitsOverview() {
                     return (
                       <div
                         key={h.id}
-                        className="glass-soft rounded-xl p-2.5 flex items-center gap-3 opacity-75"
+                        className="panel-2 p-2.5 flex items-center gap-3 opacity-75"
                       >
                         <HabitRing
                           progress={0}
@@ -387,7 +388,7 @@ export default function HabitsOverview() {
                             {h.title}
                           </div>
                           <div className="text-[0.625rem] text-text-muted truncate">
-                            {dayLabels || t('habits.specificDays')} · 🔥 {streak.current}d
+                            {dayLabels || t('habits.specificDays')} · <Glyph name="streak" size={10} className="inline-block align-[-1px] me-1" />{streak.current}d
                           </div>
                         </div>
                         <button
@@ -412,11 +413,11 @@ export default function HabitsOverview() {
           <section className="space-y-2 pt-2">
             <button
               onClick={() => setShowArchived(!showArchived)}
-              className="w-full glass-soft rounded-xl p-3 flex items-center justify-between press-spring"
+              className="w-full panel-2 p-3 flex items-center justify-between press-spring"
               type="button"
             >
               <span className="font-heading font-semibold text-sm">
-                📦 {t('habits.archivedLabel')} ({archived.length})
+                <Glyph name="archive" size={11} className="inline-block align-[-1px] me-1" />{t('habits.archivedLabel')} ({archived.length})
               </span>
               <span className="text-text-muted">{showArchived ? '▲' : '▼'}</span>
             </button>
@@ -425,7 +426,7 @@ export default function HabitsOverview() {
                 {archived.map((h) => (
                   <div
                     key={h.id}
-                    className="glass-soft rounded-xl p-2.5 flex items-center gap-3 opacity-60"
+                    className="panel-2 p-2.5 flex items-center gap-3 opacity-60"
                   >
                     <div className="flex-1 min-w-0">
                       <div className="font-heading font-semibold text-sm truncate">
@@ -470,7 +471,7 @@ export default function HabitsOverview() {
       >
         {menuHabit && (
           <div className="space-y-2">
-            <div className="glass-soft rounded-lg p-3 text-xs text-text-muted space-y-1">
+            <div className="panel-2 p-3 text-xs text-text-muted space-y-1">
               <div>
                 {t('habits.typeLabel')}: <span className="text-text">{menuHabit.type}</span>
                 {menuHabit.type === 'quantified' && menuHabit.targetAmount && (
@@ -493,7 +494,7 @@ export default function HabitsOverview() {
                 const s = streakFor(menuHabit.id);
                 return (
                   <div>
-                    🔥 {t('habits.current')} {s.current}d · {t('habits.longest')} {s.longest}d
+                    <Glyph name="streak" size={10} className="inline-block align-[-1px] me-1" />{t('habits.current')} {s.current}d · {t('habits.longest')} {s.longest}d
                   </div>
                 );
               })()}
@@ -502,7 +503,7 @@ export default function HabitsOverview() {
                 Solves "I did it but my phone wasn't with me" — e.g. reading in
                 bed at night, logged the next morning. Eligible days only. */}
             {!menuHabit.archivedAt && (
-              <div className="glass-soft rounded-lg p-3">
+              <div className="panel-2 p-3">
                 <div className="sec mb-2">{t('habits.catchUp')}</div>
                 <div className="flex justify-between gap-1">
                   {Array.from({ length: 7 }).map((_, i) => {
@@ -525,11 +526,11 @@ export default function HabitsOverview() {
                           if (menuHabit.type === 'binary') toggle(menuHabit.id, dayK);
                           else setCompletionAmount(menuHabit.id, done ? 0 : target, dayK);
                         }}
-                        className={`flex-1 flex flex-col items-center gap-1 py-1.5 rounded-lg border transition-colors ${
+                        className={`flex-1 flex flex-col items-center gap-1 py-1.5 rounded-md border transition-colors ${
                           done
                             ? 'border-primary/60 bg-primary/12 text-primary'
                             : eligible
-                              ? 'border-glass-border text-text-muted active:border-primary/40'
+                              ? 'border-border text-text-muted active:border-border/40'
                               : 'border-transparent text-text-muted/30'
                         }`}
                         aria-label={`${done ? t('habits.logged') : t('habits.notLogged')} ${d.toLocaleDateString(formatLocale(), { weekday: 'long', day: 'numeric', month: 'short' })}`}
@@ -538,7 +539,7 @@ export default function HabitsOverview() {
                           {isToday ? t('days.todayShort') : dMini(d.getDay())}
                         </span>
                         <span className="text-sm font-heading font-semibold leading-none">
-                          {done ? '✓' : d.getDate()}
+                          {done ? <Glyph name="check" size={11} /> : d.getDate()}
                         </span>
                       </button>
                     );

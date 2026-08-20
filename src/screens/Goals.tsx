@@ -30,6 +30,7 @@ import {
   type Goal,
   type GoalType,
 } from '../types/goals';
+import Glyph from '../components/Glyph';
 
 export default function Goals() {
   const { t } = useTranslation();
@@ -101,7 +102,7 @@ export default function Goals() {
           !editingNow && (
             <button
               onClick={() => setAdding(true)}
-              className="text-xs px-2 py-1 rounded-sm border border-primary text-primary active:bg-primary/10"
+              className="chip press-spring"
             >
               + {t('goals.new')}
             </button>
@@ -200,7 +201,7 @@ function GoalRow({
   // Fallback guards against a stored goal whose type was retired (e.g. the
   // v1.4 `reading_count` removal) — the v17 migration deletes such rows, but
   // this keeps the row from crashing if one is mid-flight from a cloud pull.
-  const rawMeta = GOAL_TYPE_LABELS[goal.goalType] ?? { label: goal.goalType, unit: '', icon: '🎯' };
+  const rawMeta = GOAL_TYPE_LABELS[goal.goalType] ?? { label: goal.goalType, unit: '', icon: 'goals' };
   const meta = { ...rawMeta, label: t(`goalTypes.${goal.goalType}`, { defaultValue: rawMeta.label }) };
   const pace = paceLabel(goal, progress);
   const pct = Math.min(100, Math.max(0, progress.percent));
@@ -218,7 +219,7 @@ function GoalRow({
   return (
     <div className="py-2 border-b border-border/40 last:border-0">
       <div className="flex items-start gap-2">
-        <span className="text-base mt-0.5">{meta.icon}</span>
+        <Glyph name={meta.icon} size={15} className="text-text-muted mt-1" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <div className="font-heading font-semibold text-sm truncate">{goal.title}</div>
@@ -259,7 +260,7 @@ function GoalRow({
           {goal.completed && (
             <button
               onClick={onComplete}
-              className="text-[0.625rem] mt-2 px-2 py-1 rounded-sm border border-border text-text-muted active:text-primary"
+              className="text-[0.625rem] mt-2 px-2 py-1 rounded-sm border border-border text-text-muted active:text-text"
             >
               {t('goals.reopen')}
             </button>

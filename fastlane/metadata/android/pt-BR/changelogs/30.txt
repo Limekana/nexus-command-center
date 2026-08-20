@@ -1,0 +1,7 @@
+Um novo visual e o fim das desconexões constantes.
+
+A interface foi refeita: superfícies planas, fios finos e uma única cor de destaque, reservada a um valor ao vivo. Os números usam fonte monoespaçada para as colunas ficarem alinhadas.
+
+A desconexão a cada um ou dois dias foi corrigida — cada app mantém agora a própria sessão.
+
+Você também pode enviar feedback pelas Configurações, e a configuração inicial não reaparece em uma conta que já a concluiu.

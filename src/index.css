@@ -1,25 +1,42 @@
-/* Self-hosted variable fonts (latin). Previously loaded from
-   fonts.googleapis.com via a render-blocking <link> in index.html, which made
-   first paint depend on reaching Google — on an offline device, or an F-Droid
-   user who firewalls Google, the WebView could stall on that request instead
-   of failing fast. Bundling them locally makes rendering network-independent
-   and removes the third-party Google call, which F-Droid disallows. These are
-   the same variable woff2 files Google served, so rendering is unchanged.
+/* Self-hosted fonts (latin). Never loaded from a CDN: first paint must not
+   depend on reaching Google — on an offline device, or an F-Droid user who
+   firewalls Google, the WebView would stall on that request instead of
+   failing fast — and F-Droid disallows the third-party call outright.
    font-display: swap keeps text visible in the system fallback while the
-   woff2 loads. */
+   woff2 loads.
+
+   v1.10: IBM Plex replaces Space Grotesk + Inter. Plex has an engineering
+   lineage and true tabular figures, which is most of why the composed
+   screens read as measured rather than decorated. Sans ships as one
+   variable file; Mono has no variable cut, so the three weights actually
+   used are loaded individually (~45KB total, less than Inter alone was). */
 @font-face {
-  font-family: 'Space Grotesk';
+  font-family: 'IBM Plex Sans';
   font-style: normal;
-  font-weight: 300 700;
+  font-weight: 100 700;
   font-display: swap;
-  src: url('/fonts/space-grotesk.woff2') format('woff2');
+  src: url('/fonts/plex-sans.woff2') format('woff2');
 }
 @font-face {
-  font-family: 'Inter';
+  font-family: 'IBM Plex Mono';
   font-style: normal;
-  font-weight: 100 900;
+  font-weight: 400;
   font-display: swap;
-  src: url('/fonts/inter.woff2') format('woff2');
+  src: url('/fonts/plex-mono-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/plex-mono-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/plex-mono-600.woff2') format('woff2');
 }
 
 @tailwind base;
@@ -36,6 +53,23 @@
        Set on :root/[dir] rather than per-component so any future slider gets
        it for free. */
     --dir: 1;
+
+    /* ─── v1.10 instrument palette ────────────────────────────────────────
+     * The same seven values the Tailwind config exposes as utility classes,
+     * mirrored here for the hand-written CSS below (tick marks, grid rules,
+     * bars) that cannot go through a class. Keep the two in step —
+     * `tailwind.config.js` is the definition, this is the echo. */
+    --ground:    #0B0C0E;
+    --panel:     #141618;
+    --panel-2:   #191C1F;
+    --rule:      #23262A;
+    --rule-soft: #1A1D20;
+    --ink:       #E8E6E1;
+    --ink-dim:   #A9AEB4;
+    --ink-mute:  #7C828A;
+    --signal:    #E8A33D;
+    --pos:       #4E9A6B;
+    --neg:       #C4544B;
 
     /* ─── v1.9 Item 14 — desktop layout rhythm ────────────────────────────
      * ONE rhythm for the whole app. Four screens had independently chosen
@@ -95,7 +129,7 @@
 
   html, body, #root {
     height: 100%;
-    background: #0D1117;
+    background: var(--ground);
   }
 
   body {
@@ -105,36 +139,25 @@
     user-select: none;
   }
 
-  /* v1.2 ambient mesh — fixed-position pseudo behind everything. Three
-     radial gradients give the suite a deep-space "cockpit window" feel:
-     a cyan dome top-right, a teal undertow bottom-left, and a small cyan
-     hot-spot mid-right to keep the center alive. All under 12% alpha so
-     it reads as ambient light, not pattern. Sits at z-index 0; the root
-     #root creates its own stacking context at z-index 1 so every screen
-     paints over the mesh without needing to opt in.
+  /* v1.10: the ambient cyan mesh that used to live on `body::before` is gone.
+     It was atmosphere no reading depended on, and it forced #root to declare
+     a stacking context purely so content would paint above it. The ground is
+     a flat field now, which is what lets a 1px rule read as structure — over
+     a gradient, hairlines look like artefacts.
 
-     S24 / Snapdragon 8 Gen 3: three radial gradients on a fixed pseudo are
-     essentially free — they're rasterized once and reused on scroll. The
-     backdrop-filter calls in glass panes do the heavy GPU lifting. */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background:
-      radial-gradient(60% 50% at 100% 0%,  rgba(0, 212, 255, 0.10), transparent 65%),
-      radial-gradient(80% 60% at 0% 100%,  rgba(0, 92, 130, 0.14),  transparent 70%),
-      radial-gradient(40% 30% at 70% 80%,  rgba(0, 212, 255, 0.06), transparent 70%);
-  }
-
-  /* #root MUST establish its own stacking context above the body::before
-     mesh — otherwise the first positioned descendant decides paint order
-     and the mesh ends up over content. Also keeps fixed children (modals,
-     bottom nav) painting over the mesh as expected. */
+     #root keeps `position: relative` (it is the offset parent for absolutely
+     positioned descendants) but no longer needs the z-index that created the
+     stacking context. */
   #root {
     position: relative;
-    z-index: 1;
+  }
+
+  /* Every numeric in the app is set in Plex Mono, and every one of them is
+     tabular — columns then align down the page without any screen being told
+     to align them. This one rule is a large part of why the composed result
+     reads as engineered. */
+  .font-mono, code, kbd, samp {
+    font-variant-numeric: tabular-nums;
   }
 
   /* Form controls keep normal selection so the user can highlight/copy text. */
@@ -165,7 +188,7 @@
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.015em;
   }
 
   input, textarea, select, button {
@@ -175,6 +198,17 @@
   /* iOS safe area helpers */
   .safe-top { padding-top: env(safe-area-inset-top); }
   .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
+  /* The app reveals lists with a staggered rise and springs on press. Honour
+     the OS-level request to stop — it is a vestibular accessibility setting,
+     not a preference about taste. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }
 
 @layer components {
@@ -261,147 +295,223 @@
     }
   }
 
-  /* ─── v1.0 base components (preserved verbatim) ─────────────────────── */
+  /* ═══ v1.10 PRIMITIVES ═══════════════════════════════════════════════════
+   *
+   * The whole surface vocabulary is four classes now: a panel, a chip, a
+   * readout and a row list — plus two measurement devices (ticks, bar). If a
+   * screen seems to need a fifth kind of surface, the answer is almost always
+   * that the screen needs less, not that the vocabulary needs more.
+   */
+
+  /* ─── Panels ─────────────────────────────────────────────────────────────
+   * Flat, opaque, 1px rule, near-square. No blur, no translucency, no drop
+   * shadow. Depth comes from the fill step (panel -> panel-2) and from where
+   * the rules fall, never from a shadow. */
+  .panel {
+    @apply bg-surface border border-border rounded-md;
+  }
+  .panel-2 {
+    @apply bg-surface2 border border-border rounded-md;
+  }
+  /* Live/primary panel — a 1px amber edge, not a bloom. At most one or two
+     per screen; see the palette note in tailwind.config.js. */
+  .panel-live {
+    @apply bg-surface border border-primary rounded-md;
+  }
+
+  /* A group of panels that share their rules, so the grid lines ARE the
+     structure rather than each tile carrying its own outline. The 1px gap is
+     the rule colour showing through from the container behind. */
+  .rule-grid {
+    display: grid;
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+  }
+  .rule-grid > * {
+    background: var(--panel);
+  }
+
+  /* ─── Readout ────────────────────────────────────────────────────────────
+   * A measured value: large tabular mono figure with its unit dimmed and set
+   * smaller, so the number owns the line and the unit annotates it.
+   *   <p class="readout readout-lg">14,208<span class="unit">EUR</span></p> */
+  .readout {
+    @apply font-mono tabular-nums text-text font-medium leading-none;
+    letter-spacing: -0.02em;
+  }
+  .readout .unit {
+    @apply text-text-faint font-normal;
+    font-size: 0.55em;
+    letter-spacing: 0.04em;
+    margin-inline-start: 0.35em;
+  }
+  .readout-lg { font-size: 1.75rem; }
+  .readout-xl { font-size: 2.25rem; }
+  /* The live reading — the one value on the panel the eye should land on. */
+  .readout-live { @apply text-primary; }
+
+  /* ─── Rows ───────────────────────────────────────────────────────────────
+   * A data list: label at the start, tabular figure at the end, hairline
+   * dividers between entries and none at the edges. */
+  .rows {
+    display: flex;
+    flex-direction: column;
+  }
+  .rows > * + * {
+    border-top: 1px solid var(--rule-soft);
+  }
+  .row {
+    @apply flex items-center justify-between gap-3 py-2 text-sm;
+  }
+  .num {
+    @apply font-mono tabular-nums text-text;
+  }
+  .num-dim { @apply text-text-muted; }
+  .num-pos { @apply text-success; }
+  .num-neg { @apply text-danger; }
+
+  /* ─── Ticks ──────────────────────────────────────────────────────────────
+   * The measurement device: minor marks every 12px, major every 60px. It is
+   * a scale, not an ornament — put it under a series, or along the edge of a
+   * panel that has a range, and nowhere else. */
+  .ticks {
+    height: 8px;
+    background-image:
+      linear-gradient(to right, var(--rule) 0 1px, transparent 1px),
+      linear-gradient(to right, var(--rule-soft) 0 1px, transparent 1px);
+    background-size: 60px 8px, 12px 4px;
+    background-position: 0 0, 0 100%;
+    background-repeat: repeat-x, repeat-x;
+  }
+
+  /* ─── Bar ────────────────────────────────────────────────────────────────
+   * A magnitude against a track. Square ends on purpose — a rounded cap
+   * misreports the value at small widths. */
+  .bar {
+    position: relative;
+    height: 4px;
+    background: var(--rule-soft);
+    overflow: hidden;
+  }
+  .bar > i {
+    display: block;
+    height: 100%;
+    background: var(--ink-dim);
+    transition: width 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .bar-live > i { background: var(--signal); }
+  .bar-pos  > i { background: var(--pos); }
+  .bar-neg  > i { background: var(--neg); }
+
+  /* ─── Micro-label ────────────────────────────────────────────────────────
+   * The one uppercase device in the app: mono, ~10px, wide tracking. Used
+   * for column headers, units and section labels. Sparingly — uppercase
+   * everywhere is shouting, and several of the ten locales have no case. */
+  .sec {
+    @apply font-mono text-[0.625rem] uppercase tracking-[0.16em] text-text-faint font-medium;
+  }
+
+  /* ─── v1.0 base components, re-pointed at the instrument tokens ────────── */
   .card {
     @apply bg-surface border border-border rounded-md p-3;
   }
   .card-elevated {
-    @apply bg-surface2 border border-border rounded-lg p-4;
+    @apply bg-surface2 border border-border rounded-md p-4;
   }
 
   .chip {
-    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-surface text-xs text-text-muted transition-colors active:scale-[0.98];
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border border-border bg-surface text-xs text-text-muted transition-colors;
   }
+  /* Selected, not live. A selection is structural information — "you are
+     here" — so it reads as a fill step plus a 2px index mark on the bottom
+     edge, the same device the nav and the tick strips use. Colouring the
+     whole chip amber put five or six accent elements on screens that have a
+     filter row, and drowned the one figure that was actually live. The mark
+     is an inset shadow so it costs no layout. */
   .chip-on {
-    @apply border-primary/60 bg-primary/10 text-primary;
+    @apply bg-surface2 text-text border-border;
+    box-shadow: inset 0 -2px 0 var(--signal);
+  }
+
+  /* A micro action chip — the .sec label treatment inside a chip frame. It
+     exists because eight screens had independently hand-rolled the same
+     "small MANAGE / EDIT affordance on a panel header", every one of them in
+     the accent colour, and a screen with three of those had three amber
+     elements before it had reported a single number. */
+  .chip-micro {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border border-border bg-surface
+           font-mono text-[0.625rem] uppercase tracking-[0.16em] text-text-muted transition-colors;
   }
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-3 rounded-md bg-primary text-bg font-heading font-semibold text-sm tracking-tight active:scale-[0.98] disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-3 rounded-sm bg-primary text-bg font-heading font-semibold text-sm tracking-tight active:opacity-90 disabled:opacity-50;
   }
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-3 rounded-md bg-transparent border border-border text-text font-heading font-medium text-sm active:scale-[0.98];
+    @apply inline-flex items-center justify-center gap-2 px-4 py-3 rounded-sm bg-transparent border border-border text-text font-heading font-medium text-sm active:bg-surface2;
   }
   .btn-sm {
     @apply px-3 py-1.5 text-xs rounded-sm;
   }
 
   .input {
-    @apply w-full bg-surface2 border border-border rounded-md px-3 py-3 text-sm text-text placeholder:text-text-muted/60 focus:outline-none focus:border-primary;
+    @apply w-full bg-surface2 border border-border rounded-sm px-3 py-3 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-primary;
   }
 
   .stat-box {
     @apply bg-surface border border-border rounded-md p-3 flex flex-col gap-0.5;
   }
   .stat-box-hi {
-    @apply border-primary/40 shadow-glow;
-  }
-
-  .sec {
-    @apply text-[0.625rem] uppercase tracking-[0.12em] text-text-muted font-medium;
+    @apply border-primary;
   }
 
   .alert {
-    @apply flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-xs;
+    @apply flex items-center gap-2 rounded-sm border border-border bg-surface px-3 py-2 text-xs;
   }
-  .alert-warn   { @apply border-warning/40 bg-warning/5 text-warning; }
-  .alert-ok     { @apply border-success/40 bg-success/5 text-success; }
-  .alert-danger { @apply border-danger/40 bg-danger/5 text-danger; }
+  .alert-warn   { @apply border-warning/50 bg-warning/5 text-warning; }
+  .alert-ok     { @apply border-success/50 bg-success/5 text-success; }
+  .alert-danger { @apply border-danger/50 bg-danger/5 text-danger; }
 
-  /* ─── v1.2 Glass surface system ─────────────────────────────────────── */
-  /*
-   * Three tiers, each layering blur + translucent fill + hairline border +
-   * inset-top white highlight (the "lit edge" of glass) + outer drop shadow.
-   *
-   * Use as a class on the outermost element of a surface. Pair with rounded-*
-   * to control the radius — most v1.2 surfaces use rounded-xl (20px) for
-   * panels, rounded-pill for chips, rounded-t-2xl for sheets.
-   *
-   * Coverage note: backdrop-filter works in Capacitor Android's WebView on
-   * Chromium >=76 (all Capacitor 7 targets). Older Android falls back to a
-   * flat translucent fill — readable but loses the depth. We don't care
-   * because Cap 7 minSdk is 23 and Chromium 76+ is universal at that level.
-   */
-  .glass {
-    background: theme('colors.glass.DEFAULT');
-    @apply backdrop-blur-glass border border-glass-border shadow-glass;
-  }
-  .glass-strong {
-    background: theme('colors.glass.strong');
-    @apply backdrop-blur-sheet border border-glass-border-strong shadow-glass-lg;
-  }
-  .glass-soft {
-    background: theme('colors.glass.soft');
-    @apply backdrop-blur-nav border border-glass-border;
-  }
-  /* Accent-lit variant — for selected/active/signal-hot glass elements.
-     Replaces the white inset highlight with cyan, and the outer drop with
-     a cyan halo. Read as "this glass is energized." */
-  .glass-glow {
-    background: theme('colors.glass.DEFAULT');
-    @apply backdrop-blur-glass shadow-glass-glow;
-    border: 1px solid transparent;
-  }
-
-  /* ─── v1.2 Pill chips ───────────────────────────────────────────────── */
-  /*
-   * .pill is a touch-friendly chip primitive — used for filter chips,
-   * sort selectors, segmented controls, and signal/rating displays in
-   * Insights. Always rounded-pill, always glass-bg, always >= 32px high so
-   * thumb taps land. The active state uses cyan accent matching .chip-on
-   * but keeps the glass blur so it stays in the v1.2 visual vocabulary.
-   *
-   * Variants:
-   *   .pill          base — text-muted, transparent-ish glass
-   *   .pill-on       active — cyan border + cyan tint background
-   *   .pill-strong   higher-contrast text (used outside cards over mesh)
-   *   .pill-danger / -success / -warning  — status colors for ratings/etc.
-   *   .pill-lg       larger touch target for primary segmented controls
-   */
+  /* ─── Chip ───────────────────────────────────────────────────────────────
+   * `.pill` is the historical name and is still on ~34 call sites via the
+   * <Pill> component; it is the same treatment as `.chip`, sized for touch.
+   * The three glass tiers it used to sit alongside are gone — every one of
+   * their call sites now says `.panel` / `.panel-2` / `.panel-live`, which
+   * is two real surfaces plus a live one, and that is all the depth a flat
+   * system has to offer. */
   .pill {
-    @apply inline-flex items-center gap-1.5 px-3 h-8 rounded-pill text-xs font-medium
-           border border-glass-border text-text-muted
-           transition-all duration-200 ease-spring-soft active:scale-[0.96];
-    background: theme('colors.glass.DEFAULT');
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    @apply inline-flex items-center gap-1.5 px-2.5 h-8 rounded-sm text-xs font-medium
+           border border-border bg-surface text-text-muted
+           transition-colors duration-150;
   }
+  /* See .chip-on — same reasoning, same device. */
   .pill-on {
-    @apply text-primary;
-    background: rgba(0, 212, 255, 0.12);
-    border-color: rgba(0, 212, 255, 0.55);
-    box-shadow: 0 0 0 1px rgba(0, 212, 255, 0.18), 0 0 18px -6px rgba(0, 212, 255, 0.35);
+    @apply text-text bg-surface2 border-border;
+    box-shadow: inset 0 -2px 0 var(--signal);
   }
   .pill-strong   { @apply text-text; }
   .pill-lg       { @apply h-10 px-4 text-sm; }
   .pill-danger {
-    @apply text-danger;
-    background: rgba(248, 81, 73, 0.12);
-    border-color: rgba(248, 81, 73, 0.45);
+    @apply text-danger border-danger/60;
+    background: rgba(196, 84, 75, 0.10);
   }
   .pill-success {
-    @apply text-success;
-    background: rgba(63, 185, 80, 0.12);
-    border-color: rgba(63, 185, 80, 0.45);
+    @apply text-success border-success/60;
+    background: rgba(78, 154, 107, 0.10);
   }
   .pill-warning {
-    @apply text-warning;
-    background: rgba(210, 153, 34, 0.12);
-    border-color: rgba(210, 153, 34, 0.45);
+    @apply text-warning border-warning/60;
+    background: rgba(185, 138, 60, 0.10);
   }
 
-  /* ─── v1.2 Motion utilities ─────────────────────────────────────────── */
-  /*
+  /* ─── Motion ─────────────────────────────────────────────────────────────
    * Stagger reveal — for list entries on first paint. Add `.stagger-children`
    * to a list container and every direct child fades + lifts in with a
    * 50ms cascade. Capped at 8 explicit nth-child rules to keep the CSS
-   * compact; everything past child 8 lands together at 360ms. That trade is
-   * intentional — the user perceives the first 4–5 items as orchestrated,
-   * the rest as a coherent finale, and no list past 12 items needs more.
+   * compact; everything past child 8 lands together at 360ms.
    *
-   * Spec says lists also stagger on filter/sort changes. We don't re-trigger
-   * on those because reflow + animation per keystroke gets distracting. Mount
-   * only.
+   * Mount only — we don't re-trigger on filter/sort because reflow plus
+   * animation per keystroke gets distracting.
    */
   .stagger-children > * {
     opacity: 0;
@@ -416,12 +526,17 @@
   .stagger-children > *:nth-child(7) { animation-delay: 320ms; }
   .stagger-children > *:nth-child(n+8) { animation-delay: 360ms; }
 
-  /* Press-spring — slap on any button/tappable to get a 0.96 scale-down
-     with an overshoot bounce on release. Pairs better with glass surfaces
-     than the existing active:scale-[0.98] because the spring overshoot
-     reads as the surface itself flexing rather than a flat squish. */
+  /* Press feedback. The old version overshot on release, which read as the
+     surface flexing — right for glass, wrong for a panel that is meant to be
+     rigid. It dims instead, with no scale.
+
+     Opacity rather than a fill swap on purpose: this class sits on 47
+     elements with wildly different backgrounds (amber FAB, ghost buttons,
+     bare rows), and `active:bg-*` would out-specify every one of their own
+     backgrounds and flash them the same grey. Opacity composes with all of
+     them. */
   .press-spring {
-    @apply transition-transform duration-200 ease-spring active:scale-[0.96];
+    @apply transition-opacity duration-150 active:opacity-80;
   }
 
   /* Hide scrollbars in the phone shell while keeping scroll */
@@ -429,41 +544,29 @@
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 }
 
-/* ── v1.6.1 Onboarding — liquid glass ─────────────────────────────────────
-   Sits over the app's ambient mesh. The card gets a cyan gradient hairline
-   border, an inner top-glow, and a soft outer bloom; content enters with a
-   spring rise and each step's body cross-fades. */
+/* ── Onboarding ───────────────────────────────────────────────────────────
+   Was a cyan-lit glass card floating over its own bloom. It is the same
+   shape the rest of the app uses now: a flat panel on the flat ground, with
+   the progress rail filling amber — the one place a live-reading colour is
+   literally reporting a live reading. */
 .onb-screen { position: relative; }
-/* a brighter localized cyan bloom directly behind the card */
-.onb-screen::before {
-  content: ''; position: fixed; left: 50%; top: 42%; width: 460px; height: 460px;
-  transform: translate(-50%, -50%); pointer-events: none; z-index: 0;
-  background: radial-gradient(closest-side, rgba(0,212,255,0.16), rgba(0,212,255,0.05) 45%, transparent 72%);
-  filter: blur(6px);
-}
-.onb-rise { animation: onbRise 0.55s cubic-bezier(0.16,1,0.3,1) both; }
-@keyframes onbRise { from { opacity: 0; transform: translateY(16px) scale(0.985); } to { opacity: 1; transform: none; } }
-.onb-wordmark { text-shadow: 0 0 22px rgba(0,212,255,0.45); }
-/* glass card: gradient hairline border via mask + inner glow */
+.onb-rise { animation: onbRise 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes onbRise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.onb-wordmark { letter-spacing: -0.02em; }
 .onb-card {
-  position: relative; border-radius: 20px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
-  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-  box-shadow: 0 24px 60px -24px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 0 60px -30px rgba(0,212,255,0.35);
+  position: relative;
+  border-radius: 3px;
+  background: var(--panel);
+  border: 1px solid var(--rule);
 }
-.onb-card::before {
-  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
-  background: linear-gradient(160deg, rgba(0,212,255,0.55), rgba(0,212,255,0.06) 40%, rgba(255,255,255,0.10));
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor; mask-composite: exclude;
+.onb-rail { display: flex; gap: 4px; }
+.onb-seg { flex: 1; height: 2px; background: var(--rule); overflow: hidden; }
+.onb-seg > i {
+  display: block; height: 100%; width: 0;
+  background: var(--signal);
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
-/* progress rail — segments fill cyan with a spring as the step advances */
-.onb-rail { display: flex; gap: 6px; }
-.onb-seg { flex: 1; height: 3px; border-radius: 99px; background: rgba(255,255,255,0.10); overflow: hidden; }
-.onb-seg > i { display: block; height: 100%; width: 0; border-radius: inherit;
-  background: linear-gradient(90deg, #00D4FF, #7af0ff);
-  box-shadow: 0 0 10px rgba(0,212,255,0.7); transition: width 0.45s cubic-bezier(0.16,1,0.3,1); }
 .onb-seg.on > i { width: 100%; }
 .onb-seg.cur > i { width: 100%; }
-.onb-body { animation: onbBody 0.34s cubic-bezier(0.16,1,0.3,1) both; }
-@keyframes onbBody { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.onb-body { animation: onbBody 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes onbBody { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
