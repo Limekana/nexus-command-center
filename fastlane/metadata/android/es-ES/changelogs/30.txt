@@ -1,0 +1,7 @@
+Un aspecto nuevo y el fin de los cierres de sesión constantes.
+
+La interfaz se ha rehecho: superficies planas, líneas finas y un único color de acento reservado a un valor en directo. Las cifras usan una tipografía monoespaciada para que las columnas queden alineadas.
+
+Se ha corregido el cierre de sesión cada uno o dos días: cada app mantiene ahora su propia sesión.
+
+También puedes enviar comentarios desde Ajustes, y la configuración inicial ya no reaparece en una cuenta que ya la completó.

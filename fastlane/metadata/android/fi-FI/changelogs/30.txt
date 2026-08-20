@@ -1,0 +1,7 @@
+Uusi ilme, ja jatkuva uloskirjautuminen loppuu.
+
+Käyttöliittymä on rakennettu uusiksi: tasaiset paneelit, ohuet viivat ja yksi korostusväri, joka merkitsee vain elävää lukemaa. Numerot ovat tasalevyisellä kirjasimella, joten sarakkeet asettuvat linjaan.
+
+Uloskirjautuminen parin päivän välein on korjattu — jokaisella sovelluksella on nyt oma istuntonsa yhteisen sijaan.
+
+Voit myös lähettää palautetta asetuksista, eikä käyttöönotto toistu tilillä, joka on jo tehnyt sen.

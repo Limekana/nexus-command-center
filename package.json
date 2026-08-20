@@ -1,6 +1,6 @@
 {
   "name": "nexus-dashboard",
-  "version": "1.9.1",
+  "version": "1.10.0",
   "private": true,
   "type": "module",
   "main": "electron/main.cjs",

@@ -1,0 +1,7 @@
+A new look, and an end to the constant sign-outs.
+
+The interface is rebuilt: flat panels, fine rules, and one accent colour reserved for live values. Numbers use a monospaced face so columns align down the page.
+
+Being signed out every day or two is fixed — each app now holds its own session instead of sharing one they kept invalidating for each other.
+
+You can also send feedback from Settings, and setup no longer reappears on an account that has already finished it.
