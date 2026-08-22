@@ -1171,5 +1171,17 @@
       "save": "Simpan",
       "hint": "#kategori  @akun  today/yesterday  ·  Tab melengkapi  ·  Enter menyimpan  ·  Esc menutup"
     }
+  },
+  "referral": {
+    "eyebrow": "SATU PERTANYAAN",
+    "title": "Dari mana kamu tahu Nexus Command Center?",
+    "opt": {
+      "reddit": "Reddit",
+      "store": "Menjelajah F-Droid atau toko aplikasi",
+      "friend": "Dari teman",
+      "other": "Dari tempat lain"
+    },
+    "dismiss": "Nanti saja",
+    "thanks": "Terima kasih — ini membantu."
   }
 }

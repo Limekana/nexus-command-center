@@ -1183,5 +1183,17 @@
       "save": "Guardar",
       "hint": "#categoria  @conta  today/yesterday  ·  Tab completa  ·  Enter guarda  ·  Esc fecha"
     }
+  },
+  "referral": {
+    "eyebrow": "UMA PERGUNTA",
+    "title": "Como você conheceu o Nexus Command Center?",
+    "opt": {
+      "reddit": "Reddit",
+      "store": "Navegando na F-Droid ou em uma loja de apps",
+      "friend": "Um amigo",
+      "other": "Em outro lugar"
+    },
+    "dismiss": "Agora não",
+    "thanks": "Obrigado — isso ajuda."
   }
 }
