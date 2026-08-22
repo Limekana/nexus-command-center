@@ -34,7 +34,7 @@
 <header>
   <div class="brand">Limecore Studio</div>
   <h1>Privacy Policy</h1>
-  <div class="updated">Last updated 6 August 2026 · covers Nexus Command Center, LimeLog and StudyDesk</div>
+  <div class="updated">Last updated 22 August 2026 · covers Nexus Command Center, LimeLog and StudyDesk</div>
 </header>
 
 <p class="lede">
@@ -49,7 +49,10 @@
   <ul>
     <li><strong>Without an account, nothing leaves your device.</strong> All three apps work fully offline as a guest.</li>
     <li><strong>With an account, your data syncs</strong> so you can use more than one device and survive changing phone.</li>
-    <li><strong>No advertising, no tracking, no analytics SDKs.</strong> We do not know which screens you opened or for how long.</li>
+    <li><strong>No advertising, and nothing that follows you around.</strong> The Android
+    apps contain no analytics code at all — not disabled, not present. The two
+    <em>websites</em> count page views without cookies and without anything tied to your
+    account; that is described in full below.</li>
     <li><strong>The AI features are off until you switch them on</strong> in Settings, in every app. If you do switch them on, what you send <strong>may be used by Google to train its models</strong> — we run on their free tier. Details below.</li>
     <li>You can <strong>export everything</strong> and <strong>delete your account and all its data</strong> from inside any of the three apps, without asking us.</li>
     <li>One account works across all three apps. Deleting it deletes everything, in all three.</li>
@@ -190,6 +193,39 @@ services below are the only ones that receive anything at all.</p>
   own or how much. They do, like any web request, see the IP address it came
   from. <strong>They happen whether or not you have an account</strong>, because
   prices are the same for everyone. The other two apps make no such requests.
+</p>
+
+<h3>Vercel (the websites only)</h3>
+<p>
+  Nexus Command Center and StudyDesk also run in a browser, at
+  <code>nexus.limecore.dev</code> and <code>studydesk.limecore.dev</code>. Those two
+  websites are hosted by Vercel. LimeLog has no web edition. <strong>Nothing in
+  this section applies to the Android apps</strong> — the analytics code described
+  here is excluded from them at build time, so it is not merely switched off in the
+  APK, it is not in the file.
+</p>
+<p>
+  <strong>Page counting.</strong> The websites use Vercel Web Analytics, which records
+  the page you opened, the site that linked you there, and a coarse country, browser
+  and device type. It sets <strong>no cookies</strong>, stores nothing on your device,
+  and is never joined to your account — we can see that a page was opened, not who
+  opened it. We use it to know whether anyone is finding the apps at all.
+</p>
+<p>
+  <strong>Market data on the web edition takes a detour.</strong> A browser cannot call
+  most of the market-data providers listed above directly, so on the Nexus Command
+  Center website those requests are forwarded through Vercel first. Vercel therefore
+  sees them, and may keep them in its request logs for a period it controls. The
+  Android app calls the providers straight from your device and skips this entirely.
+</p>
+<p>
+  One consequence is worth stating plainly rather than leaving you to infer it. If you
+  add <strong>your own Finnhub API key</strong> in Settings on the website, Finnhub
+  accepts that key as part of the web address rather than as a hidden header — so the
+  key can appear in Vercel's request logs. Nothing new is exposed to a third party: it
+  is your key, and it was already travelling to Finnhub in the clear. What is new is
+  that it can also sit in a log on infrastructure we operate. If you would rather it
+  did not, use the Android app, where the request never passes through us.
 </p>
 
 <h3>Ko-fi (only if you tap the support link)</h3>
