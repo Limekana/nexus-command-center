@@ -83,6 +83,10 @@ export default function App() {
   // frame of the wizard before the answer arrives; a guest resolves instantly
   // because there is no account to ask.
   useEffect(() => {
+    // HYG-4: The synchronous set is the point: a guest has no account to ask, so the
+    // gate has to resolve in this same commit or the wizard shows a frame
+    // before the answer arrives — the exact bug the v1.10 note above fixed.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!session) { setOnboardChecked(true); return; }
     let cancelled = false;
     setOnboardChecked(false);

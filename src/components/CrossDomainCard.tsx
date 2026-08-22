@@ -64,10 +64,11 @@ export default function CrossDomainCard() {
     return () => clearInterval(t);
   }, [paused, report.insights.length]);
 
-  // Snap idx back in range if the insight set shrinks (e.g. data changes).
-  useEffect(() => {
-    if (idx >= report.insights.length && report.insights.length > 0) setIdx(0);
-  }, [idx, report.insights.length]);
+  // HYG-4 — was an effect that corrected `idx` after the fact. Derived instead:
+  // when the insight set shrinks, the stored index points past the end for
+  // exactly one render, and the effect's own re-render was what fixed it. The
+  // clamp here removes both that frame and the extra render.
+  const safeIdx = idx < report.insights.length ? idx : 0;
 
   // Baseline-building state — <4 weeks of activity.
   if (!report.ready) {
@@ -111,7 +112,7 @@ export default function CrossDomainCard() {
     );
   }
 
-  const insight = report.insights[idx] ?? report.insights[0];
+  const insight = report.insights[safeIdx] ?? report.insights[0];
   return (
     <button
       type="button"
@@ -131,7 +132,7 @@ export default function CrossDomainCard() {
               <span
                 key={i}
                 className={`block w-1.5 h-1.5 rounded-full transition-colors ${
-                  i === idx ? 'bg-primary' : 'bg-text-muted/30'
+                  i === safeIdx ? 'bg-primary' : 'bg-text-muted/30'
                 }`}
               />
             ))}

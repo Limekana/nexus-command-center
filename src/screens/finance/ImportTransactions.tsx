@@ -96,6 +96,8 @@ export default function ImportTransactions() {
     if (accountId) return;
     const live = accounts.filter((a) => !a.archivedAt);
     const preferred = live.find((a) => a.accountType === 'checking') ?? live[0];
+    // HYG-4: Overridable default target account; guarded so it fires once.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (preferred) setAccountId(preferred.id);
   }, [accounts, accountId]);
 
@@ -165,6 +167,9 @@ export default function ImportTransactions() {
       const guess = byData[i] ?? 'ignore';
       return byName.includes(guess) ? 'ignore' : guess;
     });
+    // HYG-4: Auto-detected column mapping. Derived once, then owned and edited by the
+    // user — which is exactly why it has to land in state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMapping(merged);
   }, [raw, hasHeader]);
 
@@ -175,6 +180,9 @@ export default function ImportTransactions() {
     const di = mapping.indexOf('date');
     if (di >= 0) {
       const detected = detectDateOrder(dataRows.map((r) => r[di] ?? ''));
+      // HYG-4: Re-detected when the mapping changes, then user-overridable. Same
+      // ownership handoff as the mapping above.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDateOrder(detected.order);
       setDateAmbiguous(detected.ambiguous);
     } else {
@@ -205,6 +213,10 @@ export default function ImportTransactions() {
   // Re-deriving the rows invalidates any manual selection — the user was
   // choosing against a different reading of the file.
   useEffect(() => {
+    // HYG-4: Deliberate invalidation, not synchronisation: the per-row overrides were
+    // chosen against a different reading of the file and are meaningless once
+    // the parse changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOverrides({});
   }, [built]);
 

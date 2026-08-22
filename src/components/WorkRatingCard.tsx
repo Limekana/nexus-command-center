@@ -45,6 +45,10 @@ export default function WorkRatingCard() {
     if (noteHydratedFor.current !== today) {
       setNoteDraft(todayLog?.note ?? '');
       noteHydratedFor.current = today;
+      // HYG-4: Ref-guarded on `today`, so this re-seeds once per day identity rather
+      // than per render. Deriving would discard the user's in-progress draft
+      // every time the stored note changed underneath them.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (todayLog?.note) setNoteOpen(true);
     }
   }, [today, todayLog?.note]);

@@ -61,10 +61,18 @@ export default function Dashboard() {
   const tasksOverdue = tasks.filter((t) => !t.completed && t.dueDate && isOverdue(t.dueDate)).length;
   const tasksOpen = tasks.filter((t) => !t.completed);
 
-  const workoutsThisWeek = useMemo(() => {
-    const weekAgo = Date.now() - 7 * 86400000;
-    return sessions.filter((s) => new Date(s.date).getTime() > weekAgo).length;
-  }, [sessions]);
+  // HYG-4 — was memoised on [sessions], which pinned the seven-day window to
+  // whenever the session list last changed: leave the app open across midnight
+  // and the count kept measuring yesterday's week. Recomputing per render is a
+  // filter over a short array and costs nothing measurable.
+  //
+  // The Date.now() call keeps this render impure and the rule is right about
+  // that, but the impurity IS the feature — the window has to move with the
+  // clock. Scoped rather than rewritten, since the only pure alternative is a
+  // ticking clock in state for a number that changes once a day.
+  // eslint-disable-next-line react-hooks/purity
+  const weekAgo = Date.now() - 7 * 86400000;
+  const workoutsThisWeek = sessions.filter((s) => new Date(s.date).getTime() > weekAgo).length;
 
   const gpaDelta = studies && previousGpa != null
     ? `${studies.calculatedGpa - previousGpa >= 0 ? '↑' : '↓'} ${Math.abs(studies.calculatedGpa - previousGpa).toFixed(2)} ${t('dash.pts')}`

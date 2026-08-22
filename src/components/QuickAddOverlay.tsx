@@ -62,10 +62,19 @@ export default function QuickAddOverlay({ open, onClose }: Props) {
     return [];
   }, [draft, categories, liveAccounts]);
 
+  // HYG-4: The highlight is a cursor into a list that just changed identity. Keeping
+  // it would leave the selection pointing at a different suggestion than the
+  // one the user was looking at when they pressed Enter.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setHighlight(0), [suggestions.length, draft.active]);
 
   useEffect(() => {
     if (!open) return;
+    // HYG-4: Reset on open. The overlay stays mounted while closed (the parent renders
+    // it unconditionally), so there is no unmount to clear this state. The pure
+    // alternative is remounting from the parent via a key — a bigger change to
+    // the caller than the lint it would remove.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setText('');
     setCaret(0);
     setSaved(null);
