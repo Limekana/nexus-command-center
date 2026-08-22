@@ -36,6 +36,7 @@ import { rearmTaskReminders } from '../lib/taskReminders';
 import { runPortfolioEodTick } from '../lib/portfolioEod';
 import { runNewsAlertsTick } from '../lib/newsAlerts';
 import { supabase } from '../lib/supabase';
+import { withCaptcha } from '../lib/captcha';
 import { setGuestMode } from '../lib/guestMode';
 import Glyph from '../components/Glyph';
 
@@ -244,7 +245,8 @@ export default function Settings() {
 
   const onChangePassword = async () => {
     if (!user?.email) return;
-    const { error } = await supabase.auth.resetPasswordForEmail(user.email);
+    const { error } = await withCaptcha((captchaToken) =>
+      supabase.auth.resetPasswordForEmail(user.email!, { captchaToken }));
     if (error) {
       alert(t('settings.pwResetFail', { msg: error.message }));
     } else {
