@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
+import { Analytics } from '@vercel/analytics/react';
 import { useAuthStore } from './store/useAuthStore';
 import { useSessionStore } from './store/useSessionStore';
 import { useSyncStore } from './store/useSyncStore';
@@ -349,6 +350,7 @@ export default function App() {
           component for the rationale. */}
       <NotificationsExplainerModal />
       <NotificationBridge />
+      <Analytics />
       <Routes>
         <Route element={<AppShell />}>
           <Route path="/" element={<Dashboard />} />
