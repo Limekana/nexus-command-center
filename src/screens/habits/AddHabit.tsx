@@ -60,6 +60,9 @@ export default function AddHabit() {
     if (!editId) return;
     const h = habits.find((x) => x.id === editId);
     if (!h) return;
+    // HYG-4: Seeding an editable form from the record being edited — see
+    // AddTransaction for why this cannot be derived.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTitle(h.title);
     setType(h.type);
     setTargetAmount(h.targetAmount != null ? String(h.targetAmount) : '');

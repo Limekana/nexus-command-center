@@ -99,6 +99,9 @@ export default function WhatIf() {
   // value is a strong signal that net worth wasn't ready on first render.
   useEffect(() => {
     if (startingBalance === 0 && currentNetWorth > 0) {
+      // HYG-4: Seeds an editable input from data that may arrive after mount. The
+      // `=== 0` guard is what stops it from overwriting a value the user typed.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStartingBalance(Math.round(currentNetWorth));
     }
   }, [currentNetWorth, startingBalance]);

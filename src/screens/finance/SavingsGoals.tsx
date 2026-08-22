@@ -514,10 +514,20 @@ function GoalRow({ goal, onAllocate, onSet, onEdit, onDelete }: GoalRowProps) {
 
   // Deadline pacing — when set, compare expected progress vs actual. Used
   // for the deadline pill tone (warning when behind, success when ahead).
-  const pacingTone = useMemo<'success' | 'warning' | 'neutral'>(() => {
+  //
+  // HYG-4 — was memoised on [createdAt, deadline, completed, pct], which pinned
+  // "now" to whenever one of those last changed. A goal that is on pace today
+  // and behind tomorrow kept reporting on-pace until its allocation moved,
+  // which is precisely the case the pill exists to warn about. Recomputed per
+  // render instead; it is a handful of arithmetic.
+  //
+  // The Date.now() read keeps this impure and the rule is right, but elapsed
+  // time IS the input here. Scoped rather than rewritten.
+  const pacingTone: 'success' | 'warning' | 'neutral' = (() => {
     if (!goal.deadline || completed) return 'neutral';
     const created = new Date(goal.createdAt).getTime();
     const due = new Date(goal.deadline).getTime();
+    // eslint-disable-next-line react-hooks/purity
     const now = Date.now();
     if (due <= created) return 'neutral'; // malformed; don't second-guess
     const totalDur = due - created;
@@ -527,7 +537,7 @@ function GoalRow({ goal, onAllocate, onSet, onEdit, onDelete }: GoalRowProps) {
     if (pct >= expectedPct + 5) return 'success';
     if (pct < expectedPct - 5) return 'warning';
     return 'neutral';
-  }, [goal.createdAt, goal.deadline, completed, pct]);
+  })();
 
   // Quick-allocate amounts based on the goal's scale. Round numbers feel
   // better than literal "10/50/100" — for a €10k goal a 1% allocation

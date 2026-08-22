@@ -52,6 +52,9 @@ export default function AddTask() {
     if (!editId) return;
     const t = tasks.find((x) => x.id === editId);
     if (!t) return;
+    // HYG-4: Seeding an editable form from the record being edited — see
+    // AddTransaction for why this cannot be derived.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTitle(t.title);
     setDue(t.dueDate ? new Date(t.dueDate).toISOString().slice(0, 16) : '');
     setPriority(t.priority);

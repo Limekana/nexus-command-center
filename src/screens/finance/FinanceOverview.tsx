@@ -86,6 +86,9 @@ export default function FinanceOverview() {
   });
   useEffect(() => {
     const t = searchParams.get('tab');
+    // HYG-4: The tab is moved both by the URL and by tapping, so it cannot be derived
+    // from searchParams alone.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (t === 'portfolio' || t === 'balance' || t === 'markets') setTab(t);
   }, [searchParams]);
 

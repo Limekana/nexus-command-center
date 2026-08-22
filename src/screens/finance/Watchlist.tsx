@@ -183,6 +183,9 @@ export default function Watchlist() {
   useEffect(() => {
     if (!isDesktop) return;
     if (selectedId && watchlist.some((w) => w.id === selectedId)) return;
+    // HYG-4: Selection is user-driven; the guards above mean this only re-points when
+    // the selected ticker has been deleted out from under the pane.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedId(watchlist[0]?.id ?? null);
   }, [isDesktop, watchlist, selectedId]);
 
