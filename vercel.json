@@ -7,7 +7,7 @@
     { "source": "/yfin/:path*", "destination": "https://query1.finance.yahoo.com/:path*" },
     { "source": "/yfin2/:path*", "destination": "https://query2.finance.yahoo.com/:path*" },
     { "source": "/fh/:path*", "destination": "https://finnhub.io/:path*" },
-    { "source": "/cg/:path*", "destination": "https://api.coingecko.com/:path*" },
+    { "source": "/cg/:path*", "destination": "/api/cg/:path*" },
     { "source": "/fx/:path*", "destination": "https://open.er-api.com/:path*" },
     { "source": "/ecb-api/:path*", "destination": "https://data-api.ecb.europa.eu/:path*" }
   ]
