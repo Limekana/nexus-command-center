@@ -1183,5 +1183,17 @@
     "fear": "Miedo",
     "neutral": "Neutral",
     "greed": "Codicia"
+  },
+  "referral": {
+    "eyebrow": "UNA PREGUNTA",
+    "title": "¿Cómo conociste Nexus Command Center?",
+    "opt": {
+      "reddit": "Reddit",
+      "store": "Explorando F-Droid o una tienda de apps",
+      "friend": "Un amigo",
+      "other": "En otro sitio"
+    },
+    "dismiss": "Ahora no",
+    "thanks": "Gracias, nos ayuda."
   }
 }

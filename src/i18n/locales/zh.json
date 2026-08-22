@@ -1177,5 +1177,17 @@
     "fear": "恐惧",
     "neutral": "中性",
     "greed": "贪婪"
+  },
+  "referral": {
+    "eyebrow": "一个问题",
+    "title": "你从哪里知道 Nexus Command Center 的？",
+    "opt": {
+      "reddit": "Reddit",
+      "store": "在 F-Droid 或应用商店里浏览时",
+      "friend": "朋友推荐",
+      "other": "其他地方"
+    },
+    "dismiss": "以后再说",
+    "thanks": "谢谢，这很有帮助。"
   }
 }
