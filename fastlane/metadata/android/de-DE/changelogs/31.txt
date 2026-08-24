@@ -1,0 +1,5 @@
+Zwei Korrekturen.
+
+Fälligkeitszeiten von Aufgaben bleiben korrekt. Eine auf 15:00 gesetzte Aufgabe zeigte beim erneuten Öffnen 12:00, und jedes Speichern verschob den Termin weiter. Vorhandene Aufgaben sind nicht betroffen — die gespeicherte Zeit war immer richtig, nur die Bearbeitungsansicht nicht.
+
+Der PIN-Bildschirm passt jetzt auf ein Notebook. Auf einem breiten, aber niedrigen Bildschirm war er so vergrößert, dass die unterste Tastenreihe außerhalb des Bildes lag.

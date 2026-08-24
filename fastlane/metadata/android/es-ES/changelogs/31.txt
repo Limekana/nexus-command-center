@@ -1,0 +1,5 @@
+Dos correcciones.
+
+Las horas de vencimiento de las tareas se guardan bien. Una tarea puesta a las 15:00 mostraba 12:00 al reabrirla, y cada vez que se guardaba la fecha se desplazaba más. Las tareas existentes no se ven afectadas: la hora guardada siempre fue correcta, solo fallaba la pantalla de edición.
+
+La pantalla del PIN cabe en un portátil. En una pantalla ancha pero baja se ampliaba tanto que la última fila del teclado quedaba fuera.

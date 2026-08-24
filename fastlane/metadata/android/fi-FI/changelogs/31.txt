@@ -1,0 +1,5 @@
+Kaksi korjausta.
+
+Tehtävien eräajat säilyvät oikein. Kello 15.00 asetettu tehtävä näytti 12.00 avattaessa, ja tallennus siirsi aikaa joka kerralla lisää. Olemassa olevat tehtävät eivät kärsineet — tallennettu aika oli aina oikein, vain muokkausnäkymä näytti väärin.
+
+PIN-näyttö mahtuu kannettavan ruudulle. Leveällä mutta matalalla näytöllä sitä suurennettiin niin että numeronäppäimistön alin rivi jäi ruudun ulkopuolelle.
