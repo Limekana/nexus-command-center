@@ -13,6 +13,13 @@ export default {
         tablet: '769px',
         desktop: '1201px',
         wide: '1600px',
+        // v1.10.1 — a HEIGHT gate, stacked onto `desktop:` where a style makes
+        // something taller. `desktop:` alone assumes a wide screen is also a
+        // tall one, which a 1366x768 laptop is not: the lock screen's desktop
+        // sizing measured 1085px inside a 768px viewport and the user had to
+        // scroll to reach the bottom row of the keypad. Set at 1000px so the
+        // full-size treatment only appears where it actually fits.
+        tall: { raw: '(min-height: 1000px)' },
       },
       colors: {
         // ─── v1.10 "Precision instrument" palette ──────────────────────────

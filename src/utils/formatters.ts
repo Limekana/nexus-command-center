@@ -88,3 +88,31 @@ export function isToday(iso: string): boolean {
 export function isOverdue(iso: string): boolean {
   return new Date(iso) < new Date() && !isToday(iso);
 }
+
+/**
+ * Format an instant for a `<input type="datetime-local">` value.
+ *
+ * v1.10.1 bug fix. The obvious version of this is
+ * `new Date(iso).toISOString().slice(0, 16)`, and it is wrong in a way that
+ * only shows up outside UTC: `toISOString()` converts to UTC, while the input
+ * interprets whatever string it is given as LOCAL time. Editing a task due at
+ * 15:00 in Helsinki (UTC+3 in summer) therefore reopened showing 12:00 — the
+ * reported "the time doesn't save, it shows 12.00 every time".
+ *
+ * Worse than cosmetic: whatever the field showed was what got saved on the
+ * next submit, so each edit round-trip silently shifted the deadline by the
+ * UTC offset again. The only timezone where the naive version is correct is
+ * the one nobody develops in by accident.
+ *
+ * Reading the local components back out is the fix — there is no built-in
+ * that formats an instant as a local ISO-shaped string.
+ */
+export function toDateTimeLocalValue(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return (
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
+    `T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  );
+}

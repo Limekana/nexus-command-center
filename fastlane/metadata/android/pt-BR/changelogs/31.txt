@@ -1,0 +1,5 @@
+Duas correções.
+
+Os horários de vencimento das tarefas são mantidos corretamente. Uma tarefa definida para 15:00 mostrava 12:00 ao ser reaberta, e cada gravação deslocava o prazo mais um pouco. As tarefas existentes não foram afetadas: o horário salvo sempre esteve certo, só a tela de edição estava errada.
+
+A tela do PIN cabe em um notebook. Em uma tela larga mas baixa, ela era ampliada a ponto de a última linha do teclado ficar fora da tela.

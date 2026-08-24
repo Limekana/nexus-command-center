@@ -1,0 +1,5 @@
+Dua perbaikan.
+
+Waktu tenggat tugas kini tersimpan dengan benar. Tugas yang diatur pukul 15:00 tampil 12:00 saat dibuka lagi, dan setiap penyimpanan menggeser tenggatnya lebih jauh. Tugas yang sudah ada tidak terpengaruh — waktu yang tersimpan selalu benar, hanya layar penyuntingan yang salah.
+
+Layar PIN muat di layar laptop. Pada layar lebar tapi pendek, tampilannya diperbesar sampai baris terbawah tombol angka keluar dari layar.
