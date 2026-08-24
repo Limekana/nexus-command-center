@@ -1,0 +1,5 @@
+Deux corrections.
+
+Les heures d’échéance des tâches sont conservées correctement. Une tâche réglée sur 15:00 affichait 12:00 à la réouverture, et chaque enregistrement décalait encore l’échéance. Les tâches existantes ne sont pas touchées : l’heure enregistrée était toujours juste, seul l’écran d’édition était faux.
+
+L’écran du code PIN tient sur un portable. Sur un écran large mais peu haut, il était agrandi au point que la dernière rangée du clavier sortait de l’écran.

@@ -8,6 +8,7 @@ import { useTaskStore } from '../../store/useTaskStore';
 import { useTemplatesStore } from '../../store/useTemplatesStore';
 import type { TaskTemplate } from '../../types/templates';
 import { TaskCategory, TaskPriority } from '../../types/tasks';
+import { toDateTimeLocalValue } from '../../utils/formatters';
 
 // `dot` restores what the labels lost. The three tiers used to be spelled with
 // red/yellow/green emoji circles baked into the translated strings, which meant
@@ -53,7 +54,7 @@ export default function AddTask() {
     const t = tasks.find((x) => x.id === editId);
     if (!t) return;
     setTitle(t.title);
-    setDue(t.dueDate ? new Date(t.dueDate).toISOString().slice(0, 16) : '');
+    setDue(t.dueDate ? toDateTimeLocalValue(t.dueDate) : '');
     setPriority(t.priority);
     setCategory(t.category ?? 'personal');
     setNotes(t.notes ?? '');

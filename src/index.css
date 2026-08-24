@@ -103,7 +103,15 @@
     --ui-scale: 1;
   }
 
-  @media (min-width: 1201px) {
+  /* v1.10.1 — the height half of this condition. Width alone treated a
+   * 1366x768 laptop as "a desktop, so make it bigger", and 1.2x is exactly
+   * what made the lock screen overflow its viewport by 317px. A short screen
+   * is the one place the "it is too small" assumption is wrong.
+   *
+   * This only moves the AUTOMATIC default. The explicit Settings choice still
+   * sets --ui-scale inline on <html> and still outranks this in both
+   * directions, so anyone who wants 120% on a laptop can still ask for it. */
+  @media (min-width: 1201px) and (min-height: 1000px) {
     :root { --ui-scale: 1.2; }
   }
 

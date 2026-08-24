@@ -1,0 +1,5 @@
+Two fixes.
+
+Task due times are kept correctly. Setting a task for 15:00 and reopening it showed 12:00, and saving again shifted the deadline further each time. Existing tasks are unaffected — the stored time was always right, only the edit screen was wrong.
+
+The PIN screen fits on a laptop. On a wide but short screen it was scaled up until the bottom row of the keypad was off-screen and you had to scroll to reach it.
