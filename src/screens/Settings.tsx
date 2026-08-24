@@ -504,6 +504,23 @@ export default function Settings() {
             </div>
             <span className="text-text-muted text-lg flex-shrink-0">›</span>
           </a>
+          {/* Sits next to Ko-fi rather than in its own section because the two
+              are about to be connected: Ko-fi's own Discord bot maps a
+              membership tier onto a Discord role. Same shape as the row above
+              — an ordinary outbound link, no SDK, no embed, nothing loaded
+              from discord.com unless the user taps it. */}
+          <a
+            className="py-2 flex items-center justify-between gap-3 active:opacity-80"
+            href="https://discord.gg/g8VuB4yXHY"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <div className="min-w-0">
+              <div className="text-sm">{t('settings.discord')}</div>
+              <div className="text-[0.625rem] text-text-muted">{t('settings.discordSub')}</div>
+            </div>
+            <span className="text-text-muted text-lg flex-shrink-0">›</span>
+          </a>
         </Section>
 
         <Section title={t('settings.lifeProfile')}>

@@ -349,7 +349,9 @@
       "idea": "सुझाव",
       "praise": "प्रशंसा",
       "other": "अन्य"
-    }
+    },
+    "discord": "Discord समुदाय",
+    "discordSub": "सवाल, बग रिपोर्ट और आगे क्या आ रहा है"
   },
   "lock": {
     "secureAccess": "सुरक्षित पहुँच",

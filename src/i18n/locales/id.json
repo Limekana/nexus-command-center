@@ -349,7 +349,9 @@
       "idea": "Ide",
       "praise": "Pujian",
       "other": "Lainnya"
-    }
+    },
+    "discord": "Komunitas Discord",
+    "discordSub": "Pertanyaan, laporan bug, dan rencana berikutnya"
   },
   "lock": {
     "secureAccess": "Akses aman",
