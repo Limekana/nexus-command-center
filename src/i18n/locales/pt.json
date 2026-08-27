@@ -349,7 +349,9 @@
       "idea": "Ideia",
       "praise": "Elogio",
       "other": "Outro"
-    }
+    },
+    "discord": "Comunidade no Discord",
+    "discordSub": "Dúvidas, relatos de bugs e o que vem por aí"
   },
   "lock": {
     "secureAccess": "Acesso seguro",

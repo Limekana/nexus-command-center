@@ -288,7 +288,9 @@
       "idea": "Idee",
       "praise": "Lob",
       "other": "Sonstiges"
-    }
+    },
+    "discord": "Discord-Community",
+    "discordSub": "Fragen, Fehlerberichte und was als Nächstes kommt"
   },
   "days": {
     "long": {

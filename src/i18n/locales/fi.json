@@ -288,7 +288,9 @@
       "idea": "Idea",
       "praise": "Kehu",
       "other": "Muu"
-    }
+    },
+    "discord": "Discord-yhteisö",
+    "discordSub": "Kysymykset, bugi-ilmoitukset ja mitä on tulossa"
   },
   "days": {
     "long": {
