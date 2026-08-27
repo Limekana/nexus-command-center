@@ -14,6 +14,7 @@ import { hydrateStudiesFromCloud, hydrateHabitsFromCloud, hydrateBodyMetricsFrom
 import { useStudiesStore } from './store/useStudiesStore';
 import { isGuestMode } from './lib/guestMode';
 import AdoptionPrompt from './components/AdoptionPrompt';
+import ReferralPrompt from './components/ReferralPrompt';
 import NotificationsExplainerModal from './components/NotificationsExplainerModal';
 import LockScreen from './screens/LockScreen';
 import Login from './screens/auth/Login';
@@ -343,6 +344,9 @@ export default function App() {
   return (
     <>
       <AdoptionPrompt />
+      {/* Item 8 — asks once per account, inside the account-age window only.
+          Non-blocking by design; see the component. */}
+      <ReferralPrompt />
       {/* First-launch (post-upgrade) explainer for notifications. Renders
           nothing once the user has dismissed it once via either path
           ("Enable Notifications" or "Not Now"). Native-only — see the

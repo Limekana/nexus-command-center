@@ -1179,5 +1179,17 @@
     "fear": "Pelko",
     "neutral": "Neutraali",
     "greed": "Ahneus"
+  },
+  "referral": {
+    "eyebrow": "YKSI KYSYMYS",
+    "title": "Mistä kuulit Nexus Command Centeristä?",
+    "opt": {
+      "reddit": "Reddit",
+      "store": "Selaillessa F-Droidia tai sovelluskauppaa",
+      "friend": "Kaverilta",
+      "other": "Jostain muualta"
+    },
+    "dismiss": "Ei nyt",
+    "thanks": "Kiitos – tästä on apua."
   }
 }
