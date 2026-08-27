@@ -143,6 +143,10 @@ export default function Settings() {
       setBioReason(c.reason);
     });
     notificationsAvailable().then(setNotifAvailable);
+    // HYG-4: The initial read pairs with the 5s interval below; both write the same
+    // state, and dropping this one would leave the panel blank until the first
+    // tick.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setBudgets(allBudgetStats());
     void refreshPending();
     // Refresh budget meters every 5s while the screen is open so the user

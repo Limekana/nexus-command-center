@@ -51,19 +51,30 @@ export default tseslint.config(
       // / cross-store fallback reads that are fine to swallow silently).
       'no-empty': ['error', { allowEmptyCatch: true }],
       // react-hooks@7 folded in two new React-Compiler-oriented rules
-      // (purity, set-state-in-effect) that fire ~24 times across
-      // long-standing, ordinary "sync local state from a prop/store/URL
-      // param" effects — none are correctness bugs, all predate this
-      // plugin major. Rewriting ~20 files' worth of effects to satisfy a
-      // compiler NCC doesn't use is a real-risk refactor on a finance app
-      // and out of scope for "add a lint gate." Off for now, matching the
-      // spirit of StudyDesk's own react-hooks/static-components downgrade
-      // for the same plugin major — tracked as a follow-up (see
-      // Nexus_Version_Status.md, new HYG candidate) rather than silently
-      // dropped. (Note: 'warn' would still fail --max-warnings 0, so this
-      // has to be 'off', not 'warn', to actually be non-blocking.)
-      'react-hooks/purity': 'off',
-      'react-hooks/set-state-in-effect': 'off',
+      // (purity, set-state-in-effect). They fired 25 times on long-standing
+      // code when the gate was added, and were switched off wholesale rather
+      // than rewritten sight-unseen on a finance app.
+      //
+      // HYG-4 (v1.11) closed that out by reviewing all 25 individually:
+      //
+      //   3 were real and are fixed. CrossDomainCard corrected a rotation
+      //     index in an effect when deriving it removes both the stale frame
+      //     and the extra render. Dashboard and SavingsGoals each memoised a
+      //     Date.now() window against deps that don't include time, so the
+      //     "last 7 days" count and the deadline-pacing pill both went stale
+      //     across a day boundary — a goal that fell behind overnight kept
+      //     reporting on pace, which is the one thing that pill is for.
+      //
+      //   The rest are seeded editable forms, overridable defaults, live
+      //     clocks, async kickoffs and deep-link consumption. Each now carries
+      //     a scoped disable stating why AT the site, so the reasoning is
+      //     where the next reader will be rather than in a config file.
+      //
+      // Both rules are ON. That is the actual win: the 21 exceptions are
+      // pinned and explained, and anything NEW that trips these rules fails
+      // the gate instead of joining an invisible backlog.
+      'react-hooks/purity': 'error',
+      'react-hooks/set-state-in-effect': 'error',
     },
   },
 )

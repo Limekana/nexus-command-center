@@ -57,6 +57,9 @@ export default function ShareModal({
   };
 
   useEffect(() => {
+    // HYG-4: Fetch kickoff, not state synchronisation — the synchronous set inside
+    // refresh() is the loading flag going up.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subjectId]);

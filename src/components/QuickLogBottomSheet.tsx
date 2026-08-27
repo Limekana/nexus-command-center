@@ -90,6 +90,10 @@ function QuickExpense({ onDone }: { onDone: () => void }) {
   useEffect(() => {
     if (accountId) return;
     const cat = categories.find((c) => c.id === categoryId);
+    // HYG-4: A default the user can override cannot be derived: derived, it would
+    // re-apply on every render and silently undo their choice. The `if
+    // (accountId) return;` guard is what makes it fire once.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (cat?.linkedManualAssetId) setAccountId(cat.linkedManualAssetId);
   }, [categoryId, categories, accountId]);
 

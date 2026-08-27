@@ -51,6 +51,9 @@ export default function HabitsOverview() {
   useEffect(() => {
     const cid = searchParams.get('catchup');
     if (cid && habits.some((h) => h.id === cid)) {
+      // HYG-4: One-shot side effect from a deep link, not state synchronisation: it
+      // consumes the ?catchup param and clears it in the same pass.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveMenu(cid);
       // Clear the param so re-renders / back-nav don't re-trigger.
       const next = new URLSearchParams(searchParams);
