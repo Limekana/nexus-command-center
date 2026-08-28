@@ -22,16 +22,26 @@ export default function LockScreen() {
   const [bioReason, setBioReason] = useState<string>('');
   // Countdown tick during a brute-force lockout — re-renders the secondsLeft
   // each second so the user sees a live "Try again in 28s" instead of stale.
-  const [, setNow] = useState(Date.now());
+  // HYG-4 — the value is discarded (`[, setNow]`); only the re-render matters.
+  // Seeding it from Date.now() made the first render impure for no gain.
+  const [, setNow] = useState(0);
   useEffect(() => {
     if (lockedUntil <= Date.now()) return;
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, [lockedUntil]);
+  // HYG-4: A lockout countdown has to read the clock during render. Holding the
+  // clock in state instead would just trade this rule for
+  // set-state-in-effect, which is not an improvement.
+  // eslint-disable-next-line react-hooks/purity
   const secondsLeft = Math.max(0, Math.ceil((lockedUntil - Date.now()) / 1000));
   const isLockedOut = secondsLeft > 0;
 
   useEffect(() => {
+    // HYG-4: `mode` is also moved by user interaction, so it cannot be derived from
+    // hasPin alone — deriving would strand the user whenever they navigate
+    // within the screen.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMode(hasPin ? 'enter' : 'set');
   }, [hasPin]);
 

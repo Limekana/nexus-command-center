@@ -349,7 +349,9 @@
       "idea": "सुझाव",
       "praise": "प्रशंसा",
       "other": "अन्य"
-    }
+    },
+    "discord": "Discord समुदाय",
+    "discordSub": "सवाल, बग रिपोर्ट और आगे क्या आ रहा है"
   },
   "lock": {
     "secureAccess": "सुरक्षित पहुँच",
@@ -1177,5 +1179,17 @@
       "save": "सहेजें",
       "hint": "#श्रेणी  @खाता  today/yesterday  ·  Tab पूरा करता है  ·  Enter सहेजता है  ·  Esc बंद करता है"
     }
+  },
+  "referral": {
+    "eyebrow": "एक सवाल",
+    "title": "आपने Nexus Command Center के बारे में कहाँ सुना?",
+    "opt": {
+      "reddit": "Reddit",
+      "store": "F-Droid या किसी ऐप स्टोर में ब्राउज़ करते हुए",
+      "friend": "किसी दोस्त से",
+      "other": "कहीं और"
+    },
+    "dismiss": "अभी नहीं",
+    "thanks": "धन्यवाद — इससे मदद मिलती है।"
   }
 }

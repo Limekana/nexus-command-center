@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Trans, useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { translateAuthError } from '../../lib/authErrors';
+import { withCaptcha } from '../../lib/captcha';
 
 // AUTH-2 — confirmation-code bounds, ported from StudyDesk's AuthGate.
 //
@@ -65,7 +66,8 @@ export default function Signup() {
     setError(null);
     setInfo(null);
     setSubmitting(true);
-    const { error: err } = await supabase.auth.resend({ type: 'signup', email: email.trim() });
+    const { error: err } = await withCaptcha((captchaToken) =>
+      supabase.auth.resend({ type: 'signup', email: email.trim(), options: { captchaToken } }));
     setSubmitting(false);
     if (err) setError(translateAuthError(err, t) ?? t('auth.errOtpResend'));
     else setInfo(t('auth.otpSent'));
@@ -94,13 +96,15 @@ export default function Signup() {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
-      options: {
-        data: { full_name: fullName.trim() },
-      },
-    });
+    const { error } = await withCaptcha((captchaToken) =>
+      supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          data: { full_name: fullName.trim() },
+          captchaToken,
+        },
+      }));
     setSubmitting(false);
     if (error) {
       setError(translateAuthError(error, t));

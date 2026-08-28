@@ -349,7 +349,9 @@
       "idea": "فكرة",
       "praise": "إشادة",
       "other": "أخرى"
-    }
+    },
+    "discord": "مجتمع Discord",
+    "discordSub": "الأسئلة وتقارير الأخطاء وما هو قادم"
   },
   "lock": {
     "secureAccess": "وصول آمن",
@@ -1201,5 +1203,17 @@
       "save": "حفظ",
       "hint": "#فئة  @حساب  today/yesterday  ·  Tab يُكمل  ·  Enter يحفظ  ·  Esc يغلق"
     }
+  },
+  "referral": {
+    "eyebrow": "سؤال واحد",
+    "title": "كيف عرفت Nexus Command Center؟",
+    "opt": {
+      "reddit": "Reddit",
+      "store": "أثناء التصفّح في F-Droid أو متجر تطبيقات",
+      "friend": "من صديق",
+      "other": "من مكان آخر"
+    },
+    "dismiss": "ليس الآن",
+    "thanks": "شكرًا — هذا يساعدنا."
   }
 }

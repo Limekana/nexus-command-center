@@ -51,6 +51,10 @@ export default function AddTransaction() {
     if (!editId) return;
     const tx = transactions.find((t) => t.id === editId);
     if (!tx) return;
+    // HYG-4: Seeding an editable form from the record being edited. Deriving would
+    // make the form read-only in practice: every store change would overwrite
+    // whatever the user had typed.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setType(tx.type);
     setAmount(String(tx.amount));
     setDescription(tx.description);
@@ -72,6 +76,9 @@ export default function AddTransaction() {
     const cat = categoryId ? categories.find((c) => c.id === categoryId) : null;
     const defaultFromCat = cat?.linkedManualAssetId;
     if (defaultFromCat && accounts.some((a) => a.id === defaultFromCat)) {
+      // HYG-4: Overridable default — see the comment above. The early return is what
+      // keeps it from re-applying over the user's choice.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAccountId(defaultFromCat);
     } else {
       setAccountId(accounts[0].id);

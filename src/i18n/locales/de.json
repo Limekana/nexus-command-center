@@ -288,7 +288,9 @@
       "idea": "Idee",
       "praise": "Lob",
       "other": "Sonstiges"
-    }
+    },
+    "discord": "Discord-Community",
+    "discordSub": "Fragen, Fehlerberichte und was als Nächstes kommt"
   },
   "days": {
     "long": {
@@ -1177,5 +1179,17 @@
     "fear": "Angst",
     "neutral": "Neutral",
     "greed": "Gier"
+  },
+  "referral": {
+    "eyebrow": "EINE FRAGE",
+    "title": "Woher kennst du Nexus Command Center?",
+    "opt": {
+      "reddit": "Reddit",
+      "store": "Beim Stöbern in F-Droid oder einem App-Store",
+      "friend": "Von Freunden",
+      "other": "Woanders"
+    },
+    "dismiss": "Nicht jetzt",
+    "thanks": "Danke – das hilft."
   }
 }

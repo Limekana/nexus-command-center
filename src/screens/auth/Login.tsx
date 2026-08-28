@@ -20,6 +20,7 @@ import { supabase, OAUTH_REDIRECT_URL } from '../../lib/supabase';
 import { setGuestMode } from '../../lib/guestMode';
 import { isOnboarded } from '../../lib/onboarding';
 import { translateAuthError } from '../../lib/authErrors';
+import { withCaptcha } from '../../lib/captcha';
 
 export default function Login() {
   const { t } = useTranslation();
@@ -41,7 +42,14 @@ export default function Login() {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    // withCaptcha only involves hCaptcha if the server asks for it — see
+    // lib/captcha.ts for why this is not a widget on the screen.
+    const { error } = await withCaptcha((captchaToken) =>
+      supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+        options: { captchaToken },
+      }));
     setSubmitting(false);
     if (error) {
       setError(translateAuthError(error, t));

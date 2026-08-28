@@ -36,6 +36,7 @@ import { rearmTaskReminders } from '../lib/taskReminders';
 import { runPortfolioEodTick } from '../lib/portfolioEod';
 import { runNewsAlertsTick } from '../lib/newsAlerts';
 import { supabase } from '../lib/supabase';
+import { withCaptcha } from '../lib/captcha';
 import { setGuestMode } from '../lib/guestMode';
 import Glyph from '../components/Glyph';
 
@@ -142,6 +143,10 @@ export default function Settings() {
       setBioReason(c.reason);
     });
     notificationsAvailable().then(setNotifAvailable);
+    // HYG-4: The initial read pairs with the 5s interval below; both write the same
+    // state, and dropping this one would leave the panel blank until the first
+    // tick.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setBudgets(allBudgetStats());
     void refreshPending();
     // Refresh budget meters every 5s while the screen is open so the user
@@ -244,7 +249,8 @@ export default function Settings() {
 
   const onChangePassword = async () => {
     if (!user?.email) return;
-    const { error } = await supabase.auth.resetPasswordForEmail(user.email);
+    const { error } = await withCaptcha((captchaToken) =>
+      supabase.auth.resetPasswordForEmail(user.email!, { captchaToken }));
     if (error) {
       alert(t('settings.pwResetFail', { msg: error.message }));
     } else {
@@ -499,6 +505,23 @@ export default function Settings() {
             <div className="min-w-0">
               <div className="text-sm">{t('settings.supportDev')}</div>
               <div className="text-[0.625rem] text-text-muted">{t('settings.supportDevSub')}</div>
+            </div>
+            <span className="text-text-muted text-lg flex-shrink-0">›</span>
+          </a>
+          {/* Sits next to Ko-fi rather than in its own section because the two
+              are about to be connected: Ko-fi's own Discord bot maps a
+              membership tier onto a Discord role. Same shape as the row above
+              — an ordinary outbound link, no SDK, no embed, nothing loaded
+              from discord.com unless the user taps it. */}
+          <a
+            className="py-2 flex items-center justify-between gap-3 active:opacity-80"
+            href="https://discord.gg/g8VuB4yXHY"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <div className="min-w-0">
+              <div className="text-sm">{t('settings.discord')}</div>
+              <div className="text-[0.625rem] text-text-muted">{t('settings.discordSub')}</div>
             </div>
             <span className="text-text-muted text-lg flex-shrink-0">›</span>
           </a>
