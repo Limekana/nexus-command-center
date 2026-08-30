@@ -10,8 +10,11 @@ import { seedIfEmpty } from './db/seed';
 import { clearAllLocalData } from './db/database';
 import { supabase } from './lib/supabase';
 import { startRealtime, stopRealtime } from './lib/realtime';
-import { hydrateStudiesFromCloud, hydrateHabitsFromCloud, hydrateBodyMetricsFromCloud, hydrateWorkQualityFromCloud } from './lib/cloudSync';
+import { hydrateStudiesFromCloud, hydrateHabitsFromCloud, hydrateBodyMetricsFromCloud, hydrateWorkQualityFromCloud, hydrateBraindumpFromCloud } from './lib/cloudSync';
+import { watchAppOpens } from './lib/appOpens';
+import { refreshEntitlement } from './lib/entitlement';
 import { useStudiesStore } from './store/useStudiesStore';
+import { useBraindumpStore } from './store/useBraindumpStore';
 import { isGuestMode } from './lib/guestMode';
 import AdoptionPrompt from './components/AdoptionPrompt';
 import ReferralPrompt from './components/ReferralPrompt';
@@ -38,6 +41,7 @@ import TasksOverview from './screens/tasks/TasksOverview';
 import AddTask from './screens/tasks/AddTask';
 import HabitsOverview from './screens/habits/HabitsOverview';
 import AddHabit from './screens/habits/AddHabit';
+import Braindump from './screens/Braindump';
 import Life from './screens/Life';
 import WeeklyReview from './screens/WeeklyReview';
 import YearReview from './screens/YearReview';
@@ -117,6 +121,11 @@ export default function App() {
         localStorage.setItem('nexus.wiped.v1', '1');
       }
       await seedIfEmpty();
+      // v1.12 Item 10 - Braindump entries live in Dexie and are local, so this
+      // load belongs in the mount bootstrap rather than in the session-gated
+      // hydration block below. A guest captures ideas too, and without this
+      // their dashboard card would read empty while their entries sat on disk.
+      await useBraindumpStore.getState().load();
       await initAuth();
       initSync();
       // v1.2 — install the Insights rating-history observer. Runs once;
@@ -156,6 +165,27 @@ export default function App() {
   //   3. THEN open the Realtime subscription so future deltas merge cleanly.
   //   4. Kick the full background syncNow() afterward for the other tables
   //      (transactions, portfolio, etc.) — non-blocking.
+  // v1.12 Item 0 — retention. Session-gated rather than mount-only: an open
+  // recorded before the session is restored has no user to attribute it to and
+  // would be skipped. The visibilitychange listener installed here covers the
+  // commoner case — the app resumed from the background days later without the
+  // process having died.
+  useEffect(() => {
+    if (!session) return;
+    return watchAppOpens();
+  }, [session]);
+
+  // v1.12 Item 5 — supporter entitlement. Keyed on the user id rather than the
+  // session object so a token refresh does not re-ask; the module additionally
+  // serves from cache for six hours, so this is close to free on an ordinary
+  // launch. A network failure keeps the cached answer rather than stripping a
+  // supporter's perk.
+  useEffect(() => {
+    const uid = session?.user?.id;
+    if (!uid) return;
+    void refreshEntitlement(uid);
+  }, [session?.user?.id]);
+
   useEffect(() => {
     if (!session) {
       stopRealtime();
@@ -227,6 +257,22 @@ export default function App() {
         await useWorkQualityStore.getState().load();
       } catch (e) {
         console.warn('[app-init] work quality hydration threw:', e);
+      }
+      // v1.12 Item 10 - Braindump hydration. Same fire-and-forget shape as the
+      // siblings above: an idea captured on the phone should be on the desktop
+      // without waiting for a manual sync, and a failure here must not block
+      // app-init.
+      try {
+        const bdResult = await hydrateBraindumpFromCloud(userId);
+        console.log(
+          `[app-init] braindump hydrated: rows=${bdResult.braindumpEntries}, errors=${bdResult.errors.length}`,
+        );
+        if (bdResult.errors.length > 0) {
+          console.warn('[app-init] braindump hydration errors:', bdResult.errors);
+        }
+        await useBraindumpStore.getState().load();
+      } catch (e) {
+        console.warn('[app-init] braindump hydration threw:', e);
       }
       // v1.6 — Finance store load. Finance (transactions + budget categories)
       // is NCC-native and pulled by fullSync below, but the in-memory finance
@@ -377,6 +423,8 @@ export default function App() {
           {/* v1.9 Item 14b #4 — CSV import/export. */}
           <Route path="/finance/import" element={<ImportTransactions />} />
           <Route path="/tasks" element={<TasksOverview />} />
+          {/* v1.12 Item 10 - Braindump quick capture. */}
+          <Route path="/braindump" element={<Braindump />} />
           <Route path="/tasks/add" element={<AddTask />} />
           <Route path="/habits" element={<HabitsOverview />} />
           <Route path="/habits/add" element={<AddHabit />} />

@@ -1,0 +1,5 @@
+Nouveau : Idées, un endroit pour noter une pensée avant qu'elle file.
+
+Un champ sur l'accueil. Pas de titre, pas de catégorie, pas d'échéance — juste l'idée, horodatée. Si elle mérite d'être suivie, un appui la transforme en tâche, et la note d'origine reste comme trace.
+
+Corrige aussi la saisie avec les claviers chinois, japonais et coréens dans l'ajout rapide, où des caractères pouvaient être perdus.

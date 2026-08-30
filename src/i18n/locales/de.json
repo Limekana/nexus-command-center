@@ -29,7 +29,8 @@
     "fitness": "Fitness",
     "studies": "Studium",
     "habits": "Gewohnheiten",
-    "work": "Arbeit"
+    "work": "Arbeit",
+    "braindump": "Ideenspeicher"
   },
   "nav": {
     "home": "Start",
@@ -1191,5 +1192,17 @@
     },
     "dismiss": "Nicht jetzt",
     "thanks": "Danke – das hilft."
+  },
+  "braindump": {
+    "placeholder": "Was beschäftigt dich?",
+    "hint": "Strg / Cmd + Enter zum Speichern",
+    "tooLong": "Zu lang — maximal {{max}} Zeichen",
+    "save": "Speichern",
+    "emptyTitle": "Noch nichts erfasst",
+    "emptyBody": "Schreib oben einen Gedanken. Kein Titel, keine Kategorie — nur die Idee.",
+    "recent": "{{count}} erfasst",
+    "convert": "In Aufgabe umwandeln",
+    "converted": "Umgewandelt",
+    "viewTask": "Aufgabe ansehen"
   }
 }

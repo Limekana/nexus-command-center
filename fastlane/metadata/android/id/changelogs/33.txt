@@ -1,0 +1,5 @@
+Baru: Ide — tempat menuliskan pikiran sebelum hilang.
+
+Satu kolom di layar utama. Tanpa judul, tanpa kategori, tanpa tenggat — hanya idenya, dengan waktu. Jika layak ditindaklanjuti, satu ketukan mengubahnya jadi tugas, dan catatan aslinya tetap tersimpan.
+
+Juga memperbaiki pengetikan dengan papan ketik Tionghoa, Jepang, dan Korea pada tambah cepat, di mana karakter bisa hilang.

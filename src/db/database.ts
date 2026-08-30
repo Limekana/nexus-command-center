@@ -6,7 +6,9 @@ import { Task } from '../types/tasks';
 import { Goal } from '../types/goals';
 import { Habit, HabitCompletion } from '../types/habits';
 import { WorkQualityLog } from '../types/work';
+import { BraindumpEntry } from '../types/braindump';
 import { generateId } from '../utils/uuid';
+import { clearEntitlement } from '../lib/entitlement';
 
 // v1.2 — Insights rating-history row. One per recompute per ticker. Used to
 // detect tier changes between consecutive recomputes (gating the push
@@ -84,7 +86,12 @@ export interface SyncQueueItem {
     | 'work_quality_log'
     // v1.10 - in-app feedback. Insert-only; the client supplies the uuid so a
     // queue retry files the same report rather than a second one.
-    | 'feedback';
+    | 'feedback'
+    // v1.12 Item 0 - retention. One row per user per app per day, upserted on
+    // the composite key, so a retry is idempotent by construction.
+    | 'app_open'
+    // v1.12 Item 10 - Braindump quick capture.
+    | 'braindump_entry';
   entityId: string;
   operation: 'insert' | 'update' | 'delete';
   payload: string;
@@ -166,6 +173,7 @@ class NexusDB extends Dexie {
   // body metrics until this table existed).
   bodyMetrics!: Table<BodyMetric, string>;
   workQualityLogs!: Table<WorkQualityLog, string>;
+  braindumpEntries!: Table<BraindumpEntry, string>;
 
   // v15 — BUG-23 Stock Sales Tracking (v1.3.1). One row per realized sale.
   // FIFO cost basis computed at sale time; realized P&L is Σ realizedGainLoss.
@@ -834,6 +842,14 @@ class NexusDB extends Dexie {
     this.version(21).stores({
       readingItems: null,
     });
+
+    // v22 - v1.12 Item 10, Braindump. Additive: a new table only, no upgrade
+    // hook, so an existing device gains an empty store and nothing else moves.
+    // Indexed on createdAt because the only query is "my entries, newest
+    // first", and on syncStatus to match every other synced store here.
+    this.version(22).stores({
+      braindumpEntries: 'id, createdAt, syncStatus',
+    });
   }
 }
 
@@ -869,6 +885,7 @@ export async function clearAllLocalData(): Promise<void> {
       db.portfolioCashEntries,
       db.lifeNarrative,
       db.workQualityLogs,
+      db.braindumpEntries,
       db.syncQueue,
     ],
     async () => {
@@ -899,8 +916,15 @@ export async function clearAllLocalData(): Promise<void> {
         db.portfolioCashEntries.clear(),
         db.lifeNarrative.clear(),
         db.workQualityLogs.clear(),
+        db.braindumpEntries.clear(),
         db.syncQueue.clear(),
       ]);
     }
   );
+  // v1.12 Item 5 — the supporter entitlement is cached in localStorage so a
+  // perk survives being offline, which also means it survives a sign-out
+  // unless something clears it. Cleared here rather than at each sign-out call
+  // site because this function is the single entry point every one of them
+  // already goes through — Settings, AdoptionPrompt and the App-level wipe.
+  clearEntitlement();
 }

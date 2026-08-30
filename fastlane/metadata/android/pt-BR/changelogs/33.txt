@@ -1,0 +1,5 @@
+Novo: Ideias, um lugar para anotar algo antes que se perca.
+
+Um campo na tela inicial. Sem título, sem categoria, sem prazo — só a ideia, com hora. Quando vale a pena agir, um toque vira tarefa e a nota original fica como registro.
+
+Também corrige a digitação com teclados chinês, japonês e coreano na adição rápida, onde caracteres podiam se perder.
