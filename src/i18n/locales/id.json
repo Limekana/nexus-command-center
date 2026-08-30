@@ -83,7 +83,8 @@
     "fitness": "Kebugaran",
     "studies": "Studi",
     "habits": "Kebiasaan",
-    "work": "Pekerjaan"
+    "work": "Pekerjaan",
+    "braindump": "Ide"
   },
   "nav": {
     "home": "Beranda",
@@ -1185,5 +1186,17 @@
     },
     "dismiss": "Nanti saja",
     "thanks": "Terima kasih — ini membantu."
+  },
+  "braindump": {
+    "placeholder": "Apa yang kamu pikirkan?",
+    "hint": "Ctrl / Cmd + Enter untuk menyimpan",
+    "tooLong": "Terlalu panjang — maksimal {{max}} karakter",
+    "save": "Simpan",
+    "emptyTitle": "Belum ada yang tersimpan",
+    "emptyBody": "Tulis pemikiran di atas. Tanpa judul, tanpa kategori — hanya idenya.",
+    "recent": "{{count}} tersimpan",
+    "convert": "Ubah jadi tugas",
+    "converted": "Diubah",
+    "viewTask": "Lihat tugas"
   }
 }

@@ -6,6 +6,7 @@ import { Task } from '../types/tasks';
 import { Goal } from '../types/goals';
 import { Habit, HabitCompletion } from '../types/habits';
 import { WorkQualityLog } from '../types/work';
+import { BraindumpEntry } from '../types/braindump';
 import { generateId } from '../utils/uuid';
 import { clearEntitlement } from '../lib/entitlement';
 
@@ -88,7 +89,9 @@ export interface SyncQueueItem {
     | 'feedback'
     // v1.12 Item 0 - retention. One row per user per app per day, upserted on
     // the composite key, so a retry is idempotent by construction.
-    | 'app_open';
+    | 'app_open'
+    // v1.12 Item 10 - Braindump quick capture.
+    | 'braindump_entry';
   entityId: string;
   operation: 'insert' | 'update' | 'delete';
   payload: string;
@@ -170,6 +173,7 @@ class NexusDB extends Dexie {
   // body metrics until this table existed).
   bodyMetrics!: Table<BodyMetric, string>;
   workQualityLogs!: Table<WorkQualityLog, string>;
+  braindumpEntries!: Table<BraindumpEntry, string>;
 
   // v15 — BUG-23 Stock Sales Tracking (v1.3.1). One row per realized sale.
   // FIFO cost basis computed at sale time; realized P&L is Σ realizedGainLoss.
@@ -838,6 +842,14 @@ class NexusDB extends Dexie {
     this.version(21).stores({
       readingItems: null,
     });
+
+    // v22 - v1.12 Item 10, Braindump. Additive: a new table only, no upgrade
+    // hook, so an existing device gains an empty store and nothing else moves.
+    // Indexed on createdAt because the only query is "my entries, newest
+    // first", and on syncStatus to match every other synced store here.
+    this.version(22).stores({
+      braindumpEntries: 'id, createdAt, syncStatus',
+    });
   }
 }
 
@@ -873,6 +885,7 @@ export async function clearAllLocalData(): Promise<void> {
       db.portfolioCashEntries,
       db.lifeNarrative,
       db.workQualityLogs,
+      db.braindumpEntries,
       db.syncQueue,
     ],
     async () => {
@@ -903,6 +916,7 @@ export async function clearAllLocalData(): Promise<void> {
         db.portfolioCashEntries.clear(),
         db.lifeNarrative.clear(),
         db.workQualityLogs.clear(),
+        db.braindumpEntries.clear(),
         db.syncQueue.clear(),
       ]);
     }

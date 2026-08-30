@@ -29,7 +29,8 @@
     "fitness": "Kunto",
     "studies": "Opinnot",
     "habits": "Tavat",
-    "work": "Työ"
+    "work": "Työ",
+    "braindump": "Ideat"
   },
   "nav": {
     "home": "Koti",
@@ -1191,5 +1192,17 @@
     },
     "dismiss": "Ei nyt",
     "thanks": "Kiitos – tästä on apua."
+  },
+  "braindump": {
+    "placeholder": "Mitä mietit?",
+    "hint": "Ctrl / Cmd + Enter tallentaa",
+    "tooLong": "Liian pitkä — enintään {{max}} merkkiä",
+    "save": "Tallenna",
+    "emptyTitle": "Ei vielä mitään",
+    "emptyBody": "Kirjoita ajatus yllä. Ei otsikkoa, ei luokkaa — vain idea.",
+    "recent": "{{count}} tallennettu",
+    "convert": "Muunna tehtäväksi",
+    "converted": "Muunnettu",
+    "viewTask": "Näytä tehtävä"
   }
 }

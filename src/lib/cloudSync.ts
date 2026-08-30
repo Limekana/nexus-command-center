@@ -33,6 +33,7 @@ import type { Task, TaskPriority } from '../types/tasks';
 import type { Goal, GoalType } from '../types/goals';
 import type { Habit, HabitCompletion } from '../types/habits';
 import type { WorkQualityLog } from '../types/work';
+import type { BraindumpEntry } from '../types/braindump';
 
 // ============================================================================
 // Push mappers — local entity → remote upsert payload
@@ -422,6 +423,32 @@ async function pushAppOpen(item: SyncQueueItem, ctx: PushContext): Promise<void>
   if (error) throw error;
 }
 
+// v1.12 Item 10 - Braindump.
+//
+// Delete is a HARD delete, matching pushTask rather than the soft-delete
+// tables: an entry the user threw away is a discarded thought, and nothing
+// downstream needs a tombstone to reconcile against.
+async function pushBraindumpEntry(item: SyncQueueItem, ctx: PushContext): Promise<void> {
+  if (item.operation === 'delete') {
+    const { error } = await supabase
+      .from('braindump_entries')
+      .delete()
+      .eq('id', item.entityId);
+    if (error) throw error;
+    return;
+  }
+  const local: BraindumpEntry = JSON.parse(item.payload);
+  const { error } = await supabase.from('braindump_entries').upsert({
+    id: local.id,
+    user_id: ctx.userId,
+    content: local.content,
+    converted_task_id: local.convertedTaskId ?? null,
+    created_at: local.createdAt,
+    updated_at: local.updatedAt || item.createdAt,
+  });
+  if (error) throw error;
+}
+
 async function pushFeedback(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (item.operation === 'delete') return; // feedback is append-only
   const local = JSON.parse(item.payload) as {
@@ -557,6 +584,7 @@ const pushHandlers: Record<SyncQueueItem['entityType'], (item: SyncQueueItem, ct
   habit: pushHabit,
   feedback: pushFeedback,
   app_open: pushAppOpen,
+  braindump_entry: pushBraindumpEntry,
   habit_completion: pushHabitCompletion,
   work_quality_log: pushWorkQualityLog,
   // grade_import is a local-only snapshot concept — courses sync individually.
@@ -604,6 +632,10 @@ const ENTITY_PRIORITY: Record<SyncQueueItem['entityType'], number> = {
   habit_completion: 2, // FK → habits
   work_quality_log: 1, // NCC-native, no FK dependencies
   app_open: 1, // no FK dependencies beyond auth.users
+  // 2, not 1: converted_task_id references tasks. The FK is ON DELETE SET NULL
+  // so an out-of-order push degrades to a lost link rather than an error, but
+  // ordering it correctly means the link simply survives.
+  braindump_entry: 2,
 };
 
 // Postgres integrity-constraint violations whose cause is the payload itself, not
@@ -683,6 +715,7 @@ export interface PullResult {
   stockSales: number;
   portfolioCashEntries: number;
   workQualityLogs: number;
+  braindumpEntries: number;
   errors: string[];
 }
 
@@ -1033,6 +1066,55 @@ export async function hydrateWorkQualityFromCloud(
   return { workQualityLogs: count, errors };
 }
 
+interface BraindumpHydrationResult {
+  braindumpEntries: number;
+  errors: string[];
+}
+
+/**
+ * v1.12 Item 10 - pull the user's braindump entries into Dexie.
+ *
+ * Same posture as the other hydrators: the ordinary authenticated client with
+ * RLS as the gate, an explicit user_id filter as defence in depth, and a
+ * try/catch so one bad row cannot take the whole sync down. Soft-deleted rows
+ * are filtered out rather than tombstoned locally - nothing references an
+ * entry, so there is no reconciliation that needs to see the deletion.
+ */
+export async function hydrateBraindumpFromCloud(
+  userId: string,
+): Promise<BraindumpHydrationResult> {
+  const errors: string[] = [];
+  let count = 0;
+  try {
+    const { data, error } = await supabase
+      .from('braindump_entries')
+      .select('*')
+      .eq('user_id', userId)
+      .is('deleted_at', null);
+    if (error) throw error;
+    if (data) {
+      const rows: BraindumpEntry[] = (data as any[]).map((r) => ({
+        id: r.id,
+        // Coerced rather than trusted: content is free text arriving from the
+        // network, and a null would break every consumer that measures length.
+        content: typeof r.content === 'string' ? r.content : '',
+        convertedTaskId: r.converted_task_id ?? null,
+        syncStatus: 'synced' as const,
+        createdAt: r.created_at,
+        updatedAt: r.updated_at,
+        deletedAt: null,
+      }));
+      await db.braindumpEntries.bulkPut(rows);
+      count = rows.length;
+    }
+  } catch (e) {
+    const msg = (e as Error).message;
+    errors.push(`braindump_entries: ${msg}`);
+    console.warn('[braindump-hydrate] failed:', msg);
+  }
+  return { braindumpEntries: count, errors };
+}
+
 interface StockSalesHydrationResult {
   stockSales: number;
   errors: string[];
@@ -1142,6 +1224,7 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     stockSales: 0,
     portfolioCashEntries: 0,
     workQualityLogs: 0,
+    braindumpEntries: 0,
     errors,
   };
 
@@ -1464,6 +1547,11 @@ export async function pullAll(_userId: string): Promise<PullResult> {
   const workQualityHydration = await hydrateWorkQualityFromCloud(_userId);
   result.workQualityLogs = workQualityHydration.workQualityLogs;
   for (const e of workQualityHydration.errors) errors.push(e);
+
+  // v1.12 Item 10 - Braindump.
+  const braindumpHydration = await hydrateBraindumpFromCloud(_userId);
+  result.braindumpEntries = braindumpHydration.braindumpEntries;
+  for (const e of braindumpHydration.errors) errors.push(e);
 
   return result;
 }

@@ -9,6 +9,7 @@ import { useTaskStore } from './useTaskStore';
 import { useGoalsStore } from './useGoalsStore';
 import { useBodyMetricsStore } from './useBodyMetricsStore';
 import { useWorkQualityStore } from './useWorkQualityStore';
+import { useBraindumpStore } from './useBraindumpStore';
 
 // Reload every cloud-synced data store from Dexie. Called after each pull so
 // that rows newly merged into Dexie (from other devices, Realtime triggers,
@@ -35,6 +36,9 @@ async function reloadDataStores(): Promise<void> {
       // v1.5 — Work domain self-assessment. Refresh after a pull so a rating
       // made on another device shows on the Home card + Life Work score.
       useWorkQualityStore.getState().load(),
+      // v1.12 Item 10 - Braindump. Refresh after a pull so an idea captured on
+      // another device appears without a navigation, same as the two above.
+      useBraindumpStore.getState().load(),
     ]);
   } catch (e) {
     // Reload failures shouldn't surface as sync errors — the data IS in Dexie,

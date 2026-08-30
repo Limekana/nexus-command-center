@@ -29,7 +29,8 @@
     "fitness": "健身",
     "studies": "学业",
     "habits": "习惯",
-    "work": "工作"
+    "work": "工作",
+    "braindump": "灵感"
   },
   "nav": {
     "home": "主页",
@@ -1191,5 +1192,17 @@
     },
     "dismiss": "以后再说",
     "thanks": "谢谢，这很有帮助。"
+  },
+  "braindump": {
+    "placeholder": "在想什么？",
+    "hint": "Ctrl / Cmd + Enter 保存",
+    "tooLong": "太长 — 最多 {{max}} 个字符",
+    "save": "保存",
+    "emptyTitle": "还没有内容",
+    "emptyBody": "在上方写下一个想法。无标题、无分类 — 只有想法。",
+    "recent": "已保存 {{count}} 条",
+    "convert": "转为任务",
+    "converted": "已转换",
+    "viewTask": "查看任务"
   }
 }
