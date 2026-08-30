@@ -1,0 +1,287 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Rack — paid alternate theme for Nexus Command Center.
+
+   Imported once from src/main.tsx AFTER index.css. The v1.10 "precision
+   instrument" theme stays the free default and is not edited: with
+   [data-theme] unset the app renders exactly as it did, which is this
+   theme's regression gate.
+
+   Premise: NCC is a hub that three sibling apps write into and five modules
+   report out of. Rack draws the console that arrangement implies — inputs at
+   the top, channels below, a master bus, and a printed limit you can watch
+   yourself approach. It only pays off when several inputs are live, which is
+   deliberate: the buyer is the completionist running the whole suite.
+
+   Remembered by the METER FACE: every headline quantity is read off a
+   cream-lit scale with a printed red zone and a peak-hold tick, so a budget
+   at 91% is visibly in the red rather than merely coloured red.
+
+   Fonts are self-hosted for the same reason IBM Plex is — a CDN call would
+   fail an F-Droid build.
+   ───────────────────────────────────────────────────────────────────────── */
+
+@font-face {
+  font-family: 'Saira Semi Condensed';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/saira-semi-condensed-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Saira Semi Condensed';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/saira-semi-condensed-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Saira Semi Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/saira-semi-condensed-600.woff2') format('woff2');
+}
+
+[data-theme='rack'] {
+  /* ⚠ OPEN DESIGN QUESTION — the handoff contradicts itself here, and these
+     hexes implement the letter of it rather than the intent.
+
+     It states the neutral bias as "warm-grey, hue ~70, chroma ~0.004" in
+     OKLCH, and gives the reason: "deliberately opposite to v1.10's cool
+     neutrals, so the free and paid themes never read as one family that has
+     drifted". The hexes it supplies as final do not do that. Measured in
+     OKLCH, the space it names:
+
+         Rack  #1C1D1F  L 0.231  C 0.0041  H 264
+         Free  #0B0C0E  L 0.154  C 0.0046  H 264   <- identical hue
+         Rack  #2A2C2F  H 258      Free #141618  H 248
+
+     Chroma matches the spec; hue is 264, not 70. Both themes sit in the same
+     cool neutral family, so Rack currently reads as "v1.10, lighter" — the
+     exact outcome the warm bias was specified to prevent. (Cross-checked
+     against LimeLog's Cast Iron, where the same kind of claim measures true
+     at H 85, so this is the handoff being inconsistent rather than the
+     measurement being wrong.)
+
+     Implemented as specified because the handoff calls the colours final and
+     the mocks are drawn from them. If the intent should win instead, the same
+     L and C rotated to hue 70 give:
+         bg #1E1D1B · surface #2E2B29 · surface2 #33302D
+         border #4A4744 · border-soft #3A3734 · milling #76716D
+     Owner's call. */
+  --c-bg: 28 29 31;             /* #1C1D1F — rack void; never holds content */
+  --c-surface: 42 44 47;        /* #2A2C2F — faceplate; ONE fill, no second tier */
+  --c-surface2: 46 49 52;       /* #2E3134 — pressed switch cap */
+  --c-border: 69 72 75;         /* #45484B — engraved outline */
+  --c-border-soft: 53 56 59;    /* #35383B — row divider */
+  --c-primary: 228 85 58;       /* #E4553A — the needle, the lit LED, a new peak */
+  --c-primary-dim: 166 60 39;   /* #A63C27 */
+  --c-text: 217 212 199;        /* #D9D4C7 — silkscreen ink printed on metal */
+  --c-text-muted: 154 149 138;  /* #9A958A */
+  --c-text-faint: 126 121 111;  /* #7E796F */
+  --c-danger: 140 46 51;        /* #8C2E33 — red zone / over limit */
+  --c-success: 126 140 70;      /* #7E8C46 — in-range hold */
+  /* Advisory takes the dim needle rather than a new hue: same family as the
+     signal, visibly dimmer, exactly the rule the free theme states. */
+  --c-warning: 166 60 39;
+
+  /* Rack-only. The meter is the theme's signature, so it gets real names. */
+  --meter-face: #e4dcc4;   /* the lit field every quantity is read off */
+  --meter-track: #d3cab0;
+  --meter-ink: #2e2a22;    /* fill, and the figures printed on the face */
+  --meter-unit: #6b6559;   /* scale numerals and unit suffixes */
+  --meter-pos: #4a5a2e;    /* deep positive ink, on the face only */
+  --chamfer-lit: #3d4043;
+  --chamfer-shadow: #111214;
+  --milling: #6e7377;      /* screw heads, dividers */
+  --rail: #232527;         /* tab rail ground */
+
+  /* Ballistic, like a moving-coil needle. */
+  --rack-rise: 90ms linear;
+  --rack-settle: 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Silkscreen: condensed is what lets 0.16em tracking survive the ten locales
+   that break the current caps treatment. Figures stay IBM Plex Mono so every
+   column keeps its alignment; body copy stays IBM Plex Sans. */
+[data-theme='rack'] .sec,
+[data-theme='rack'] .chip-micro {
+  font-family: 'Saira Semi Condensed', 'IBM Plex Sans', system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+}
+
+/* ── Elevation: no drop shadows, ever ──────────────────────────────────────
+   Each unit carries one lit chamfer above and one shadowed edge below. That
+   pair is the entire depth system: it costs no layout and reads as one
+   physical stack rather than floating cards. */
+[data-theme='rack'] .panel,
+[data-theme='rack'] .panel-2,
+[data-theme='rack'] .card,
+[data-theme='rack'] .card-elevated,
+[data-theme='rack'] .stat-box {
+  box-shadow: inset 0 1px 0 var(--chamfer-lit), inset 0 -1px 0 var(--chamfer-shadow);
+  border-radius: 2px;
+}
+
+/* The live panel loses v1.10's accent edge — on a faceplate a status colour
+   would read as a skin. Live-ness is stated by an LED in the label row
+   instead, which is what `.rack-led` is for. */
+[data-theme='rack'] .panel-live {
+  border-color: rgb(var(--c-border));
+  box-shadow: inset 0 1px 0 var(--chamfer-lit), inset 0 -1px 0 var(--chamfer-shadow);
+}
+
+/* The index mark carries over from v1.10 unchanged in meaning — it just
+   becomes a lit switch cap. */
+[data-theme='rack'] .chip-on,
+[data-theme='rack'] .pill-on {
+  background: rgb(var(--c-surface2));
+  box-shadow: inset 0 1px 0 rgb(var(--c-border)), inset 0 -2px 0 rgb(var(--c-primary));
+}
+
+/* A milled edge, not a moulded one. Screws, LEDs and avatars stay circular —
+   `rounded-full` is untouched, so that distinction keeps carrying information. */
+html[data-theme='rack'] *:not(.rounded-full):not(.rack-screw):not(.rack-led):not(.meter) {
+  border-radius: 2px;
+}
+/* The meter face gets 1px, not 2px — it is a printed card sitting in a
+   milled recess, so its edge is tighter than the metal around it. Exempted
+   from the sweep above rather than fighting it with a later rule. */
+html[data-theme='rack'] .meter { border-radius: 1px; }
+
+/* Ballistic motion: one small overshoot, then still. A rack powers up all at
+   once, so the stagger reveal is retired rather than retimed. */
+[data-theme='rack'] .stagger-children > * {
+  animation: none;
+  opacity: 1;
+}
+
+/* Screws in the header — the 1U unit at the top of every screen. Drawn as a
+   pseudo-element pair rather than markup so the free theme's AppHeader is not
+   carrying Rack furniture it never renders. The header becomes the faceplate
+   the rest of the rack hangs off, which is why it also takes the chamfer. */
+[data-theme='rack'] header {
+  position: relative;
+  padding-inline: 14px;
+  background: rgb(var(--c-surface));
+  border-bottom: none;
+  box-shadow: inset 0 1px 0 var(--chamfer-lit), inset 0 -1px 0 var(--chamfer-shadow);
+}
+[data-theme='rack'] header::before,
+[data-theme='rack'] header::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  margin-top: -2.5px;
+  border-radius: 50%;
+  background: var(--milling);
+  box-shadow: inset 0 1px 0 var(--chamfer-shadow);
+  pointer-events: none;
+}
+[data-theme='rack'] header::before { inset-inline-start: 4px; }
+[data-theme='rack'] header::after { inset-inline-end: 4px; }
+
+/* The tab rail is its own unit: darker ground, lit chamfer on top. */
+[data-theme='rack'] nav {
+  background: var(--rail);
+  box-shadow: inset 0 1px 0 var(--chamfer-lit);
+}
+
+/* ── Atoms ───────────────────────────────────────────────────────────────── */
+
+.rack-screw {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--milling);
+  box-shadow: inset 0 1px 0 var(--chamfer-shadow);
+  flex: 0 0 auto;
+}
+
+.rack-led {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgb(var(--c-border));
+  flex: 0 0 auto;
+  transition: background 80ms linear;
+}
+.rack-led--on { background: rgb(var(--c-primary)); }
+.rack-led--ok { background: rgb(var(--c-success)); }
+
+/* ── The meter ───────────────────────────────────────────────────────────── */
+
+.meter {
+  position: relative;
+  background: var(--meter-face);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.meter__track {
+  position: absolute;
+  inset: 0;
+  background: var(--meter-track);
+}
+
+/* The red zone is PRINTED on the face, not painted on the metal. A status
+   colour sitting directly on the faceplate is the thing that would make this
+   look like a skin instead of a machine. */
+.meter__zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgb(var(--c-danger) / 0.28);
+}
+
+.meter__fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  inset-inline-start: 0;
+  background: var(--meter-ink);
+  transition: width var(--rack-settle, 420ms cubic-bezier(0.34, 1.56, 0.64, 1));
+}
+.meter__fill--over { background: rgb(var(--c-danger)); }
+
+/* Peak hold: 2px, and 2px taller than the track on both sides so it reads as
+   a mark on the scale rather than part of the fill. */
+.meter__peak {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: rgb(var(--c-danger));
+}
+.meter__peak--ok { background: rgb(var(--c-success)); }
+.meter__peak--new { background: rgb(var(--c-primary)); }
+
+.meter-scale {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  color: var(--meter-unit);
+}
+
+/* Figures appear on the meter face only. */
+.meter-readout {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--meter-ink);
+}
+.meter-readout__unit {
+  font-size: 0.55em;
+  color: var(--meter-unit);
+  margin-inline-start: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Needles jump to value and peak ticks stay put. */
+  .meter__fill { transition: none; }
+}
