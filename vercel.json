@@ -10,5 +10,14 @@
     { "source": "/cg/:path*", "destination": "/api/cg/:path*" },
     { "source": "/fx/:path*", "destination": "https://open.er-api.com/:path*" },
     { "source": "/ecb-api/:path*", "destination": "https://data-api.ecb.europa.eu/:path*" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Content-Security-Policy", "value": "frame-ancestors 'none'" },
+        { "key": "X-Frame-Options", "value": "DENY" }
+      ]
+    }
   ]
 }

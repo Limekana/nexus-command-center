@@ -14,7 +14,11 @@
       <style> blocks during HMR and for keyframes; this is the standard
       compromise for SPAs without a separate build step.
       connect-src enumerates every host the app legitimately calls out to.
-      frame-ancestors 'none' prevents clickjacking via iframe embedding.
+      frame-ancestors is NOT here: browsers ignore it when it arrives via
+      <meta>, and logged a console error for it. Clickjacking protection is
+      delivered as a real Content-Security-Policy HTTP header instead — see
+      the headers block in vercel.json. Nothing was lost moving it; it had
+      never actually been in force from here.
     -->
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
@@ -25,7 +29,6 @@
       connect-src 'self' https://*.supabase.co wss://*.supabase.co https://finnhub.io https://api.coingecko.com https://query1.finance.yahoo.com https://query2.finance.yahoo.com https://open.er-api.com;
       object-src 'none';
       base-uri 'self';
-      frame-ancestors 'none';
       form-action 'self';
     " />
     <title>Nexus Command Center — a live dashboard for your other apps</title>
