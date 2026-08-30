@@ -7,6 +7,7 @@ import { Goal } from '../types/goals';
 import { Habit, HabitCompletion } from '../types/habits';
 import { WorkQualityLog } from '../types/work';
 import { generateId } from '../utils/uuid';
+import { clearEntitlement } from '../lib/entitlement';
 
 // v1.2 — Insights rating-history row. One per recompute per ticker. Used to
 // detect tier changes between consecutive recomputes (gating the push
@@ -906,4 +907,10 @@ export async function clearAllLocalData(): Promise<void> {
       ]);
     }
   );
+  // v1.12 Item 5 — the supporter entitlement is cached in localStorage so a
+  // perk survives being offline, which also means it survives a sign-out
+  // unless something clears it. Cleared here rather than at each sign-out call
+  // site because this function is the single entry point every one of them
+  // already goes through — Settings, AdoptionPrompt and the App-level wipe.
+  clearEntitlement();
 }

@@ -12,6 +12,7 @@ import { supabase } from './lib/supabase';
 import { startRealtime, stopRealtime } from './lib/realtime';
 import { hydrateStudiesFromCloud, hydrateHabitsFromCloud, hydrateBodyMetricsFromCloud, hydrateWorkQualityFromCloud } from './lib/cloudSync';
 import { watchAppOpens } from './lib/appOpens';
+import { refreshEntitlement } from './lib/entitlement';
 import { useStudiesStore } from './store/useStudiesStore';
 import { isGuestMode } from './lib/guestMode';
 import AdoptionPrompt from './components/AdoptionPrompt';
@@ -166,6 +167,17 @@ export default function App() {
     if (!session) return;
     return watchAppOpens();
   }, [session]);
+
+  // v1.12 Item 5 — supporter entitlement. Keyed on the user id rather than the
+  // session object so a token refresh does not re-ask; the module additionally
+  // serves from cache for six hours, so this is close to free on an ordinary
+  // launch. A network failure keeps the cached answer rather than stripping a
+  // supporter's perk.
+  useEffect(() => {
+    const uid = session?.user?.id;
+    if (!uid) return;
+    void refreshEntitlement(uid);
+  }, [session?.user?.id]);
 
   useEffect(() => {
     if (!session) {
