@@ -1,0 +1,5 @@
+Neu: Ideenspeicher — ein Ort für den Gedanken, bevor er weg ist.
+
+Ein Feld auf der Startseite. Kein Titel, keine Kategorie, kein Datum — nur der Gedanke, mit Zeitstempel. Lohnt sich eine Idee, wird sie mit einem Tippen zur Aufgabe, und die ursprüngliche Notiz bleibt als Beleg erhalten.
+
+Behebt außerdem die Eingabe mit chinesischen, japanischen und koreanischen Tastaturen im Schnellzugriff, wo Zeichen verloren gehen konnten.

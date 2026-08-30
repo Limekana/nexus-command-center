@@ -1,0 +1,5 @@
+Adds Braindump: a place to write down an idea before it goes.
+
+One box on the home screen. No title, no category, no due date — just the thought, timestamped. When an idea is worth acting on, one tap turns it into a task, and the original note stays as a record of where it came from.
+
+Also fixes typing with Chinese, Japanese and Korean keyboards in quick add, where characters could be lost while the keyboard was still composing them.

@@ -1,0 +1,5 @@
+Lisää Ideat: paikka kirjoittaa ajatus muistiin ennen kuin se katoaa.
+
+Yksi kenttä etusivulla. Ei otsikkoa, ei luokkaa, ei eräpäivää — vain ajatus aikaleimalla. Kun idea kannattaa toteuttaa, yhdellä napautuksella siitä tulee tehtävä, ja alkuperäinen muistiinpano jää talteen.
+
+Korjaa myös kirjoittamisen kiinan, japanin ja korean näppäimistöillä pikalisäyksessä, jossa merkkejä saattoi kadota kesken kirjoittamisen.
