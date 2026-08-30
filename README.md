@@ -15,9 +15,9 @@ everything and surfaces what matters.
 
 | App | Role | Status | Repo |
 |---|---|---|---|
-| **Nexus Command Center** | Cross-domain dashboard. Aggregates the other apps, runs Weekly + Year Reviews, owns Goals, hosts Finance and Tasks. | Active (MVP v3.1) | _This repo_ |
+| **Nexus Command Center** | Cross-domain dashboard. Aggregates the other apps, runs Weekly + Year Reviews, owns Goals, hosts Finance and Tasks. | Active | _This repo_ |
 | **StudyDesk** | Focused study companion. Course / grade tracking, study-time timer, reading library. | Active | [Limekana/StudyDesk](https://github.com/Limekana/StudyDesk) |
-| **Limelog** | Workout & fitness logger. Sessions, sets, reps, RPE; live-pushes into the shared backend. | In development | [Limekana/limelog](https://github.com/Limekana/limelog) <!-- placeholder URL until repo lands --> |
+| **Limelog** | Workout & fitness logger. Sessions, sets, reps, RPE; live-pushes into the shared backend. | Active | [Limekana/limelog](https://github.com/Limekana/limelog) |
 
 ---
 
@@ -190,11 +190,21 @@ scripts/         Build / tooling scripts (icons, secret detection)
 
 ## Status
 
-Active development. MVP v3.1 — sync, multi-app integration, and the Reviews
-shipped in the same milestone. The integration contracts for the sibling
-apps (Limelog and StudyDesk) live in private working docs; ask
-[@Limekana](https://github.com/Limekana) if you're building something that
-needs to write into the same Supabase backend.
+Released and in active development. All three apps ship together on a shared
+suite version, so a milestone lands across the suite rather than app by app.
+See [Releases](https://github.com/Limekana/nexus-command-center/releases) for
+the current version and changelog — Android APKs and the Electron desktop
+build are attached there.
+
+The integration contracts for the sibling apps (Limelog and StudyDesk) live
+in private working docs; ask [@Limekana](https://github.com/Limekana) if
+you're building something that needs to write into the same Supabase backend.
+
+## Support
+
+The Nexus OS suite is free, open source and ad-free. If it's useful to you, you can support development on Ko-fi — it goes straight back into building the suite.
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/J6K8240SNW)
 
 ## License
 
