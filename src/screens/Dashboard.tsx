@@ -15,6 +15,7 @@ import { useFinanceStore } from '../store/useFinanceStore';
 import { useStudiesStore } from '../store/useStudiesStore';
 import { useFitnessStore } from '../store/useFitnessStore';
 import { useTaskStore } from '../store/useTaskStore';
+import { useBraindumpStore } from '../store/useBraindumpStore';
 import { formatCurrency, isOverdue, isToday } from '../utils/formatters';
 
 export default function Dashboard() {
@@ -32,6 +33,7 @@ export default function Dashboard() {
   const sessions = useFitnessStore((s) => s.sessions);
 
   const tasks = useTaskStore((s) => s.tasks);
+  const braindumpEntries = useBraindumpStore((s) => s.entries);
 
   // Portfolio auto-refresh used to live here, but Dashboard mounts as a child
   // of AppShell — at first-mount the holdings store is still empty (AppShell's
@@ -210,11 +212,40 @@ export default function Dashboard() {
             )}
             {tasksOpen.length === 1 && <Empty msg=" " />}
           </ModuleSummaryCard>
+
+          {/* v1.12 Item 10 - Braindump. Surfaced on the dashboard rather than
+              buried behind a nav entry: the friction this feature exists to
+              kill is "I had an idea and getting it recorded cost too much", so
+              the entry point has to be on the first screen. */}
+          <ModuleSummaryCard
+            title={t('domains.braindump')}
+            icon="sparkle"
+            tag={braindumpEntries.length > 0 ? t('dash.tagOpen') : t('dash.tagClear')}
+            to="/braindump"
+          >
+            {braindumpEntries.length > 0 ? (
+              braindumpEntries.slice(0, 2).map((e) => (
+                <ListRow key={e.id} label={firstLineOf(e.content)} />
+              ))
+            ) : (
+              <>
+                <Empty msg={t('braindump.emptyTitle')} />
+                <Empty msg={t('dash.tapToAdd')} />
+              </>
+            )}
+            {braindumpEntries.length === 1 && <Empty msg=" " />}
+          </ModuleSummaryCard>
         </div>
         </div>
       </div>
     </>
   );
+}
+
+/** First non-empty line of a braindump entry, capped for a one-line row. */
+function firstLineOf(content: string): string {
+  const line = (content || '').split(/\r?\n/).map((l) => l.trim()).find(Boolean) || '';
+  return line.length > 60 ? `${line.slice(0, 57)}…` : line;
 }
 
 function Empty({ msg }: { msg: string }) {

@@ -29,7 +29,8 @@
     "fitness": "Fitness",
     "studies": "Studies",
     "habits": "Habits",
-    "work": "Work"
+    "work": "Work",
+    "braindump": "Braindump"
   },
   "nav": {
     "home": "Home",
@@ -1191,5 +1192,17 @@
     },
     "dismiss": "Not now",
     "thanks": "Thanks — that helps."
+  },
+  "braindump": {
+    "placeholder": "What's on your mind?",
+    "hint": "Ctrl / Cmd + Enter to save",
+    "tooLong": "Too long — {{max}} characters max",
+    "save": "Save",
+    "emptyTitle": "Nothing captured yet",
+    "emptyBody": "Type a thought above. No title, no category — just the idea.",
+    "recent": "{{count}} captured",
+    "convert": "Convert to task",
+    "converted": "Converted",
+    "viewTask": "View task"
   }
 }

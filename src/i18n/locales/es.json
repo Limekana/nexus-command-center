@@ -29,7 +29,8 @@
     "fitness": "Forma física",
     "studies": "Estudios",
     "habits": "Hábitos",
-    "work": "Trabajo"
+    "work": "Trabajo",
+    "braindump": "Ideas"
   },
   "nav": {
     "home": "Inicio",
@@ -1197,5 +1198,17 @@
     },
     "dismiss": "Ahora no",
     "thanks": "Gracias, nos ayuda."
+  },
+  "braindump": {
+    "placeholder": "¿Qué tienes en mente?",
+    "hint": "Ctrl / Cmd + Enter para guardar",
+    "tooLong": "Demasiado largo — máximo {{max}} caracteres",
+    "save": "Guardar",
+    "emptyTitle": "Nada capturado aún",
+    "emptyBody": "Escribe una idea arriba. Sin título, sin categoría — solo la idea.",
+    "recent": "{{count}} capturadas",
+    "convert": "Convertir en tarea",
+    "converted": "Convertida",
+    "viewTask": "Ver tarea"
   }
 }

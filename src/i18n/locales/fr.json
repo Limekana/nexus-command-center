@@ -29,7 +29,8 @@
     "fitness": "Forme",
     "studies": "Études",
     "habits": "Habitudes",
-    "work": "Travail"
+    "work": "Travail",
+    "braindump": "Idées"
   },
   "nav": {
     "home": "Accueil",
@@ -1197,5 +1198,17 @@
     },
     "dismiss": "Pas maintenant",
     "thanks": "Merci, ça nous aide."
+  },
+  "braindump": {
+    "placeholder": "À quoi penses-tu ?",
+    "hint": "Ctrl / Cmd + Entrée pour enregistrer",
+    "tooLong": "Trop long — {{max}} caractères maximum",
+    "save": "Enregistrer",
+    "emptyTitle": "Rien de capturé pour l’instant",
+    "emptyBody": "Écris une pensée ci-dessus. Pas de titre, pas de catégorie — juste l’idée.",
+    "recent": "{{count}} capturées",
+    "convert": "Convertir en tâche",
+    "converted": "Convertie",
+    "viewTask": "Voir la tâche"
   }
 }
