@@ -23,6 +23,7 @@ import { formatMoney } from '../lib/currencies';
 import { formatLocale } from '../utils/formatters';
 import { isComplete, parseQuickEntry, rankMatches } from '../lib/quickEntry';
 import Glyph from './Glyph';
+import { compositionTracking, isComposing } from '../lib/imeSubmit';
 
 interface Props {
   open: boolean;
@@ -139,6 +140,11 @@ export default function QuickAddOverlay({ open, onClose }: Props) {
   };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
+    // While an IME is composing, every key below belongs to it: arrows walk the
+    // candidate list, Tab and Enter commit the selection, Escape cancels it. Each
+    // branch here also calls preventDefault(), so acting on any of them takes the
+    // key away from the keyboard mid-word. Guard the whole handler, not just Enter.
+    if (isComposing(e)) return;
     if (e.key === 'Escape') {
       e.preventDefault();
       onClose();
@@ -154,6 +160,8 @@ export default function QuickAddOverlay({ open, onClose }: Props) {
       acceptSuggestion(suggestions[highlight].label);
       return;
     }
+    // ime-ok: the whole handler already returns early on isComposing() above,
+    // which covers this branch and the arrow/Tab/Escape ones too.
     if (e.key === 'Enter') {
       e.preventDefault();
       // Enter completes the token being typed before it commits anything —
@@ -187,6 +195,7 @@ export default function QuickAddOverlay({ open, onClose }: Props) {
           }}
           onKeyUp={(e) => setCaret((e.target as HTMLInputElement).selectionStart ?? 0)}
           onClick={(e) => setCaret((e.target as HTMLInputElement).selectionStart ?? 0)}
+          {...compositionTracking}
           onKeyDown={onKeyDown}
           placeholder={t('fin.qa.placeholder')}
           className="w-full bg-transparent text-lg font-heading text-text placeholder:text-text-muted/50 focus:outline-none px-2 py-1.5"

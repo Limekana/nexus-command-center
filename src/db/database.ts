@@ -84,7 +84,10 @@ export interface SyncQueueItem {
     | 'work_quality_log'
     // v1.10 - in-app feedback. Insert-only; the client supplies the uuid so a
     // queue retry files the same report rather than a second one.
-    | 'feedback';
+    | 'feedback'
+    // v1.12 Item 0 - retention. One row per user per app per day, upserted on
+    // the composite key, so a retry is idempotent by construction.
+    | 'app_open';
   entityId: string;
   operation: 'insert' | 'update' | 'delete';
   payload: string;

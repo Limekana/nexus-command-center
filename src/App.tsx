@@ -11,6 +11,7 @@ import { clearAllLocalData } from './db/database';
 import { supabase } from './lib/supabase';
 import { startRealtime, stopRealtime } from './lib/realtime';
 import { hydrateStudiesFromCloud, hydrateHabitsFromCloud, hydrateBodyMetricsFromCloud, hydrateWorkQualityFromCloud } from './lib/cloudSync';
+import { watchAppOpens } from './lib/appOpens';
 import { useStudiesStore } from './store/useStudiesStore';
 import { isGuestMode } from './lib/guestMode';
 import AdoptionPrompt from './components/AdoptionPrompt';
@@ -156,6 +157,16 @@ export default function App() {
   //   3. THEN open the Realtime subscription so future deltas merge cleanly.
   //   4. Kick the full background syncNow() afterward for the other tables
   //      (transactions, portfolio, etc.) — non-blocking.
+  // v1.12 Item 0 — retention. Session-gated rather than mount-only: an open
+  // recorded before the session is restored has no user to attribute it to and
+  // would be skipped. The visibilitychange listener installed here covers the
+  // commoner case — the app resumed from the background days later without the
+  // process having died.
+  useEffect(() => {
+    if (!session) return;
+    return watchAppOpens();
+  }, [session]);
+
   useEffect(() => {
     if (!session) {
       stopRealtime();

@@ -396,6 +396,32 @@ async function pushGrade(item: SyncQueueItem, ctx: PushContext): Promise<void> {
 // UPSERT onto an existing row becomes an UPDATE that RLS would then refuse. A
 // 23505 means the first attempt actually landed, so it is success from the
 // queue's point of view - swallowing it is what makes the retry idempotent.
+// v1.12 Item 0 - retention.
+//
+// Retention was previously inferred from content-row timestamps and
+// `auth.users.last_sign_in_at`. The latter moves on a silent token refresh, so
+// it recorded that the client woke up rather than that the person came back.
+//
+// UPSERT on the composite primary key (user_id, app, opened_on): a queue retry,
+// or a second foreground on the same day, resolves to the same row rather than
+// a duplicate or a 23505.
+async function pushAppOpen(item: SyncQueueItem, ctx: PushContext): Promise<void> {
+  if (item.operation === 'delete') return; // opens are never deleted client-side
+  const local = JSON.parse(item.payload) as {
+    appVersion: string;
+    platform: string;
+    openedOn: string;
+  };
+  const { error } = await supabase.from('app_opens').upsert({
+    user_id: ctx.userId,
+    app: 'ncc',
+    app_version: local.appVersion || null,
+    platform: local.platform || null,
+    opened_on: local.openedOn,
+  }, { onConflict: 'user_id,app,opened_on' });
+  if (error) throw error;
+}
+
 async function pushFeedback(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (item.operation === 'delete') return; // feedback is append-only
   const local = JSON.parse(item.payload) as {
@@ -530,6 +556,7 @@ const pushHandlers: Record<SyncQueueItem['entityType'], (item: SyncQueueItem, ct
   },
   habit: pushHabit,
   feedback: pushFeedback,
+  app_open: pushAppOpen,
   habit_completion: pushHabitCompletion,
   work_quality_log: pushWorkQualityLog,
   // grade_import is a local-only snapshot concept — courses sync individually.
@@ -576,6 +603,7 @@ const ENTITY_PRIORITY: Record<SyncQueueItem['entityType'], number> = {
   habit: 1, // parent — no FK dependencies
   habit_completion: 2, // FK → habits
   work_quality_log: 1, // NCC-native, no FK dependencies
+  app_open: 1, // no FK dependencies beyond auth.users
 };
 
 // Postgres integrity-constraint violations whose cause is the payload itself, not
