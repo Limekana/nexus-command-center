@@ -196,6 +196,12 @@ apps (Limelog and StudyDesk) live in private working docs; ask
 [@Limekana](https://github.com/Limekana) if you're building something that
 needs to write into the same Supabase backend.
 
+## Support
+
+The Nexus OS suite is free, open source and ad-free. If it's useful to you, you can support development on Ko-fi — it goes straight back into building the suite.
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/J6K8240SNW)
+
 ## License
 
 Personal project — no license declared yet. Code is here to read; ask
