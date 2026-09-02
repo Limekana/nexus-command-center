@@ -1,0 +1,3 @@
+Fixes signing in on the desktop app.
+
+Signing in used to send the app's own window to a web page and leave it there — no back button, nothing to click, the app effectively gone. Sign-in now opens in your browser and hands you straight back to Nexus when it finishes.

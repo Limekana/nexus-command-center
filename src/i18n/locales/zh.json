@@ -99,6 +99,7 @@
     "errPasswordWeak": "密码需包含大小写字母、数字和符号。",
     "errPasswordMismatch": "两次输入的密码不一致。",
     "errGoogleStart": "无法启动 Google 登录。",
+    "desktopBrowser": "请在浏览器中完成登录，然后回到这里。",
     "errInvalidCredentials": "邮箱或密码不正确。",
     "errAlreadyRegistered": "该邮箱已注册。请尝试登录。",
     "errWeakPassword": "请选择更强的密码。",

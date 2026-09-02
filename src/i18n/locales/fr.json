@@ -99,6 +99,7 @@
     "errPasswordWeak": "Le mot de passe doit contenir majuscules, minuscules, un chiffre et un symbole.",
     "errPasswordMismatch": "Les mots de passe ne correspondent pas.",
     "errGoogleStart": "Impossible de démarrer la connexion Google.",
+    "desktopBrowser": "Terminez la connexion dans votre navigateur, puis revenez ici.",
     "errInvalidCredentials": "E-mail ou mot de passe incorrect.",
     "errAlreadyRegistered": "Un compte existe déjà pour cet e-mail. Essayez de vous connecter.",
     "errWeakPassword": "Choisissez un mot de passe plus fort.",

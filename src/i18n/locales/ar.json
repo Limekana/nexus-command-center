@@ -34,6 +34,7 @@
     "errPasswordWeak": "تحتاج كلمة المرور إلى أحرف كبيرة وصغيرة ورقم ورمز.",
     "errPasswordMismatch": "كلمتا المرور غير متطابقتين.",
     "errGoogleStart": "تعذّر بدء تسجيل الدخول عبر Google.",
+    "desktopBrowser": "أكمل تسجيل الدخول في المتصفح ثم عد إلى هنا.",
     "errInvalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
     "errAlreadyRegistered": "يوجد حساب بهذا البريد الإلكتروني بالفعل. جرّب تسجيل الدخول.",
     "errWeakPassword": "اختر كلمة مرور أقوى.",

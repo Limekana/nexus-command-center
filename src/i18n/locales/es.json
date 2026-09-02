@@ -99,6 +99,7 @@
     "errPasswordWeak": "La contraseña necesita mayúsculas y minúsculas, un número y un símbolo.",
     "errPasswordMismatch": "Las contraseñas no coinciden.",
     "errGoogleStart": "No se pudo iniciar el acceso con Google.",
+    "desktopBrowser": "Termina de iniciar sesión en tu navegador y vuelve aquí.",
     "errInvalidCredentials": "Correo o contraseña incorrectos.",
     "errAlreadyRegistered": "Ya existe una cuenta con ese correo. Prueba a iniciar sesión.",
     "errWeakPassword": "Elige una contraseña más segura.",

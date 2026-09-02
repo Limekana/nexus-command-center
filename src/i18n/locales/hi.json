@@ -34,6 +34,7 @@
     "errPasswordWeak": "पासवर्ड में बड़े और छोटे अक्षर, एक अंक और एक चिह्न होना चाहिए।",
     "errPasswordMismatch": "पासवर्ड मेल नहीं खाते।",
     "errGoogleStart": "Google साइन-इन शुरू नहीं हो सका।",
+    "desktopBrowser": "अपने ब्राउज़र में साइन-इन पूरा करें, फिर यहाँ लौटें।",
     "errInvalidCredentials": "ईमेल या पासवर्ड ग़लत है।",
     "errAlreadyRegistered": "इस ईमेल से खाता पहले से मौजूद है। साइन इन करके देखें।",
     "errWeakPassword": "कोई मज़बूत पासवर्ड चुनें।",

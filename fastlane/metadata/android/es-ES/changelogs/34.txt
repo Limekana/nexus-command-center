@@ -1,0 +1,3 @@
+Corrige el inicio de sesión en la app de escritorio.
+
+Al iniciar sesión, la propia ventana de la app acababa en una página web y se quedaba ahí: sin botón de volver, sin nada que pulsar, la app desaparecida. Ahora el inicio de sesión se abre en tu navegador y te devuelve directamente a Nexus al terminar.

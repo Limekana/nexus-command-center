@@ -1,0 +1,3 @@
+Corrige la connexion dans l'app de bureau.
+
+La connexion envoyait la propre fenêtre de l'app vers une page web et l'y laissait : aucun bouton retour, rien à cliquer, l'app disparue. Elle s'ouvre désormais dans ton navigateur et te ramène directement dans Nexus une fois terminée.

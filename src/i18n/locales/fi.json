@@ -99,6 +99,7 @@
     "errPasswordWeak": "Salasanassa tarvitaan isoja ja pieniä kirjaimia, numero ja erikoismerkki.",
     "errPasswordMismatch": "Salasanat eivät täsmää.",
     "errGoogleStart": "Google-kirjautumista ei voitu aloittaa.",
+    "desktopBrowser": "Viimeistele kirjautuminen selaimessa ja palaa tänne.",
     "errInvalidCredentials": "Väärä sähköposti tai salasana.",
     "errAlreadyRegistered": "Tälle sähköpostille on jo tili. Kokeile kirjautua sisään.",
     "errWeakPassword": "Valitse vahvempi salasana.",

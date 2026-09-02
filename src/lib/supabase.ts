@@ -11,6 +11,7 @@ import { createClient, type SupportedStorage } from '@supabase/supabase-js';
 import { Preferences } from '@capacitor/preferences';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
+import { DESKTOP_REDIRECT_URL } from './desktop';
 
 const SUPABASE_URL = 'https://hkktorzhaqnfqsnlstda.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_ykHLJ4QuFm2HKXACygwezw_c_cvR_yf';
@@ -99,6 +100,15 @@ if (Capacitor.isNativePlatform()) {
 // flag — but note that EVERY origin still has to be listed in Supabase's
 // Auth → URL Configuration → Redirect URLs allowlist, or Supabase silently
 // falls back to the Site URL again and the symptom returns unchanged.
+//
+// DESKTOP is the third case, and v1.12 did not have it. In Electron
+// `Capacitor.isNativePlatform()` is false (there is no Capacitor bridge) and
+// `window.location.origin` is `nexus://app` — a custom scheme, which Supabase's
+// redirect allow-list cannot hold, so every desktop sign-in fell back to the
+// Site URL and parked the app's own window on the marketing site with no route
+// back. The desktop shell now listens on a fixed loopback port and passes that
+// URL in; see `electron/main.cjs`. A null means the listener could not bind, in
+// which case the origin fallback below is no worse than what shipped.
 export const OAUTH_REDIRECT_URL = Capacitor.isNativePlatform()
   ? 'com.limecore.nexus://login-callback'
-  : `${window.location.origin}/`;
+  : DESKTOP_REDIRECT_URL || `${window.location.origin}/`;

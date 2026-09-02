@@ -34,6 +34,7 @@
     "errPasswordWeak": "A senha precisa de maiúsculas e minúsculas, um número e um símbolo.",
     "errPasswordMismatch": "As senhas não coincidem.",
     "errGoogleStart": "Não foi possível iniciar o login com o Google.",
+    "desktopBrowser": "Conclua o login no seu navegador e volte para cá.",
     "errInvalidCredentials": "E-mail ou senha incorretos.",
     "errAlreadyRegistered": "Já existe uma conta com esse e-mail. Tente entrar.",
     "errWeakPassword": "Escolha uma senha mais forte.",

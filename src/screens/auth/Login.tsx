@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import { supabase, OAUTH_REDIRECT_URL } from '../../lib/supabase';
+import { desktop } from '../../lib/desktop';
 import { setGuestMode } from '../../lib/guestMode';
 import { isOnboarded } from '../../lib/onboarding';
 import { translateAuthError } from '../../lib/authErrors';
@@ -36,6 +37,10 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [googleSubmitting, setGoogleSubmitting] = useState(false);
+  // v1.12.1 — a non-error status line. Desktop sign-in now completes in the
+  // system browser, and a window that visibly does nothing after the click is
+  // indistinguishable from one that failed.
+  const [notice, setNotice] = useState<string | null>(null);
   const [showEmail, setShowEmail] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -60,6 +65,7 @@ export default function Login() {
 
   const onGoogle = async () => {
     setError(null);
+    setNotice(null);
     setGoogleSubmitting(true);
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -78,6 +84,20 @@ export default function Login() {
         await Browser.open({ url: data.url, presentationStyle: 'fullscreen' });
         // The deep-link listener in App.tsx will exchangeCodeForSession when
         // Google redirects back to our scheme.
+      } else if (desktop?.beginOAuth) {
+        // v1.12.1 — NEVER navigate the desktop window. It has no back button,
+        // no address bar and no menu, so sending it to a provider is a one-way
+        // trip: the redirect chain ended on limecore.dev/confirmed and the app
+        // was gone. The system browser owns this leg; the loopback listener in
+        // electron/main.cjs brings the code back and the handler in App.tsx
+        // redeems it, where the PKCE verifier lives.
+        const opened = await desktop.beginOAuth(data.url);
+        if (!opened) {
+          setError(t('auth.errGoogleStart'));
+          setGoogleSubmitting(false);
+          return;
+        }
+        setNotice(t('auth.desktopBrowser'));
       } else {
         // Web fallback — just navigate the current tab.
         window.location.href = data.url;
@@ -211,6 +231,12 @@ export default function Login() {
           <div className="alert alert-warn text-xs mt-4">
             <span className="w-2 h-2 rounded-full bg-danger" />
             <span>{error}</span>
+          </div>
+        )}
+
+        {notice && !error && (
+          <div className="alert text-xs mt-4" role="status">
+            <span>{notice}</span>
           </div>
         )}
 
