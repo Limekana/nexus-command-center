@@ -4,6 +4,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import { useAuthStore } from './store/useAuthStore';
+import { IS_DESKTOP } from './lib/isDesktop';
 import { useSessionStore } from './store/useSessionStore';
 import { useSyncStore } from './store/useSyncStore';
 import { seedIfEmpty } from './db/seed';
@@ -382,7 +383,16 @@ export default function App() {
   // 3. Session OK (or guest mode active) but device not unlocked → LockScreen.
   // PIN/biometric still gates a guest-mode session if the user has set one,
   // so the lock UX stays consistent regardless of cloud auth state.
-  if (!unlocked) {
+  //
+  // NOT ON DESKTOP. The app lock is a phone control: it answers "someone else
+  // picked up my unlocked handset", and it pays for that with a PIN pad on
+  // every cold start. A desktop machine already sits behind an OS session the
+  // user logs into, so the second gate buys nothing and charges the same
+  // price — and it charges it worse here, because the desktop window has no
+  // biometric to fall back on, making the PIN the only way in and a forgotten
+  // one a locked-out install. Removed for that build, not weakened for any
+  // other: Android and web are untouched below.
+  if (!unlocked && !IS_DESKTOP) {
     return <LockScreen />;
   }
 
