@@ -11,12 +11,13 @@
 //      so the next launch goes straight to the app. User can still sign in
 //      later from Settings to enable Supabase sync.
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import { supabase, OAUTH_REDIRECT_URL } from '../../lib/supabase';
+import { desktop, DESKTOP_REDIRECT_URL } from '../../lib/desktop';
 import { setGuestMode } from '../../lib/guestMode';
 import { isOnboarded } from '../../lib/onboarding';
 import { translateAuthError } from '../../lib/authErrors';
@@ -34,9 +35,40 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  // Desktop sign-in leaves the app for the system browser, so the screen has to
+  // say so — otherwise the button just goes quiet and the user presses it again.
+  const [info, setInfo] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [googleSubmitting, setGoogleSubmitting] = useState(false);
   const [showEmail, setShowEmail] = useState(false);
+
+  // The desktop equivalent of the deep-link listener App.tsx runs for Android.
+  // The Electron shell's loopback server receives Supabase's redirect and hands
+  // the code over IPC; the exchange has to happen HERE because the PKCE code
+  // verifier lives in this renderer's storage and nowhere else — the main
+  // process could not redeem the code even if it wanted to.
+  useEffect(() => {
+    if (!desktop?.onCallback) return;
+    return desktop.onCallback(async ({ code, error: callbackError }) => {
+      setInfo(null);
+      if (callbackError || !code) {
+        setError(callbackError || t('auth.errCallback'));
+        setGoogleSubmitting(false);
+        return;
+      }
+      setGoogleSubmitting(true);
+      try {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (exchangeError) setError(translateAuthError(exchangeError, t) ?? t('auth.errCallback'));
+        // On success the session store listener fires and App.tsx renders away
+        // from this screen, so there is nothing to clear here.
+      } catch (e) {
+        setError(translateAuthError(e as Error, t) ?? t('auth.errCallback'));
+      } finally {
+        setGoogleSubmitting(false);
+      }
+    });
+  }, [t]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,6 +92,15 @@ export default function Login() {
 
   const onGoogle = async () => {
     setError(null);
+    setInfo(null);
+    // Desktop with no loopback listener: every candidate port was taken, so
+    // OAUTH_REDIRECT_URL has fallen back to `nexus://app/` — the exact value
+    // that strands the window on the marketing site. Refuse the round trip and
+    // say so. Email sign-in needs no redirect and is untouched by this.
+    if (desktop && !DESKTOP_REDIRECT_URL) {
+      setError(t('auth.errDesktopNoListener'));
+      return;
+    }
     setGoogleSubmitting(true);
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -78,6 +119,22 @@ export default function Login() {
         await Browser.open({ url: data.url, presentationStyle: 'fullscreen' });
         // The deep-link listener in App.tsx will exchangeCodeForSession when
         // Google redirects back to our scheme.
+      } else if (desktop?.beginOAuth) {
+        // NEVER `window.location.href` on desktop. There is no back button, no
+        // address bar and no menu, so sending the app's own window to a provider
+        // is a one-way trip — it ended on limecore.dev/confirmed and the app was
+        // gone. The system browser owns this leg; the code comes back to the
+        // loopback listener and is redeemed by the effect above.
+        const opened = await desktop.beginOAuth(data.url);
+        if (!opened) {
+          // The main process refused the URL (not https) or the OS had no
+          // browser to hand it to. Either way nothing is pending, so say so
+          // rather than leaving a spinner waiting on a callback that is never
+          // coming — and do not fall through to the navigation that broke this.
+          setError(t('auth.errGoogleStart'));
+          return;
+        }
+        setInfo(t('auth.desktopBrowser'));
       } else {
         // Web fallback — just navigate the current tab.
         window.location.href = data.url;
@@ -101,6 +158,7 @@ export default function Login() {
     // navigate needed — App.tsx re-renders to Dashboard once the gate
     // condition flips.
     setError(null);
+    setInfo(null);
     await setGuestMode(true);
     window.dispatchEvent(new CustomEvent('nexus:guest-mode-changed'));
   };
@@ -205,6 +263,16 @@ export default function Login() {
               </Link>
             </p>
           </>
+        )}
+
+        {/* Desktop hand-off notice. Distinct from `error`: this is the happy
+            path mid-flight, and the two can never both be set — each setter
+            clears the other. */}
+        {info && (
+          <div className="alert text-xs mt-4">
+            <span className="w-2 h-2 rounded-full bg-primary" />
+            <span>{info}</span>
+          </div>
         )}
 
         {error && (

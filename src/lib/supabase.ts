@@ -11,6 +11,7 @@ import { createClient, type SupportedStorage } from '@supabase/supabase-js';
 import { Preferences } from '@capacitor/preferences';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
+import { DESKTOP_REDIRECT_URL } from './desktop';
 
 const SUPABASE_URL = 'https://hkktorzhaqnfqsnlstda.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_ykHLJ4QuFm2HKXACygwezw_c_cvR_yf';
@@ -99,6 +100,21 @@ if (Capacitor.isNativePlatform()) {
 // flag — but note that EVERY origin still has to be listed in Supabase's
 // Auth → URL Configuration → Redirect URLs allowlist, or Supabase silently
 // falls back to the Site URL again and the symptom returns unchanged.
+//
+// DESKTOP is the third case, and nothing before this had it. In Electron
+// `Capacitor.isNativePlatform()` is false (there is no Capacitor bridge) and
+// `window.location.origin` is `nexus://app` — a custom scheme, which Supabase's
+// redirect allow-list cannot hold, so the WEB branch above caught the desktop
+// build and every desktop sign-in fell back to the Site URL. That parked the
+// app's own window on limecore.dev/confirmed with no back button, no address
+// bar and no menu: the app was gone until relaunch. Worse here than in
+// StudyDesk, because NCC is the SSO source the rest of the suite inherits from.
+//
+// The desktop shell now listens on a fixed loopback port and passes that URL in
+// through its preload; see `electron/main.cjs`. A null means the listener could
+// not bind, in which case this falls through to the origin — no worse than what
+// shipped, and Login.tsx refuses to start a Google sign-in in that state rather
+// than walking into the same dead end again.
 export const OAUTH_REDIRECT_URL = Capacitor.isNativePlatform()
   ? 'com.limecore.nexus://login-callback'
-  : `${window.location.origin}/`;
+  : DESKTOP_REDIRECT_URL || `${window.location.origin}/`;
