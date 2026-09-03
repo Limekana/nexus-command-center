@@ -538,6 +538,110 @@ export default function Settings() {
           </a>
         </Section>
 
+        {/* ── Feedback ───────────────────────────────────────────────────
+             MOVED UP in v1.13, from fourteenth of fifteen sections to third
+             from the top — directly under Support.
+
+             The v1.13 build plan asks an open question: NCC has 106 signups,
+             60 within a fortnight, and has never produced a single feedback
+             row or GitHub issue in its life, while StudyDesk has twelve. Its
+             two candidate answers are "the form isn't reachable there" and
+             "nobody is engaged enough to use it", and it notes those "point
+             at completely different work".
+
+             Checking the source settles the first: the form is here, it is
+             complete, and its submit handler has no silent `return` — every
+             guard sets a visible notice. So it works.
+
+             But it was sitting BELOW "API keys" and "API usage today", at the
+             bottom of a ~1000-line settings screen, behind two sections that
+             only matter to someone who has wired up their own API key. A
+             feature nobody scrolls to is not meaningfully more reachable than
+             one that does not exist, and "no feedback rows" is a much weaker
+             signal about engagement when the form is that far down.
+
+             This does not prove placement was the cause. It removes the
+             cheapest confound, so the next reading of that table means
+             something. ── */
+        }
+        <Section title={t('settings.feedback')}>
+          <p className="text-sm text-muted mb-3">{t('settings.feedbackBlurb')}</p>
+
+          <div className="flex flex-wrap gap-2 mb-3" role="group" aria-label={t('settings.feedbackCategory')}>
+            {FEEDBACK_CATEGORIES.map((c) => (
+              <button
+                key={c}
+                type="button"
+                className={fbCategory === c ? 'pill pill-active' : 'pill'}
+                onClick={() => setFbCategory(c)}
+                aria-pressed={fbCategory === c}
+              >
+                {t(`settings.fbCat.${c}`)}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex gap-1 mb-3" role="group" aria-label={t('settings.feedbackRating')}>
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                key={n}
+                type="button"
+                className={n <= fbRating ? 'text-xl text-accent' : 'text-xl text-muted'}
+                onClick={() => setFbRating(n === fbRating ? 0 : n)}
+                aria-label={t('settings.feedbackRatingN', { n })}
+                aria-pressed={n <= fbRating}
+              >
+                <Glyph name="star" size={18} filled={n <= fbRating} />
+              </button>
+            ))}
+          </div>
+
+          <textarea
+            className="input w-full min-h-[98px] resize-y"
+            value={fbMessage}
+            maxLength={FEEDBACK_MAX}
+            onChange={(e) => {
+              setFbMessage(e.target.value);
+              if (fbNotice) setFbNotice(null);
+            }}
+            placeholder={t('settings.feedbackPlaceholder')}
+            aria-label={t('settings.feedback')}
+          />
+          <div className="text-xs text-muted text-right mt-1">
+            {fbMessage.length}/{FEEDBACK_MAX}
+          </div>
+
+          <button
+            className="btn-ghost w-full mt-2"
+            disabled={!fbMessage.trim()}
+            onClick={() => {
+              const body = fbMessage.trim();
+              if (!body) { setFbNotice(t('settings.feedbackEmpty')); return; }
+              if (!user) { setFbNotice(t('settings.feedbackSignIn')); return; }
+              const id = generateId();
+              void enqueue('feedback', id, 'insert', {
+                id,
+                category: fbCategory,
+                rating: fbRating || null,
+                message: body,
+                appVersion: pkg.version,
+                platform: Capacitor.getPlatform(),
+              });
+              setFbMessage('');
+              setFbRating(0);
+              setFbNotice(t('settings.feedbackThanks'));
+            }}
+          >
+            {t('settings.feedbackSend')}
+          </button>
+
+          {fbNotice && <p className="text-sm text-muted mt-2">{fbNotice}</p>}
+          <p className="text-xs text-muted mt-2">
+            {t('settings.feedbackMeta', { app: 'Nexus Command Center', version: pkg.version })}
+          </p>
+        </Section>
+
+
         <Section title={t('settings.lifeProfile')}>
           <button
             className="w-full py-2 flex items-center justify-between gap-3 text-start active:opacity-80"
@@ -907,83 +1011,6 @@ export default function Settings() {
           <div className="text-[0.625rem] text-text-muted">
             {t('settings.apiUsageResets')}
           </div>
-        </Section>
-
-        <Section title={t('settings.feedback')}>
-          <p className="text-sm text-muted mb-3">{t('settings.feedbackBlurb')}</p>
-
-          <div className="flex flex-wrap gap-2 mb-3" role="group" aria-label={t('settings.feedbackCategory')}>
-            {FEEDBACK_CATEGORIES.map((c) => (
-              <button
-                key={c}
-                type="button"
-                className={fbCategory === c ? 'pill pill-active' : 'pill'}
-                onClick={() => setFbCategory(c)}
-                aria-pressed={fbCategory === c}
-              >
-                {t(`settings.fbCat.${c}`)}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex gap-1 mb-3" role="group" aria-label={t('settings.feedbackRating')}>
-            {[1, 2, 3, 4, 5].map((n) => (
-              <button
-                key={n}
-                type="button"
-                className={n <= fbRating ? 'text-xl text-accent' : 'text-xl text-muted'}
-                onClick={() => setFbRating(n === fbRating ? 0 : n)}
-                aria-label={t('settings.feedbackRatingN', { n })}
-                aria-pressed={n <= fbRating}
-              >
-                <Glyph name="star" size={18} filled={n <= fbRating} />
-              </button>
-            ))}
-          </div>
-
-          <textarea
-            className="input w-full min-h-[98px] resize-y"
-            value={fbMessage}
-            maxLength={FEEDBACK_MAX}
-            onChange={(e) => {
-              setFbMessage(e.target.value);
-              if (fbNotice) setFbNotice(null);
-            }}
-            placeholder={t('settings.feedbackPlaceholder')}
-            aria-label={t('settings.feedback')}
-          />
-          <div className="text-xs text-muted text-right mt-1">
-            {fbMessage.length}/{FEEDBACK_MAX}
-          </div>
-
-          <button
-            className="btn-ghost w-full mt-2"
-            disabled={!fbMessage.trim()}
-            onClick={() => {
-              const body = fbMessage.trim();
-              if (!body) { setFbNotice(t('settings.feedbackEmpty')); return; }
-              if (!user) { setFbNotice(t('settings.feedbackSignIn')); return; }
-              const id = generateId();
-              void enqueue('feedback', id, 'insert', {
-                id,
-                category: fbCategory,
-                rating: fbRating || null,
-                message: body,
-                appVersion: pkg.version,
-                platform: Capacitor.getPlatform(),
-              });
-              setFbMessage('');
-              setFbRating(0);
-              setFbNotice(t('settings.feedbackThanks'));
-            }}
-          >
-            {t('settings.feedbackSend')}
-          </button>
-
-          {fbNotice && <p className="text-sm text-muted mt-2">{fbNotice}</p>}
-          <p className="text-xs text-muted mt-2">
-            {t('settings.feedbackMeta', { app: 'Nexus Command Center', version: pkg.version })}
-          </p>
         </Section>
 
         <Section title={t('settings.about')}>
