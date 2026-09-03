@@ -1,0 +1,3 @@
+Korjaa työpöytäsovelluksen kirjautumisen.
+
+Kirjautuminen vei aiemmin sovelluksen oman ikkunan verkkosivulle ja jätti sen sinne — ei paluupainiketta, ei mitään klikattavaa, sovellus käytännössä poissa. Kirjautuminen avautuu nyt selaimeen ja palauttaa sinut suoraan Nexukseen, kun se on valmis.

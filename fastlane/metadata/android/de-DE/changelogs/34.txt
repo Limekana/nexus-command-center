@@ -1,0 +1,3 @@
+Behebt die Anmeldung in der Desktop-App.
+
+Beim Anmelden landete das eigene Fenster der App auf einer Webseite und blieb dort — keine Zurück-Schaltfläche, nichts zum Anklicken, die App praktisch weg. Die Anmeldung öffnet sich jetzt im Browser und bringt dich danach direkt zu Nexus zurück.

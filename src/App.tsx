@@ -60,6 +60,7 @@ import { useWorkQualityStore } from './store/useWorkQualityStore';
 import { useLifeProfileStore } from './store/useLifeProfileStore';
 import { useFinanceStore } from './store/useFinanceStore';
 import { isOnboarded, setOnboarded, hydrateOnboardedFromCloud, markOnboardedCloud } from './lib/onboarding';
+import { desktop } from './lib/desktop';
 
 export default function App() {
   const unlocked = useAuthStore((s) => s.unlocked);
@@ -336,6 +337,20 @@ export default function App() {
     return () => {
       sub.then((s) => s.remove());
     };
+  }, []);
+
+  // v1.12.1 — the desktop equivalent of the deep-link handler above. The
+  // Electron shell receives Supabase's redirect on a loopback listener and
+  // hands the code over IPC; the exchange has to happen HERE because the PKCE
+  // code verifier lives in this renderer's storage and nowhere else. Before
+  // this, `OAUTH_REDIRECT_URL` was `nexus://app/` — un-allowlistable — so
+  // Supabase bounced to the Site URL and took the app's own window with it.
+  useEffect(() => {
+    if (!desktop?.onCallback) return;
+    return desktop.onCallback(({ code }) => {
+      if (!code) return;
+      void supabase.auth.exchangeCodeForSession(code);
+    });
   }, []);
 
   // 1. Wait for session restoration AND guest flag read before deciding.
