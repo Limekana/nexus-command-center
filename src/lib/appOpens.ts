@@ -22,6 +22,7 @@
 // instead of retrying forever, so a stray open cannot wedge the queue.
 
 import { Capacitor } from '@capacitor/core';
+import { IS_DESKTOP } from './isDesktop';
 import { enqueue } from '../db/syncQueue';
 import { supabase } from './supabase';
 import { generateId } from '../utils/uuid';
@@ -40,9 +41,10 @@ function platform(): string {
   if (Capacitor.isNativePlatform()) {
     return Capacitor.getPlatform() === 'android' ? 'android' : 'web';
   }
-  if (typeof navigator !== 'undefined' && /electron/i.test(navigator.userAgent)) {
-    return 'desktop';
-  }
+  // Same check, now shared with the desktop app-lock exemption — see
+  // `lib/isDesktop.ts`. Lifted out rather than copied so the two can never
+  // disagree about what "desktop" means.
+  if (IS_DESKTOP) return 'desktop';
   return 'web';
 }
 
