@@ -17,7 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import { supabase, OAUTH_REDIRECT_URL } from '../../lib/supabase';
-import { desktop } from '../../lib/desktop';
+import { desktop, DESKTOP_REDIRECT_URL } from '../../lib/desktop';
 import { setGuestMode } from '../../lib/guestMode';
 import { isOnboarded } from '../../lib/onboarding';
 import { translateAuthError } from '../../lib/authErrors';
@@ -66,6 +66,19 @@ export default function Login() {
   const onGoogle = async () => {
     setError(null);
     setNotice(null);
+    // Desktop with no loopback listener: every candidate port was taken, so
+    // DESKTOP_REDIRECT_URL is null and OAUTH_REDIRECT_URL has fallen back to
+    // `nexus://app/` — the exact value this whole change exists to stop being
+    // sent to Supabase. Left alone the round trip still *looks* like it works:
+    // the browser opens, Google authenticates, Supabase rejects the redirect,
+    // and the user lands on limecore.dev/confirmed with no session and no
+    // error, while this screen sits on a notice waiting for a callback that
+    // can never arrive. Refuse it up front and say why. Email sign-in needs no
+    // redirect and is unaffected.
+    if (desktop && !DESKTOP_REDIRECT_URL) {
+      setError(t('auth.errDesktopNoListener'));
+      return;
+    }
     setGoogleSubmitting(true);
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({

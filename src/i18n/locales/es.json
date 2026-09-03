@@ -100,6 +100,7 @@
     "errPasswordMismatch": "Las contraseñas no coinciden.",
     "errGoogleStart": "No se pudo iniciar el acceso con Google.",
     "desktopBrowser": "Termina de iniciar sesión en tu navegador y vuelve aquí.",
+    "errDesktopNoListener": "El inicio de sesión de escritorio no está disponible en este arranque. Reinicia Nexus o inicia sesión con tu correo abajo.",
     "errInvalidCredentials": "Correo o contraseña incorrectos.",
     "errAlreadyRegistered": "Ya existe una cuenta con ese correo. Prueba a iniciar sesión.",
     "errWeakPassword": "Elige una contraseña más segura.",

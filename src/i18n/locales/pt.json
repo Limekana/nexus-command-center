@@ -35,6 +35,7 @@
     "errPasswordMismatch": "As senhas não coincidem.",
     "errGoogleStart": "Não foi possível iniciar o login com o Google.",
     "desktopBrowser": "Conclua o login no seu navegador e volte para cá.",
+    "errDesktopNoListener": "O login no computador está indisponível nesta inicialização. Reinicie o Nexus ou entre com e-mail abaixo.",
     "errInvalidCredentials": "E-mail ou senha incorretos.",
     "errAlreadyRegistered": "Já existe uma conta com esse e-mail. Tente entrar.",
     "errWeakPassword": "Escolha uma senha mais forte.",

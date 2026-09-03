@@ -35,6 +35,7 @@
     "errPasswordMismatch": "Kata sandi tidak cocok.",
     "errGoogleStart": "Tidak dapat memulai proses masuk dengan Google.",
     "desktopBrowser": "Selesaikan proses masuk di peramban, lalu kembali ke sini.",
+    "errDesktopNoListener": "Masuk lewat desktop tidak tersedia pada peluncuran ini. Mulai ulang Nexus, atau masuk dengan email di bawah.",
     "errInvalidCredentials": "Email atau kata sandi salah.",
     "errAlreadyRegistered": "Email itu sudah punya akun. Coba masuk saja.",
     "errWeakPassword": "Pilih kata sandi yang lebih kuat.",
