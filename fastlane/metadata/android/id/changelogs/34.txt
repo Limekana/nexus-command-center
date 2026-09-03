@@ -1,0 +1,3 @@
+Memperbaiki proses masuk di aplikasi desktop.
+
+Dulu, masuk akun membawa jendela aplikasi itu sendiri ke sebuah halaman web dan meninggalkannya di sana — tanpa tombol kembali, tanpa apa pun untuk diklik, aplikasinya praktis hilang. Kini proses masuk terbuka di peramban dan langsung mengembalikanmu ke Nexus setelah selesai.

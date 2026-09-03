@@ -1,0 +1,3 @@
+Corrige o login no app de desktop.
+
+Entrar na conta levava a própria janela do app para uma página da web e a deixava lá — sem botão de voltar, sem nada para clicar, o app praticamente sumido. Agora o login abre no seu navegador e te traz direto de volta ao Nexus quando termina.

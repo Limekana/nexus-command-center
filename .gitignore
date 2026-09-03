@@ -70,3 +70,9 @@ WORKOUT_TRACKER_INTEGRATION.md
 
 # electron-builder tool cache (relocated off %LOCALAPPDATA% — see electron/build.cjs)
 .electron-cache/
+
+# Signing credentials for the shared Limecore release keystore.
+# Must never be committed - the whole suite is signed with one key.
+keystore.properties
+*.jks
+*.keystore
