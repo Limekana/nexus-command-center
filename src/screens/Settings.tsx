@@ -16,6 +16,7 @@ import { Capacitor } from '@capacitor/core';
 import { enqueue } from '../db/syncQueue';
 import { generateId } from '../utils/uuid';
 import { useAuthStore } from '../store/useAuthStore';
+import { IS_DESKTOP } from '../lib/isDesktop';
 import { useSyncStore } from '../store/useSyncStore';
 import { useSessionStore, userDisplayName } from '../store/useSessionStore';
 import { useSettingsStore, BaseCurrency, UI_SCALES } from '../store/useSettingsStore';
@@ -176,7 +177,11 @@ export default function Settings() {
     // PIN re-entry gate. Without this, briefly-unlocked devices left in
     // someone else's hands could be nuked by a single tap. We require the PIN
     // even though the user has already unlocked the app in this session.
-    if (hasPin) {
+    // `hasPin` can still be true on a desktop install that set one before the
+    // lock was removed. Prompting there would demand a PIN the user can no
+    // longer see, change, or reset from Settings — turning a forgotten one into
+    // a permanent block on the very control that recovers from it.
+    if (hasPin && !IS_DESKTOP) {
       const entered = window.prompt(t('settings.pinReentry'));
       if (!entered) return;
       const result = await verifyPin(entered);
@@ -323,6 +328,11 @@ export default function Settings() {
           )}
         </Section>
 
+        {/* The app lock is a phone control and is not part of the desktop
+            build — see `App.tsx` for why. Hiding the section rather than
+            disabling the controls: a greyed-out PIN row invites the question
+            "why can't I turn this on", and there is no answer that helps. */}
+        {!IS_DESKTOP && (
         <Section title={t('settings.security')}>
           <Toggle
             label={t('settings.biometricUnlock')}
@@ -369,6 +379,7 @@ export default function Settings() {
             {t('settings.lockNow')}
           </button>
         </Section>
+        )}
 
         <Section title={t('settings.dataSync')}>
           <ListRow
