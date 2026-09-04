@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { listPending } from '../db/syncQueue';
+import type { SyncQueueItem } from '../db/database';
+import { listPending, listQuarantined, releaseQuarantined } from '../db/syncQueue';
 import { fullSync, PushResult, PullResult } from '../lib/cloudSync';
 import { useSessionStore } from './useSessionStore';
 import { useFinanceStore } from './useFinanceStore';
@@ -58,16 +59,39 @@ interface SyncStore {
   lastPull: PullResult | null;
   // Most recent error messages from individual queue items, for diagnostics UI.
   itemErrors: { entityType: string; entityId: string; message: string }[];
+  // v1.13.1 — items held after repeated failures. Still queued, still
+  // unsynced, no longer retried. Surfaced so "we couldn't upload this" is
+  // something the user can see and act on, rather than a write that quietly
+  // disappeared after the UI said it was sent.
+  quarantinedCount: number;
+  quarantinedItems: { entityType: string; entityId: string; message: string; reason: string }[];
 
   init: () => void;
   refreshPending: () => Promise<void>;
   syncNow: () => Promise<void>;
+  /** Release every held item back into the queue and drain immediately. */
+  retryQuarantined: () => Promise<void>;
 }
 
 // Promise-chain pattern: concurrent syncNow calls don't no-op, they queue up
 // behind the in-flight call. This was the silent-fail bug — adoption's
 // syncNow was being skipped because App.tsx's auto-sync was already running.
 let inflight: Promise<void> | null = null;
+
+// Shape held queue rows for the UI. Kept to the 5 most recent, like itemErrors
+// — the count carries the magnitude, the list is there so the user can tell
+// *what* is stuck.
+function quarantineState(held: SyncQueueItem[]) {
+  return {
+    quarantinedCount: held.length,
+    quarantinedItems: held.slice(-5).map((q) => ({
+      entityType: q.entityType,
+      entityId: q.entityId,
+      message: q.lastError ?? 'unknown',
+      reason: q.quarantineReason ?? 'unknown',
+    })),
+  };
+}
 
 export const useSyncStore = create<SyncStore>((set, get) => ({
   isOnline: navigator.onLine,
@@ -78,6 +102,8 @@ export const useSyncStore = create<SyncStore>((set, get) => ({
   lastPush: null,
   lastPull: null,
   itemErrors: [],
+  quarantinedCount: 0,
+  quarantinedItems: [],
 
   init() {
     const update = () => {
@@ -90,6 +116,16 @@ export const useSyncStore = create<SyncStore>((set, get) => ({
     };
     window.addEventListener('online', update);
     window.addEventListener('offline', update);
+    // Items released from quarantine by a fresh sign-in / token refresh (see
+    // useSessionStore). They are pending again, so pick them up now rather
+    // than waiting for whatever next happens to recount the queue.
+    window.addEventListener('nexus:queue-released', () => {
+      void get()
+        .refreshPending()
+        .then(() => {
+          if (get().isOnline && get().pendingCount > 0 && !get().syncing) void get().syncNow();
+        });
+    });
     get().refreshPending();
 
     // Background flusher: every 30s, if online + signed in + pending > 0 and
@@ -105,8 +141,14 @@ export const useSyncStore = create<SyncStore>((set, get) => ({
   },
 
   async refreshPending() {
-    const pending = await listPending();
-    set({ pendingCount: pending.length });
+    const [pending, held] = await Promise.all([listPending(), listQuarantined()]);
+    set({ pendingCount: pending.length, ...quarantineState(held) });
+  },
+
+  async retryQuarantined() {
+    const released = await releaseQuarantined();
+    await get().refreshPending();
+    if (released > 0) await get().syncNow();
   },
 
   async syncNow() {
@@ -138,7 +180,7 @@ export const useSyncStore = create<SyncStore>((set, get) => ({
         if (pull.errors.length === 0) {
           await reloadDataStores();
         }
-        const pending = await listPending();
+        const [pending, held] = await Promise.all([listPending(), listQuarantined()]);
         // Surface up to 5 of the most recent item errors for diagnostics.
         const itemErrors = pending
           .filter((p) => p.lastError)
@@ -153,6 +195,7 @@ export const useSyncStore = create<SyncStore>((set, get) => ({
         set({
           lastSyncedAt: now,
           pendingCount: pending.length,
+          ...quarantineState(held),
           lastPush: push,
           lastPull: pull,
           syncing: false,

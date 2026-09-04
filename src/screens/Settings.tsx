@@ -109,6 +109,9 @@ export default function Settings() {
 
   const lastError = useSyncStore((s) => s.lastError);
   const itemErrors = useSyncStore((s) => s.itemErrors);
+  const quarantinedCount = useSyncStore((s) => s.quarantinedCount);
+  const quarantinedItems = useSyncStore((s) => s.quarantinedItems);
+  const retryQuarantined = useSyncStore((s) => s.retryQuarantined);
   const refreshPending = useSyncStore((s) => s.refreshPending);
   const [finnhubKey, setFinnhubKey] = useState('');
   const [finnhubKey2, setFinnhubKey2] = useState('');
@@ -413,6 +416,32 @@ export default function Settings() {
                 </div>
               ))}
             </div>
+          )}
+          {/* v1.13.1 — writes that were never uploaded and are no longer being
+              retried. They are still in the queue; this row is the only place
+              the user can find out that something they wrote never landed, and
+              the button is how they get it moving again. */}
+          {quarantinedCount > 0 && (
+            <>
+              <ListRow
+                label={t('settings.heldWrites')}
+                value={t('settings.heldCount', { n: quarantinedCount })}
+              />
+              <div className="text-[0.625rem] text-text-muted mt-1 space-y-0.5 font-mono">
+                {quarantinedItems.map((e, i) => (
+                  <div key={i} className="truncate">
+                    · {e.entityType} ({e.reason}): {e.message}
+                  </div>
+                ))}
+              </div>
+              <button
+                className="btn-ghost w-full mt-2"
+                onClick={retryQuarantined}
+                disabled={!isOnline || syncing}
+              >
+                {t('settings.retryHeld')}
+              </button>
+            </>
           )}
           <button
             className="btn-ghost w-full mt-2"

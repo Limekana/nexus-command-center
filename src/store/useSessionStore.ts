@@ -11,6 +11,7 @@ import { publishSession, clearPublishedSession } from '../lib/ssoPublisher';
 import { setGuestMode } from '../lib/guestMode';
 import { scheduleOriginStamp } from '../lib/originMarker';
 import { db } from '../db/database';
+import { releaseQuarantined } from '../db/syncQueue';
 
 interface SessionState {
   session: Session | null;
@@ -66,9 +67,29 @@ export const useSessionStore = create<SessionState>((set) => ({
     // ACT-5 — cover the restored-session path too, not just fresh sign-ins.
     // Every account that predates this instrumentation only ever appears here.
     scheduleOriginStamp(data.session?.user ?? null);
-    supabase.auth.onAuthStateChange((_event, session) => {
+    supabase.auth.onAuthStateChange((event, session) => {
       set({ session, user: session?.user ?? null });
       scheduleOriginStamp(session?.user ?? null);
+      // v1.13.1 — a queue item held after repeated RLS denials was held
+      // because the token it was pushed with wasn't accepted. A new token is
+      // the one event that can change that answer, so let those items back
+      // into the pending set. Payload-fault items are deliberately left held:
+      // a fresh JWT does not fix a check-constraint violation.
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        void releaseQuarantined('auth')
+          .then((n) => {
+            // The 30s background flusher only fires while the sync store's
+            // pendingCount is > 0, and that count was computed before these
+            // items came back. Without this the released writes would sit
+            // there until something else happened to refresh it. An event
+            // rather than a direct call: useSyncStore imports this module, so
+            // reaching the other way would close an import cycle.
+            if (n > 0) window.dispatchEvent(new CustomEvent('nexus:queue-released'));
+          })
+          .catch((e) =>
+            console.warn('[auth] releasing auth-quarantined queue items failed:', e)
+          );
+      }
       // Republish on every auth change — token refreshes, sign-in,
       // sign-out (null clears the bridge for siblings). Fire-and-forget
       // here is fine — onAuthStateChange callbacks aren't awaited by

@@ -24,6 +24,7 @@
 import { supabase } from './supabase';
 import { db, SyncQueueItem } from '../db/database';
 import { listPending } from '../db/syncQueue';
+import { planSyncFailure, MAX_AUTH_ATTEMPTS, type SyncFailurePlan } from './syncRetry';
 import { generateId, legacyIdToUuid } from '../utils/uuid';
 import type { Transaction, BudgetCategory, PortfolioHolding, PortfolioLot, ManualAsset, WatchlistItem, StockSale, PortfolioCashEntry } from '../types/finance';
 import { legacyAssetTypeToAccountType } from '../types/finance';
@@ -600,6 +601,9 @@ export interface PushResult {
   attempted: number;
   succeeded: number;
   failed: number;
+  /** Items that stopped being retried this drain. They are still in the queue
+   * and still unsynced — held, not discarded. */
+  quarantined: number;
   errors: { entityType: string; entityId: string; message: string }[];
 }
 
@@ -638,16 +642,30 @@ const ENTITY_PRIORITY: Record<SyncQueueItem['entityType'], number> = {
   braindump_entry: 2,
 };
 
-// Postgres integrity-constraint violations whose cause is the payload itself, not
-// a transient network/auth condition. Retrying these can never succeed, so the
-// queue should drop them rather than retry forever. (23502 not-null, 23503 FK,
-// 23514 check, 22P02 invalid-text, 22003 numeric-out-of-range, 23505 unique_violation
-// — a duplicate insert will never stop conflicting, 42501 insufficient_privilege/RLS
-// denial — the policy isn't going to change on the next retry.)
-const PERMANENT_PG_CODES = new Set(['23502', '23503', '23514', '22P02', '22003', '23505', '42501']);
-function isPermanentSyncError(e: unknown): boolean {
-  const code = (e as { code?: string } | null)?.code;
-  return typeof code === 'string' && PERMANENT_PG_CODES.has(code);
+// How a failure is classified — which codes retry, which quarantine, and how
+// many auth denials an item gets — lives in src/lib/syncRetry.ts, dependency-free
+// so scripts/check-sync.mjs can execute it and assert the invariant directly.
+//
+// The rule that module exists to hold: a queue item is marked `syncedAt` only
+// when the row actually landed. 42501 (RLS denial) used to be treated as
+// permanent and marked synced, which silently discarded feedback the UI had
+// already told the user was sent.
+
+/** Force a token refresh after an RLS denial, so the retry runs against a new
+ * JWT rather than the one Postgres just rejected. `refreshSession()` is the
+ * forced round-trip; `getSession()` only refreshes when the cached token is
+ * near expiry, and a rejected-but-unexpired token is precisely the case we
+ * must not reuse — so it is the fallback, not the first choice. */
+async function refreshAuthSession(): Promise<void> {
+  try {
+    const { data, error } = await supabase.auth.refreshSession();
+    if (!error && data.session) return;
+    await supabase.auth.getSession();
+  } catch (e) {
+    // A refresh failure is not fatal here: the item stays pending, its attempt
+    // is counted, and the next drain tries again.
+    console.warn('[sync] session refresh after RLS denial failed:', e);
+  }
 }
 
 export async function pushQueue(userId: string): Promise<PushResult> {
@@ -659,8 +677,12 @@ export async function pushQueue(userId: string): Promise<PushResult> {
     return a.createdAt.localeCompare(b.createdAt);
   });
 
-  const result: PushResult = { attempted: 0, succeeded: 0, failed: 0, errors: [] };
+  const result: PushResult = { attempted: 0, succeeded: 0, failed: 0, quarantined: 0, errors: [] };
   const now = new Date().toISOString();
+
+  // At most one forced token refresh per drain: the first RLS denial buys a
+  // fresh JWT for every item that follows.
+  let refreshed = false;
 
   for (const item of pending) {
     result.attempted++;
@@ -673,23 +695,61 @@ export async function pushQueue(userId: string): Promise<PushResult> {
       await handler(item, { userId });
       await db.syncQueue.update(item.id, { syncedAt: now, lastError: undefined });
       result.succeeded++;
+      continue;
     } catch (e) {
       const msg = (e as Error).message ?? String(e);
-      if (isPermanentSyncError(e)) {
-        // Non-retryable: the payload itself is invalid (e.g. a lot pointing at a
-        // deleted holding → FK violation, or a malformed account → check/not-null
-        // violation). Retrying every drain just spams the error banner forever, so
-        // drop the item from the pending set (mark it synced) and surface it once.
-        await db.syncQueue.update(item.id, { syncedAt: now, lastError: `[dropped] ${msg}` });
-        result.errors.push({ entityType: item.entityType, entityId: item.entityId, message: `[dropped, won't retry] ${msg}` });
-      } else {
-        await db.syncQueue.update(item.id, { lastError: msg });
-        result.errors.push({ entityType: item.entityType, entityId: item.entityId, message: msg });
+      const plan = planSyncFailure(e, item, msg, now, refreshed);
+
+      // An RLS denial on the first try usually means a stale token, not a
+      // forbidden row. Refresh and retry this same item immediately, so the
+      // user's write lands in this drain rather than 30 seconds later.
+      if (plan.refreshSession) {
+        refreshed = true;
+        await refreshAuthSession();
+        try {
+          await handler(item, { userId });
+          await db.syncQueue.update(item.id, { syncedAt: now, lastError: undefined });
+          result.succeeded++;
+          continue;
+        } catch (retryErr) {
+          const retryMsg = (retryErr as Error).message ?? String(retryErr);
+          // Counted from the item's stored state, not the failure a moment ago:
+          // the pre-refresh attempt used a token we already knew was suspect, so
+          // the pair costs one attempt, not two.
+          const retryPlan = planSyncFailure(retryErr, item, retryMsg, now, true);
+          await db.syncQueue.update(item.id, retryPlan.patch);
+          result.errors.push(describeFailure(item, retryPlan, retryMsg));
+          result.failed++;
+          if (retryPlan.action === 'quarantine') result.quarantined++;
+          continue;
+        }
       }
+
+      // Note what is NOT here: `syncedAt`. Neither branch of planSyncFailure
+      // ever produces one, so a write that did not land is never recorded as
+      // landed. A quarantined item stays in the queue — held, visible via
+      // listQuarantined(), recoverable via releaseQuarantined().
+      await db.syncQueue.update(item.id, plan.patch);
+      result.errors.push(describeFailure(item, plan, msg));
       result.failed++;
+      if (plan.action === 'quarantine') result.quarantined++;
     }
   }
   return result;
+}
+
+function describeFailure(
+  item: SyncQueueItem,
+  plan: SyncFailurePlan,
+  msg: string,
+): { entityType: string; entityId: string; message: string } {
+  const prefix =
+    plan.action === 'quarantine'
+      ? plan.reason === 'auth'
+        ? `[held after ${MAX_AUTH_ATTEMPTS} permission denials — not uploaded] `
+        : '[held, cannot be uploaded as-is] '
+      : '';
+  return { entityType: item.entityType, entityId: item.entityId, message: `${prefix}${msg}` };
 }
 
 // ============================================================================

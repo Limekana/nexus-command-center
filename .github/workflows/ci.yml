@@ -37,5 +37,14 @@ jobs:
       - name: IME guard
         run: node scripts/check-ime.mjs
 
+      # v1.13.1. NCC had 16 distinct users in the week the feedback form went
+      # out and zero feedback rows, while StudyDesk had 8 of 11 submit. The
+      # cause was in the queue, not the form: an RLS denial (42501) was
+      # classified permanent and the item marked synced, so a report the UI had
+      # already confirmed as sent was discarded. This asserts the rule that a
+      # queued write is marked synced only when the row actually landed.
+      - name: Sync-queue guard
+        run: node scripts/check-sync.mjs
+
       - name: Build gate
         run: npm run build

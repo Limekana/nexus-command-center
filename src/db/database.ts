@@ -96,8 +96,20 @@ export interface SyncQueueItem {
   operation: 'insert' | 'update' | 'delete';
   payload: string;
   createdAt: string;
+  /** Set ONLY when the row actually landed in Postgres. A failed push must
+   * never stamp this — see src/lib/syncRetry.ts for why that rule exists. */
   syncedAt?: string;
   lastError?: string;
+  // ── v1.13.1 quarantine (see src/lib/syncRetry.ts) ───────────────────────
+  /** Count of RLS/permission denials (SQLSTATE 42501) seen for this item.
+   * Transient failures (offline, 5xx) deliberately do not increment it. */
+  authAttempts?: number;
+  /** Set when the item has stopped being retried but is still in the queue —
+   * held, visible, and recoverable via releaseQuarantined(). Quarantined
+   * items are excluded from listPending(), so they neither push nor keep the
+   * 30s background flusher awake. */
+  quarantinedAt?: string;
+  quarantineReason?: 'auth' | 'payload';
 }
 
 class NexusDB extends Dexie {
