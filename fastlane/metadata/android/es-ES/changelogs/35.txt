@@ -1,0 +1,3 @@
+Hace que el formulario de comentarios sea fácil de encontrar.
+
+Enviar comentarios era el penúltimo elemento de Ajustes, debajo de las claves de API y del uso de hoy — tan abajo que casi nadie llegaba a desplazarse hasta ahí. Ahora está en la mitad superior de la pantalla, donde sí se alcanza.

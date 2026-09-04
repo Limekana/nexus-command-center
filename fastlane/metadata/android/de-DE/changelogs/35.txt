@@ -1,0 +1,3 @@
+Macht das Feedback-Formular auffindbar.
+
+Feedback senden stand in den Einstellungen an vorletzter Stelle, unter API-Schlüsseln und der heutigen Nutzung — so weit unten, dass kaum jemand so weit gescrollt hat. Es steht jetzt in der oberen Hälfte, wo man es auch erreicht.

@@ -1,0 +1,3 @@
+Torna o formulário de feedback fácil de encontrar.
+
+Enviar feedback era o penúltimo item das Configurações, abaixo das chaves de API e do uso de hoje — tão embaixo que quase ninguém rolava até lá. Agora fica na metade superior da tela, onde dá para alcançar.

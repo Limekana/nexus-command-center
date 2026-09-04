@@ -1,0 +1,3 @@
+Rend le formulaire de retour facile à trouver.
+
+Envoyer un retour était l'avant-dernier élément des Réglages, sous les clés d'API et l'utilisation du jour — si bas que presque personne ne faisait défiler jusque-là. Il se trouve désormais dans la moitié haute de l'écran, à portée de main.
