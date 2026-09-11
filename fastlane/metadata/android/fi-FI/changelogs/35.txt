@@ -1,0 +1,3 @@
+Tekee palautelomakkeesta helpon löytää.
+
+Palautteen lähettäminen oli asetuksissa toiseksi viimeisenä, API-avainten ja päivän käytön alapuolella — niin alhaalla, ettei useimmat koskaan vierittäneet sinne asti. Se on nyt näytön yläpuoliskossa, mistä sen todella löytää.

@@ -1,6 +1,6 @@
 {
   "name": "nexus-dashboard",
-  "version": "1.12.1",
+  "version": "1.13.0",
   "private": true,
   "type": "module",
   "main": "electron/main.cjs",
@@ -10,7 +10,7 @@
     "check:ime": "node scripts/check-ime.mjs",
     "check:secrets": "node scripts/check-secrets.mjs --all",
     "build": "tsc -b && vite build",
-    "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
+    "lint": "node scripts/check-ime.mjs && eslint . --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "cap:add:android": "cap add android",
     "cap:sync": "npm run build && cap sync android",

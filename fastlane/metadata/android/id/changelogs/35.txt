@@ -1,0 +1,3 @@
+Membuat formulir masukan mudah ditemukan.
+
+Kirim masukan berada di urutan kedua dari bawah pada Pengaturan, di bawah kunci API dan penggunaan hari ini — begitu jauh ke bawah sehingga hampir tak ada yang menggulir sampai sana. Kini letaknya di paruh atas layar, tempat yang benar-benar terjangkau.

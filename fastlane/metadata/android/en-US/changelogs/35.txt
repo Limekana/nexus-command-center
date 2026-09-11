@@ -1,0 +1,3 @@
+Makes the feedback form easy to find.
+
+Sending feedback sat second-to-last in Settings, below API keys and today's usage — far enough down that most people never scrolled to it. It now sits in the upper half of the screen, where you can actually reach it.
