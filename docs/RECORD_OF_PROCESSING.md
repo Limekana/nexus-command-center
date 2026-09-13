@@ -146,15 +146,31 @@ archiving is "keep but hide", not a deletion. The privacy policy now states the
 
 ### Outstanding items affecting this section
 
-| Ref | Item |
-|---|---|
-| O-3 | Custom SMTP not configured; 7 of 172 signups unconfirmed |
-| O-4 | Supabase DPA not yet accepted — Art. 28 requires a written processor agreement |
-| O-5 | Free-plan backups: 7-day retention, no point-in-time recovery |
-| O-6 | Leaked-password protection disabled |
-| C-1 | Release keystore backup off-machine unverified |
-| C-2 | Supabase Site URL and redirect allowlist unreviewed |
-| O-8 | Vercel added as a processor for the browser version (hosting + market-data proxy). DPA/SCC position not yet recorded — see §5 |
+Re-checked 2026-09-13. Four of the six items previously listed here had been
+closed on 2026-08-01 and were never struck off, so this section was describing
+a weaker posture than the one actually in place — in a document whose whole
+job is to describe the posture accurately. Closures are kept in the table with
+their evidence rather than deleted: a compliance record that quietly loses
+rows is not more trustworthy than one that shows its working.
+
+| Ref | Item | Status |
+|---|---|---|
+| O-5 | Free-plan backups: 7-day retention, no point-in-time recovery. Weekly `pg_dump` script written and preflight-verified | 🟠 **Open.** Needs the `ops/.db-url` credential file — owner action, a real DB password, never generated or requested by an agent |
+| O-6 | Leaked-password protection disabled | 🟠 **Open, plan-gated.** Requires Supabase Pro. Re-verified live 2026-09-13: still the *only* finding the security advisor reports on the whole project |
+| O-8 | Vercel is a processor for the browser version (hosting + market-data proxy). DPA/SCC position not recorded — see §5 | 🟠 **Open**, raised 2026-09-13 |
+| ~~O-3~~ | Custom SMTP not configured | ✅ Closed 2026-08-01, confirmed with the owner (`docs/OPEN_ITEMS.md`) |
+| ~~O-4~~ | Supabase DPA not accepted — Art. 28 needs a written processor agreement | ✅ Closed 2026-08-01, confirmed with the owner (`docs/OPEN_ITEMS.md`) |
+| ~~C-1~~ | Release keystore backup off-machine unverified | ✅ Closed 2026-08-01, confirmed with the owner (`docs/OPEN_ITEMS.md`) |
+| ~~C-2~~ | Supabase Site URL and redirect allowlist unreviewed | ✅ Closed 2026-08-01, confirmed with the owner (`docs/OPEN_ITEMS.md`) |
+
+> **On where this document lives.** It says above that it does not require
+> publication. It is **not** on the website — GitHub Pages serves the
+> `gh-pages` branch, which carries only `index.html` and `legal/`, so nothing
+> here has ever been reachable from limecore.dev. It *is* in a public
+> repository, and readable by anyone browsing the source. That is a deliberate
+> consequence of the open-source posture in the list above, not an accident,
+> but it does mean this section is a public statement and should be kept true
+> — which is why the stale rows above were corrected rather than left.
 
 ## 8. Breach procedure
 
@@ -180,5 +196,6 @@ Everything else goes to l1m3core@gmail.com, answered within one calendar month.
 
 | Date | Change |
 |---|---|
+| 2026-09-13 | Corrected §7's outstanding-items table: `O-3`, `O-4`, `C-1` and `C-2` were closed on 2026-08-01 and never struck off, so the document overstated the open exposure for six weeks. `O-6` re-verified against the live security advisor (still the only finding on the project). Also recorded that this file is not served by GitHub Pages — `gh-pages` carries only `index.html` and `legal/` — which had been assumed rather than checked. |
 | 2026-09-13 | Added **Vercel** as a processor for the browser version of NCC — hosting and the market-data proxy — with the transfer question logged as `O-8`. It had been live since 2026-08-14 and was missing from §4 and §5 entirely. Corrects the `PRIV-1` premise on the way past: the Finnhub key travels in an `X-Finnhub-Token` HEADER, not a `?token=` query parameter, so it is not in the request path an access log records. The transit through infrastructure we rent is real and is now disclosed; the key-in-the-URL part was not. |
 | 2026-07-29 | First version. Written against the live schema and console rather than from memory: table list and RLS state read from `pg_class`, account figures from `auth.users`, processor list from the actual outbound hosts in the source. |
