@@ -2,7 +2,7 @@
 
 **Controller:** Limecore Studio (sole trader), Helsinki, Finland
 **Contact:** l1m3core@gmail.com
-**Last reviewed:** 29 July 2026
+**Last reviewed:** 13 September 2026
 **Covers:** Nexus Command Center, LimeLog, StudyDesk — one controller, one
 account system, one database.
 
@@ -71,6 +71,7 @@ no access to banking credentials — no such feature exists.
 | **Supabase** | Processor | Everything in §3. Database and Auth. |
 | **Google (OAuth)** | Processor / independent controller for its own account | Only on "Continue with Google" — returns email, name, picture. 138 of 172 accounts (80%) use this route. |
 | **Google (Gemini)** | Processor, with a caveat — see §5 | Only when the user switches AI on. The debriefs send the note the user typed; NCC's summary sends five 0–100 scores and on-screen headlines, no raw records. |
+| **Vercel** (NCC browser version only) | Processor | Hosts the browser build and proxies its market-data requests. Sees the request path, the ticker or currency pair, and the visitor's IP address. A user's own Finnhub API key transits it in a request header when one is set — not in the URL, and not logged by us. No account, name, holdings or amounts. The Android apps do not touch it. |
 | **Market data providers** (NCC only) | Not processors of personal data | CoinGecko, Yahoo Finance, Finnhub, open.er-api.com, the ECB, the US Federal Reserve, NYSE, CNN's market-indicator feed. Each request carries a ticker symbol or currency pair — plus, unavoidably, the originating IP address. No account, name, holdings or amounts. |
 
 No data is sold or shared for any other purpose.
@@ -78,6 +79,12 @@ No data is sold or shared for any other purpose.
 ## 5. Transfers to third countries
 
 **Supabase** hosts in Stockholm, Sweden. No transfer.
+
+**Vercel** is a US company. The browser build and its market-data proxy run on
+its edge network, so requests from web visitors — and any BYO Finnhub key
+travelling in one — may be handled outside the EEA. The legal basis for that
+transfer is **not yet recorded here**; see `O-8` in §7. Nothing in §3 goes to
+Vercel: the database is Supabase and the proxy holds nothing.
 
 **Google (Gemini)** may process outside the EEA, under the Standard Contractual
 Clauses Google offers for international transfers.
@@ -147,6 +154,7 @@ archiving is "keep but hide", not a deletion. The privacy policy now states the
 | O-6 | Leaked-password protection disabled |
 | C-1 | Release keystore backup off-machine unverified |
 | C-2 | Supabase Site URL and redirect allowlist unreviewed |
+| O-8 | Vercel added as a processor for the browser version (hosting + market-data proxy). DPA/SCC position not yet recorded — see §5 |
 
 ## 8. Breach procedure
 
@@ -172,4 +180,5 @@ Everything else goes to l1m3core@gmail.com, answered within one calendar month.
 
 | Date | Change |
 |---|---|
+| 2026-09-13 | Added **Vercel** as a processor for the browser version of NCC — hosting and the market-data proxy — with the transfer question logged as `O-8`. It had been live since 2026-08-14 and was missing from §4 and §5 entirely. Corrects the `PRIV-1` premise on the way past: the Finnhub key travels in an `X-Finnhub-Token` HEADER, not a `?token=` query parameter, so it is not in the request path an access log records. The transit through infrastructure we rent is real and is now disclosed; the key-in-the-URL part was not. |
 | 2026-07-29 | First version. Written against the live schema and console rather than from memory: table list and RLS state read from `pg_class`, account figures from `auth.users`, processor list from the actual outbound hosts in the source. |
