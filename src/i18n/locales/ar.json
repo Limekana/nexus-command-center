@@ -77,7 +77,8 @@
     "revokeAccess": "إزالة صلاحية {{name}}؟",
     "thisUser": "هذا المستخدم",
     "deleteTitle": "حذف",
-    "deleteItem": "حذف هذا العنصر؟"
+    "deleteItem": "حذف هذا العنصر؟",
+    "share": "مشاركة"
   },
   "domains": {
     "lifeScore": "مؤشر الحياة",

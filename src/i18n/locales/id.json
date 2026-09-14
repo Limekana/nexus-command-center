@@ -77,7 +77,8 @@
     "revokeAccess": "Cabut akses {{name}}?",
     "thisUser": "pengguna ini",
     "deleteTitle": "Hapus",
-    "deleteItem": "Hapus item ini?"
+    "deleteItem": "Hapus item ini?",
+    "share": "Bagikan"
   },
   "domains": {
     "lifeScore": "Skor Hidup",

@@ -77,7 +77,8 @@
     "revokeAccess": "{{name}} की पहुँच हटाएँ?",
     "thisUser": "यह उपयोगकर्ता",
     "deleteTitle": "हटाएँ",
-    "deleteItem": "यह आइटम हटाएँ?"
+    "deleteItem": "यह आइटम हटाएँ?",
+    "share": "साझा करें"
   },
   "domains": {
     "lifeScore": "लाइफ़ स्कोर",

@@ -21,7 +21,8 @@
     "revokeAccess": "Retirer l'accès de {{name}} ?",
     "thisUser": "cet utilisateur",
     "deleteTitle": "Supprimer",
-    "deleteItem": "Supprimer cet élément ?"
+    "deleteItem": "Supprimer cet élément ?",
+    "share": "Partager"
   },
   "domains": {
     "lifeScore": "Score de vie",

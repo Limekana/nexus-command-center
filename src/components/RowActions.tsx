@@ -20,7 +20,8 @@ export default function RowActions({ onEdit, onDelete, onShare, confirmMsg }: Ro
             onShare();
           }}
           className="text-text-muted hover:text-primary active:text-text text-xs px-2 py-1 rounded-sm border border-border active:bg-surface2"
-          aria-label="Share"
+          aria-label={t('common.share')}
+          title={t('common.share')}
         >
           ⇆
         </button>
@@ -32,7 +33,8 @@ export default function RowActions({ onEdit, onDelete, onShare, confirmMsg }: Ro
             onEdit();
           }}
           className="text-text-muted hover:text-primary active:text-text text-xs px-2 py-1 rounded-sm border border-border active:bg-surface2"
-          aria-label="Edit"
+          aria-label={t('common.edit')}
+          title={t('common.edit')}
         >
           <Glyph name="edit" size={12} />
         </button>
@@ -48,7 +50,8 @@ export default function RowActions({ onEdit, onDelete, onShare, confirmMsg }: Ro
             })();
           }}
           className="text-text-muted hover:text-danger active:text-danger text-xs px-2 py-1 rounded-sm border border-border active:bg-danger/10"
-          aria-label="Delete"
+          aria-label={t('common.delete')}
+          title={t('common.delete')}
         >
           <Glyph name="close" size={12} />
         </button>

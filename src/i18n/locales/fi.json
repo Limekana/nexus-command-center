@@ -21,7 +21,8 @@
     "revokeAccess": "Poistetaanko käyttäjän {{name}} käyttöoikeus?",
     "thisUser": "tämä käyttäjä",
     "deleteTitle": "Poista",
-    "deleteItem": "Poistetaanko tämä?"
+    "deleteItem": "Poistetaanko tämä?",
+    "share": "Jaa"
   },
   "domains": {
     "lifeScore": "Elämäpisteet",

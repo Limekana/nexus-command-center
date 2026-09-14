@@ -21,7 +21,8 @@
     "revokeAccess": "移除 {{name}} 的访问权限？",
     "thisUser": "该用户",
     "deleteTitle": "删除",
-    "deleteItem": "删除此项？"
+    "deleteItem": "删除此项？",
+    "share": "共享"
   },
   "domains": {
     "lifeScore": "生活评分",

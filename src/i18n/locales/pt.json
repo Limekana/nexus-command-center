@@ -77,7 +77,8 @@
     "revokeAccess": "Remover o acesso de {{name}}?",
     "thisUser": "este utilizador",
     "deleteTitle": "Eliminar",
-    "deleteItem": "Eliminar este item?"
+    "deleteItem": "Eliminar este item?",
+    "share": "Partilhar"
   },
   "domains": {
     "lifeScore": "Pontuação de Vida",
