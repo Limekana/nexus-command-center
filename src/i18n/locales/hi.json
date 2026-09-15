@@ -77,7 +77,8 @@
     "revokeAccess": "{{name}} की पहुँच हटाएँ?",
     "thisUser": "यह उपयोगकर्ता",
     "deleteTitle": "हटाएँ",
-    "deleteItem": "यह आइटम हटाएँ?"
+    "deleteItem": "यह आइटम हटाएँ?",
+    "share": "साझा करें"
   },
   "domains": {
     "lifeScore": "लाइफ़ स्कोर",
@@ -569,7 +570,12 @@
     "startDate": "आरंभ तिथि",
     "startHint": "केवल इस तारीख़ या उसके बाद की घटनाएँ गिनी जाएँगी।",
     "targetDate": "लक्ष्य तिथि",
-    "optional": "(वैकल्पिक)"
+    "optional": "(वैकल्पिक)",
+    "paceAhead": "गति से आगे",
+    "paceOn": "गति पर",
+    "paceBehind": "अब से हर हफ़्ते {{amount}} अंतर को पाट देगा",
+    "paceBehindNoTime": "{{amount}} बाक़ी",
+    "paceDone": "लक्ष्य पूरा"
   },
   "weeklyReview": {
     "title": "साप्ताहिक समीक्षा",

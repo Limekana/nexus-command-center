@@ -21,7 +21,8 @@
     "revokeAccess": "Zugriff von {{name}} entfernen?",
     "thisUser": "diese Person",
     "deleteTitle": "Löschen",
-    "deleteItem": "Dieses Element löschen?"
+    "deleteItem": "Dieses Element löschen?",
+    "share": "Teilen"
   },
   "domains": {
     "lifeScore": "Lebenswert",
@@ -518,7 +519,12 @@
     "startDate": "Startdatum",
     "startHint": "Nur Ereignisse ab diesem Datum zählen.",
     "targetDate": "Zieldatum",
-    "optional": "(optional)"
+    "optional": "(optional)",
+    "paceAhead": "vor dem Plan",
+    "paceOn": "im Plan",
+    "paceBehind": "{{amount}} pro Woche ab jetzt schließt die Lücke",
+    "paceBehindNoTime": "{{amount}} übrig",
+    "paceDone": "Ziel erreicht"
   },
   "goalTypes": {
     "net_worth": "Nettovermögen",
