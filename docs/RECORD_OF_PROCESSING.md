@@ -64,6 +64,14 @@ their own trend, and never shared.
 **Financial figures** are entered by the user. There is no bank connection and
 no access to banking credentials — no such feature exists.
 
+**IP addresses.** Added 2026-09-15. Not in the table above because they are not
+stored in any of the 27 tables, but they are personal data and they are
+processed: Supabase and Vercel both see the originating IP of every request and
+hold it in access logs, and so does every market-data provider a request is
+forwarded to. Omitting them made §5's "nothing in §3 goes to Vercel" read as a
+stronger claim than the facts support. Nothing in the apps reads, stores or
+acts on an IP address.
+
 ## 4. Categories of recipients
 
 | Recipient | Role | What it receives |
@@ -82,9 +90,50 @@ No data is sold or shared for any other purpose.
 
 **Vercel** is a US company. The browser build and its market-data proxy run on
 its edge network, so requests from web visitors — and any BYO Finnhub key
-travelling in one — may be handled outside the EEA. The legal basis for that
-transfer is **not yet recorded here**; see `O-8` in §7. Nothing in §3 goes to
-Vercel: the database is Supabase and the proxy holds nothing.
+travelling in one — may be handled outside the EEA.
+
+> **Transfer mechanism, recorded 2026-09-15.** Vercel's Data Processing
+> Addendum incorporates the **2021 EU Standard Contractual Clauses** (European
+> Commission decision 2021/914), **Module Two (controller to processor)**, with
+> the **UK International Data Transfer Addendum** incorporated by reference for
+> UK transfers. Both parties are deemed to have signed them on entering the
+> Vercel agreement — **no separate signature is required**, which is why this
+> needed recording rather than negotiating. Source: Vercel's published DPA at
+> `vercel.com/legal/dpa`.
+>
+> **Verify before relying on this.** It was established from Vercel's published
+> terms, not from a countersigned copy in our possession. Confirm the DPA is in
+> force for this specific account and keep a dated copy of the version relied
+> on — an SCC basis whose text you cannot produce is not much of a basis.
+
+No database content reaches Vercel: the database is Supabase, and the proxy
+stores nothing. What Vercel does see is request metadata — the path, the ticker
+or currency pair, the visitor's IP, and a BYO Finnhub key in a request header
+when one is set. A ticker plus an IP is not nothing: repeated across a session
+it describes what a person is watching.
+
+> **Minimisation is a better lever than paperwork, and it is not yet pulled.**
+> SCCs make a transfer lawful; they do not make it smaller. Three options, best
+> first:
+>
+> 1. **Stop proxying Finnhub.** The native apps already call it directly — the
+>    Capacitor WebView bypasses CORS — so the key never leaves the device. Only
+>    the browser build proxies, and only because of CORS. **If Finnhub returns
+>    `Access-Control-Allow-Origin` for browser requests, the `/fh/*` rewrite can
+>    be deleted and the user's own API key stops transiting a machine we rent at
+>    all.** That eliminates the transfer instead of legitimising it, and it is
+>    the single biggest improvement available here. One request answers it; it
+>    could not be run from the authoring session, whose egress proxy blocks the
+>    host.
+> 2. **Pin the function region to the EEA.** Vercel's Hobby plan now allows one
+>    chosen region for *serverless* functions (`arn1`, Stockholm, would match
+>    Supabase). This does **not** help today: `/api/cg` is declared
+>    `runtime: 'edge'`, edge functions run globally and ignore the setting, and
+>    the plain rewrites are served wherever the request lands. It only becomes
+>    real once the function moves to the Node runtime — a change that should be
+>    made and tested deliberately, not folded into a documentation edit.
+> 3. **Drop market data from the browser build** and let the web edition be
+>    study/tasks/habits only. Cleanest privacy answer, largest product cost.
 
 **Google (Gemini)** may process outside the EEA, under the Standard Contractual
 Clauses Google offers for international transfers.
@@ -156,8 +205,9 @@ rows is not more trustworthy than one that shows its working.
 | Ref | Item | Status |
 |---|---|---|
 | O-5 | Free-plan backups: 7-day retention, no point-in-time recovery. Weekly `pg_dump` script written and preflight-verified | 🟠 **Open.** Needs the `ops/.db-url` credential file — owner action, a real DB password, never generated or requested by an agent |
-| O-6 | Leaked-password protection disabled | 🟠 **Open, plan-gated.** Requires Supabase Pro. Re-verified live 2026-09-13: still the *only* finding the security advisor reports on the whole project |
-| O-8 | Vercel is a processor for the browser version (hosting + market-data proxy). DPA/SCC position not recorded — see §5 | 🟠 **Open**, raised 2026-09-13 |
+| O-6 | Leaked-password protection disabled | 🟠 **Open, plan-gated.** Requires Supabase Pro; owner confirmed 2026-09-15 they are not on it. Re-verified live 2026-09-15: still the *only* finding the security advisor reports on the whole project. ⚠️ **Id collision:** the suite registry (`limecore/Nexus_Version_Status.md`) tracks this same item as `PRE-3`, and uses `O-6` for nothing and `O-7` for a different thing entirely (the weekly purge job, where this document's `O-7` is the Gemini free tier). The two documents share an id namespace without sharing a numbering. Until that is reconciled, cite ids **with the document they come from**. |
+| ~~O-8~~ | Vercel is a processor for the browser version (hosting + market-data proxy). DPA/SCC position not recorded — see §5 | ✅ **Closed 2026-09-15 as to the record.** The transfer basis is now stated in §5: Vercel's DPA incorporates the 2021 SCCs (2021/914) Module Two plus the UK IDTA, deemed signed on entering the agreement with no separate signature — so the basis already existed and the gap was that nobody had written it down. **Two follow-ons deliberately left open rather than folded in:** confirm the DPA is in force for this account and keep a dated copy of the text relied on; and take one of the three minimisation options in §5, the best of which (deleting the `/fh/*` rewrite if Finnhub sends CORS headers) removes a transfer instead of legitimising it. |
+| O-9 | **Vercel's Hobby plan is for non-commercial use.** The suite carries a Ko-fi link and a `supporter_entitlements` table, and the browser build is served from Hobby. Whether donations plus supporter tiers make this "commercial" under Vercel's terms has never been checked. | 🟠 **Open, raised 2026-09-15.** Not a data-protection issue — a terms-of-service one, recorded here because the consequence lands in the same place: a Hobby account suspended for commercial use takes the browser build and its proxy down with it. Owner to read Vercel's fair-use terms against the actual monetisation and either confirm it is within them or move the project to a paid plan. |
 | ~~O-3~~ | Custom SMTP not configured | ✅ Closed 2026-08-01, confirmed with the owner (`docs/OPEN_ITEMS.md`) |
 | ~~O-4~~ | Supabase DPA not accepted — Art. 28 needs a written processor agreement | ✅ Closed 2026-08-01, confirmed with the owner (`docs/OPEN_ITEMS.md`) |
 | ~~C-1~~ | Release keystore backup off-machine unverified | ✅ Closed 2026-08-01, confirmed with the owner (`docs/OPEN_ITEMS.md`) |
@@ -196,6 +246,7 @@ Everything else goes to l1m3core@gmail.com, answered within one calendar month.
 
 | Date | Change |
 |---|---|
+| 2026-09-15 | **Recorded Vercel's transfer basis, closing `O-8`.** Its DPA incorporates the 2021 SCCs (2021/914) Module Two and the UK IDTA, deemed signed on entering the agreement — the basis existed, nobody had written it down. Also: added **IP addresses** to §3, which had omitted them entirely and so let §5 claim more than the facts support; set out three minimisation options in §5 and named the best one (delete the `/fh/*` rewrite if Finnhub sends CORS headers, so a user's own API key stops transiting our infrastructure at all); raised **`O-9`** on Vercel's Hobby plan being non-commercial-use while the suite carries a Ko-fi link and supporter tiers; and flagged that this document and the suite registry share an id namespace without sharing a numbering (`O-6`/`PRE-3`, and two different `O-7`s). |
 | 2026-09-13 | Corrected §7's outstanding-items table: `O-3`, `O-4`, `C-1` and `C-2` were closed on 2026-08-01 and never struck off, so the document overstated the open exposure for six weeks. `O-6` re-verified against the live security advisor (still the only finding on the project). Also recorded that this file is not served by GitHub Pages — `gh-pages` carries only `index.html` and `legal/` — which had been assumed rather than checked. |
 | 2026-09-13 | Added **Vercel** as a processor for the browser version of NCC — hosting and the market-data proxy — with the transfer question logged as `O-8`. It had been live since 2026-08-14 and was missing from §4 and §5 entirely. Corrects the `PRIV-1` premise on the way past: the Finnhub key travels in an `X-Finnhub-Token` HEADER, not a `?token=` query parameter, so it is not in the request path an access log records. The transit through infrastructure we rent is real and is now disclosed; the key-in-the-URL part was not. |
 | 2026-07-29 | First version. Written against the live schema and console rather than from memory: table list and RLS state read from `pg_class`, account figures from `auth.users`, processor list from the actual outbound hosts in the source. |
