@@ -570,7 +570,12 @@
     "startDate": "Tanggal mulai",
     "startHint": "Hanya kejadian pada atau setelah tanggal ini yang dihitung.",
     "targetDate": "Tanggal target",
-    "optional": "(opsional)"
+    "optional": "(opsional)",
+    "paceAhead": "lebih cepat dari target",
+    "paceOn": "sesuai target",
+    "paceBehind": "{{amount}} per minggu mulai sekarang menutup selisihnya",
+    "paceBehindNoTime": "sisa {{amount}}",
+    "paceDone": "target tercapai"
   },
   "weeklyReview": {
     "title": "Tinjauan mingguan",

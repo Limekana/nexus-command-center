@@ -519,7 +519,12 @@
     "startDate": "Date de début",
     "startHint": "Seuls les événements à partir de cette date comptent.",
     "targetDate": "Date cible",
-    "optional": "(facultatif)"
+    "optional": "(facultatif)",
+    "paceAhead": "en avance",
+    "paceOn": "dans les temps",
+    "paceBehind": "{{amount}} par semaine à partir d'ici comble l'écart",
+    "paceBehindNoTime": "il reste {{amount}}",
+    "paceDone": "objectif atteint"
   },
   "goalTypes": {
     "net_worth": "Valeur nette",

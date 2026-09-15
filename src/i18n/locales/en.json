@@ -519,7 +519,12 @@
     "startDate": "Start date",
     "startHint": "Only events on/after this date count.",
     "targetDate": "Target date",
-    "optional": "(optional)"
+    "optional": "(optional)",
+    "paceAhead": "ahead of pace",
+    "paceOn": "on pace",
+    "paceBehind": "{{amount}} a week from here closes the gap",
+    "paceBehindNoTime": "{{amount}} left",
+    "paceDone": "target reached"
   },
   "goalTypes": {
     "net_worth": "Net Worth",

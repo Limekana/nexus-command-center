@@ -570,7 +570,12 @@
     "startDate": "تاريخ البدء",
     "startHint": "تُحتسب فقط الأحداث في هذا التاريخ أو بعده.",
     "targetDate": "التاريخ المستهدف",
-    "optional": "(اختياري)"
+    "optional": "(اختياري)",
+    "paceAhead": "متقدّم عن الوتيرة",
+    "paceOn": "ضمن الوتيرة",
+    "paceBehind": "‏{{amount}} أسبوعياً من الآن يسدّ الفارق",
+    "paceBehindNoTime": "بقي {{amount}}",
+    "paceDone": "تم بلوغ الهدف"
   },
   "weeklyReview": {
     "title": "المراجعة الأسبوعية",

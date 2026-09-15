@@ -570,7 +570,12 @@
     "startDate": "Data inicial",
     "startHint": "Só contam eventos a partir desta data.",
     "targetDate": "Data-alvo",
-    "optional": "(opcional)"
+    "optional": "(opcional)",
+    "paceAhead": "à frente do ritmo",
+    "paceOn": "no ritmo",
+    "paceBehind": "{{amount}} por semana a partir daqui fecha a diferença",
+    "paceBehindNoTime": "faltam {{amount}}",
+    "paceDone": "objetivo alcançado"
   },
   "weeklyReview": {
     "title": "Revisão semanal",

@@ -145,7 +145,22 @@ export function computeGoalProgress(goal: Goal, d: DataSources): GoalProgress {
   return { currentValue, percent, daysRemaining, paceDelta, reached };
 }
 
-/** Quick label like "ahead by 4" / "behind by 1.5" / "on pace". */
+/**
+ * Quick label like "ahead by 4" / "behind by 1.5" / "on pace".
+ *
+ * @deprecated v1.14 — superseded by `pacingFor` in `lib/goalPacing.ts`, which
+ * the Goals screen now uses. Two things were wrong with this one and both are
+ * worth stating rather than deleting quietly:
+ *
+ *   1. It returned ENGLISH. These strings went straight to the screen in all
+ *      ten locales, so a Finnish user read "behind by 1.5".
+ *   2. "behind by 1.5" is a verdict with no action in it. The v1.14 design
+ *      constraint is that behind pace must read as recoverable — what closes
+ *      the gap, not how far you have fallen.
+ *
+ * Kept only so an out-of-tree caller does not break on upgrade. Nothing in
+ * this repo calls it.
+ */
 export function paceLabel(g: Goal, p: GoalProgress): string | null {
   if (p.paceDelta == null) return null;
   const abs = Math.abs(p.paceDelta);
