@@ -21,7 +21,8 @@
     "revokeAccess": "移除 {{name}} 的访问权限？",
     "thisUser": "该用户",
     "deleteTitle": "删除",
-    "deleteItem": "删除此项？"
+    "deleteItem": "删除此项？",
+    "share": "共享"
   },
   "domains": {
     "lifeScore": "生活评分",
@@ -518,7 +519,12 @@
     "startDate": "开始日期",
     "startHint": "仅统计该日期当天及之后的事件。",
     "targetDate": "目标日期",
-    "optional": "（可选）"
+    "optional": "（可选）",
+    "paceAhead": "进度超前",
+    "paceOn": "进度正常",
+    "paceBehind": "从现在起每周 {{amount}} 即可补上差距",
+    "paceBehindNoTime": "还差 {{amount}}",
+    "paceDone": "已达成目标"
   },
   "goalTypes": {
     "net_worth": "净资产",
