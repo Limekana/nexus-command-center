@@ -214,6 +214,8 @@
     "portfolioEodSub": "美股收盘时今日走势回顾",
     "marketNews": "市场新闻",
     "marketNewsSub": "关于你持有股票的报道 + 重大市场动向",
+    "watchlistAlerts": "自选股目标价",
+    "watchlistAlertsSub": "当自选股达到你设定的目标价时",
     "macroHeadlines": "包含宏观头条",
     "macroHeadlinesSub": "美联储、CPI、就业、FOMC、通胀、衰退",
     "permCheckFailed": "权限检查失败。",

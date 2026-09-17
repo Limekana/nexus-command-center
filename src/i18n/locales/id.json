@@ -275,6 +275,8 @@
     "portfolioEodSub": "Ringkasan pergerakan hari ini saat pasar AS tutup",
     "marketNews": "Berita pasar",
     "marketNewsSub": "Berita tentang saham yang kamu miliki + pergerakan besar pasar",
+    "watchlistAlerts": "Target daftar pantau",
+    "watchlistAlertsSub": "Saat ticker yang kamu pantau mencapai harga target yang kamu tetapkan",
     "macroHeadlines": "Sertakan berita makro",
     "macroHeadlinesSub": "Fed, CPI, ketenagakerjaan, FOMC, inflasi, resesi",
     "permCheckFailed": "Pemeriksaan izin gagal.",

@@ -214,6 +214,8 @@
     "portfolioEodSub": "Yhteenveto tämän päivän liikkeestä USA:n pörssin sulkeutuessa",
     "marketNews": "Markkinauutiset",
     "marketNewsSub": "Uutisia omistamistasi osakkeista + suuret markkinaliikkeet",
+    "watchlistAlerts": "Seurantalistan tavoitteet",
+    "watchlistAlertsSub": "Kun seuraamasi arvopaperi saavuttaa asettamasi tavoitehinnan",
     "macroHeadlines": "Sisällytä makro-otsikot",
     "macroHeadlinesSub": "Fed, CPI, työllisyys, FOMC, inflaatio, taantuma",
     "permCheckFailed": "Lupatarkistus epäonnistui.",

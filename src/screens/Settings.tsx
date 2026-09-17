@@ -36,6 +36,7 @@ import { cancelCategory, type NotificationCategory } from '../lib/notifications'
 import { rearmTaskReminders } from '../lib/taskReminders';
 import { runPortfolioEodTick } from '../lib/portfolioEod';
 import { runNewsAlertsTick } from '../lib/newsAlerts';
+import { runWatchlistAlertsTick } from '../lib/watchlistAlerts';
 import { supabase } from '../lib/supabase';
 import { withCaptcha } from '../lib/captcha';
 import { setGuestMode } from '../lib/guestMode';
@@ -94,6 +95,8 @@ export default function Settings() {
   const setNotifPortfolioEodEnabled = useSettingsStore((s) => s.setNotifPortfolioEodEnabled);
   const notifNewsEnabled = useSettingsStore((s) => s.notifNewsEnabled);
   const setNotifNewsEnabled = useSettingsStore((s) => s.setNotifNewsEnabled);
+  const notifWatchlistEnabled = useSettingsStore((s) => s.notifWatchlistEnabled);
+  const setNotifWatchlistEnabled = useSettingsStore((s) => s.setNotifWatchlistEnabled);
   const aiEnabled = useSettingsStore((s) => s.aiEnabled);
   const setAiEnabled = useSettingsStore((s) => s.setAiEnabled);
   const notifMacroKeywordsEnabled = useSettingsStore((s) => s.notifMacroKeywordsEnabled);
@@ -752,17 +755,19 @@ export default function Settings() {
                 // the user has flipped these before, leave their picks alone.
                 const anySubOn =
                   notifTasksEnabled || notifBudgetsEnabled ||
-                  notifPortfolioEodEnabled || notifNewsEnabled || weeklyReminder;
+                  notifPortfolioEodEnabled || notifNewsEnabled || notifWatchlistEnabled || weeklyReminder;
                 if (!anySubOn) {
                   await Promise.all([
                     setNotifTasksEnabled(true),
                     setNotifBudgetsEnabled(true),
                     setNotifPortfolioEodEnabled(true),
                     setNotifNewsEnabled(true),
+                    setNotifWatchlistEnabled(true),
                   ]);
                   void rearmTaskReminders();
                   void runPortfolioEodTick();
                   void runNewsAlertsTick();
+                  void runWatchlistAlertsTick();
                 }
                 // Background perm check. If it fails (most likely the
                 // plugin bridge is wedged), warn the user but leave the
@@ -793,6 +798,7 @@ export default function Settings() {
                   cancelCategory('budgets'),
                   cancelCategory('portfolio-eod'),
                   cancelCategory('news'),
+                  cancelCategory('watchlist'),
                 ]);
               }
             }}
@@ -912,6 +918,24 @@ export default function Settings() {
             value={notifMacroKeywordsEnabled}
             locked={!notifMasterEnabled || !notifNewsEnabled}
             onChange={setNotifMacroKeywordsEnabled}
+          />
+          {/* v1.15 Item 9 — targets have always been settable on the Watchlist;
+              this is what makes one worth setting. Below the news pair rather
+              than inside it: a target is the user's own number, not a story. */}
+          <Toggle
+            label={t('settings.watchlistAlerts')}
+            sub={t('settings.watchlistAlertsSub')}
+            value={notifWatchlistEnabled}
+            locked={!notifMasterEnabled}
+            onChange={(on) => handleNotifToggle({
+              on,
+              category: 'watchlist',
+              setEnabled: setNotifWatchlistEnabled,
+              requestPerm: requestNotificationPermission,
+              setMsg: setNotifMsg,
+              t,
+              onAfterEnable: runWatchlistAlertsTick,
+            })}
           />
           {notifMsg && (
             <div className="text-[0.625rem] text-warning mt-1">{notifMsg}</div>

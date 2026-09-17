@@ -26,6 +26,7 @@
 //   3000-3099  Budget threshold alerts (one ID per category × threshold)
 //   4000-4099  Portfolio end-of-day (4001 = 4:05pm primary, 4002 = 4:35pm backup)
 //   5000-5999  News alerts (one ID per news item, derived from item ID)
+//   6000-6099  Watchlist price targets (one ID per item × side, v1.15)
 // ────────────────────────────────────────────────────────────────────────
 
 import { Capacitor } from '@capacitor/core';
@@ -40,7 +41,8 @@ export type NotificationCategory =
   | 'portfolio-eod'
   | 'news'
   | 'insights'
-  | 'habits';
+  | 'habits'
+  | 'watchlist';
 
 export interface NotificationResult {
   ok: boolean;
@@ -111,6 +113,14 @@ const CHANNEL_SPECS: Record<NotificationCategory, ChannelSpec> = {
     description: 'Daily reminders for habits with a set time',
     importance: 3,
   },
+  // v1.15 — a price the user named in advance has been reached. DEFAULT
+  // importance like budgets: it is something they asked to act on, not news.
+  watchlist: {
+    id: 'watchlist',
+    name: 'Watchlist Targets',
+    description: 'When a watched ticker reaches a target price you set',
+    importance: 3,
+  },
 };
 
 // ID range bases — see "ID allocation map" comment above.
@@ -124,6 +134,8 @@ export const ID_RANGES: Record<NotificationCategory, { base: number; size: numbe
   insights: { base: 7000, size: 1000 },
   // v1.2 — one ID per habit. Hash-derived (see habitReminders.ts).
   habits: { base: 8000, size: 1000 },
+  // v1.15 — 50 items × above/below. Hash-derived (see watchlistAlerts.ts).
+  watchlist: { base: 6000, size: 100 },
 };
 
 // ─── Platform / availability ────────────────────────────────────────────

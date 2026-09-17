@@ -35,6 +35,7 @@ import { checkBudgetThresholds } from '../lib/budgetAlerts';
 // the transaction's signed delta.
 import { runPortfolioEodTick } from '../lib/portfolioEod';
 import { runNewsAlertsTick } from '../lib/newsAlerts';
+import { runWatchlistAlertsTick } from '../lib/watchlistAlerts';
 
 interface FinanceStore {
   transactions: Transaction[];
@@ -877,6 +878,9 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
     // the freshest quotes. Idempotent — runs cancel-or-schedule based on
     // current time-of-day in ET.
     void runPortfolioEodTick();
+    // v1.15 Item 9 — quotes (and FX) for watched tickers were just written
+    // above, so this is the moment a target can newly be crossed.
+    void runWatchlistAlertsTick();
     // Eagerly populate per-holding news so the News screen renders without
     // each row needing to be opened. Fire-and-forget; failures are logged
     // but don't block the rest of the refresh from settling.

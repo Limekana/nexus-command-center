@@ -275,6 +275,8 @@
     "portfolioEodSub": "अमेरिकी बाज़ार बंद होने पर आज की चाल का सार",
     "marketNews": "बाज़ार समाचार",
     "marketNewsSub": "आपके टिकर से जुड़ी ख़बरें और बाज़ार की बड़ी हलचलें",
+    "watchlistAlerts": "वॉचलिस्ट लक्ष्य",
+    "watchlistAlertsSub": "जब कोई देखा जा रहा टिकर आपके तय किए लक्ष्य मूल्य पर पहुँचे",
     "macroHeadlines": "मैक्रो सुर्ख़ियाँ शामिल करें",
     "macroHeadlinesSub": "Fed, CPI, रोज़गार, FOMC, महँगाई, मंदी",
     "permCheckFailed": "अनुमति जाँच विफल।",

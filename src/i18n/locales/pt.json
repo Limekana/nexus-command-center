@@ -275,6 +275,8 @@
     "portfolioEodSub": "Resumo do movimento de hoje no fechamento do mercado dos EUA",
     "marketNews": "Notícias do mercado",
     "marketNewsSub": "Matérias sobre os ativos que você tem + grandes movimentos de mercado",
+    "watchlistAlerts": "Alvos da lista de observação",
+    "watchlistAlertsSub": "Quando um ativo observado atinge um preço-alvo que você definiu",
     "macroHeadlines": "Incluir manchetes macro",
     "macroHeadlinesSub": "Fed, CPI, emprego, FOMC, inflação, recessão",
     "permCheckFailed": "Falha ao verificar a permissão.",

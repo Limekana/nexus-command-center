@@ -214,6 +214,8 @@
     "portfolioEodSub": "Recap of today's move on US market close",
     "marketNews": "Market News",
     "marketNewsSub": "Stories about tickers you own + major market moves",
+    "watchlistAlerts": "Watchlist Targets",
+    "watchlistAlertsSub": "When a watched ticker reaches a target price you set",
     "macroHeadlines": "Include Macro Headlines",
     "macroHeadlinesSub": "Fed, CPI, jobs, FOMC, inflation, recession",
     "permCheckFailed": "Permission check failed.",

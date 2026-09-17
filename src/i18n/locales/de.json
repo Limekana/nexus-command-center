@@ -214,6 +214,8 @@
     "portfolioEodSub": "Rückblick auf die heutige Bewegung bei US-Börsenschluss",
     "marketNews": "Marktnachrichten",
     "marketNewsSub": "Storys zu deinen Titeln + große Marktbewegungen",
+    "watchlistAlerts": "Watchlist-Ziele",
+    "watchlistAlertsSub": "Wenn ein beobachteter Titel einen von dir gesetzten Zielkurs erreicht",
     "macroHeadlines": "Makro-Schlagzeilen einbeziehen",
     "macroHeadlinesSub": "Fed, VPI, Jobs, FOMC, Inflation, Rezession",
     "permCheckFailed": "Berechtigungsprüfung fehlgeschlagen.",
