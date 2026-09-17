@@ -21,7 +21,8 @@
     "revokeAccess": "Poistetaanko käyttäjän {{name}} käyttöoikeus?",
     "thisUser": "tämä käyttäjä",
     "deleteTitle": "Poista",
-    "deleteItem": "Poistetaanko tämä?"
+    "deleteItem": "Poistetaanko tämä?",
+    "share": "Jaa"
   },
   "domains": {
     "lifeScore": "Elämäpisteet",
@@ -518,7 +519,12 @@
     "startDate": "Aloituspäivä",
     "startHint": "Vain tämän päivän jälkeiset tapahtumat lasketaan.",
     "targetDate": "Tavoitepäivä",
-    "optional": "(valinnainen)"
+    "optional": "(valinnainen)",
+    "paceAhead": "edellä tahtia",
+    "paceOn": "tahdissa",
+    "paceBehind": "{{amount}} viikossa tästä eteenpäin kuroo eron umpeen",
+    "paceBehindNoTime": "{{amount}} jäljellä",
+    "paceDone": "tavoite saavutettu"
   },
   "goalTypes": {
     "net_worth": "Nettovarallisuus",

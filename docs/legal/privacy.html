@@ -34,7 +34,7 @@
 <header>
   <div class="brand">Limecore Studio</div>
   <h1>Privacy Policy</h1>
-  <div class="updated">Last updated 6 August 2026 · covers Nexus Command Center, LimeLog and StudyDesk</div>
+  <div class="updated">Last updated 13 September 2026 · covers Nexus Command Center, LimeLog and StudyDesk</div>
 </header>
 
 <p class="lede">
@@ -190,6 +190,33 @@ services below are the only ones that receive anything at all.</p>
   own or how much. They do, like any web request, see the IP address it came
   from. <strong>They happen whether or not you have an account</strong>, because
   prices are the same for everyone. The other two apps make no such requests.
+</p>
+
+<h3>The browser version routes market data through a server we run</h3>
+<p>
+  The Android apps call those providers straight from your device. The browser
+  version cannot — several of them refuse cross-site requests, and one of them
+  refuses datacentre addresses outright — so Nexus Command Center on the web
+  sends the same requests through a thin proxy we operate on
+  <a href="https://vercel.com/legal/privacy-policy" rel="noopener">Vercel</a>,
+  which passes each one to the provider and hands the answer back. It adds
+  nothing to the request and keeps no copy of the answer. The request still
+  carries a ticker or a currency pair and nothing about you.
+</p>
+<p>
+  Two consequences, and the first is in your favour. <strong>The provider sees
+  the proxy's address rather than yours</strong>, so on the web the paragraph
+  above overstates what they learn.
+</p>
+<p>
+  The second is the one to read before you paste anything in. If you have
+  entered <strong>your own Finnhub API key</strong>, that key travels through
+  the proxy with the request. It is sent as a request header, never in the
+  address — deliberately, so that it stays out of URLs, browser history and
+  ordinary access logs — and we neither read it nor record it. But it does now
+  cross a machine we rent, which it did not do before the browser version
+  existed. On the Android apps it never leaves your device. On none of them is
+  it sent to our database.
 </p>
 
 <h3>Ko-fi (only if you tap the support link)</h3>

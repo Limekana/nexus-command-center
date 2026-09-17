@@ -9,6 +9,8 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AppHeader from '../components/AppHeader';
+import GoalPaceBar from '../components/GoalPaceBar';
+import { pacingFor } from '../lib/goalPacing';
 import RowActions from '../components/RowActions';
 import { useGoalsStore } from '../store/useGoalsStore';
 import { useFinanceStore } from '../store/useFinanceStore';
@@ -18,7 +20,6 @@ import { useTaskStore } from '../store/useTaskStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import {
   computeGoalProgress,
-  paceLabel,
   formatGoalValue,
   defaultTargetValue,
   type DataSources,
@@ -203,18 +204,33 @@ function GoalRow({
   // this keeps the row from crashing if one is mid-flight from a cloud pull.
   const rawMeta = GOAL_TYPE_LABELS[goal.goalType] ?? { label: goal.goalType, unit: '', icon: 'goals' };
   const meta = { ...rawMeta, label: t(`goalTypes.${goal.goalType}`, { defaultValue: rawMeta.label }) };
-  const pace = paceLabel(goal, progress);
-  const pct = Math.min(100, Math.max(0, progress.percent));
+  // v1.14 — pacing against an evenly distributed reference trajectory. The
+  // old `paceLabel` is gone from this screen: it returned English to all ten
+  // locales, and "behind by 1.5" is a verdict with no action in it.
+  const pacing = pacingFor(progress.currentValue, goal);
 
-  // Bar tone: success when reached / on pace, warning when behind by >10%,
-  // primary otherwise. Pure cosmetic — the number is the source of truth.
-  const tone: 'success' | 'warning' | 'primary' = (() => {
-    if (progress.reached) return 'success';
-    if (pace?.startsWith('behind')) return 'warning';
-    return 'primary';
+  // The sentence under the bar, and the bar's own accessible name.
+  //
+  // Behind is the only one that changes shape: it names the work that CLOSES
+  // the gap rather than the size of the gap, because a goal is reached at an
+  // uneven pace and a quiet week is not a failure. `remainingPerWeek` is null
+  // on the final day — there is no week left to spread anything over — and
+  // that case falls back to the plain remainder rather than printing a rate
+  // for a week that does not exist.
+  const paceText = (() => {
+    if (pacing.status === 'done') return t('goals.paceDone');
+    if (pacing.status === 'unknown') return null;
+    if (pacing.status === 'ahead') return t('goals.paceAhead');
+    if (pacing.status === 'on') return t('goals.paceOn');
+    if (pacing.remainingPerWeek != null) {
+      return t('goals.paceBehind', {
+        amount: formatGoalValue(goal, pacing.remainingPerWeek, baseCurrency),
+      });
+    }
+    return t('goals.paceBehindNoTime', {
+      amount: formatGoalValue(goal, pacing.remaining, baseCurrency),
+    });
   })();
-
-  const barColor = tone === 'success' ? 'bg-success' : tone === 'warning' ? 'bg-warning' : 'bg-primary';
 
   return (
     <div className="py-2 border-b border-border/40 last:border-0">
@@ -230,9 +246,12 @@ function GoalRow({
             />
           </div>
           <div className="flex items-center gap-2 mt-1">
-            <div className="flex-1 h-2 rounded-full bg-surface2 overflow-hidden">
-              <div className={`h-full ${barColor} transition-all`} style={{ width: `${pct}%` }} />
-            </div>
+            <GoalPaceBar
+              progress={pacing.status === 'unknown' ? progress.percent / 100 : pacing.progress}
+              elapsed={pacing.elapsed}
+              status={pacing.status}
+              label={paceText ?? t('goals.noDeadline')}
+            />
             <span className="text-[0.625rem] text-text-muted whitespace-nowrap">
               {Math.round(progress.percent)}%
             </span>
@@ -245,7 +264,7 @@ function GoalRow({
             </span>
             <span>
               {progress.daysRemaining != null
-                ? `${t('goals.daysLeft', { days: progress.daysRemaining })}${pace ? ` · ${pace}` : ''}`
+                ? `${t('goals.daysLeft', { days: progress.daysRemaining })}${paceText ? ` · ${paceText}` : ''}`
                 : t('goals.noDeadline')}
             </span>
           </div>
