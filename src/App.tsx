@@ -4,7 +4,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import { useAuthStore } from './store/useAuthStore';
-import { IS_DESKTOP } from './lib/isDesktop';
+import { APP_LOCK_APPLIES } from './lib/isDesktop';
 import { useSessionStore } from './store/useSessionStore';
 import { useSyncStore } from './store/useSyncStore';
 import { seedIfEmpty } from './db/seed';
@@ -391,8 +391,11 @@ export default function App() {
   // price — and it charges it worse here, because the desktop window has no
   // biometric to fall back on, making the PIN the only way in and a forgotten
   // one a locked-out install. Removed for that build, not weakened for any
-  // other: Android and web are untouched below.
-  if (!unlocked && !IS_DESKTOP) {
+  // other.
+  //
+  // NOT ON WEB EITHER (2026-09-18, owner call): the same reasoning applies to
+  // a browser tab. Android is the only build that keeps the lock.
+  if (!unlocked && APP_LOCK_APPLIES) {
     return <LockScreen />;
   }
 
