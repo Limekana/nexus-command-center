@@ -17,7 +17,7 @@ import { useTaskStore } from '../store/useTaskStore';
 import { useGoalsStore } from '../store/useGoalsStore';
 import { useSyncStore } from '../store/useSyncStore';
 import { useAuthStore } from '../store/useAuthStore';
-import { IS_DESKTOP } from '../lib/isDesktop';
+import { APP_LOCK_APPLIES } from '../lib/isDesktop';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useTemplatesStore } from '../store/useTemplatesStore';
 import { useInsightsStore } from '../store/useInsightsStore';
@@ -219,13 +219,14 @@ export default function AppShell() {
     };
   }, [refreshPortfolio, recomputeInsights, recomputeFundamentals]);
 
-  // Auto-lock timer. Never armed on desktop: with the lock screen gone there,
+  // Auto-lock timer. Never armed off Android (desktop, and web since
+  // 2026-09-18): with the lock screen gone there,
   // firing `lock()` would flip `unlocked` to false with nothing rendering the
   // gate, so it would either do nothing or — the day someone reinstates the
   // gate without reading this — silently strand the user behind a PIN pad the
   // desktop build never asked them to set.
   useEffect(() => {
-    if (IS_DESKTOP || autoLockMin <= 0) return;
+    if (!APP_LOCK_APPLIES || autoLockMin <= 0) return;
     const id = setInterval(() => {
       const idleMs = Date.now() - lastActivity;
       if (idleMs > autoLockMin * 60_000) lock();
