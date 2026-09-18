@@ -39,7 +39,9 @@
     "life": "Vida",
     "tasks": "Tareas",
     "collapseSidebar": "Contraer barra lateral",
-    "expandSidebar": "Expandir barra lateral"
+    "expandSidebar": "Expandir barra lateral",
+    "updateShort": "Actualización disponible",
+    "updateAvailable": "Actualización disponible: v{{version}}"
   },
   "life": {
     "notCountedYet": "Aún no contado",
@@ -296,7 +298,13 @@
       "other": "Otro"
     },
     "discord": "Comunidad de Discord",
-    "discordSub": "Preguntas, informes de errores y lo que viene"
+    "discordSub": "Preguntas, informes de errores y lo que viene",
+    "updates": "Actualizaciones",
+    "updateCheck": "Buscar actualizaciones",
+    "updateChecking": "Comprobando…",
+    "updateCurrent": "Actualizado",
+    "updateFailed": "No se pudo comprobar — toca para reintentar",
+    "updateOpen": "Abrir página de la versión"
   },
   "days": {
     "long": {

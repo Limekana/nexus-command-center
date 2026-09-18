@@ -39,7 +39,9 @@
     "life": "Life",
     "tasks": "Tasks",
     "collapseSidebar": "Collapse sidebar",
-    "expandSidebar": "Expand sidebar"
+    "expandSidebar": "Expand sidebar",
+    "updateShort": "Update available",
+    "updateAvailable": "Update available: v{{version}}"
   },
   "life": {
     "notCountedYet": "Not counted yet",
@@ -296,7 +298,13 @@
       "other": "Other"
     },
     "discord": "Discord community",
-    "discordSub": "Questions, bug reports, and what's coming next"
+    "discordSub": "Questions, bug reports, and what's coming next",
+    "updates": "Updates",
+    "updateCheck": "Check for updates",
+    "updateChecking": "Checking…",
+    "updateCurrent": "Up to date",
+    "updateFailed": "Couldn't check — tap to retry",
+    "updateOpen": "Open release page"
   },
   "days": {
     "long": {

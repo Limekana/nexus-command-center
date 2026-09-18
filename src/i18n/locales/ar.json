@@ -95,7 +95,9 @@
     "life": "الحياة",
     "tasks": "المهام",
     "collapseSidebar": "طي الشريط الجانبي",
-    "expandSidebar": "توسيع الشريط الجانبي"
+    "expandSidebar": "توسيع الشريط الجانبي",
+    "updateShort": "يتوفر تحديث",
+    "updateAvailable": "يتوفر تحديث: v{{version}}"
   },
   "life": {
     "notCountedYet": "لم يُحتسب بعد",
@@ -357,7 +359,13 @@
       "other": "أخرى"
     },
     "discord": "مجتمع Discord",
-    "discordSub": "الأسئلة وتقارير الأخطاء وما هو قادم"
+    "discordSub": "الأسئلة وتقارير الأخطاء وما هو قادم",
+    "updates": "التحديثات",
+    "updateCheck": "التحقق من التحديثات",
+    "updateChecking": "جارٍ التحقق…",
+    "updateCurrent": "محدَّث",
+    "updateFailed": "تعذّر التحقق — انقر لإعادة المحاولة",
+    "updateOpen": "فتح صفحة الإصدار"
   },
   "lock": {
     "secureAccess": "وصول آمن",

@@ -17,6 +17,8 @@ import { enqueue } from '../db/syncQueue';
 import { generateId } from '../utils/uuid';
 import { useAuthStore } from '../store/useAuthStore';
 import { APP_LOCK_APPLIES } from '../lib/isDesktop';
+import { IS_DESKTOP } from '../lib/desktop';
+import { checkForDesktopUpdate, openDesktopUpdate, useDesktopUpdate } from '../lib/desktopUpdate';
 import { useSyncStore } from '../store/useSyncStore';
 import { useSessionStore, userDisplayName } from '../store/useSessionStore';
 import { useSettingsStore, BaseCurrency, UI_SCALES } from '../store/useSettingsStore';
@@ -1039,6 +1041,7 @@ export default function Settings() {
 
         <Section title={t('settings.about')}>
           <ListRow label={t('settings.version')} value={pkg.version} />
+          {IS_DESKTOP && <DesktopUpdateRow />}
           <ListRow label={t('settings.studio')} value="Limecore" />
           <ListRow label={t('settings.build')} value={t('settings.buildValue')} />
           <button
@@ -1215,6 +1218,29 @@ function FinnhubKeyRow({
         )}
       </div>
     </div>
+  );
+}
+
+// v1.15 (Item 12) — the manual half of the desktop update notice. Tapping it
+// re-asks GitHub (skipping the once-per-launch cache); when a newer release is
+// already known, it opens that release's page instead.
+function DesktopUpdateRow() {
+  const { t } = useTranslation();
+  const update = useDesktopUpdate();
+  const available = update.status === 'available';
+  const value =
+    update.status === 'checking' ? t('settings.updateChecking')
+    : available ? t('settings.updateOpen')
+    : update.status === 'current' ? t('settings.updateCurrent')
+    : update.status === 'error' ? t('settings.updateFailed')
+    : t('settings.updateCheck');
+  return (
+    <ListRow
+      label={t('settings.updates')}
+      value={value}
+      tag={available ? { text: `v${update.latest}`, tone: 'green' } : undefined}
+      onClick={available ? openDesktopUpdate : () => checkForDesktopUpdate(true)}
+    />
   );
 }
 

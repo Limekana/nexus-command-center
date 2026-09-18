@@ -46,6 +46,7 @@ const path = require('node:path');
 const fs = require('node:fs');
 const http = require('node:http');
 const { pathToFileURL } = require('node:url');
+const { createUpdateChecker } = require('./update-check.cjs');
 
 const DIST_DIR = path.join(__dirname, '..', 'dist');
 const ICON_PATH = path.join(__dirname, '..', 'resources', 'icon.ico');
@@ -310,7 +311,7 @@ function createWindow() {
       autoHideMenuBar: true,
       backgroundColor: '#0d1117', // matches the app's dark theme surface, avoids a white flash on load
       webPreferences: {
-        // The bridge is three functions wide and adds no Node surface: a
+        // The bridge is a handful of IPC calls and adds no Node surface: a
         // sandboxed preload only gets contextBridge and ipcRenderer, which is
         // all `auth-preload.cjs` uses.
         preload: AUTH_PRELOAD,
@@ -355,6 +356,17 @@ ipcMain.handle('auth:begin', (_event, url) => {
   const opened = openExternally(url);
   if (opened) authPending = true;
   return opened;
+});
+
+// v1.15 (Item 12) — update notice. The renderer asks; the main process fetches
+// and, on request, opens only the release page it fetched itself.
+const updates = createUpdateChecker({ repo: 'Limekana/nexus-command-center', log });
+
+ipcMain.handle('update:check', (_event, force) => updates.check(force === true));
+
+ipcMain.handle('update:open', () => {
+  const url = updates.releaseUrl();
+  return url ? openExternally(url) : false;
 });
 
 app.whenReady().then(async () => {

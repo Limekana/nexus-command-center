@@ -95,7 +95,9 @@
     "life": "Hidup",
     "tasks": "Tugas",
     "collapseSidebar": "Ciutkan bilah sisi",
-    "expandSidebar": "Perluas bilah sisi"
+    "expandSidebar": "Perluas bilah sisi",
+    "updateShort": "Pembaruan tersedia",
+    "updateAvailable": "Pembaruan tersedia: v{{version}}"
   },
   "life": {
     "notCountedYet": "Belum dihitung",
@@ -357,7 +359,13 @@
       "other": "Lainnya"
     },
     "discord": "Komunitas Discord",
-    "discordSub": "Pertanyaan, laporan bug, dan rencana berikutnya"
+    "discordSub": "Pertanyaan, laporan bug, dan rencana berikutnya",
+    "updates": "Pembaruan",
+    "updateCheck": "Periksa pembaruan",
+    "updateChecking": "Memeriksa…",
+    "updateCurrent": "Sudah terbaru",
+    "updateFailed": "Gagal memeriksa — ketuk untuk mencoba lagi",
+    "updateOpen": "Buka halaman rilis"
   },
   "lock": {
     "secureAccess": "Akses aman",

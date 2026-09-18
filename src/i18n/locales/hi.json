@@ -95,7 +95,9 @@
     "life": "जीवन",
     "tasks": "कार्य",
     "collapseSidebar": "साइडबार छोटा करें",
-    "expandSidebar": "साइडबार बड़ा करें"
+    "expandSidebar": "साइडबार बड़ा करें",
+    "updateShort": "अपडेट उपलब्ध",
+    "updateAvailable": "अपडेट उपलब्ध: v{{version}}"
   },
   "life": {
     "notCountedYet": "अभी नहीं गिना गया",
@@ -357,7 +359,13 @@
       "other": "अन्य"
     },
     "discord": "Discord समुदाय",
-    "discordSub": "सवाल, बग रिपोर्ट और आगे क्या आ रहा है"
+    "discordSub": "सवाल, बग रिपोर्ट और आगे क्या आ रहा है",
+    "updates": "अपडेट",
+    "updateCheck": "अपडेट जाँचें",
+    "updateChecking": "जाँच हो रही है…",
+    "updateCurrent": "नवीनतम है",
+    "updateFailed": "जाँच नहीं हो सकी — फिर से टैप करें",
+    "updateOpen": "रिलीज़ पेज खोलें"
   },
   "lock": {
     "secureAccess": "सुरक्षित पहुँच",

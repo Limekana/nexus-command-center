@@ -15,8 +15,9 @@
 
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Download, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { tabs } from './BottomTabBar';
+import { openDesktopUpdate, useDesktopUpdate } from '../lib/desktopUpdate';
 
 const WIDTH_FULL = 240;
 const WIDTH_RAIL = 64;
@@ -32,6 +33,9 @@ export default function SideNav({ rail, onToggle }: SideNavProps) {
   const { pathname } = useLocation();
 
   const toggleLabel = rail ? t('nav.expandSidebar') : t('nav.collapseSidebar');
+  const update = useDesktopUpdate();
+  const updateLabel =
+    update.status === 'available' ? t('nav.updateAvailable', { version: update.latest }) : '';
 
   return (
     <aside
@@ -97,6 +101,33 @@ export default function SideNav({ rail, onToggle }: SideNavProps) {
       </nav>
 
       <div className="border-t border-border p-2">
+        {/* v1.15 (Item 12) — only ever rendered on the desktop build, and only
+            when GitHub has a newer release. Opens the release page; the
+            update itself stays the user's to run. */}
+        {update.status === 'available' && (
+          <button
+            type="button"
+            onClick={openDesktopUpdate}
+            aria-label={updateLabel}
+            title={updateLabel}
+            className={`press-spring mb-1 flex w-full items-center rounded-md border border-primary/40 bg-primary/10 py-2.5 text-primary transition-colors duration-200 hover:bg-primary/15 ${
+              rail ? 'justify-center px-0' : 'gap-3 px-3'
+            }`}
+          >
+            <span className="relative">
+              <Download size={18} strokeWidth={1.75} aria-hidden="true" />
+              {rail && (
+                <span aria-hidden className="absolute -end-1 -top-1 h-2 w-2 rounded-full bg-primary" />
+              )}
+            </span>
+            {!rail && (
+              <span className="flex min-w-0 flex-1 items-baseline justify-between gap-2">
+                <span className="truncate text-sm font-medium">{t('nav.updateShort')}</span>
+                <span className="font-mono text-[0.6875rem] text-primary/80">v{update.latest}</span>
+              </span>
+            )}
+          </button>
+        )}
         <button
           type="button"
           onClick={onToggle}

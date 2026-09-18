@@ -15,6 +15,17 @@ export type DesktopBridge = {
   beginOAuth: (url: string) => Promise<boolean>;
   /** Subscribe to the loopback callback. Returns an unsubscriber. */
   onCallback: (fn: (payload: DesktopAuthCallback) => void) => () => void;
+  /** v1.15 — ask the main process whether a newer GitHub release exists.
+   *  `force` skips its once-per-launch cache. */
+  checkForUpdate: (force?: boolean) => Promise<DesktopUpdateResult>;
+  /** Open the release page the main process found. False if none. */
+  openUpdate: () => Promise<boolean>;
+};
+
+export type DesktopUpdateResult = {
+  status: 'available' | 'current' | 'error';
+  current: string;
+  latest: string | null;
 };
 
 declare global {

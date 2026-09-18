@@ -39,7 +39,9 @@
     "life": "Leben",
     "tasks": "Aufgaben",
     "collapseSidebar": "Seitenleiste einklappen",
-    "expandSidebar": "Seitenleiste ausklappen"
+    "expandSidebar": "Seitenleiste ausklappen",
+    "updateShort": "Update verfügbar",
+    "updateAvailable": "Update verfügbar: v{{version}}"
   },
   "life": {
     "notCountedYet": "Noch nicht gezählt",
@@ -296,7 +298,13 @@
       "other": "Sonstiges"
     },
     "discord": "Discord-Community",
-    "discordSub": "Fragen, Fehlerberichte und was als Nächstes kommt"
+    "discordSub": "Fragen, Fehlerberichte und was als Nächstes kommt",
+    "updates": "Updates",
+    "updateCheck": "Nach Updates suchen",
+    "updateChecking": "Wird geprüft…",
+    "updateCurrent": "Aktuell",
+    "updateFailed": "Prüfung fehlgeschlagen — erneut tippen",
+    "updateOpen": "Release-Seite öffnen"
   },
   "days": {
     "long": {
