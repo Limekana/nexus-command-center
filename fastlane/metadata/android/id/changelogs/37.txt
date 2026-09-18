@@ -1,0 +1,3 @@
+Peringatan target harga untuk daftar pantauan.
+
+Tetapkan target di atas atau di bawah harga, dan NCC memberi tahu sekali saat target terlewati — aktifkan di Pengaturan → Notifikasi. Tujuan dan Tinjauan Mingguan kini punya kartu sendiri di dasbor, dan Kebiasaan punya bagian sendiri di tab Hidup.

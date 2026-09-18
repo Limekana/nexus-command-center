@@ -1,0 +1,3 @@
+Alertas de preço-alvo para sua lista de acompanhamento.
+
+Defina um alvo acima ou abaixo da cotação e o NCC avisa uma vez quando ele for atingido — ative em Ajustes → Notificações. Metas e Revisão semanal ganharam cartões próprios no painel, e Hábitos tem sua própria seção na aba Vida.
