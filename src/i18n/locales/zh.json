@@ -39,7 +39,11 @@
     "life": "生活",
     "tasks": "任务",
     "collapseSidebar": "折叠侧边栏",
-    "expandSidebar": "展开侧边栏"
+    "expandSidebar": "展开侧边栏",
+    "updateShort": "有可用更新",
+    "updateAvailable": "有可用更新：v{{version}}",
+    "updateDownloading": "正在下载… {{percent}}%",
+    "updateReady": "重启以更新"
   },
   "life": {
     "notCountedYet": "尚未计入",
@@ -214,6 +218,8 @@
     "portfolioEodSub": "美股收盘时今日走势回顾",
     "marketNews": "市场新闻",
     "marketNewsSub": "关于你持有股票的报道 + 重大市场动向",
+    "watchlistAlerts": "自选股目标价",
+    "watchlistAlertsSub": "当自选股达到你设定的目标价时",
     "macroHeadlines": "包含宏观头条",
     "macroHeadlinesSub": "美联储、CPI、就业、FOMC、通胀、衰退",
     "permCheckFailed": "权限检查失败。",
@@ -294,7 +300,16 @@
       "other": "其他"
     },
     "discord": "Discord 社区",
-    "discordSub": "提问、报告问题，了解后续计划"
+    "discordSub": "提问、报告问题，了解后续计划",
+    "updates": "更新",
+    "updateCheck": "检查更新",
+    "updateChecking": "正在检查…",
+    "updateCurrent": "已是最新版本",
+    "updateFailed": "检查失败 — 点按重试",
+    "updateOpen": "打开发布页面",
+    "updateDownloading": "正在下载… {{percent}}%",
+    "updateRestart": "重启以更新",
+    "updateDownload": "下载并安装"
   },
   "days": {
     "long": {

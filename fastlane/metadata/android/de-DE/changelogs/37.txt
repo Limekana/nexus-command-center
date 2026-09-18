@@ -1,0 +1,3 @@
+Kursziel-Benachrichtigungen für deine Watchlist.
+
+Lege ein Ziel über oder unter dem Kurs fest, und NCC meldet sich einmal, sobald es erreicht ist — aktivierbar unter Einstellungen → Benachrichtigungen. Ziele und Wochenrückblick haben jetzt eigene Karten im Dashboard, und Gewohnheiten einen eigenen Bereich im Tab „Leben“.

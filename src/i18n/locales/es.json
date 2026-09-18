@@ -39,7 +39,11 @@
     "life": "Vida",
     "tasks": "Tareas",
     "collapseSidebar": "Contraer barra lateral",
-    "expandSidebar": "Expandir barra lateral"
+    "expandSidebar": "Expandir barra lateral",
+    "updateShort": "Actualización disponible",
+    "updateAvailable": "Actualización disponible: v{{version}}",
+    "updateDownloading": "Descargando… {{percent}} %",
+    "updateReady": "Reiniciar para actualizar"
   },
   "life": {
     "notCountedYet": "Aún no contado",
@@ -214,6 +218,8 @@
     "portfolioEodSub": "Resumen del movimiento de hoy al cierre del mercado de EE. UU.",
     "marketNews": "Noticias del mercado",
     "marketNewsSub": "Historias sobre tus valores + grandes movimientos del mercado",
+    "watchlistAlerts": "Objetivos de la lista de seguimiento",
+    "watchlistAlertsSub": "Cuando un valor que sigues alcanza un precio objetivo que fijaste",
     "macroHeadlines": "Incluir titulares macro",
     "macroHeadlinesSub": "Fed, IPC, empleo, FOMC, inflación, recesión",
     "permCheckFailed": "Fallo en la verificación de permisos.",
@@ -294,7 +300,16 @@
       "other": "Otro"
     },
     "discord": "Comunidad de Discord",
-    "discordSub": "Preguntas, informes de errores y lo que viene"
+    "discordSub": "Preguntas, informes de errores y lo que viene",
+    "updates": "Actualizaciones",
+    "updateCheck": "Buscar actualizaciones",
+    "updateChecking": "Comprobando…",
+    "updateCurrent": "Actualizado",
+    "updateFailed": "No se pudo comprobar — toca para reintentar",
+    "updateOpen": "Abrir página de la versión",
+    "updateDownloading": "Descargando… {{percent}} %",
+    "updateRestart": "Reiniciar para actualizar",
+    "updateDownload": "Descargar e instalar"
   },
   "days": {
     "long": {

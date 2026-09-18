@@ -54,7 +54,9 @@ export const tabs: Tab[] = [
   //
   // Activity (the pulse line) rather than a heart: Life is a composite score
   // across four domains, not a health metric.
-  { to: '/life', labelKey: 'nav.life', Icon: Activity, match: (p) => p === '/life' },
+  // v1.15 Item 10 — Habits lives under Life (no tab of its own), so its
+  // screens light this tab rather than leaving the bar with nothing selected.
+  { to: '/life', labelKey: 'nav.life', Icon: Activity, match: (p) => p === '/life' || p === '/habits' || p.startsWith('/habits/') },
   { to: '/tasks', labelKey: 'nav.tasks', Icon: ListChecks, match: (p) => p === '/tasks' || p.startsWith('/tasks/') },
 ];
 

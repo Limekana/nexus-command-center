@@ -95,7 +95,11 @@
     "life": "Hidup",
     "tasks": "Tugas",
     "collapseSidebar": "Ciutkan bilah sisi",
-    "expandSidebar": "Perluas bilah sisi"
+    "expandSidebar": "Perluas bilah sisi",
+    "updateShort": "Pembaruan tersedia",
+    "updateAvailable": "Pembaruan tersedia: v{{version}}",
+    "updateDownloading": "Mengunduh… {{percent}}%",
+    "updateReady": "Mulai ulang untuk memperbarui"
   },
   "life": {
     "notCountedYet": "Belum dihitung",
@@ -275,6 +279,8 @@
     "portfolioEodSub": "Ringkasan pergerakan hari ini saat pasar AS tutup",
     "marketNews": "Berita pasar",
     "marketNewsSub": "Berita tentang saham yang kamu miliki + pergerakan besar pasar",
+    "watchlistAlerts": "Target daftar pantau",
+    "watchlistAlertsSub": "Saat ticker yang kamu pantau mencapai harga target yang kamu tetapkan",
     "macroHeadlines": "Sertakan berita makro",
     "macroHeadlinesSub": "Fed, CPI, ketenagakerjaan, FOMC, inflasi, resesi",
     "permCheckFailed": "Pemeriksaan izin gagal.",
@@ -355,7 +361,16 @@
       "other": "Lainnya"
     },
     "discord": "Komunitas Discord",
-    "discordSub": "Pertanyaan, laporan bug, dan rencana berikutnya"
+    "discordSub": "Pertanyaan, laporan bug, dan rencana berikutnya",
+    "updates": "Pembaruan",
+    "updateCheck": "Periksa pembaruan",
+    "updateChecking": "Memeriksa…",
+    "updateCurrent": "Sudah terbaru",
+    "updateFailed": "Gagal memeriksa — ketuk untuk mencoba lagi",
+    "updateOpen": "Buka halaman rilis",
+    "updateDownloading": "Mengunduh… {{percent}}%",
+    "updateRestart": "Mulai ulang untuk memperbarui",
+    "updateDownload": "Unduh & pasang"
   },
   "lock": {
     "secureAccess": "Akses aman",

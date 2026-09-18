@@ -17,6 +17,8 @@ import { enqueue } from '../db/syncQueue';
 import { generateId } from '../utils/uuid';
 import { useAuthStore } from '../store/useAuthStore';
 import { APP_LOCK_APPLIES } from '../lib/isDesktop';
+import { IS_DESKTOP } from '../lib/desktop';
+import { checkForDesktopUpdate, runDesktopUpdateAction, useDesktopUpdate } from '../lib/desktopUpdate';
 import { useSyncStore } from '../store/useSyncStore';
 import { useSessionStore, userDisplayName } from '../store/useSessionStore';
 import { useSettingsStore, BaseCurrency, UI_SCALES } from '../store/useSettingsStore';
@@ -36,6 +38,7 @@ import { cancelCategory, type NotificationCategory } from '../lib/notifications'
 import { rearmTaskReminders } from '../lib/taskReminders';
 import { runPortfolioEodTick } from '../lib/portfolioEod';
 import { runNewsAlertsTick } from '../lib/newsAlerts';
+import { runWatchlistAlertsTick } from '../lib/watchlistAlerts';
 import { supabase } from '../lib/supabase';
 import { withCaptcha } from '../lib/captcha';
 import { setGuestMode } from '../lib/guestMode';
@@ -94,6 +97,8 @@ export default function Settings() {
   const setNotifPortfolioEodEnabled = useSettingsStore((s) => s.setNotifPortfolioEodEnabled);
   const notifNewsEnabled = useSettingsStore((s) => s.notifNewsEnabled);
   const setNotifNewsEnabled = useSettingsStore((s) => s.setNotifNewsEnabled);
+  const notifWatchlistEnabled = useSettingsStore((s) => s.notifWatchlistEnabled);
+  const setNotifWatchlistEnabled = useSettingsStore((s) => s.setNotifWatchlistEnabled);
   const aiEnabled = useSettingsStore((s) => s.aiEnabled);
   const setAiEnabled = useSettingsStore((s) => s.setAiEnabled);
   const notifMacroKeywordsEnabled = useSettingsStore((s) => s.notifMacroKeywordsEnabled);
@@ -752,17 +757,19 @@ export default function Settings() {
                 // the user has flipped these before, leave their picks alone.
                 const anySubOn =
                   notifTasksEnabled || notifBudgetsEnabled ||
-                  notifPortfolioEodEnabled || notifNewsEnabled || weeklyReminder;
+                  notifPortfolioEodEnabled || notifNewsEnabled || notifWatchlistEnabled || weeklyReminder;
                 if (!anySubOn) {
                   await Promise.all([
                     setNotifTasksEnabled(true),
                     setNotifBudgetsEnabled(true),
                     setNotifPortfolioEodEnabled(true),
                     setNotifNewsEnabled(true),
+                    setNotifWatchlistEnabled(true),
                   ]);
                   void rearmTaskReminders();
                   void runPortfolioEodTick();
                   void runNewsAlertsTick();
+                  void runWatchlistAlertsTick();
                 }
                 // Background perm check. If it fails (most likely the
                 // plugin bridge is wedged), warn the user but leave the
@@ -793,6 +800,7 @@ export default function Settings() {
                   cancelCategory('budgets'),
                   cancelCategory('portfolio-eod'),
                   cancelCategory('news'),
+                  cancelCategory('watchlist'),
                 ]);
               }
             }}
@@ -913,6 +921,24 @@ export default function Settings() {
             locked={!notifMasterEnabled || !notifNewsEnabled}
             onChange={setNotifMacroKeywordsEnabled}
           />
+          {/* v1.15 Item 9 — targets have always been settable on the Watchlist;
+              this is what makes one worth setting. Below the news pair rather
+              than inside it: a target is the user's own number, not a story. */}
+          <Toggle
+            label={t('settings.watchlistAlerts')}
+            sub={t('settings.watchlistAlertsSub')}
+            value={notifWatchlistEnabled}
+            locked={!notifMasterEnabled}
+            onChange={(on) => handleNotifToggle({
+              on,
+              category: 'watchlist',
+              setEnabled: setNotifWatchlistEnabled,
+              requestPerm: requestNotificationPermission,
+              setMsg: setNotifMsg,
+              t,
+              onAfterEnable: runWatchlistAlertsTick,
+            })}
+          />
           {notifMsg && (
             <div className="text-[0.625rem] text-warning mt-1">{notifMsg}</div>
           )}
@@ -1015,6 +1041,7 @@ export default function Settings() {
 
         <Section title={t('settings.about')}>
           <ListRow label={t('settings.version')} value={pkg.version} />
+          {IS_DESKTOP && <DesktopUpdateRow />}
           <ListRow label={t('settings.studio')} value="Limecore" />
           <ListRow label={t('settings.build')} value={t('settings.buildValue')} />
           <button
@@ -1191,6 +1218,34 @@ function FinnhubKeyRow({
         )}
       </div>
     </div>
+  );
+}
+
+// v1.15 (Item 12) — the Settings half of desktop updates. With nothing known
+// yet, tapping re-asks GitHub (skipping the once-per-launch cache). Once a
+// newer release is known it downloads it, then installs it; when the updater
+// cannot take that release, it opens the release page instead.
+function DesktopUpdateRow() {
+  const { t } = useTranslation();
+  const update = useDesktopUpdate();
+  const { status, canInstall } = update;
+  const pending = status === 'available' || status === 'downloading' || status === 'ready';
+  const value =
+    status === 'checking' ? t('settings.updateChecking')
+    : status === 'downloading' ? t('settings.updateDownloading', { percent: update.percent })
+    : status === 'ready' ? t('settings.updateRestart')
+    : status === 'available' ? (canInstall ? t('settings.updateDownload') : t('settings.updateOpen'))
+    : status === 'current' ? t('settings.updateCurrent')
+    : status === 'error' ? t('settings.updateFailed')
+    : t('settings.updateCheck');
+  const busy = status === 'checking' || status === 'downloading';
+  return (
+    <ListRow
+      label={t('settings.updates')}
+      value={value}
+      tag={pending ? { text: `v${update.latest}`, tone: 'green' } : undefined}
+      onClick={busy ? undefined : pending ? runDesktopUpdateAction : () => checkForDesktopUpdate(true)}
+    />
   );
 }
 

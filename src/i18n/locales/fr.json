@@ -39,7 +39,11 @@
     "life": "Vie",
     "tasks": "Tâches",
     "collapseSidebar": "Réduire la barre latérale",
-    "expandSidebar": "Développer la barre latérale"
+    "expandSidebar": "Développer la barre latérale",
+    "updateShort": "Mise à jour disponible",
+    "updateAvailable": "Mise à jour disponible : v{{version}}",
+    "updateDownloading": "Téléchargement… {{percent}} %",
+    "updateReady": "Redémarrer pour mettre à jour"
   },
   "life": {
     "notCountedYet": "Pas encore compté",
@@ -214,6 +218,8 @@
     "portfolioEodSub": "Récap du mouvement du jour à la clôture du marché US",
     "marketNews": "Actus marché",
     "marketNewsSub": "Articles sur vos titres + grands mouvements de marché",
+    "watchlistAlerts": "Objectifs de la liste de suivi",
+    "watchlistAlertsSub": "Quand un titre suivi atteint un prix cible que vous avez fixé",
     "macroHeadlines": "Inclure les titres macro",
     "macroHeadlinesSub": "Fed, IPC, emploi, FOMC, inflation, récession",
     "permCheckFailed": "Échec de la vérification d’autorisation.",
@@ -294,7 +300,16 @@
       "other": "Autre"
     },
     "discord": "Communauté Discord",
-    "discordSub": "Questions, rapports de bugs et la suite du programme"
+    "discordSub": "Questions, rapports de bugs et la suite du programme",
+    "updates": "Mises à jour",
+    "updateCheck": "Rechercher des mises à jour",
+    "updateChecking": "Vérification…",
+    "updateCurrent": "À jour",
+    "updateFailed": "Échec de la vérification — réessayer",
+    "updateOpen": "Ouvrir la page de version",
+    "updateDownloading": "Téléchargement… {{percent}} %",
+    "updateRestart": "Redémarrer pour mettre à jour",
+    "updateDownload": "Télécharger et installer"
   },
   "days": {
     "long": {

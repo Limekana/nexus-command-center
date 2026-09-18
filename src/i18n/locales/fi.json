@@ -39,7 +39,11 @@
     "life": "Elämä",
     "tasks": "Tehtävät",
     "collapseSidebar": "Kutista sivupalkki",
-    "expandSidebar": "Laajenna sivupalkki"
+    "expandSidebar": "Laajenna sivupalkki",
+    "updateShort": "Päivitys saatavilla",
+    "updateAvailable": "Päivitys saatavilla: v{{version}}",
+    "updateDownloading": "Ladataan… {{percent}} %",
+    "updateReady": "Käynnistä uudelleen ja päivitä"
   },
   "life": {
     "notCountedYet": "Ei vielä laskettu",
@@ -214,6 +218,8 @@
     "portfolioEodSub": "Yhteenveto tämän päivän liikkeestä USA:n pörssin sulkeutuessa",
     "marketNews": "Markkinauutiset",
     "marketNewsSub": "Uutisia omistamistasi osakkeista + suuret markkinaliikkeet",
+    "watchlistAlerts": "Seurantalistan tavoitteet",
+    "watchlistAlertsSub": "Kun seuraamasi arvopaperi saavuttaa asettamasi tavoitehinnan",
     "macroHeadlines": "Sisällytä makro-otsikot",
     "macroHeadlinesSub": "Fed, CPI, työllisyys, FOMC, inflaatio, taantuma",
     "permCheckFailed": "Lupatarkistus epäonnistui.",
@@ -294,7 +300,16 @@
       "other": "Muu"
     },
     "discord": "Discord-yhteisö",
-    "discordSub": "Kysymykset, bugi-ilmoitukset ja mitä on tulossa"
+    "discordSub": "Kysymykset, bugi-ilmoitukset ja mitä on tulossa",
+    "updates": "Päivitykset",
+    "updateCheck": "Tarkista päivitykset",
+    "updateChecking": "Tarkistetaan…",
+    "updateCurrent": "Ajan tasalla",
+    "updateFailed": "Tarkistus epäonnistui — yritä uudelleen",
+    "updateOpen": "Avaa julkaisusivu",
+    "updateDownloading": "Ladataan… {{percent}} %",
+    "updateRestart": "Käynnistä uudelleen ja päivitä",
+    "updateDownload": "Lataa ja asenna"
   },
   "days": {
     "long": {

@@ -95,7 +95,11 @@
     "life": "الحياة",
     "tasks": "المهام",
     "collapseSidebar": "طي الشريط الجانبي",
-    "expandSidebar": "توسيع الشريط الجانبي"
+    "expandSidebar": "توسيع الشريط الجانبي",
+    "updateShort": "يتوفر تحديث",
+    "updateAvailable": "يتوفر تحديث: v{{version}}",
+    "updateDownloading": "جارٍ التنزيل… {{percent}}٪",
+    "updateReady": "إعادة التشغيل للتحديث"
   },
   "life": {
     "notCountedYet": "لم يُحتسب بعد",
@@ -275,6 +279,8 @@
     "portfolioEodSub": "ملخّص حركة اليوم عند إغلاق السوق الأمريكية",
     "marketNews": "أخبار السوق",
     "marketNewsSub": "أخبار عن الأسهم التي تملكها + تحرّكات السوق الكبرى",
+    "watchlistAlerts": "أهداف قائمة المتابعة",
+    "watchlistAlertsSub": "عندما يبلغ سهم تتابعه سعرًا مستهدفًا حدّدته",
     "macroHeadlines": "تضمين عناوين الاقتصاد الكلي",
     "macroHeadlinesSub": "الفيدرالي، مؤشر أسعار المستهلك، التوظيف، FOMC، التضخّم، الركود",
     "permCheckFailed": "فشل التحقق من الإذن.",
@@ -355,7 +361,16 @@
       "other": "أخرى"
     },
     "discord": "مجتمع Discord",
-    "discordSub": "الأسئلة وتقارير الأخطاء وما هو قادم"
+    "discordSub": "الأسئلة وتقارير الأخطاء وما هو قادم",
+    "updates": "التحديثات",
+    "updateCheck": "التحقق من التحديثات",
+    "updateChecking": "جارٍ التحقق…",
+    "updateCurrent": "محدَّث",
+    "updateFailed": "تعذّر التحقق — انقر لإعادة المحاولة",
+    "updateOpen": "فتح صفحة الإصدار",
+    "updateDownloading": "جارٍ التنزيل… {{percent}}٪",
+    "updateRestart": "إعادة التشغيل للتحديث",
+    "updateDownload": "تنزيل وتثبيت"
   },
   "lock": {
     "secureAccess": "وصول آمن",

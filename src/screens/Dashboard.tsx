@@ -1,7 +1,5 @@
 import { useMemo } from 'react';
-import { Target, BarChart3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 import AppHeader from '../components/AppHeader';
 import SyncStatusChip from '../components/SyncStatusChip';
 import StatCard from '../components/StatCard';
@@ -16,11 +14,14 @@ import { useStudiesStore } from '../store/useStudiesStore';
 import { useFitnessStore } from '../store/useFitnessStore';
 import { useTaskStore } from '../store/useTaskStore';
 import { useBraindumpStore } from '../store/useBraindumpStore';
+import { useGoalsStore } from '../store/useGoalsStore';
+import { useSettingsStore } from '../store/useSettingsStore';
+import { computeGoalProgress } from '../lib/goals';
+import { buildWeeklyReview } from '../lib/weeklyReview';
 import { formatCurrency, isOverdue, isToday } from '../utils/formatters';
 
 export default function Dashboard() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const transactions = useFinanceStore((s) => s.transactions);
   const budgetCategories = useFinanceStore((s) => s.budgetCategories);
   const stockQuotes = useFinanceStore((s) => s.stockQuotes);
@@ -34,6 +35,14 @@ export default function Dashboard() {
 
   const tasks = useTaskStore((s) => s.tasks);
   const braindumpEntries = useBraindumpStore((s) => s.entries);
+  // v1.15 Item 10 — Goals and Review cards.
+  const goals = useGoalsStore((s) => s.goals);
+  const holdings = useFinanceStore((s) => s.holdings);
+  const manualAssets = useFinanceStore((s) => s.manualAssets);
+  const cryptoPrices = useFinanceStore((s) => s.cryptoPrices);
+  const fxRates = useFinanceStore((s) => s.fxRates);
+  const studySessions = useStudiesStore((s) => s.studySessions);
+  const baseCurrency = useSettingsStore((s) => s.baseCurrency);
 
   // Portfolio auto-refresh used to live here, but Dashboard mounts as a child
   // of AppShell — at first-mount the holdings store is still empty (AppShell's
@@ -80,33 +89,37 @@ export default function Dashboard() {
     ? `${studies.calculatedGpa - previousGpa >= 0 ? '↑' : '↓'} ${Math.abs(studies.calculatedGpa - previousGpa).toFixed(2)} ${t('dash.pts')}`
     : studies ? t('dash.coursesCount', { count: studyCourses.length }) : t('dash.noImports');
 
+  // Same inputs and the same computeGoalProgress the Goals screen uses, so a
+  // percentage here can never disagree with the one a tap away.
+  const activeGoals = useMemo(() => {
+    const data = {
+      transactions, holdings, manualAssets, stockQuotes, cryptoPrices, fxRates, baseCurrency,
+      tasks, studySessions, workouts: sessions, currentGpa: studies?.calculatedGpa ?? null,
+    };
+    return goals
+      .filter((g) => !g.completed && !g.deletedAt)
+      .map((g) => ({ goal: g, pct: Math.max(0, Math.min(100, Math.round(computeGoalProgress(g, data).percent))) }));
+  }, [goals, transactions, holdings, manualAssets, stockQuotes, cryptoPrices, fxRates, baseCurrency, tasks, studySessions, sessions, studies]);
+
+  // This week so far, from the builder the Review screen itself uses.
+  const week = useMemo(
+    () => buildWeeklyReview({
+      transactions, courses: studyCourses, sessions: studySessions, workouts: sessions, tasks,
+      currentGpa: studies?.calculatedGpa ?? null, holdings,
+    }),
+    [transactions, studyCourses, studySessions, sessions, tasks, studies, holdings],
+  );
+
   const gpaSuffix = gradeMode === 'ib' ? '/7' : '';
   const gpaDisplay = studies ? studies.calculatedGpa.toFixed(2) + gpaSuffix : '—';
 
   return (
     <>
-      <AppHeader
-        title="NEXUS HQ"
-        action={
-          <>
-            {/* Both header actions are neutral chips. Review used to carry
-                the accent border, which put a second amber element beside the
-                live budget readout for no reason — it is a link to a screen,
-                not a reading. The lucide glyphs replace the emoji: an emoji
-                renders in the system's colour font, so no palette reaches it
-                and it stayed cheerfully multicoloured against everything
-                else. */}
-            <button onClick={() => navigate('/goals')} className="chip press-spring">
-              <Target size={12} strokeWidth={2} aria-hidden />
-              {t('dash.goals')}
-            </button>
-            <button onClick={() => navigate('/review')} className="chip press-spring">
-              <BarChart3 size={12} strokeWidth={2} aria-hidden />
-              {t('dash.review')}
-            </button>
-          </>
-        }
-      />
+      {/* v1.15 Item 10 — Goals and Review used to be two small chips here, and
+          nowhere in persistent nav since the v1.3 scope reduction. They are
+          full module cards below now, Braindump's treatment, rather than a
+          fifth tab (no new bottom-nav tabs, owner call 2026-09-17). */}
+      <AppHeader title="NEXUS HQ" />
       {/* v1.9 Item 14 — desktop arrangement, not a desktop redesign.
           Every card below is the same component with the same styling it has
           on the phone; only their arrangement changes. Below 1201px this is
@@ -234,6 +247,30 @@ export default function Dashboard() {
               </>
             )}
             {braindumpEntries.length === 1 && <Empty msg=" " />}
+          </ModuleSummaryCard>
+
+          <ModuleSummaryCard
+            title={t('dash.goals')}
+            icon="goals"
+            tag={activeGoals.length > 0 ? t('dash.tagOpen') : t('dash.tagClear')}
+            to="/goals"
+          >
+            {activeGoals.length > 0 ? (
+              activeGoals.slice(0, 2).map(({ goal, pct }) => (
+                <ListRow key={goal.id} label={goal.title} value={`${pct}%`} />
+              ))
+            ) : (
+              <>
+                <Empty msg={t('goals.noGoalsTitle')} />
+                <Empty msg=" " />
+              </>
+            )}
+            {activeGoals.length === 1 && <Empty msg=" " />}
+          </ModuleSummaryCard>
+
+          <ModuleSummaryCard title={t('dash.review')} icon="calendar" to="/review">
+            <ListRow label={t('weeklyReview.tasks')} value={String(week.tasks.completed)} />
+            <ListRow label={t('weeklyReview.workouts')} value={String(week.fitness.workoutCount)} />
           </ModuleSummaryCard>
         </div>
         </div>
