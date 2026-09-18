@@ -41,7 +41,9 @@
     "collapseSidebar": "Kutista sivupalkki",
     "expandSidebar": "Laajenna sivupalkki",
     "updateShort": "Päivitys saatavilla",
-    "updateAvailable": "Päivitys saatavilla: v{{version}}"
+    "updateAvailable": "Päivitys saatavilla: v{{version}}",
+    "updateDownloading": "Ladataan… {{percent}} %",
+    "updateReady": "Käynnistä uudelleen ja päivitä"
   },
   "life": {
     "notCountedYet": "Ei vielä laskettu",
@@ -304,7 +306,10 @@
     "updateChecking": "Tarkistetaan…",
     "updateCurrent": "Ajan tasalla",
     "updateFailed": "Tarkistus epäonnistui — yritä uudelleen",
-    "updateOpen": "Avaa julkaisusivu"
+    "updateOpen": "Avaa julkaisusivu",
+    "updateDownloading": "Ladataan… {{percent}} %",
+    "updateRestart": "Käynnistä uudelleen ja päivitä",
+    "updateDownload": "Lataa ja asenna"
   },
   "days": {
     "long": {

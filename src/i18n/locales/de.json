@@ -41,7 +41,9 @@
     "collapseSidebar": "Seitenleiste einklappen",
     "expandSidebar": "Seitenleiste ausklappen",
     "updateShort": "Update verfügbar",
-    "updateAvailable": "Update verfügbar: v{{version}}"
+    "updateAvailable": "Update verfügbar: v{{version}}",
+    "updateDownloading": "Wird geladen… {{percent}} %",
+    "updateReady": "Neu starten und aktualisieren"
   },
   "life": {
     "notCountedYet": "Noch nicht gezählt",
@@ -304,7 +306,10 @@
     "updateChecking": "Wird geprüft…",
     "updateCurrent": "Aktuell",
     "updateFailed": "Prüfung fehlgeschlagen — erneut tippen",
-    "updateOpen": "Release-Seite öffnen"
+    "updateOpen": "Release-Seite öffnen",
+    "updateDownloading": "Wird geladen… {{percent}} %",
+    "updateRestart": "Neu starten und aktualisieren",
+    "updateDownload": "Herunterladen & installieren"
   },
   "days": {
     "long": {

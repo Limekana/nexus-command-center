@@ -41,7 +41,9 @@
     "collapseSidebar": "Réduire la barre latérale",
     "expandSidebar": "Développer la barre latérale",
     "updateShort": "Mise à jour disponible",
-    "updateAvailable": "Mise à jour disponible : v{{version}}"
+    "updateAvailable": "Mise à jour disponible : v{{version}}",
+    "updateDownloading": "Téléchargement… {{percent}} %",
+    "updateReady": "Redémarrer pour mettre à jour"
   },
   "life": {
     "notCountedYet": "Pas encore compté",
@@ -304,7 +306,10 @@
     "updateChecking": "Vérification…",
     "updateCurrent": "À jour",
     "updateFailed": "Échec de la vérification — réessayer",
-    "updateOpen": "Ouvrir la page de version"
+    "updateOpen": "Ouvrir la page de version",
+    "updateDownloading": "Téléchargement… {{percent}} %",
+    "updateRestart": "Redémarrer pour mettre à jour",
+    "updateDownload": "Télécharger et installer"
   },
   "days": {
     "long": {

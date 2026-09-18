@@ -41,7 +41,9 @@
     "collapseSidebar": "Contraer barra lateral",
     "expandSidebar": "Expandir barra lateral",
     "updateShort": "Actualización disponible",
-    "updateAvailable": "Actualización disponible: v{{version}}"
+    "updateAvailable": "Actualización disponible: v{{version}}",
+    "updateDownloading": "Descargando… {{percent}} %",
+    "updateReady": "Reiniciar para actualizar"
   },
   "life": {
     "notCountedYet": "Aún no contado",
@@ -304,7 +306,10 @@
     "updateChecking": "Comprobando…",
     "updateCurrent": "Actualizado",
     "updateFailed": "No se pudo comprobar — toca para reintentar",
-    "updateOpen": "Abrir página de la versión"
+    "updateOpen": "Abrir página de la versión",
+    "updateDownloading": "Descargando… {{percent}} %",
+    "updateRestart": "Reiniciar para actualizar",
+    "updateDownload": "Descargar e instalar"
   },
   "days": {
     "long": {

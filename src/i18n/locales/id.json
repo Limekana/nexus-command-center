@@ -97,7 +97,9 @@
     "collapseSidebar": "Ciutkan bilah sisi",
     "expandSidebar": "Perluas bilah sisi",
     "updateShort": "Pembaruan tersedia",
-    "updateAvailable": "Pembaruan tersedia: v{{version}}"
+    "updateAvailable": "Pembaruan tersedia: v{{version}}",
+    "updateDownloading": "Mengunduh… {{percent}}%",
+    "updateReady": "Mulai ulang untuk memperbarui"
   },
   "life": {
     "notCountedYet": "Belum dihitung",
@@ -365,7 +367,10 @@
     "updateChecking": "Memeriksa…",
     "updateCurrent": "Sudah terbaru",
     "updateFailed": "Gagal memeriksa — ketuk untuk mencoba lagi",
-    "updateOpen": "Buka halaman rilis"
+    "updateOpen": "Buka halaman rilis",
+    "updateDownloading": "Mengunduh… {{percent}}%",
+    "updateRestart": "Mulai ulang untuk memperbarui",
+    "updateDownload": "Unduh & pasang"
   },
   "lock": {
     "secureAccess": "Akses aman",

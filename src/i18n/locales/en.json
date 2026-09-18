@@ -41,7 +41,9 @@
     "collapseSidebar": "Collapse sidebar",
     "expandSidebar": "Expand sidebar",
     "updateShort": "Update available",
-    "updateAvailable": "Update available: v{{version}}"
+    "updateAvailable": "Update available: v{{version}}",
+    "updateDownloading": "Downloading… {{percent}}%",
+    "updateReady": "Restart to update"
   },
   "life": {
     "notCountedYet": "Not counted yet",
@@ -304,7 +306,10 @@
     "updateChecking": "Checking…",
     "updateCurrent": "Up to date",
     "updateFailed": "Couldn't check — tap to retry",
-    "updateOpen": "Open release page"
+    "updateOpen": "Open release page",
+    "updateDownloading": "Downloading… {{percent}}%",
+    "updateRestart": "Restart to update",
+    "updateDownload": "Download & install"
   },
   "days": {
     "long": {

@@ -97,7 +97,9 @@
     "collapseSidebar": "साइडबार छोटा करें",
     "expandSidebar": "साइडबार बड़ा करें",
     "updateShort": "अपडेट उपलब्ध",
-    "updateAvailable": "अपडेट उपलब्ध: v{{version}}"
+    "updateAvailable": "अपडेट उपलब्ध: v{{version}}",
+    "updateDownloading": "डाउनलोड हो रहा है… {{percent}}%",
+    "updateReady": "अपडेट के लिए रीस्टार्ट करें"
   },
   "life": {
     "notCountedYet": "अभी नहीं गिना गया",
@@ -365,7 +367,10 @@
     "updateChecking": "जाँच हो रही है…",
     "updateCurrent": "नवीनतम है",
     "updateFailed": "जाँच नहीं हो सकी — फिर से टैप करें",
-    "updateOpen": "रिलीज़ पेज खोलें"
+    "updateOpen": "रिलीज़ पेज खोलें",
+    "updateDownloading": "डाउनलोड हो रहा है… {{percent}}%",
+    "updateRestart": "अपडेट के लिए रीस्टार्ट करें",
+    "updateDownload": "डाउनलोड और इंस्टॉल करें"
   },
   "lock": {
     "secureAccess": "सुरक्षित पहुँच",

@@ -17,7 +17,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Download, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { tabs } from './BottomTabBar';
-import { openDesktopUpdate, useDesktopUpdate } from '../lib/desktopUpdate';
+import { runDesktopUpdateAction, useDesktopUpdate } from '../lib/desktopUpdate';
 
 const WIDTH_FULL = 240;
 const WIDTH_RAIL = 64;
@@ -34,8 +34,13 @@ export default function SideNav({ rail, onToggle }: SideNavProps) {
 
   const toggleLabel = rail ? t('nav.expandSidebar') : t('nav.collapseSidebar');
   const update = useDesktopUpdate();
-  const updateLabel =
-    update.status === 'available' ? t('nav.updateAvailable', { version: update.latest }) : '';
+  const updateShown =
+    update.status === 'available' || update.status === 'downloading' || update.status === 'ready';
+  const updateText =
+    update.status === 'downloading' ? t('nav.updateDownloading', { percent: update.percent })
+    : update.status === 'ready' ? t('nav.updateReady')
+    : t('nav.updateShort');
+  const updateLabel = `${updateText} · v${update.latest}`;
 
   return (
     <aside
@@ -102,18 +107,27 @@ export default function SideNav({ rail, onToggle }: SideNavProps) {
 
       <div className="border-t border-border p-2">
         {/* v1.15 (Item 12) — only ever rendered on the desktop build, and only
-            when GitHub has a newer release. Opens the release page; the
-            update itself stays the user's to run. */}
-        {update.status === 'available' && (
+            when there is a newer release. Click downloads it (progress fills
+            the button's floor), then "Restart to update" installs it. When the
+            updater cannot take that release, the click opens its page. */}
+        {updateShown && (
           <button
             type="button"
-            onClick={openDesktopUpdate}
+            onClick={runDesktopUpdateAction}
+            disabled={update.status === 'downloading'}
             aria-label={updateLabel}
             title={updateLabel}
-            className={`press-spring mb-1 flex w-full items-center rounded-md border border-primary/40 bg-primary/10 py-2.5 text-primary transition-colors duration-200 hover:bg-primary/15 ${
+            className={`press-spring relative mb-1 flex w-full items-center overflow-hidden rounded-md border border-primary/40 bg-primary/10 py-2.5 text-primary transition-colors duration-200 hover:bg-primary/15 disabled:cursor-default ${
               rail ? 'justify-center px-0' : 'gap-3 px-3'
             }`}
           >
+            {update.status === 'downloading' && (
+              <span
+                aria-hidden
+                className="absolute bottom-0 start-0 h-0.5 bg-primary transition-[width] duration-300 ease-linear"
+                style={{ width: `${update.percent}%` }}
+              />
+            )}
             <span className="relative">
               <Download size={18} strokeWidth={1.75} aria-hidden="true" />
               {rail && (
@@ -122,7 +136,7 @@ export default function SideNav({ rail, onToggle }: SideNavProps) {
             </span>
             {!rail && (
               <span className="flex min-w-0 flex-1 items-baseline justify-between gap-2">
-                <span className="truncate text-sm font-medium">{t('nav.updateShort')}</span>
+                <span className="truncate text-sm font-medium">{updateText}</span>
                 <span className="font-mono text-[0.6875rem] text-primary/80">v{update.latest}</span>
               </span>
             )}

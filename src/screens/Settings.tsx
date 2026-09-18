@@ -18,7 +18,7 @@ import { generateId } from '../utils/uuid';
 import { useAuthStore } from '../store/useAuthStore';
 import { APP_LOCK_APPLIES } from '../lib/isDesktop';
 import { IS_DESKTOP } from '../lib/desktop';
-import { checkForDesktopUpdate, openDesktopUpdate, useDesktopUpdate } from '../lib/desktopUpdate';
+import { checkForDesktopUpdate, runDesktopUpdateAction, useDesktopUpdate } from '../lib/desktopUpdate';
 import { useSyncStore } from '../store/useSyncStore';
 import { useSessionStore, userDisplayName } from '../store/useSessionStore';
 import { useSettingsStore, BaseCurrency, UI_SCALES } from '../store/useSettingsStore';
@@ -1221,25 +1221,30 @@ function FinnhubKeyRow({
   );
 }
 
-// v1.15 (Item 12) — the manual half of the desktop update notice. Tapping it
-// re-asks GitHub (skipping the once-per-launch cache); when a newer release is
-// already known, it opens that release's page instead.
+// v1.15 (Item 12) — the Settings half of desktop updates. With nothing known
+// yet, tapping re-asks GitHub (skipping the once-per-launch cache). Once a
+// newer release is known it downloads it, then installs it; when the updater
+// cannot take that release, it opens the release page instead.
 function DesktopUpdateRow() {
   const { t } = useTranslation();
   const update = useDesktopUpdate();
-  const available = update.status === 'available';
+  const { status, canInstall } = update;
+  const pending = status === 'available' || status === 'downloading' || status === 'ready';
   const value =
-    update.status === 'checking' ? t('settings.updateChecking')
-    : available ? t('settings.updateOpen')
-    : update.status === 'current' ? t('settings.updateCurrent')
-    : update.status === 'error' ? t('settings.updateFailed')
+    status === 'checking' ? t('settings.updateChecking')
+    : status === 'downloading' ? t('settings.updateDownloading', { percent: update.percent })
+    : status === 'ready' ? t('settings.updateRestart')
+    : status === 'available' ? (canInstall ? t('settings.updateDownload') : t('settings.updateOpen'))
+    : status === 'current' ? t('settings.updateCurrent')
+    : status === 'error' ? t('settings.updateFailed')
     : t('settings.updateCheck');
+  const busy = status === 'checking' || status === 'downloading';
   return (
     <ListRow
       label={t('settings.updates')}
       value={value}
-      tag={available ? { text: `v${update.latest}`, tone: 'green' } : undefined}
-      onClick={available ? openDesktopUpdate : () => checkForDesktopUpdate(true)}
+      tag={pending ? { text: `v${update.latest}`, tone: 'green' } : undefined}
+      onClick={busy ? undefined : pending ? runDesktopUpdateAction : () => checkForDesktopUpdate(true)}
     />
   );
 }
