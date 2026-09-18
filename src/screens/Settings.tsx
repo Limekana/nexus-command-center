@@ -16,7 +16,7 @@ import { Capacitor } from '@capacitor/core';
 import { enqueue } from '../db/syncQueue';
 import { generateId } from '../utils/uuid';
 import { useAuthStore } from '../store/useAuthStore';
-import { IS_DESKTOP } from '../lib/isDesktop';
+import { APP_LOCK_APPLIES } from '../lib/isDesktop';
 import { useSyncStore } from '../store/useSyncStore';
 import { useSessionStore, userDisplayName } from '../store/useSessionStore';
 import { useSettingsStore, BaseCurrency, UI_SCALES } from '../store/useSettingsStore';
@@ -184,7 +184,7 @@ export default function Settings() {
     // lock was removed. Prompting there would demand a PIN the user can no
     // longer see, change, or reset from Settings — turning a forgotten one into
     // a permanent block on the very control that recovers from it.
-    if (hasPin && !IS_DESKTOP) {
+    if (hasPin && APP_LOCK_APPLIES) {
       const entered = window.prompt(t('settings.pinReentry'));
       if (!entered) return;
       const result = await verifyPin(entered);
@@ -335,7 +335,7 @@ export default function Settings() {
             build — see `App.tsx` for why. Hiding the section rather than
             disabling the controls: a greyed-out PIN row invites the question
             "why can't I turn this on", and there is no answer that helps. */}
-        {!IS_DESKTOP && (
+        {APP_LOCK_APPLIES && (
         <Section title={t('settings.security')}>
           <Toggle
             label={t('settings.biometricUnlock')}
