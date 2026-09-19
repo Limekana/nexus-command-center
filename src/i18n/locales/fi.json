@@ -309,7 +309,14 @@
     "updateOpen": "Avaa julkaisusivu",
     "updateDownloading": "Ladataan… {{percent}} %",
     "updateRestart": "Käynnistä uudelleen ja päivitä",
-    "updateDownload": "Lataa ja asenna"
+    "updateDownload": "Lataa ja asenna",
+    "appearance": "Ulkoasu",
+    "themeName": {
+      "instrument": "Instrumentti",
+      "rack": "Rack"
+    },
+    "themeLockedAria": "{{name}} — tukijan teema, lukittu",
+    "themeSupporterNote": "Rack on tukijoiden teema. Se avautuu, kun tuet kehitystä Ko-fissa (alempana)."
   },
   "days": {
     "long": {
@@ -1227,5 +1234,13 @@
     "convert": "Muunna tehtäväksi",
     "converted": "Muunnettu",
     "viewTask": "Näytä tehtävä"
+  },
+  "rack": {
+    "inputs": "Syötteet",
+    "inputLive": "kirjoitti viimeisen 7 päivän aikana",
+    "inputSilent": "hiljaa 7 päivää",
+    "budgetMeter": "Budjetti · {{month}}",
+    "budgetMeterAria": "Budjetista käytetty {{pct}} %",
+    "left": "jäljellä"
   }
 }

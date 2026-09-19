@@ -43,6 +43,7 @@ import { supabase } from '../lib/supabase';
 import { withCaptcha } from '../lib/captcha';
 import { setGuestMode } from '../lib/guestMode';
 import Glyph from '../components/Glyph';
+import ThemePicker from '../components/ThemePicker';
 
 // Auto-lock intervals. The "Never" option was removed deliberately — leaving
 // a phone permanently unlocked defeats the purpose of the PIN/biometric gate.
@@ -453,6 +454,12 @@ export default function Settings() {
               ))}
             </select>
           </div>
+        </Section>
+
+        {/* v1.15 (Item 13) — NCC had no Appearance section at all; Rack is
+            the first thing to put in it. */}
+        <Section title={t('settings.appearance')}>
+          <ThemePicker />
         </Section>
 
         <Section title={t('settings.privacy')}>

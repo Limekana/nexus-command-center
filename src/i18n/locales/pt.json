@@ -370,7 +370,14 @@
     "updateOpen": "Abrir página da versão",
     "updateDownloading": "Baixando… {{percent}}%",
     "updateRestart": "Reiniciar para atualizar",
-    "updateDownload": "Baixar e instalar"
+    "updateDownload": "Baixar e instalar",
+    "appearance": "Aparência",
+    "themeName": {
+      "instrument": "Instrumento",
+      "rack": "Rack"
+    },
+    "themeLockedAria": "{{name}} — tema de apoiador, bloqueado",
+    "themeSupporterNote": "Rack é um tema de apoiador. Ele é liberado quando você apoia o desenvolvimento no Ko-fi, logo abaixo."
   },
   "lock": {
     "secureAccess": "Acesso seguro",
@@ -1233,5 +1240,13 @@
     "convert": "Converter em tarefa",
     "converted": "Convertida",
     "viewTask": "Ver tarefa"
+  },
+  "rack": {
+    "inputs": "Entradas",
+    "inputLive": "registrou nos últimos 7 dias",
+    "inputSilent": "sem atividade há 7 dias",
+    "budgetMeter": "Orçamento · {{month}}",
+    "budgetMeterAria": "Orçamento {{pct}}% usado",
+    "left": "restantes"
   }
 }

@@ -370,7 +370,14 @@
     "updateOpen": "रिलीज़ पेज खोलें",
     "updateDownloading": "डाउनलोड हो रहा है… {{percent}}%",
     "updateRestart": "अपडेट के लिए रीस्टार्ट करें",
-    "updateDownload": "डाउनलोड और इंस्टॉल करें"
+    "updateDownload": "डाउनलोड और इंस्टॉल करें",
+    "appearance": "रूप",
+    "themeName": {
+      "instrument": "इंस्ट्रूमेंट",
+      "rack": "Rack"
+    },
+    "themeLockedAria": "{{name}} — सपोर्टर थीम, लॉक",
+    "themeSupporterNote": "Rack एक सपोर्टर थीम है। नीचे Ko-fi पर विकास का समर्थन करने पर यह अनलॉक होती है।"
   },
   "lock": {
     "secureAccess": "सुरक्षित पहुँच",
@@ -1227,5 +1234,13 @@
     "convert": "कार्य में बदलें",
     "converted": "बदल गया",
     "viewTask": "कार्य देखें"
+  },
+  "rack": {
+    "inputs": "इनपुट",
+    "inputLive": "पिछले 7 दिनों में लिखा",
+    "inputSilent": "7 दिनों से शांत",
+    "budgetMeter": "बजट · {{month}}",
+    "budgetMeterAria": "बजट {{pct}}% उपयोग हुआ",
+    "left": "बाकी"
   }
 }
