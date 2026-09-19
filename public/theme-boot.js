@@ -21,8 +21,11 @@
   try {
     if (localStorage.getItem('nexus.theme') !== 'rack') return;
     var e = JSON.parse(localStorage.getItem('nexus.entitlement') || 'null');
-    if (!e || !e.expiresAt) return;
-    if (!(Date.parse(e.expiresAt) > Date.now())) return;
+    if (!e) return;
+    // A lifetime grant has no expiry at all (mirrors isEntitled() in
+    // src/lib/entitlement.ts, v1.12 Item 6a) — without this, lifetime
+    // supporters saw a frame of the free theme on every cold start.
+    if (!e.lifetime && !(e.expiresAt && Date.parse(e.expiresAt) > Date.now())) return;
     document.documentElement.setAttribute('data-theme', 'rack');
   } catch (err) {
     /* free theme */

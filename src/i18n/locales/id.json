@@ -370,7 +370,14 @@
     "updateOpen": "Buka halaman rilis",
     "updateDownloading": "Mengunduh… {{percent}}%",
     "updateRestart": "Mulai ulang untuk memperbarui",
-    "updateDownload": "Unduh & pasang"
+    "updateDownload": "Unduh & pasang",
+    "appearance": "Tampilan",
+    "themeName": {
+      "instrument": "Instrumen",
+      "rack": "Rack"
+    },
+    "themeLockedAria": "{{name}} — tema pendukung, terkunci",
+    "themeSupporterNote": "Rack adalah tema pendukung. Tema ini terbuka saat Anda mendukung pengembangan di Ko-fi, di bawah."
   },
   "lock": {
     "secureAccess": "Akses aman",
@@ -1221,5 +1228,13 @@
     "convert": "Ubah jadi tugas",
     "converted": "Diubah",
     "viewTask": "Lihat tugas"
+  },
+  "rack": {
+    "inputs": "Masukan",
+    "inputLive": "menulis dalam 7 hari terakhir",
+    "inputSilent": "diam selama 7 hari",
+    "budgetMeter": "Anggaran · {{month}}",
+    "budgetMeterAria": "Anggaran terpakai {{pct}}%",
+    "left": "tersisa"
   }
 }

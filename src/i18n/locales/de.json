@@ -309,7 +309,14 @@
     "updateOpen": "Release-Seite öffnen",
     "updateDownloading": "Wird geladen… {{percent}} %",
     "updateRestart": "Neu starten und aktualisieren",
-    "updateDownload": "Herunterladen & installieren"
+    "updateDownload": "Herunterladen & installieren",
+    "appearance": "Darstellung",
+    "themeName": {
+      "instrument": "Instrument",
+      "rack": "Rack"
+    },
+    "themeLockedAria": "{{name}} — Unterstützer-Theme, gesperrt",
+    "themeSupporterNote": "Rack ist ein Unterstützer-Theme. Es wird freigeschaltet, wenn du die Entwicklung auf Ko-fi unterstützt (weiter unten)."
   },
   "days": {
     "long": {
@@ -1227,5 +1234,13 @@
     "convert": "In Aufgabe umwandeln",
     "converted": "Umgewandelt",
     "viewTask": "Aufgabe ansehen"
+  },
+  "rack": {
+    "inputs": "Eingänge",
+    "inputLive": "in den letzten 7 Tagen geschrieben",
+    "inputSilent": "seit 7 Tagen still",
+    "budgetMeter": "Budget · {{month}}",
+    "budgetMeterAria": "Budget zu {{pct}} % verbraucht",
+    "left": "übrig"
   }
 }

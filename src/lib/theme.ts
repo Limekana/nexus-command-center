@@ -6,10 +6,11 @@
 // regression gate the handoff asks for, and it is why `applyTheme('instrument')`
 // removes the attribute rather than setting a third value.
 //
-// Applying is split in two: the pre-paint pass in main.tsx sets the attribute
+// Applying is split in two: the pre-paint pass (public/theme-boot.js) sets the attribute
 // from storage before the stylesheet paints (so a Rack user never sees a frame
 // of the instrument theme), and this module owns every change after that.
 
+import { useSyncExternalStore } from 'react';
 import { isEntitled } from './entitlement';
 
 export const FREE_THEME = 'instrument' as const;
@@ -17,7 +18,7 @@ export const PAID_THEMES = ['rack'] as const;
 export type ThemeId = typeof FREE_THEME | (typeof PAID_THEMES)[number];
 export const THEMES: ThemeId[] = [FREE_THEME, ...PAID_THEMES];
 
-/** Shared with the pre-paint pass in main.tsx — two readers of one value. */
+/** Shared with the pre-paint pass in public/theme-boot.js — two readers of one value. */
 export const THEME_KEY = 'nexus.theme';
 
 export function isPaidTheme(theme: ThemeId): boolean {
@@ -45,11 +46,31 @@ export function activeTheme(): ThemeId {
   return isPaidTheme(pref) && !isEntitled() ? FREE_THEME : pref;
 }
 
+/** v1.15 — fired on window after every apply. */
+export const THEME_EVENT = 'nexus-theme-change';
+
 export function applyTheme(theme: ThemeId = activeTheme()): ThemeId {
   const el = document.documentElement;
   if (theme === FREE_THEME || !THEMES.includes(theme)) delete el.dataset.theme;
   else el.dataset.theme = theme;
+  window.dispatchEvent(new Event(THEME_EVENT));
   return theme;
+}
+
+function renderedTheme(): ThemeId {
+  const v = document.documentElement.dataset.theme as ThemeId | undefined;
+  return v && THEMES.includes(v) ? v : FREE_THEME;
+}
+
+function subscribeTheme(cb: () => void): () => void {
+  window.addEventListener(THEME_EVENT, cb);
+  return () => window.removeEventListener(THEME_EVENT, cb);
+}
+
+/** The theme actually on screen, for the few components that render
+ *  differently under Rack (the routing strip, the meter). */
+export function useActiveTheme(): ThemeId {
+  return useSyncExternalStore(subscribeTheme, renderedTheme, () => FREE_THEME);
 }
 
 export function setPreferredTheme(theme: ThemeId): ThemeId {

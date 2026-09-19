@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFitnessStore } from '../store/useFitnessStore';
 import { useStudiesStore } from '../store/useStudiesStore';
@@ -41,11 +41,12 @@ export function RoutingStrip({ className = '' }: { className?: string }) {
   const grades = useStudiesStore((s) => s.grades);
   const tasks = useTaskStore((s) => s.tasks);
   const lastSyncedAt = useSyncStore((s) => s.lastSyncedAt);
+  // Read the clock once, at mount: render must stay pure, and a 7-day window
+  // does not need a live tick. One value also means three dots cannot
+  // straddle a tick and disagree about what "now" is.
+  const [now] = useState(() => Date.now());
 
   const inputs = useMemo(() => {
-    // Read the clock once per render rather than per input, so three dots
-    // cannot straddle a tick and disagree about what "now" is.
-    const now = Date.now();
     const newest = (xs: Array<string | undefined>) =>
       xs.reduce<string | null>((a, b) => (b && (!a || b > a) ? b : a), null);
 
@@ -72,7 +73,7 @@ export function RoutingStrip({ className = '' }: { className?: string }) {
         live: isRecent(newest(tasks.map((x) => x.updatedAt ?? x.createdAt)), now),
       },
     ];
-  }, [workouts, studySessions, grades, tasks]);
+  }, [workouts, studySessions, grades, tasks, now]);
 
   const clock = lastSyncedAt
     ? new Date(lastSyncedAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })

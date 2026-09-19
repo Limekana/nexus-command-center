@@ -309,7 +309,14 @@
     "updateOpen": "Ouvrir la page de version",
     "updateDownloading": "Téléchargement… {{percent}} %",
     "updateRestart": "Redémarrer pour mettre à jour",
-    "updateDownload": "Télécharger et installer"
+    "updateDownload": "Télécharger et installer",
+    "appearance": "Apparence",
+    "themeName": {
+      "instrument": "Instrument",
+      "rack": "Rack"
+    },
+    "themeLockedAria": "{{name}} — thème réservé aux soutiens, verrouillé",
+    "themeSupporterNote": "Rack est un thème réservé aux soutiens. Il se déverrouille quand vous soutenez le développement sur Ko-fi, plus bas."
   },
   "days": {
     "long": {
@@ -1233,5 +1240,13 @@
     "convert": "Convertir en tâche",
     "converted": "Convertie",
     "viewTask": "Voir la tâche"
+  },
+  "rack": {
+    "inputs": "Entrées",
+    "inputLive": "a écrit ces 7 derniers jours",
+    "inputSilent": "silencieux depuis 7 jours",
+    "budgetMeter": "Budget · {{month}}",
+    "budgetMeterAria": "Budget utilisé à {{pct}} %",
+    "left": "restants"
   }
 }

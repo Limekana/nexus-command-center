@@ -309,7 +309,14 @@
     "updateOpen": "Open release page",
     "updateDownloading": "Downloading… {{percent}}%",
     "updateRestart": "Restart to update",
-    "updateDownload": "Download & install"
+    "updateDownload": "Download & install",
+    "appearance": "Appearance",
+    "themeName": {
+      "instrument": "Instrument",
+      "rack": "Rack"
+    },
+    "themeLockedAria": "{{name}} — supporter theme, locked",
+    "themeSupporterNote": "Rack is a supporter theme. It unlocks when you support development on Ko-fi, below."
   },
   "days": {
     "long": {
@@ -1227,5 +1234,13 @@
     "convert": "Convert to task",
     "converted": "Converted",
     "viewTask": "View task"
+  },
+  "rack": {
+    "inputs": "Inputs",
+    "inputLive": "wrote in the last 7 days",
+    "inputSilent": "silent for 7 days",
+    "budgetMeter": "Budget · {{month}}",
+    "budgetMeterAria": "Budget {{pct}}% used",
+    "left": "left"
   }
 }

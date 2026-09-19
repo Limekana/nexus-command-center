@@ -370,7 +370,14 @@
     "updateOpen": "فتح صفحة الإصدار",
     "updateDownloading": "جارٍ التنزيل… {{percent}}٪",
     "updateRestart": "إعادة التشغيل للتحديث",
-    "updateDownload": "تنزيل وتثبيت"
+    "updateDownload": "تنزيل وتثبيت",
+    "appearance": "المظهر",
+    "themeName": {
+      "instrument": "الأداة",
+      "rack": "Rack"
+    },
+    "themeLockedAria": "{{name}} — سمة للداعمين، مقفلة",
+    "themeSupporterNote": "Rack سمة للداعمين. تُفتح عندما تدعم التطوير على Ko-fi، في الأسفل."
   },
   "lock": {
     "secureAccess": "وصول آمن",
@@ -1251,5 +1258,13 @@
     "convert": "تحويل إلى مهمة",
     "converted": "تم التحويل",
     "viewTask": "عرض المهمة"
+  },
+  "rack": {
+    "inputs": "المدخلات",
+    "inputLive": "كتب خلال آخر 7 أيام",
+    "inputSilent": "صامت منذ 7 أيام",
+    "budgetMeter": "الميزانية · {{month}}",
+    "budgetMeterAria": "استُخدم {{pct}}٪ من الميزانية",
+    "left": "متبقٍ"
   }
 }

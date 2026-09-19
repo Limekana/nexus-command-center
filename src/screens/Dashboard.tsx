@@ -3,6 +3,9 @@ import { useTranslation } from 'react-i18next';
 import AppHeader from '../components/AppHeader';
 import SyncStatusChip from '../components/SyncStatusChip';
 import StatCard from '../components/StatCard';
+import RoutingStrip from '../components/RoutingStrip';
+import RackBudgetMeter from '../components/RackBudgetMeter';
+import { useActiveTheme } from '../lib/theme';
 import ModuleSummaryCard from '../components/ModuleSummaryCard';
 import HabitsDashboardStrip from '../components/HabitsDashboardStrip';
 import WorkRatingCard from '../components/WorkRatingCard';
@@ -67,6 +70,8 @@ export default function Dashboard() {
     [budgetCategories]
   );
   const budgetPct = monthBudget > 0 ? Math.round((monthExpenses / monthBudget) * 100) : 0;
+  // v1.15 (Item 13) — Rack adds two things the free theme never renders.
+  const rack = useActiveTheme() === 'rack';
 
   const tasksToday = tasks.filter((t) => !t.completed && t.dueDate && isToday(t.dueDate)).length;
   const tasksOverdue = tasks.filter((t) => !t.completed && t.dueDate && isOverdue(t.dueDate)).length;
@@ -135,6 +140,8 @@ export default function Dashboard() {
           the tallest one and the short cards grow dead space inside. */}
       <div className="space-y-3 desktop:space-y-0 desk-grid">
         <div className="desk-stack">
+          {/* Rack: the inputs row — the suite made visible. Dashboard only. */}
+          {rack && <RoutingStrip />}
           <SyncStatusChip />
 
           {/* v1.2 — daily habits surface above the stat grid. The strip itself
@@ -153,6 +160,13 @@ export default function Dashboard() {
 
         <div className="desk-stack">
           <div className="sec mb-2">{t('dash.overview')}</div>
+          {/* Rack: the budget read off a meter face with the limit printed on
+              it. Only when there is a budget to read. */}
+          {rack && monthBudget > 0 && (
+            <div className="mb-2">
+              <RackBudgetMeter spent={monthExpenses} limit={monthBudget} />
+            </div>
+          )}
           {/* Stays 2-up in its column at every width — these are four small
               stat tiles and a 1×4 row of them reads as a strip, not a group. */}
           <div className="grid grid-cols-2 gap-2">

@@ -43,32 +43,11 @@
 }
 
 [data-theme='rack'] {
-  /* ⚠ OPEN DESIGN QUESTION — the handoff contradicts itself here, and these
-     hexes implement the letter of it rather than the intent.
-
-     It states the neutral bias as "warm-grey, hue ~70, chroma ~0.004" in
-     OKLCH, and gives the reason: "deliberately opposite to v1.10's cool
-     neutrals, so the free and paid themes never read as one family that has
-     drifted". The hexes it supplies as final do not do that. Measured in
-     OKLCH, the space it names:
-
-         Rack  #1C1D1F  L 0.231  C 0.0041  H 264
-         Free  #0B0C0E  L 0.154  C 0.0046  H 264   <- identical hue
-         Rack  #2A2C2F  H 258      Free #141618  H 248
-
-     Chroma matches the spec; hue is 264, not 70. Both themes sit in the same
-     cool neutral family, so Rack currently reads as "v1.10, lighter" — the
-     exact outcome the warm bias was specified to prevent. (Cross-checked
-     against LimeLog's Cast Iron, where the same kind of claim measures true
-     at H 85, so this is the handoff being inconsistent rather than the
-     measurement being wrong.)
-
-     Implemented as specified because the handoff calls the colours final and
-     the mocks are drawn from them. If the intent should win instead, the same
-     L and C rotated to hue 70 give:
-         bg #1E1D1B · surface #2E2B29 · surface2 #33302D
-         border #4A4744 · border-soft #3A3734 · milling #76716D
-     Owner's call. */
+  /* Palette: the handoff's hex values, as given. The handoff's prose calls
+     the neutral bias "warm-grey, hue ~70", but its hexes measure cool
+     (OKLCH hue 242-264); the owner compared both side by side on 2026-09-19
+     and chose the hexes as given (v1.15 Item 13). Cool metal, warm ink and a
+     cream meter face. Do not "correct" these toward hue 70. */
   --c-bg: 28 29 31;             /* #1C1D1F — rack void; never holds content */
   --c-surface: 42 44 47;        /* #2A2C2F — faceplate; ONE fill, no second tier */
   --c-surface2: 46 49 52;       /* #2E3134 — pressed switch cap */
@@ -84,6 +63,20 @@
   /* Advisory takes the dim needle rather than a new hue: same family as the
      signal, visibly dimmer, exactly the rule the free theme states. */
   --c-warning: 166 60 39;
+
+  /* The same palette for the hand-written rules in index.css that cannot go
+     through a Tailwind class (ticks, grid rules, bars). */
+  --ground: #1c1d1f;
+  --panel: #2a2c2f;
+  --panel-2: #2e3134;
+  --rule: #45484b;
+  --rule-soft: #35383b;
+  --ink: #d9d4c7;
+  --ink-dim: #9a958a;
+  --ink-mute: #7e796f;
+  --signal: #e4553a;
+  --pos: #7e8c46;
+  --neg: #8c2e33;
 
   /* Rack-only. The meter is the theme's signature, so it gets real names. */
   --meter-face: #e4dcc4;   /* the lit field every quantity is read off */
@@ -218,7 +211,8 @@ html[data-theme='rack'] .meter { border-radius: 1px; }
   position: relative;
   background: var(--meter-face);
   border-radius: 1px;
-  overflow: hidden;
+  /* Not overflow:hidden — the peak tick deliberately stands 2px proud of the
+     track on both sides, and clipping it would flatten it into the fill. */
 }
 
 .meter__track {

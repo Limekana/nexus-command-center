@@ -309,7 +309,14 @@
     "updateOpen": "Abrir página de la versión",
     "updateDownloading": "Descargando… {{percent}} %",
     "updateRestart": "Reiniciar para actualizar",
-    "updateDownload": "Descargar e instalar"
+    "updateDownload": "Descargar e instalar",
+    "appearance": "Apariencia",
+    "themeName": {
+      "instrument": "Instrumento",
+      "rack": "Rack"
+    },
+    "themeLockedAria": "{{name}} — tema para quienes apoyan, bloqueado",
+    "themeSupporterNote": "Rack es un tema para quienes apoyan. Se desbloquea al apoyar el desarrollo en Ko-fi, más abajo."
   },
   "days": {
     "long": {
@@ -1233,5 +1240,13 @@
     "convert": "Convertir en tarea",
     "converted": "Convertida",
     "viewTask": "Ver tarea"
+  },
+  "rack": {
+    "inputs": "Entradas",
+    "inputLive": "escribió en los últimos 7 días",
+    "inputSilent": "sin actividad en 7 días",
+    "budgetMeter": "Presupuesto · {{month}}",
+    "budgetMeterAria": "Presupuesto usado al {{pct}} %",
+    "left": "restantes"
   }
 }

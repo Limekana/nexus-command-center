@@ -309,7 +309,14 @@
     "updateOpen": "打开发布页面",
     "updateDownloading": "正在下载… {{percent}}%",
     "updateRestart": "重启以更新",
-    "updateDownload": "下载并安装"
+    "updateDownload": "下载并安装",
+    "appearance": "外观",
+    "themeName": {
+      "instrument": "仪表",
+      "rack": "Rack"
+    },
+    "themeLockedAria": "{{name}}——支持者主题，已锁定",
+    "themeSupporterNote": "Rack 是支持者主题。在下方通过 Ko-fi 支持开发即可解锁。"
   },
   "days": {
     "long": {
@@ -1227,5 +1234,13 @@
     "convert": "转为任务",
     "converted": "已转换",
     "viewTask": "查看任务"
+  },
+  "rack": {
+    "inputs": "输入",
+    "inputLive": "过去 7 天内有写入",
+    "inputSilent": "7 天无活动",
+    "budgetMeter": "预算 · {{month}}",
+    "budgetMeterAria": "预算已使用 {{pct}}%",
+    "left": "剩余"
   }
 }
