@@ -32,7 +32,7 @@ export default function RackBudgetMeter({ spent, limit, lastMonthSpent }: Props)
         <span className="sec">{t('rack.budgetMeter', { month })}</span>
         <span className="font-mono text-xs text-primary tabular-nums">{pct}%</span>
       </div>
-      <div className="mt-2 ms-2 p-2" style={{ background: 'var(--meter-face)' }}>
+      <div className="mt-2 p-2" style={{ background: 'var(--meter-face)' }}>
         <Meter
           value={spent}
           max={limit}
