@@ -279,3 +279,85 @@ html[data-theme='rack'] .meter { border-radius: 1px; }
   /* Needles jump to value and peak ticks stay put. */
   .meter__fill { transition: none; }
 }
+
+/* ── v1.15 handoff follow-up (#46) ──────────────────────────────────────── */
+
+/* No status colour on metal. Every status banner (.alert) becomes plain
+   silkscreen on the faceplate, and its dot becomes the LED: lit needle for
+   ok/live, unlit for a warning or an outage. Status colour is printed on
+   meter faces only — a coloured strip on a faceplate is the thing that would
+   make this read as a skin instead of a machine. */
+[data-theme='rack'] .alert,
+[data-theme='rack'] .alert-ok,
+[data-theme='rack'] .alert-warn,
+[data-theme='rack'] .alert-danger {
+  background: rgb(var(--c-surface));
+  border-color: rgb(var(--c-border));
+  color: rgb(var(--c-text-muted));
+  box-shadow: inset 0 1px 0 var(--chamfer-lit), inset 0 -1px 0 var(--chamfer-shadow);
+}
+[data-theme='rack'] .alert > span.rounded-full:first-child {
+  width: 6px;
+  height: 6px;
+  background: rgb(var(--c-border));
+}
+[data-theme='rack'] .alert-ok > span.rounded-full:first-child { background: rgb(var(--c-primary)); }
+
+/* Rack atoms used by the Dashboard / Portfolio / Weekly Review units. */
+.meter-scale-label {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--meter-unit);
+  white-space: nowrap;
+}
+.rack-ticker {
+  font-family: 'Saira Semi Condensed', 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+/* History as 13 bars; only the current one carries the needle colour. */
+.rack-spark {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 26px;
+}
+.rack-spark__bar { flex: 1; background: var(--meter-ink); min-height: 2px; }
+.rack-spark__bar--now { background: rgb(var(--c-primary)); }
+
+/* ── Ballistic motion ───────────────────────────────────────────────────── */
+/* A rack powers up all at once: every fill rises from zero on mount, with the
+   one small overshoot of a moving-coil needle. Value changes after that use
+   the settle transition on .meter__fill's width. */
+@keyframes rack-power-up {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.meter__fill {
+  transform-origin: left center;
+  animation: rack-power-up var(--rack-settle, 420ms cubic-bezier(0.34, 1.56, 0.64, 1)) both;
+}
+[dir='rtl'] .meter__fill { transform-origin: right center; }
+/* Peak memory: a dropped reading stays marked for 1.2s (Meter.tsx), then
+   falls to the new value over 200ms and goes out. */
+.meter__hold {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--meter-ink);
+  opacity: 0;
+  transition: inset-inline-start 200ms ease-in, opacity 0s linear 200ms;
+  pointer-events: none;
+}
+.meter__hold--on { opacity: 0.55; transition: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Needles jump to value and peak ticks stay put. */
+  .meter__fill { animation: none; }
+  .meter__hold { display: none; }
+}

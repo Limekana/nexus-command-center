@@ -5,6 +5,7 @@ import SyncStatusChip from '../components/SyncStatusChip';
 import StatCard from '../components/StatCard';
 import RoutingStrip from '../components/RoutingStrip';
 import RackBudgetMeter from '../components/RackBudgetMeter';
+import { RackMeterBank, RackChannels } from '../components/RackDashboard';
 import { useActiveTheme } from '../lib/theme';
 import ModuleSummaryCard from '../components/ModuleSummaryCard';
 import HabitsDashboardStrip from '../components/HabitsDashboardStrip';
@@ -72,6 +73,18 @@ export default function Dashboard() {
   const budgetPct = monthBudget > 0 ? Math.round((monthExpenses / monthBudget) * 100) : 0;
   // v1.15 (Item 13) — Rack adds two things the free theme never renders.
   const rack = useActiveTheme() === 'rack';
+  // Rack's budget meter holds last month's spend as its peak.
+  const lastMonthExpenses = useMemo(() => {
+    const now = new Date();
+    const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    return transactions
+      .filter((t) => {
+        if (t.type !== 'expense') return false;
+        const d = new Date(t.date);
+        return d.getFullYear() === prev.getFullYear() && d.getMonth() === prev.getMonth();
+      })
+      .reduce((s, t) => s + t.amount, 0);
+  }, [transactions]);
 
   const tasksToday = tasks.filter((t) => !t.completed && t.dueDate && isToday(t.dueDate)).length;
   const tasksOverdue = tasks.filter((t) => !t.completed && t.dueDate && isOverdue(t.dueDate)).length;
@@ -164,11 +177,26 @@ export default function Dashboard() {
               it. Only when there is a budget to read. */}
           {rack && monthBudget > 0 && (
             <div className="mb-2">
-              <RackBudgetMeter spent={monthExpenses} limit={monthBudget} />
+              <RackBudgetMeter spent={monthExpenses} limit={monthBudget} lastMonthSpent={lastMonthExpenses} />
             </div>
           )}
           {/* Stays 2-up in its column at every width — these are four small
               stat tiles and a 1×4 row of them reads as a strip, not a group. */}
+          {rack ? (
+            <div className="space-y-2">
+              <RackMeterBank
+                gpa={studies ? studies.calculatedGpa : null}
+                gpaMax={gradeMode === 'ib' ? 7 : 4}
+                gpaPrevious={studies ? previousGpa : null}
+                gpaDisplay={gpaDisplay}
+                workouts={workoutsThisWeek}
+                workoutTarget={4}
+                tasksDue={tasksToday + tasksOverdue}
+                tasksOverdue={tasksOverdue}
+              />
+              <RackChannels tasks={tasks} />
+            </div>
+          ) : (
           <div className="grid grid-cols-2 gap-2">
             <StatCard
               value={formatCurrency(Math.max(0, monthBudget - monthExpenses))}
@@ -195,6 +223,7 @@ export default function Dashboard() {
               tone={tasksOverdue > 0 ? 'danger' : 'default'}
             />
           </div>
+          )}
         </div>
 
         <div className="desk-stack">
