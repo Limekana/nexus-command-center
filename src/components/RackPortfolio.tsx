@@ -53,7 +53,7 @@ export function RackMasterBus({ total, dayChange, dayPct, snapshots, baseCurrenc
           {up ? '+' : '−'}{Math.abs(dayPct).toFixed(2)}%
         </span>
       </div>
-      <div className="mt-2 ms-2 p-2" style={{ background: 'var(--meter-face)' }}>
+      <div className="mt-2 p-2" style={{ background: 'var(--meter-face)' }}>
         <div className="flex items-baseline justify-between gap-2">
           <div className="meter-readout text-[1.4375rem]">
             {fmt(total, baseCurrency)}
