@@ -95,7 +95,11 @@
     "life": "जीवन",
     "tasks": "कार्य",
     "collapseSidebar": "साइडबार छोटा करें",
-    "expandSidebar": "साइडबार बड़ा करें"
+    "expandSidebar": "साइडबार बड़ा करें",
+    "updateShort": "अपडेट उपलब्ध",
+    "updateAvailable": "अपडेट उपलब्ध: v{{version}}",
+    "updateDownloading": "डाउनलोड हो रहा है… {{percent}}%",
+    "updateReady": "अपडेट के लिए रीस्टार्ट करें"
   },
   "life": {
     "notCountedYet": "अभी नहीं गिना गया",
@@ -275,6 +279,8 @@
     "portfolioEodSub": "अमेरिकी बाज़ार बंद होने पर आज की चाल का सार",
     "marketNews": "बाज़ार समाचार",
     "marketNewsSub": "आपके टिकर से जुड़ी ख़बरें और बाज़ार की बड़ी हलचलें",
+    "watchlistAlerts": "वॉचलिस्ट लक्ष्य",
+    "watchlistAlertsSub": "जब कोई देखा जा रहा टिकर आपके तय किए लक्ष्य मूल्य पर पहुँचे",
     "macroHeadlines": "मैक्रो सुर्ख़ियाँ शामिल करें",
     "macroHeadlinesSub": "Fed, CPI, रोज़गार, FOMC, महँगाई, मंदी",
     "permCheckFailed": "अनुमति जाँच विफल।",
@@ -355,7 +361,23 @@
       "other": "अन्य"
     },
     "discord": "Discord समुदाय",
-    "discordSub": "सवाल, बग रिपोर्ट और आगे क्या आ रहा है"
+    "discordSub": "सवाल, बग रिपोर्ट और आगे क्या आ रहा है",
+    "updates": "अपडेट",
+    "updateCheck": "अपडेट जाँचें",
+    "updateChecking": "जाँच हो रही है…",
+    "updateCurrent": "नवीनतम है",
+    "updateFailed": "जाँच नहीं हो सकी — फिर से टैप करें",
+    "updateOpen": "रिलीज़ पेज खोलें",
+    "updateDownloading": "डाउनलोड हो रहा है… {{percent}}%",
+    "updateRestart": "अपडेट के लिए रीस्टार्ट करें",
+    "updateDownload": "डाउनलोड और इंस्टॉल करें",
+    "appearance": "रूप",
+    "themeName": {
+      "instrument": "इंस्ट्रूमेंट",
+      "rack": "Rack"
+    },
+    "themeLockedAria": "{{name}} — सपोर्टर थीम, लॉक",
+    "themeSupporterNote": "Rack एक सपोर्टर थीम है। नीचे Ko-fi पर विकास का समर्थन करने पर यह अनलॉक होती है।"
   },
   "lock": {
     "secureAccess": "सुरक्षित पहुँच",
@@ -1212,5 +1234,39 @@
     "convert": "कार्य में बदलें",
     "converted": "बदल गया",
     "viewTask": "कार्य देखें"
+  },
+  "rack": {
+    "inputs": "इनपुट",
+    "inputLive": "पिछले 7 दिनों में लिखा",
+    "inputSilent": "7 दिनों से शांत",
+    "budgetMeter": "बजट · {{month}}",
+    "budgetMeterAria": "बजट {{pct}}% उपयोग हुआ",
+    "left": "बाकी",
+    "workouts": "वर्कआउट",
+    "tasksDue": "बाकी काम",
+    "channels": "चैनल",
+    "nOver_one": "{{count}} देर से",
+    "nOver_other": "{{count}} देर से",
+    "allClear": "कुछ भी बाकी या देर से नहीं",
+    "statusOver": "देर",
+    "statusToday": "आज",
+    "peak": "शिखर {{pct}}% · {{month}}",
+    "master": "मास्टर · कुल मूल्य",
+    "allocation": "चैनल · आवंटन",
+    "tickEqual": "निशान = बराबर भार",
+    "weightAria": "{{ticker}}: पोर्टफ़ोलियो का {{pct}}%",
+    "sum": "योग",
+    "positionsInvested_one": "{{count}} पोज़ीशन · {{pct}}% निवेशित",
+    "positionsInvested_other": "{{count}} पोज़ीशन · {{pct}}% निवेशित",
+    "levels": "स्तर बनाम रखा शिखर",
+    "holdPrev": "होल्ड = पिछला हफ़्ता",
+    "levelSpend": "खर्च",
+    "levelStudy": "पढ़ाई",
+    "levelVolume": "वॉल्यूम",
+    "levelTasks": "काम",
+    "tasksDone_one": "{{count}} पूरे",
+    "tasksDone_other": "{{count}} पूरे",
+    "newPeak": "नया शिखर",
+    "log": "लॉग"
   }
 }

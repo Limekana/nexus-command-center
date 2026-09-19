@@ -1,0 +1,3 @@
+Price-target alerts for your watchlist.
+
+Set a target above or below a ticker's price and NCC notifies you once when it is crossed — switch it on under Settings → Notifications. Goals and Weekly Review now have full cards on the dashboard, and Habits has its own section in the Life tab. Supporters get a new theme, Rack: a console look with a budget meter and an inputs strip, in Settings → Appearance.

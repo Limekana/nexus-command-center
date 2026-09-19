@@ -24,6 +24,8 @@ const NOTIF_TASKS_KEY = 'settings.notif.tasks';
 const NOTIF_BUDGETS_KEY = 'settings.notif.budgets';
 const NOTIF_PORTFOLIO_EOD_KEY = 'settings.notif.portfolioEod';
 const NOTIF_NEWS_KEY = 'settings.notif.news';
+// v1.15 Item 9 — Watchlist price-target alerts.
+const NOTIF_WATCHLIST_KEY = 'settings.notif.watchlist';
 // Macro-headline opt-in (Fed / CPI / jobs / inflation / FOMC). Off by default
 // because the keyword classifier is noisier than the index-move trigger;
 // users who actually want macro-event alerts flip this on explicitly.
@@ -91,6 +93,7 @@ interface SettingsStore {
   notifBudgetsEnabled: boolean;
   notifPortfolioEodEnabled: boolean;
   notifNewsEnabled: boolean;
+  notifWatchlistEnabled: boolean;
   notifMacroKeywordsEnabled: boolean;
   notifIntroSeen: boolean;
   /** v1.2 — emergency buffer reserved from cash+savings ManualAssets, in
@@ -116,6 +119,7 @@ interface SettingsStore {
   setNotifBudgetsEnabled: (on: boolean) => Promise<void>;
   setNotifPortfolioEodEnabled: (on: boolean) => Promise<void>;
   setNotifNewsEnabled: (on: boolean) => Promise<void>;
+  setNotifWatchlistEnabled: (on: boolean) => Promise<void>;
   setNotifMacroKeywordsEnabled: (on: boolean) => Promise<void>;
   setNotifIntroSeen: (seen: boolean) => Promise<void>;
   setSavingsBufferAmount: (amount: number) => Promise<void>;
@@ -162,6 +166,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   notifBudgetsEnabled: false,
   notifPortfolioEodEnabled: false,
   notifNewsEnabled: false,
+  notifWatchlistEnabled: false,
   notifMacroKeywordsEnabled: false,
   notifIntroSeen: false,
   savingsBufferAmount: 0,
@@ -179,6 +184,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
       notifBudgets,
       notifPortfolioEod,
       notifNews,
+      notifWatchlist,
       notifMacroKeywords,
       notifIntroSeen,
       savingsBuffer,
@@ -193,6 +199,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
       readBoolPref(NOTIF_BUDGETS_KEY),
       readBoolPref(NOTIF_PORTFOLIO_EOD_KEY),
       readBoolPref(NOTIF_NEWS_KEY),
+      readBoolPref(NOTIF_WATCHLIST_KEY),
       readBoolPref(NOTIF_MACRO_KEYS_KEY),
       readBoolPref(NOTIF_INTRO_SEEN_KEY),
       readPref(SAVINGS_BUFFER_KEY),
@@ -211,6 +218,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
       notifBudgetsEnabled: notifBudgets,
       notifPortfolioEodEnabled: notifPortfolioEod,
       notifNewsEnabled: notifNews,
+      notifWatchlistEnabled: notifWatchlist,
       notifMacroKeywordsEnabled: notifMacroKeywords,
       notifIntroSeen,
       savingsBufferAmount: savingsBuffer ? Math.max(0, parseFloat(savingsBuffer) || 0) : 0,
@@ -262,6 +270,11 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   async setNotifNewsEnabled(on) {
     await writePref(NOTIF_NEWS_KEY, on ? '1' : '0');
     set({ notifNewsEnabled: on });
+  },
+
+  async setNotifWatchlistEnabled(on) {
+    await writePref(NOTIF_WATCHLIST_KEY, on ? '1' : '0');
+    set({ notifWatchlistEnabled: on });
   },
 
   async setNotifMacroKeywordsEnabled(on) {

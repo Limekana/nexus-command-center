@@ -1,0 +1,3 @@
+Alertas de precio objetivo para tu lista de seguimiento.
+
+Fija un objetivo por encima o por debajo del precio y NCC te avisa una vez cuando se cruce; actívalo en Ajustes → Notificaciones. Objetivos y Resumen semanal tienen ahora tarjetas propias en el panel, y Hábitos su propia sección en la pestaña Vida. Nuevo tema para quienes apoyan, Rack: aspecto de consola con medidor de presupuesto y barra de entradas, en Ajustes → Apariencia.

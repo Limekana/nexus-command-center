@@ -31,6 +31,9 @@
       base-uri 'self';
       form-action 'self';
     " />
+    <!-- v1.15 (Item 13) — applies a paid theme before first paint. A classic
+         same-origin script, so the strict script-src 'self' CSP holds. -->
+    <script src="/theme-boot.js"></script>
     <title>Nexus Command Center — a live dashboard for your other apps</title>
     <meta name="description" content="Reads live from StudyDesk and LimeLog. Study hours next to training volume next to spending, in about 1.5 seconds. Local-first, no subscription, no trackers." />
     <link rel="canonical" href="https://nexus.limecore.dev/" />

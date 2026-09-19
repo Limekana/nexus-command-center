@@ -54,6 +54,25 @@
        it for free. */
     --dir: 1;
 
+    /* v1.15 (Item 13) — the palette tailwind.config.js reads, as RGB channel
+     * triplets so its `/ <alpha-value>` opacity utilities keep working. These
+     * ARE the v1.10 instrument values, byte for byte; a paid theme re-points
+     * them under [data-theme] and removing the attribute restores exactly
+     * this. */
+    --c-bg: 11 12 14;            /* #0B0C0E */
+    --c-surface: 20 22 24;       /* #141618 */
+    --c-surface2: 25 28 31;      /* #191C1F */
+    --c-border: 35 38 42;        /* #23262A */
+    --c-border-soft: 26 29 32;   /* #1A1D20 */
+    --c-primary: 232 163 61;     /* #E8A33D */
+    --c-primary-dim: 168 117 42; /* #A8752A */
+    --c-text: 232 230 225;       /* #E8E6E1 */
+    --c-text-muted: 169 174 180; /* #A9AEB4 */
+    --c-text-faint: 124 130 138; /* #7C828A */
+    --c-danger: 196 84 75;       /* #C4544B */
+    --c-success: 78 154 107;     /* #4E9A6B */
+    --c-warning: 185 138 60;     /* #B98A3C */
+
     /* ─── v1.10 instrument palette ────────────────────────────────────────
      * The same seven values the Tailwind config exposes as utility classes,
      * mirrored here for the hand-written CSS below (tick marks, grid rules,

@@ -24,6 +24,10 @@ import { supabase } from './supabase';
 
 const CACHE_KEY = 'nexus.entitlement';
 
+/** v1.15 — fired on window whenever the cached entitlement changes, so the
+ *  active theme and the Settings picker can re-resolve without a reload. */
+export const ENTITLEMENT_EVENT = 'nexus-entitlement-change';
+
 // Short enough that a fresh supporter sees their perk the same session, long
 // enough that opening the app offline for a week doesn't strip a paid theme.
 const REVALIDATE_AFTER_MS = 6 * 60 * 60 * 1000; // 6 hours
@@ -75,6 +79,7 @@ function writeCache(rec: EntitlementRecord | null): void {
   } catch {
     /* storage unavailable — fall through to the un-entitled default */
   }
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(ENTITLEMENT_EVENT));
 }
 
 /**

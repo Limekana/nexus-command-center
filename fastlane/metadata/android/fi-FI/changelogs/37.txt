@@ -1,0 +1,3 @@
+Hintatavoitehälytykset seurantalistalle.
+
+Aseta osakkeelle ylä- tai alaraja, niin NCC ilmoittaa kerran, kun hinta ylittää sen — ota käyttöön kohdassa Asetukset → Ilmoitukset. Tavoitteet ja viikkokatsaus saavat omat korttinsa kojelaudalle, ja tavoilla on oma osionsa Elämä-välilehdellä. Tukijoille uusi teema, Rack: konsolimainen ilme budjettimittarilla ja syöteriviillä, kohdassa Asetukset → Ulkoasu.

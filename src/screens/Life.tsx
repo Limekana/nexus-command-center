@@ -50,6 +50,7 @@ import {
   type DomainKey,
 } from '../lib/lifeProfile';
 import { dateKey } from '../lib/habitStreaks';
+import HabitsDashboardStrip from '../components/HabitsDashboardStrip';
 import { DOMAIN } from '../lib/themeColors';
 
 const TONE_BORDER: Record<Insight['tone'], string> = {
@@ -354,6 +355,18 @@ export default function Life() {
               )}
             </div>
           )}
+        </section>
+
+        {/* ─── HABITS (v1.15 Item 10) ───────────────────────────────────
+             Habits had no home in the tab bar; its only way in was the strip
+             on Home. Life is where habit completion already feeds the score,
+             so the same strip nests here too (and the Life tab stays lit on
+             /habits), rather than Habits getting a tab of its own. */}
+        <section className="space-y-3">
+          <h2 className="font-heading font-semibold text-xs uppercase tracking-wider text-text-muted px-1">
+            {t('domains.habits')}
+          </h2>
+          <HabitsDashboardStrip />
         </section>
 
         {/* v1.9 Item 14 — desktop arrangement. THIS WEEK stays full width

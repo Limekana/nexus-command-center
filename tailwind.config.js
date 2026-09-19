@@ -32,33 +32,39 @@ export default {
         // purpose: ~300 call sites already say `text-text-muted` /
         // `border-border` / `bg-surface`, and re-pointing the names re-skins
         // all of them at once instead of touching every file.
-        bg: '#0B0C0E',        // page ground — near-black, faint cool bias
-        surface: '#141618',   // panel fill — flat, never translucent
-        surface2: '#191C1F',  // nested / hovered panel
-        border: '#23262A',    // hairline rule and grid line
-        'border-soft': '#1A1D20', // internal row divider (lighter than a rule)
+        //
+        // v1.15 (Item 13) — every value is read through a CSS variable whose
+        // :root default is the exact v1.10 hex (src/index.css), so the free
+        // theme renders unchanged and [data-theme='rack'] can re-point the
+        // same names (src/themes/rack.css). `<alpha-value>` keeps opacity
+        // utilities like `bg-primary/10` working.
+        bg: 'rgb(var(--c-bg) / <alpha-value>)',              // page ground — near-black, faint cool bias
+        surface: 'rgb(var(--c-surface) / <alpha-value>)',    // panel fill — flat, never translucent
+        surface2: 'rgb(var(--c-surface2) / <alpha-value>)',  // nested / hovered panel
+        border: 'rgb(var(--c-border) / <alpha-value>)',      // hairline rule and grid line
+        'border-soft': 'rgb(var(--c-border-soft) / <alpha-value>)', // internal row divider (lighter than a rule)
         primary: {
           // The instrument colour. Marks the LIVE reading, the current value,
           // the emphasised endpoint of a series — nothing else. If more than
           // roughly two amber elements are on one screen, one of them is wrong.
-          DEFAULT: '#E8A33D',
-          dim: '#A8752A',
+          DEFAULT: 'rgb(var(--c-primary) / <alpha-value>)',
+          dim: 'rgb(var(--c-primary-dim) / <alpha-value>)',
         },
         text: {
           // Warm-tinted ink against cool-tinted neutrals. That asymmetry is
           // what makes the palette read as chosen rather than inherited —
           // do not "clean it up" to pure greys / pure white.
-          DEFAULT: '#E8E6E1',
-          muted: '#A9AEB4',
-          faint: '#7C828A',   // micro-labels, units, axis
+          DEFAULT: 'rgb(var(--c-text) / <alpha-value>)',
+          muted: 'rgb(var(--c-text-muted) / <alpha-value>)',
+          faint: 'rgb(var(--c-text-faint) / <alpha-value>)',   // micro-labels, units, axis
         },
         // Semantic pair, deliberately desaturated so they never fight the
         // signal amber when a screen shows both.
-        danger: '#C4544B',
-        success: '#4E9A6B',
+        danger: 'rgb(var(--c-danger) / <alpha-value>)',
+        success: 'rgb(var(--c-success) / <alpha-value>)',
         // Advisory amber: same family as the signal, visibly dimmer. Kept
         // distinct so a caution state cannot be mistaken for a live reading.
-        warning: '#B98A3C',
+        warning: 'rgb(var(--c-warning) / <alpha-value>)',
       },
       fontFamily: {
         // IBM Plex — engineering lineage, true tabular figures, SIL OFL so it

@@ -95,7 +95,11 @@
     "life": "Vida",
     "tasks": "Tarefas",
     "collapseSidebar": "Recolher barra lateral",
-    "expandSidebar": "Expandir barra lateral"
+    "expandSidebar": "Expandir barra lateral",
+    "updateShort": "Atualização disponível",
+    "updateAvailable": "Atualização disponível: v{{version}}",
+    "updateDownloading": "Baixando… {{percent}}%",
+    "updateReady": "Reiniciar para atualizar"
   },
   "life": {
     "notCountedYet": "Ainda não contabilizado",
@@ -275,6 +279,8 @@
     "portfolioEodSub": "Resumo do movimento de hoje no fechamento do mercado dos EUA",
     "marketNews": "Notícias do mercado",
     "marketNewsSub": "Matérias sobre os ativos que você tem + grandes movimentos de mercado",
+    "watchlistAlerts": "Alvos da lista de observação",
+    "watchlistAlertsSub": "Quando um ativo observado atinge um preço-alvo que você definiu",
     "macroHeadlines": "Incluir manchetes macro",
     "macroHeadlinesSub": "Fed, CPI, emprego, FOMC, inflação, recessão",
     "permCheckFailed": "Falha ao verificar a permissão.",
@@ -355,7 +361,23 @@
       "other": "Outro"
     },
     "discord": "Comunidade no Discord",
-    "discordSub": "Dúvidas, relatos de bugs e o que vem por aí"
+    "discordSub": "Dúvidas, relatos de bugs e o que vem por aí",
+    "updates": "Atualizações",
+    "updateCheck": "Verificar atualizações",
+    "updateChecking": "Verificando…",
+    "updateCurrent": "Atualizado",
+    "updateFailed": "Não foi possível verificar — toque para tentar de novo",
+    "updateOpen": "Abrir página da versão",
+    "updateDownloading": "Baixando… {{percent}}%",
+    "updateRestart": "Reiniciar para atualizar",
+    "updateDownload": "Baixar e instalar",
+    "appearance": "Aparência",
+    "themeName": {
+      "instrument": "Instrumento",
+      "rack": "Rack"
+    },
+    "themeLockedAria": "{{name}} — tema de apoiador, bloqueado",
+    "themeSupporterNote": "Rack é um tema de apoiador. Ele é liberado quando você apoia o desenvolvimento no Ko-fi, logo abaixo."
   },
   "lock": {
     "secureAccess": "Acesso seguro",
@@ -1218,5 +1240,42 @@
     "convert": "Converter em tarefa",
     "converted": "Convertida",
     "viewTask": "Ver tarefa"
+  },
+  "rack": {
+    "inputs": "Entradas",
+    "inputLive": "registrou nos últimos 7 dias",
+    "inputSilent": "sem atividade há 7 dias",
+    "budgetMeter": "Orçamento · {{month}}",
+    "budgetMeterAria": "Orçamento {{pct}}% usado",
+    "left": "restantes",
+    "workouts": "Treinos",
+    "tasksDue": "Pendentes",
+    "channels": "Canais",
+    "nOver_one": "{{count}} atrasadas",
+    "nOver_many": "{{count}} atrasadas",
+    "nOver_other": "{{count}} atrasadas",
+    "allClear": "Nada pendente nem atrasado",
+    "statusOver": "Atrasada",
+    "statusToday": "Hoje",
+    "peak": "Pico {{pct}}% · {{month}}",
+    "master": "Master · valor total",
+    "allocation": "Canais · alocação",
+    "tickEqual": "Marca = peso igual",
+    "weightAria": "{{ticker}}: {{pct}}% da carteira",
+    "sum": "Soma",
+    "positionsInvested_one": "{{count}} posição · {{pct}}% investido",
+    "positionsInvested_many": "{{count}} posições · {{pct}}% investido",
+    "positionsInvested_other": "{{count}} posições · {{pct}}% investido",
+    "levels": "Níveis vs pico retido",
+    "holdPrev": "Retenção = semana passada",
+    "levelSpend": "Gastos",
+    "levelStudy": "Estudo",
+    "levelVolume": "Volume",
+    "levelTasks": "Tarefas",
+    "tasksDone_one": "{{count}} feitas",
+    "tasksDone_many": "{{count}} feitas",
+    "tasksDone_other": "{{count}} feitas",
+    "newPeak": "Novo pico",
+    "log": "Registro"
   }
 }
