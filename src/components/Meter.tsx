@@ -14,6 +14,8 @@
  * theme rather than this component silently restyling itself.
  */
 
+import { useEffect, useState } from 'react';
+
 export type PeakTone = 'over' | 'ok' | 'new';
 
 export interface MeterProps {
@@ -30,6 +32,9 @@ export interface MeterProps {
    * so fill and tick coincide and the mark goes to the needle colour.
    */
   peakTone?: PeakTone;
+  /** Draw the fill in the red-zone colour regardless of position — a count
+   *  that is over its limit (tasks overdue) rather than past a printed zone. */
+  forceOver?: boolean;
   /** Print `0 25 50 75 90 100` across the top. 3U meters only. */
   showScale?: boolean;
   /** 5px (bank), 11px (primary), 14px (channel row). */
@@ -41,12 +46,16 @@ export interface MeterProps {
 
 const clampPct = (n: number) => Math.max(0, Math.min(100, n));
 
+/** How long a dropped reading's old position stays marked before it falls. */
+const HOLD_MS = 1200;
+
 export function Meter({
   value,
   max,
   redZoneFrom,
   peak,
   peakTone = 'over',
+  forceOver = false,
   showScale = false,
   height = 11,
   label,
@@ -58,7 +67,24 @@ export function Meter({
   const safeMax = Number.isFinite(max) && max > 0 ? max : 1;
   const pct = clampPct((Number.isFinite(value) ? value : 0) / safeMax * 100);
   const peakPct = peak != null && Number.isFinite(peak) ? clampPct((peak / safeMax) * 100) : null;
-  const over = redZoneFrom != null && pct >= redZoneFrom;
+  const over = forceOver || (redZoneFrom != null && pct >= redZoneFrom);
+
+  // v1.15 — ballistic hold, like a moving-coil needle's peak memory: when the
+  // reading drops, its old position stays marked for 1.2s, then falls to the
+  // new value over 200ms (the CSS transition on .meter__hold). Tracked by
+  // adjusting state during render rather than in an effect, which is React's
+  // sanctioned way to react to a prop change without a cascading render.
+  const [lastPct, setLastPct] = useState(pct);
+  const [hold, setHold] = useState<number | null>(null);
+  if (pct !== lastPct) {
+    if (pct < lastPct) setHold(lastPct);
+    setLastPct(pct);
+  }
+  useEffect(() => {
+    if (hold == null) return;
+    const id = window.setTimeout(() => setHold(null), HOLD_MS);
+    return () => window.clearTimeout(id);
+  }, [hold]);
 
   return (
     <div className={className}>
@@ -89,6 +115,11 @@ export function Meter({
           />
         )}
         <div className={`meter__fill${over ? ' meter__fill--over' : ''}`} style={{ width: `${pct}%` }} />
+        <div
+          className={`meter__hold${hold != null ? ' meter__hold--on' : ''}`}
+          style={{ insetInlineStart: `calc(${hold ?? pct}% - 1px)` }}
+          aria-hidden="true"
+        />
         {peakPct != null && (
           <div
             className={`meter__peak meter__peak--${peakTone}`}

@@ -23,6 +23,8 @@ import { useFitnessStore } from '../store/useFitnessStore';
 import { useTaskStore } from '../store/useTaskStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { buildWeeklyReview, startOfWeek } from '../lib/weeklyReview';
+import { RackLevels, RackLog, type LevelRow } from '../components/RackWeekly';
+import { useActiveTheme } from '../lib/theme';
 import Glyph from '../components/Glyph';
 
 function formatRange(start: Date, end: Date): string {
@@ -98,6 +100,24 @@ export default function WeeklyReview() {
     ],
   );
 
+  // v1.15 (Item 13) — Rack's held peak is simply last week's report.
+  const rack = useActiveTheme() === 'rack';
+  const prior = useMemo(() => {
+    if (!rack) return null;
+    const start = new Date(currentWeekStart);
+    start.setDate(start.getDate() - 7);
+    return buildWeeklyReview({
+      weekStart: start,
+      transactions,
+      courses,
+      sessions: studySessions,
+      workouts,
+      tasks,
+      currentGpa: currentImport?.calculatedGpa ?? null,
+      holdings,
+    });
+  }, [rack, currentWeekStart, transactions, courses, studySessions, workouts, tasks, currentImport, holdings]);
+
   const fmtMoney = (amount: number): string =>
     new Intl.NumberFormat(formatLocale(), {
       style: 'currency',
@@ -138,8 +158,35 @@ export default function WeeklyReview() {
           </button>
         </div>
 
+        {rack && prior && (() => {
+          const pct = (v: number, p: number) =>
+            p > 0 ? `${v >= p ? '+' : '−'}${Math.round((Math.abs(v - p) / p) * 100)}%` : '—';
+          const cnt = (v: number, p: number) => (v === p ? '±0' : `${v > p ? '+' : '−'}${Math.abs(v - p)}`);
+          const hm = (m: number) => `${Math.floor(m / 60)}h${String(Math.round(m % 60)).padStart(2, '0')}`;
+          const rows: LevelRow[] = [
+            { key: 'spend', label: t('rack.levelSpend'), value: data.finance.spend, previous: prior.finance.spend,
+              display: fmtMoney(data.finance.spend), delta: pct(data.finance.spend, prior.finance.spend), lowerIsBetter: true,
+              onClick: () => navigate('/finance') },
+            { key: 'study', label: t('rack.levelStudy'), value: data.studies.studyMinutes, previous: prior.studies.studyMinutes,
+              display: hm(data.studies.studyMinutes), delta: pct(data.studies.studyMinutes, prior.studies.studyMinutes),
+              onClick: () => navigate('/life') },
+            { key: 'volume', label: t('rack.levelVolume'), value: data.fitness.totalVolumeKg, previous: prior.fitness.totalVolumeKg,
+              display: `${Math.round(data.fitness.totalVolumeKg).toLocaleString(formatLocale())} kg`,
+              delta: pct(data.fitness.totalVolumeKg, prior.fitness.totalVolumeKg), onClick: () => navigate('/life') },
+            { key: 'tasks', label: t('rack.levelTasks'), value: data.tasks.completed, previous: prior.tasks.completed,
+              display: t('rack.tasksDone', { count: data.tasks.completed }), delta: cnt(data.tasks.completed, prior.tasks.completed),
+              onClick: () => navigate('/tasks') },
+          ];
+          return (
+            <>
+              <RackLevels rows={rows} />
+              <RackLog lines={data.insights} />
+            </>
+          );
+        })()}
+
         {/* Insights */}
-        {data.insights.length > 0 && (
+        {!rack && data.insights.length > 0 && (
           <div className="card">
             <div className="font-heading font-semibold text-sm mb-2">{t('weeklyReview.highlights')}</div>
             <div className="space-y-1.5">
@@ -155,6 +202,7 @@ export default function WeeklyReview() {
           </div>
         )}
 
+        {!rack && (<>
         {/* Finance */}
         <button
           onClick={() => navigate('/finance')}
@@ -279,6 +327,8 @@ export default function WeeklyReview() {
             </div>
           )}
         </button>
+
+        </>)}
 
         <button
           onClick={() => navigate('/review/year')}
