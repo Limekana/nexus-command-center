@@ -39,7 +39,11 @@
     "life": "Vie",
     "tasks": "Tâches",
     "collapseSidebar": "Réduire la barre latérale",
-    "expandSidebar": "Développer la barre latérale"
+    "expandSidebar": "Développer la barre latérale",
+    "updateShort": "Mise à jour disponible",
+    "updateAvailable": "Mise à jour disponible : v{{version}}",
+    "updateDownloading": "Téléchargement… {{percent}} %",
+    "updateReady": "Redémarrer pour mettre à jour"
   },
   "life": {
     "notCountedYet": "Pas encore compté",
@@ -214,6 +218,8 @@
     "portfolioEodSub": "Récap du mouvement du jour à la clôture du marché US",
     "marketNews": "Actus marché",
     "marketNewsSub": "Articles sur vos titres + grands mouvements de marché",
+    "watchlistAlerts": "Objectifs de la liste de suivi",
+    "watchlistAlertsSub": "Quand un titre suivi atteint un prix cible que vous avez fixé",
     "macroHeadlines": "Inclure les titres macro",
     "macroHeadlinesSub": "Fed, IPC, emploi, FOMC, inflation, récession",
     "permCheckFailed": "Échec de la vérification d’autorisation.",
@@ -294,7 +300,23 @@
       "other": "Autre"
     },
     "discord": "Communauté Discord",
-    "discordSub": "Questions, rapports de bugs et la suite du programme"
+    "discordSub": "Questions, rapports de bugs et la suite du programme",
+    "updates": "Mises à jour",
+    "updateCheck": "Rechercher des mises à jour",
+    "updateChecking": "Vérification…",
+    "updateCurrent": "À jour",
+    "updateFailed": "Échec de la vérification — réessayer",
+    "updateOpen": "Ouvrir la page de version",
+    "updateDownloading": "Téléchargement… {{percent}} %",
+    "updateRestart": "Redémarrer pour mettre à jour",
+    "updateDownload": "Télécharger et installer",
+    "appearance": "Apparence",
+    "themeName": {
+      "instrument": "Instrument",
+      "rack": "Rack"
+    },
+    "themeLockedAria": "{{name}} — thème réservé aux soutiens, verrouillé",
+    "themeSupporterNote": "Rack est un thème réservé aux soutiens. Il se déverrouille quand vous soutenez le développement sur Ko-fi, plus bas."
   },
   "days": {
     "long": {
@@ -1218,5 +1240,42 @@
     "convert": "Convertir en tâche",
     "converted": "Convertie",
     "viewTask": "Voir la tâche"
+  },
+  "rack": {
+    "inputs": "Entrées",
+    "inputLive": "a écrit ces 7 derniers jours",
+    "inputSilent": "silencieux depuis 7 jours",
+    "budgetMeter": "Budget · {{month}}",
+    "budgetMeterAria": "Budget utilisé à {{pct}} %",
+    "left": "restants",
+    "workouts": "Séances",
+    "tasksDue": "À faire",
+    "channels": "Canaux",
+    "nOver_one": "{{count}} en retard",
+    "nOver_many": "{{count}} en retard",
+    "nOver_other": "{{count}} en retard",
+    "allClear": "Rien d’échu ni en retard",
+    "statusOver": "Retard",
+    "statusToday": "Aujourd’hui",
+    "peak": "Crête {{pct}} % · {{month}}",
+    "master": "Master · valeur totale",
+    "allocation": "Canaux · répartition",
+    "tickEqual": "Repère = poids égal",
+    "weightAria": "{{ticker}} : {{pct}} % du portefeuille",
+    "sum": "Somme",
+    "positionsInvested_one": "{{count}} position · {{pct}} % investi",
+    "positionsInvested_many": "{{count}} positions · {{pct}} % investi",
+    "positionsInvested_other": "{{count}} positions · {{pct}} % investi",
+    "levels": "Niveaux vs crête tenue",
+    "holdPrev": "Tenue = semaine dernière",
+    "levelSpend": "Dépenses",
+    "levelStudy": "Études",
+    "levelVolume": "Volume",
+    "levelTasks": "Tâches",
+    "tasksDone_one": "{{count}} faites",
+    "tasksDone_many": "{{count}} faites",
+    "tasksDone_other": "{{count}} faites",
+    "newPeak": "Nouvelle crête",
+    "log": "Journal"
   }
 }

@@ -95,7 +95,11 @@
     "life": "Hidup",
     "tasks": "Tugas",
     "collapseSidebar": "Ciutkan bilah sisi",
-    "expandSidebar": "Perluas bilah sisi"
+    "expandSidebar": "Perluas bilah sisi",
+    "updateShort": "Pembaruan tersedia",
+    "updateAvailable": "Pembaruan tersedia: v{{version}}",
+    "updateDownloading": "Mengunduh… {{percent}}%",
+    "updateReady": "Mulai ulang untuk memperbarui"
   },
   "life": {
     "notCountedYet": "Belum dihitung",
@@ -275,6 +279,8 @@
     "portfolioEodSub": "Ringkasan pergerakan hari ini saat pasar AS tutup",
     "marketNews": "Berita pasar",
     "marketNewsSub": "Berita tentang saham yang kamu miliki + pergerakan besar pasar",
+    "watchlistAlerts": "Target daftar pantau",
+    "watchlistAlertsSub": "Saat ticker yang kamu pantau mencapai harga target yang kamu tetapkan",
     "macroHeadlines": "Sertakan berita makro",
     "macroHeadlinesSub": "Fed, CPI, ketenagakerjaan, FOMC, inflasi, resesi",
     "permCheckFailed": "Pemeriksaan izin gagal.",
@@ -355,7 +361,23 @@
       "other": "Lainnya"
     },
     "discord": "Komunitas Discord",
-    "discordSub": "Pertanyaan, laporan bug, dan rencana berikutnya"
+    "discordSub": "Pertanyaan, laporan bug, dan rencana berikutnya",
+    "updates": "Pembaruan",
+    "updateCheck": "Periksa pembaruan",
+    "updateChecking": "Memeriksa…",
+    "updateCurrent": "Sudah terbaru",
+    "updateFailed": "Gagal memeriksa — ketuk untuk mencoba lagi",
+    "updateOpen": "Buka halaman rilis",
+    "updateDownloading": "Mengunduh… {{percent}}%",
+    "updateRestart": "Mulai ulang untuk memperbarui",
+    "updateDownload": "Unduh & pasang",
+    "appearance": "Tampilan",
+    "themeName": {
+      "instrument": "Instrumen",
+      "rack": "Rack"
+    },
+    "themeLockedAria": "{{name}} — tema pendukung, terkunci",
+    "themeSupporterNote": "Rack adalah tema pendukung. Tema ini terbuka saat Anda mendukung pengembangan di Ko-fi, di bawah."
   },
   "lock": {
     "secureAccess": "Akses aman",
@@ -1206,5 +1228,36 @@
     "convert": "Ubah jadi tugas",
     "converted": "Diubah",
     "viewTask": "Lihat tugas"
+  },
+  "rack": {
+    "inputs": "Masukan",
+    "inputLive": "menulis dalam 7 hari terakhir",
+    "inputSilent": "diam selama 7 hari",
+    "budgetMeter": "Anggaran · {{month}}",
+    "budgetMeterAria": "Anggaran terpakai {{pct}}%",
+    "left": "tersisa",
+    "workouts": "Latihan",
+    "tasksDue": "Jatuh tempo",
+    "channels": "Kanal",
+    "nOver_other": "{{count}} terlambat",
+    "allClear": "Tidak ada yang jatuh tempo atau terlambat",
+    "statusOver": "Terlambat",
+    "statusToday": "Hari ini",
+    "peak": "Puncak {{pct}}% · {{month}}",
+    "master": "Master · nilai total",
+    "allocation": "Kanal · alokasi",
+    "tickEqual": "Tanda = bobot sama",
+    "weightAria": "{{ticker}}: {{pct}}% dari portofolio",
+    "sum": "Jumlah",
+    "positionsInvested_other": "{{count}} posisi · {{pct}}% diinvestasikan",
+    "levels": "Level vs puncak tertahan",
+    "holdPrev": "Tahan = minggu lalu",
+    "levelSpend": "Belanja",
+    "levelStudy": "Belajar",
+    "levelVolume": "Volume",
+    "levelTasks": "Tugas",
+    "tasksDone_other": "{{count}} selesai",
+    "newPeak": "Puncak baru",
+    "log": "Log"
   }
 }

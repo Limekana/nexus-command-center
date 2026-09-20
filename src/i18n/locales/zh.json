@@ -39,7 +39,11 @@
     "life": "生活",
     "tasks": "任务",
     "collapseSidebar": "折叠侧边栏",
-    "expandSidebar": "展开侧边栏"
+    "expandSidebar": "展开侧边栏",
+    "updateShort": "有可用更新",
+    "updateAvailable": "有可用更新：v{{version}}",
+    "updateDownloading": "正在下载… {{percent}}%",
+    "updateReady": "重启以更新"
   },
   "life": {
     "notCountedYet": "尚未计入",
@@ -214,6 +218,8 @@
     "portfolioEodSub": "美股收盘时今日走势回顾",
     "marketNews": "市场新闻",
     "marketNewsSub": "关于你持有股票的报道 + 重大市场动向",
+    "watchlistAlerts": "自选股目标价",
+    "watchlistAlertsSub": "当自选股达到你设定的目标价时",
     "macroHeadlines": "包含宏观头条",
     "macroHeadlinesSub": "美联储、CPI、就业、FOMC、通胀、衰退",
     "permCheckFailed": "权限检查失败。",
@@ -294,7 +300,23 @@
       "other": "其他"
     },
     "discord": "Discord 社区",
-    "discordSub": "提问、报告问题，了解后续计划"
+    "discordSub": "提问、报告问题，了解后续计划",
+    "updates": "更新",
+    "updateCheck": "检查更新",
+    "updateChecking": "正在检查…",
+    "updateCurrent": "已是最新版本",
+    "updateFailed": "检查失败 — 点按重试",
+    "updateOpen": "打开发布页面",
+    "updateDownloading": "正在下载… {{percent}}%",
+    "updateRestart": "重启以更新",
+    "updateDownload": "下载并安装",
+    "appearance": "外观",
+    "themeName": {
+      "instrument": "仪表",
+      "rack": "Rack"
+    },
+    "themeLockedAria": "{{name}}——支持者主题，已锁定",
+    "themeSupporterNote": "Rack 是支持者主题。在下方通过 Ko-fi 支持开发即可解锁。"
   },
   "days": {
     "long": {
@@ -1212,5 +1234,36 @@
     "convert": "转为任务",
     "converted": "已转换",
     "viewTask": "查看任务"
+  },
+  "rack": {
+    "inputs": "输入",
+    "inputLive": "过去 7 天内有写入",
+    "inputSilent": "7 天无活动",
+    "budgetMeter": "预算 · {{month}}",
+    "budgetMeterAria": "预算已使用 {{pct}}%",
+    "left": "剩余",
+    "workouts": "训练",
+    "tasksDue": "待办",
+    "channels": "通道",
+    "nOver_other": "{{count}} 项逾期",
+    "allClear": "没有到期或逾期的任务",
+    "statusOver": "逾期",
+    "statusToday": "今天",
+    "peak": "峰值 {{pct}}% · {{month}}",
+    "master": "总线 · 总价值",
+    "allocation": "通道 · 配置",
+    "tickEqual": "刻度 = 等权重",
+    "weightAria": "{{ticker}}：占组合 {{pct}}%",
+    "sum": "合计",
+    "positionsInvested_other": "{{count}} 个持仓 · 已投资 {{pct}}%",
+    "levels": "电平与保持峰值",
+    "holdPrev": "保持 = 上周",
+    "levelSpend": "支出",
+    "levelStudy": "学习",
+    "levelVolume": "训练量",
+    "levelTasks": "任务",
+    "tasksDone_other": "完成 {{count}} 项",
+    "newPeak": "新峰值",
+    "log": "日志"
   }
 }

@@ -10,8 +10,18 @@
 // The buffer goal is excluded from `allocatedBase` to avoid double-counting
 // (it IS the buffer; subtracting both would carve off the same money twice).
 //
+// v1.15 fix — liquid is the DERIVED balance (opening balance + every
+// transaction, lib/accountBalance.ts), not the stored `value`. Since the v1.2
+// Account refactor `value` mirrors the OPENING balance only: a portfolio
+// deposit lowers it while the income booked to the account is counted only
+// in the derived balance, so reading `value` showed an owner's savings
+// account at −2,804 € when it actually held +345.78 €. The account set and the
+// balance now match Net Worth's liquid figure exactly — cash, savings and
+// checking, archived accounts excluded — so the two screens cannot disagree.
+//
 // Math:
-//   liquidBase = Σ convert(asset.value, asset.currency, base) for asset in cash+savings
+//   liquidBase = Σ convert(derivedBalance(account), account.currency, base)
+//                for non-archived cash/savings/checking accounts
 //   bufferAmount = convert(bufferGoal.allocatedAmount, bufferGoal.currency, base)
 //   allocatedBase = Σ convert(goal.allocatedAmount, goal.currency, base)
 //                    for goal in non-buffer, non-deleted goals
@@ -27,9 +37,28 @@
 // it via `unconvertable` in the return for UI diagnostics.
 
 import { convertSync } from '../api/fxRates';
-import type { ManualAsset, SavingsGoal } from '../types/finance';
+import { computeAccountBalance } from './accountBalance';
+import type { ManualAsset, SavingsGoal, Transaction } from '../types/finance';
 
-const LIQUID_TYPES = new Set(['cash', 'savings']);
+/** Same set Net Worth's liquid figure uses (NetWorth.tsx LIQUID_TYPES). */
+export const LIQUID_ACCOUNT_TYPES = new Set(['cash', 'savings', 'checking']);
+
+/** Is this account liquid cash? Canonical `accountType` first, legacy
+ *  `assetType` for rows written before the dual-field transition. */
+export function isLiquidAccount(a: ManualAsset): boolean {
+  if (a.archivedAt) return false;
+  return LIQUID_ACCOUNT_TYPES.has(a.accountType ?? a.assetType);
+}
+
+/** An account's derived balance in its own currency. */
+export function liquidBalance(
+  a: ManualAsset,
+  transactions: Transaction[],
+  fxRates: Record<string, number> | null,
+  baseCurrency: string,
+): number {
+  return computeAccountBalance(a, transactions, fxRates, baseCurrency).balance;
+}
 
 interface AvailableCashResult {
   /** Total cash+savings in baseCurrency. */
@@ -47,6 +76,7 @@ interface AvailableCashResult {
 export function computeAvailableCash(
   manualAssets: ManualAsset[],
   goals: SavingsGoal[],
+  transactions: Transaction[],
   fxRates: Record<string, number> | null,
   baseCurrency: string,
 ): AvailableCashResult {
@@ -54,8 +84,9 @@ export function computeAvailableCash(
 
   let liquidBase = 0;
   for (const a of manualAssets) {
-    if (!LIQUID_TYPES.has(a.assetType)) continue;
-    const conv = convertSync(a.value, a.currency, baseCurrency, fxRates);
+    if (!isLiquidAccount(a)) continue;
+    const balance = liquidBalance(a, transactions, fxRates, baseCurrency);
+    const conv = a.currency === baseCurrency ? balance : convertSync(balance, a.currency, baseCurrency, fxRates);
     if (conv == null) {
       unconvertable.push(`asset:${a.id}`);
       continue;

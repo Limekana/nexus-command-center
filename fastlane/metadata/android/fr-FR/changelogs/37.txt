@@ -1,0 +1,3 @@
+Alertes de cours cible pour votre liste de suivi.
+
+Fixez un seuil au-dessus ou en dessous du cours et NCC vous prévient une fois qu’il est franchi — à activer dans Réglages → Notifications. Objectifs et Bilan hebdomadaire ont désormais leurs propres cartes sur le tableau de bord, et les Habitudes une section dans l’onglet Vie. Nouveau thème pour les soutiens, Rack : un look de console avec jauge de budget et barre d’entrées, dans Réglages → Apparence.

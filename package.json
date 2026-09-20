@@ -1,6 +1,6 @@
 {
   "name": "nexus-dashboard",
-  "version": "1.14.0",
+  "version": "1.15.0",
   "private": true,
   "type": "module",
   "main": "electron/main.cjs",
@@ -17,8 +17,7 @@
     "cap:open": "cap open android",
     "icons": "node scripts/build-icons.mjs && capacitor-assets generate --android",
     "electron:dev": "electron .",
-    "electron:build": "npm run build && node electron/build.cjs --win && npm run electron:zip",
-    "electron:zip": "node electron/package-zip.cjs"
+    "electron:build": "npm run build && node electron/build.cjs --win --publish never"
   },
   "dependencies": {
     "@aparajita/capacitor-biometric-auth": "^9.1.2",
@@ -32,6 +31,7 @@
     "@vercel/analytics": "^2.0.1",
     "axios": "^1.7.7",
     "dexie": "^4.0.8",
+    "electron-updater": "^6.8.9",
     "i18next": "^23.16.8",
     "lucide-react": "^0.414.0",
     "react": "^18.3.1",
@@ -79,6 +79,13 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "artifactName": "NexusCommandCenter-Desktop-Setup-${version}.${ext}"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Limekana",
+        "repo": "nexus-command-center"
+      }
+    ]
   }
 }

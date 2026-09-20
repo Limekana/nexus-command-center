@@ -19,7 +19,7 @@ import HoldingDetailSheet from '../../components/HoldingDetailSheet';
 import RatingPill from '../../components/RatingPill';
 import { useFinanceStore } from '../../store/useFinanceStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
-import { convertSync, normalizeCurrency } from '../../api/fxRates';
+import { resolveWatchPrice, targetHit } from '../../lib/watchlistAlerts';
 import { validateTicker } from '../../lib/tickerValidation';
 import { useShellTier } from '../../lib/useShell';
 import type { WatchlistItem, PortfolioHolding } from '../../types/finance';
@@ -124,38 +124,12 @@ export default function Watchlist() {
   // Rows with quote-derived display data.
   const rows = useMemo(() => {
     return watchlist.map((w) => {
-      let price: number | null = null;
-      let dayPct = 0;
-      // Widened to plain string so the stock branch can swap in a native
-      // currency (USD/EUR/GBP/etc.) when FX conversion to base isn't available.
-      let currency: string = baseCurrency;
-      let sparkline: number[] | undefined;
-      let alert: 'above' | 'below' | null = null;
-      if (w.assetType === 'crypto') {
-        const p = cryptoPrices?.prices.find((p) => p.id === w.ticker.toLowerCase());
-        if (p) {
-          // Convert EUR → base for display.
-          const conv = baseCurrency === 'EUR' ? p.priceEur : convertSync(p.priceEur, 'EUR', baseCurrency, fxRates);
-          price = conv;
-          currency = baseCurrency;
-          dayPct = p.change24h ?? 0;
-          sparkline = sparklines[w.ticker.toLowerCase()];
-        }
-      } else {
-        const q = stockQuotes.find((s) => s.ticker === w.ticker.toUpperCase());
-        if (q) {
-          const native = normalizeCurrency(q.quote.c, q.currency);
-          const conv = convertSync(q.quote.c, q.currency, baseCurrency, fxRates);
-          price = conv ?? native.amount;
-          currency = conv != null ? baseCurrency : native.currency;
-          dayPct = q.quote.dp ?? 0;
-          sparkline = sparklines[w.ticker.toUpperCase()];
-        }
-      }
-      if (price != null) {
-        if (w.targetAbove != null && price >= w.targetAbove) alert = 'above';
-        else if (w.targetBelow != null && price <= w.targetBelow) alert = 'below';
-      }
+      // v1.15 Item 9 — price and target check moved to watchlistAlerts.ts so
+      // this badge and the notification read the same numbers.
+      const { price, currency, dayPct } = resolveWatchPrice(w, stockQuotes, cryptoPrices, fxRates, baseCurrency);
+      const sparkline: number[] | undefined =
+        sparklines[w.assetType === 'crypto' ? w.ticker.toLowerCase() : w.ticker.toUpperCase()];
+      const alert = targetHit(w, price);
       return { item: w, price, currency, dayPct, sparkline, alert };
     });
   }, [watchlist, stockQuotes, cryptoPrices, sparklines, fxRates, baseCurrency]);

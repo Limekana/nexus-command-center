@@ -10,7 +10,7 @@ import { Pill } from '../../components/ui/Pill';
 import { useSavingsGoalsStore } from '../../store/useSavingsGoalsStore';
 import { useFinanceStore } from '../../store/useFinanceStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
-import { computeAvailableCash } from '../../lib/savingsAvailableCash';
+import { computeAvailableCash, isLiquidAccount, liquidBalance } from '../../lib/savingsAvailableCash';
 import { convertSync } from '../../api/fxRates';
 import type { SavingsGoal, ManualAsset } from '../../types/finance';
 import Glyph from '../../components/Glyph';
@@ -60,6 +60,7 @@ export default function SavingsGoals() {
   const deleteGoal = useSavingsGoalsStore((s) => s.deleteGoal);
 
   const manualAssets = useFinanceStore((s) => s.manualAssets);
+  const transactions = useFinanceStore((s) => s.transactions);
   const updateManualAsset = useFinanceStore((s) => s.updateManualAsset);
   const fxRates = useFinanceStore((s) => s.fxRates);
   const baseCurrency = useSettingsStore((s) => s.baseCurrency);
@@ -82,8 +83,8 @@ export default function SavingsGoals() {
 
   // ─── Available cash math ──────────────────────────────────────────────
   const available = useMemo(
-    () => computeAvailableCash(manualAssets, goals, fxRates, baseCurrency),
-    [manualAssets, goals, fxRates, baseCurrency],
+    () => computeAvailableCash(manualAssets, goals, transactions, fxRates, baseCurrency),
+    [manualAssets, goals, transactions, fxRates, baseCurrency],
   );
   const overAllocated = available.available < 0;
   const noLiquidAssets = available.liquidBase === 0;
@@ -135,15 +136,18 @@ export default function SavingsGoals() {
   //
   // Liquid asset list — cash + savings ManualAssets sorted by value desc.
   // Used both for the source-selector default and the dropdown.
-  const liquidAssets = useMemo<ManualAsset[]>(() => {
+  // v1.15 fix — each account's DERIVED balance (see savingsAvailableCash),
+  // carried as `balance` so the list, the sort and the invest debit agree.
+  const liquidAssets = useMemo<(ManualAsset & { balance: number })[]>(() => {
     return manualAssets
-      .filter((a) => a.assetType === 'cash' || a.assetType === 'savings')
+      .filter(isLiquidAccount)
+      .map((a) => ({ ...a, balance: liquidBalance(a, transactions, fxRates, baseCurrency) }))
       .sort((a, b) => {
-        const ab = convertSync(a.value, a.currency, baseCurrency, fxRates) ?? 0;
-        const bb = convertSync(b.value, b.currency, baseCurrency, fxRates) ?? 0;
+        const ab = convertSync(a.balance, a.currency, baseCurrency, fxRates) ?? 0;
+        const bb = convertSync(b.balance, b.currency, baseCurrency, fxRates) ?? 0;
         return bb - ab;
       });
-  }, [manualAssets, baseCurrency, fxRates]);
+  }, [manualAssets, transactions, baseCurrency, fxRates]);
 
   const [investOpen, setInvestOpen] = useState(false);
   const [investAmount, setInvestAmount] = useState('');
@@ -176,8 +180,15 @@ export default function SavingsGoals() {
       window.setTimeout(() => setFlashMessage(null), 4000);
       return;
     }
-    const nextValue = Math.max(0, source.value - amountInSourceCurrency);
-    await updateManualAsset(source.id, { value: nextValue });
+    // v1.15 fix — debit the OPENING balance, exactly as the portfolio
+    // deposit does (useFinanceStore.depositToPortfolio): the derived balance
+    // is opening + transactions, so lowering the opening by the amount lowers
+    // the balance by the amount. The old `Math.max(0, value - amount)` treated
+    // the opening as the balance and clamped it at zero — on an account whose
+    // opening is legitimately negative that clamp ADDED money.
+    const opening = source.startingBalance ?? source.value ?? 0;
+    const nextOpening = opening - amountInSourceCurrency;
+    await updateManualAsset(source.id, { startingBalance: nextOpening, value: nextOpening });
     setInvestOpen(false);
     setFlashMessage(t('fin.sg.movedToInvest', { amount: fmtCompact(amount, baseCurrency), name: source.name }));
     window.setTimeout(() => setFlashMessage(null), 5000);
@@ -441,10 +452,10 @@ export default function SavingsGoals() {
                 <option value="">{t('fin.sg.noCashAssets')}</option>
               ) : (
                 liquidAssets.map((a) => {
-                  const inBase = convertSync(a.value, a.currency, baseCurrency, fxRates);
+                  const inBase = convertSync(a.balance, a.currency, baseCurrency, fxRates);
                   return (
                     <option key={a.id} value={a.id}>
-                      {a.name} · {fmtCompact(a.value, a.currency)}
+                      {a.name} · {fmtCompact(a.balance, a.currency)}
                       {inBase != null && a.currency !== baseCurrency
                         ? ` (≈ ${fmtCompact(inBase, baseCurrency)})`
                         : ''}

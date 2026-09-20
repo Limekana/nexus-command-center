@@ -1,10 +1,12 @@
 import { useMemo } from 'react';
-import { Target, BarChart3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 import AppHeader from '../components/AppHeader';
 import SyncStatusChip from '../components/SyncStatusChip';
 import StatCard from '../components/StatCard';
+import RoutingStrip from '../components/RoutingStrip';
+import RackBudgetMeter from '../components/RackBudgetMeter';
+import { RackMeterBank, RackChannels } from '../components/RackDashboard';
+import { useActiveTheme } from '../lib/theme';
 import ModuleSummaryCard from '../components/ModuleSummaryCard';
 import HabitsDashboardStrip from '../components/HabitsDashboardStrip';
 import WorkRatingCard from '../components/WorkRatingCard';
@@ -16,11 +18,14 @@ import { useStudiesStore } from '../store/useStudiesStore';
 import { useFitnessStore } from '../store/useFitnessStore';
 import { useTaskStore } from '../store/useTaskStore';
 import { useBraindumpStore } from '../store/useBraindumpStore';
+import { useGoalsStore } from '../store/useGoalsStore';
+import { useSettingsStore } from '../store/useSettingsStore';
+import { computeGoalProgress } from '../lib/goals';
+import { buildWeeklyReview } from '../lib/weeklyReview';
 import { formatCurrency, isOverdue, isToday } from '../utils/formatters';
 
 export default function Dashboard() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const transactions = useFinanceStore((s) => s.transactions);
   const budgetCategories = useFinanceStore((s) => s.budgetCategories);
   const stockQuotes = useFinanceStore((s) => s.stockQuotes);
@@ -34,6 +39,14 @@ export default function Dashboard() {
 
   const tasks = useTaskStore((s) => s.tasks);
   const braindumpEntries = useBraindumpStore((s) => s.entries);
+  // v1.15 Item 10 — Goals and Review cards.
+  const goals = useGoalsStore((s) => s.goals);
+  const holdings = useFinanceStore((s) => s.holdings);
+  const manualAssets = useFinanceStore((s) => s.manualAssets);
+  const cryptoPrices = useFinanceStore((s) => s.cryptoPrices);
+  const fxRates = useFinanceStore((s) => s.fxRates);
+  const studySessions = useStudiesStore((s) => s.studySessions);
+  const baseCurrency = useSettingsStore((s) => s.baseCurrency);
 
   // Portfolio auto-refresh used to live here, but Dashboard mounts as a child
   // of AppShell — at first-mount the holdings store is still empty (AppShell's
@@ -58,6 +71,20 @@ export default function Dashboard() {
     [budgetCategories]
   );
   const budgetPct = monthBudget > 0 ? Math.round((monthExpenses / monthBudget) * 100) : 0;
+  // v1.15 (Item 13) — Rack adds two things the free theme never renders.
+  const rack = useActiveTheme() === 'rack';
+  // Rack's budget meter holds last month's spend as its peak.
+  const lastMonthExpenses = useMemo(() => {
+    const now = new Date();
+    const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    return transactions
+      .filter((t) => {
+        if (t.type !== 'expense') return false;
+        const d = new Date(t.date);
+        return d.getFullYear() === prev.getFullYear() && d.getMonth() === prev.getMonth();
+      })
+      .reduce((s, t) => s + t.amount, 0);
+  }, [transactions]);
 
   const tasksToday = tasks.filter((t) => !t.completed && t.dueDate && isToday(t.dueDate)).length;
   const tasksOverdue = tasks.filter((t) => !t.completed && t.dueDate && isOverdue(t.dueDate)).length;
@@ -80,33 +107,37 @@ export default function Dashboard() {
     ? `${studies.calculatedGpa - previousGpa >= 0 ? '↑' : '↓'} ${Math.abs(studies.calculatedGpa - previousGpa).toFixed(2)} ${t('dash.pts')}`
     : studies ? t('dash.coursesCount', { count: studyCourses.length }) : t('dash.noImports');
 
+  // Same inputs and the same computeGoalProgress the Goals screen uses, so a
+  // percentage here can never disagree with the one a tap away.
+  const activeGoals = useMemo(() => {
+    const data = {
+      transactions, holdings, manualAssets, stockQuotes, cryptoPrices, fxRates, baseCurrency,
+      tasks, studySessions, workouts: sessions, currentGpa: studies?.calculatedGpa ?? null,
+    };
+    return goals
+      .filter((g) => !g.completed && !g.deletedAt)
+      .map((g) => ({ goal: g, pct: Math.max(0, Math.min(100, Math.round(computeGoalProgress(g, data).percent))) }));
+  }, [goals, transactions, holdings, manualAssets, stockQuotes, cryptoPrices, fxRates, baseCurrency, tasks, studySessions, sessions, studies]);
+
+  // This week so far, from the builder the Review screen itself uses.
+  const week = useMemo(
+    () => buildWeeklyReview({
+      transactions, courses: studyCourses, sessions: studySessions, workouts: sessions, tasks,
+      currentGpa: studies?.calculatedGpa ?? null, holdings,
+    }),
+    [transactions, studyCourses, studySessions, sessions, tasks, studies, holdings],
+  );
+
   const gpaSuffix = gradeMode === 'ib' ? '/7' : '';
   const gpaDisplay = studies ? studies.calculatedGpa.toFixed(2) + gpaSuffix : '—';
 
   return (
     <>
-      <AppHeader
-        title="NEXUS HQ"
-        action={
-          <>
-            {/* Both header actions are neutral chips. Review used to carry
-                the accent border, which put a second amber element beside the
-                live budget readout for no reason — it is a link to a screen,
-                not a reading. The lucide glyphs replace the emoji: an emoji
-                renders in the system's colour font, so no palette reaches it
-                and it stayed cheerfully multicoloured against everything
-                else. */}
-            <button onClick={() => navigate('/goals')} className="chip press-spring">
-              <Target size={12} strokeWidth={2} aria-hidden />
-              {t('dash.goals')}
-            </button>
-            <button onClick={() => navigate('/review')} className="chip press-spring">
-              <BarChart3 size={12} strokeWidth={2} aria-hidden />
-              {t('dash.review')}
-            </button>
-          </>
-        }
-      />
+      {/* v1.15 Item 10 — Goals and Review used to be two small chips here, and
+          nowhere in persistent nav since the v1.3 scope reduction. They are
+          full module cards below now, Braindump's treatment, rather than a
+          fifth tab (no new bottom-nav tabs, owner call 2026-09-17). */}
+      <AppHeader title="NEXUS HQ" />
       {/* v1.9 Item 14 — desktop arrangement, not a desktop redesign.
           Every card below is the same component with the same styling it has
           on the phone; only their arrangement changes. Below 1201px this is
@@ -122,6 +153,8 @@ export default function Dashboard() {
           the tallest one and the short cards grow dead space inside. */}
       <div className="space-y-3 desktop:space-y-0 desk-grid">
         <div className="desk-stack">
+          {/* Rack: the inputs row — the suite made visible. Dashboard only. */}
+          {rack && <RoutingStrip />}
           <SyncStatusChip />
 
           {/* v1.2 — daily habits surface above the stat grid. The strip itself
@@ -140,8 +173,30 @@ export default function Dashboard() {
 
         <div className="desk-stack">
           <div className="sec mb-2">{t('dash.overview')}</div>
+          {/* Rack: the budget read off a meter face with the limit printed on
+              it. Only when there is a budget to read. */}
+          {rack && monthBudget > 0 && (
+            <div className="mb-2">
+              <RackBudgetMeter spent={monthExpenses} limit={monthBudget} lastMonthSpent={lastMonthExpenses} />
+            </div>
+          )}
           {/* Stays 2-up in its column at every width — these are four small
               stat tiles and a 1×4 row of them reads as a strip, not a group. */}
+          {rack ? (
+            <div className="space-y-2">
+              <RackMeterBank
+                gpa={studies ? studies.calculatedGpa : null}
+                gpaMax={gradeMode === 'ib' ? 7 : 4}
+                gpaPrevious={studies ? previousGpa : null}
+                gpaDisplay={gpaDisplay}
+                workouts={workoutsThisWeek}
+                workoutTarget={4}
+                tasksDue={tasksToday + tasksOverdue}
+                tasksOverdue={tasksOverdue}
+              />
+              <RackChannels tasks={tasks} />
+            </div>
+          ) : (
           <div className="grid grid-cols-2 gap-2">
             <StatCard
               value={formatCurrency(Math.max(0, monthBudget - monthExpenses))}
@@ -168,6 +223,7 @@ export default function Dashboard() {
               tone={tasksOverdue > 0 ? 'danger' : 'default'}
             />
           </div>
+          )}
         </div>
 
         <div className="desk-stack">
@@ -234,6 +290,30 @@ export default function Dashboard() {
               </>
             )}
             {braindumpEntries.length === 1 && <Empty msg=" " />}
+          </ModuleSummaryCard>
+
+          <ModuleSummaryCard
+            title={t('dash.goals')}
+            icon="goals"
+            tag={activeGoals.length > 0 ? t('dash.tagOpen') : t('dash.tagClear')}
+            to="/goals"
+          >
+            {activeGoals.length > 0 ? (
+              activeGoals.slice(0, 2).map(({ goal, pct }) => (
+                <ListRow key={goal.id} label={goal.title} value={`${pct}%`} />
+              ))
+            ) : (
+              <>
+                <Empty msg={t('goals.noGoalsTitle')} />
+                <Empty msg=" " />
+              </>
+            )}
+            {activeGoals.length === 1 && <Empty msg=" " />}
+          </ModuleSummaryCard>
+
+          <ModuleSummaryCard title={t('dash.review')} icon="calendar" to="/review">
+            <ListRow label={t('weeklyReview.tasks')} value={String(week.tasks.completed)} />
+            <ListRow label={t('weeklyReview.workouts')} value={String(week.fitness.workoutCount)} />
           </ModuleSummaryCard>
         </div>
         </div>

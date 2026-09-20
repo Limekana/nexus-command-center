@@ -62,6 +62,7 @@ import { useLifeProfileStore } from './store/useLifeProfileStore';
 import { useFinanceStore } from './store/useFinanceStore';
 import { isOnboarded, setOnboarded, hydrateOnboardedFromCloud, markOnboardedCloud } from './lib/onboarding';
 import { desktop } from './lib/desktop';
+import { checkForDesktopUpdate } from './lib/desktopUpdate';
 
 export default function App() {
   const unlocked = useAuthStore((s) => s.unlocked);
@@ -352,6 +353,11 @@ export default function App() {
       if (!code) return;
       void supabase.auth.exchangeCodeForSession(code);
     });
+  }, []);
+
+  // v1.15 (Item 12) — one release check per launch; a no-op off desktop.
+  useEffect(() => {
+    checkForDesktopUpdate();
   }, []);
 
   // 1. Wait for session restoration AND guest flag read before deciding.

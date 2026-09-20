@@ -27,6 +27,8 @@ import type { PortfolioHolding, PortfolioLot } from '../../types/finance';
 import type { QuoteResult } from '../../api/finnhub';
 import type { CryptoResult } from '../../api/coingecko';
 import type { CompanyProfile } from '../../api/companyProfile';
+import { RackMasterBus, RackAllocation } from '../../components/RackPortfolio';
+import { useActiveTheme } from '../../lib/theme';
 import Glyph from '../../components/Glyph';
 
 
@@ -220,6 +222,9 @@ export default function Portfolio() {
   // v1.9 Item 14b — the dense table is a desktop-tier surface; phone and
   // tablet keep the card lists, which are the right shape for those widths.
   const isDesktop = useShellTier() === 'desktop';
+  // v1.15 (Item 13) — Rack draws the totals as a master bus and the
+  // allocation as channels; the free theme's cards are untouched.
+  const rack = useActiveTheme() === 'rack';
 
   // Helper used by all three Tier 2 surfaces — looks up a holding by ticker
   // (case-insensitive, equity bias) and opens the detail sheet.
@@ -452,6 +457,20 @@ export default function Portfolio() {
           </div>
         )}
 
+        {rack ? (
+          <RackMasterBus
+            total={totals.total}
+            dayChange={totals.dayChange}
+            dayPct={totals.dayPct}
+            snapshots={snapshots}
+            baseCurrency={baseCurrency}
+            fmt={fmt}
+            cost={totals.hasCost ? totals.cost : null}
+            pl={totals.hasCost ? totals.pl : null}
+            plPct={totals.hasCost ? totals.plPct : null}
+            note={<>{totals.missingFx ? t('fin.port.partial') : ''}{t('fin.port.cached')}{oldestAge > 0 ? formatCacheAge(oldestAge) : t('fin.port.fresh')}</>}
+          />
+        ) : (<>
         {/* Totals card — value, day change, cost basis, P/L */}
         <div className="card-elevated">
           <div className="text-[0.625rem] uppercase tracking-[0.15em] text-text-muted mb-1">
@@ -498,6 +517,8 @@ export default function Portfolio() {
           </div>
         </div>
 
+        </>)}
+
         {/* Portfolio value history */}
         <PortfolioValueChart
           snapshots={snapshots}
@@ -505,6 +526,23 @@ export default function Portfolio() {
           formatCurrency={fmt}
         />
 
+        {rack ? (
+          <RackAllocation
+            rows={positions
+              .filter((p) => p.valueBase != null && p.valueBase > 0)
+              .map((p) => ({
+                key: p.holding.id,
+                ticker: p.holding.ticker,
+                value: p.valueBase as number,
+                dayPct: p.dayChangePct,
+                onClick: () => setDetailHolding(p.holding),
+              }))}
+            total={totals.total}
+            positionsValue={totals.positionsValue}
+            baseCurrency={baseCurrency}
+            fmt={fmt}
+          />
+        ) : (<>
         {/* Allocation donut */}
         {allocationSlices.length > 0 && (
           <div className="card">
@@ -554,6 +592,8 @@ export default function Portfolio() {
             </div>
           </div>
         )}
+
+        </>)}
 
         {/* Insights — auto-generated observations from existing data */}
         <InsightsCard />
