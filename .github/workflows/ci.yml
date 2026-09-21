@@ -39,3 +39,10 @@ jobs:
 
       - name: Build gate
         run: npm run build
+
+      # v1.16 (limecore#11). Characterization tests over the pure logic where a
+      # silent change corrupts user data or money: the CSV importer, FIFO cost
+      # basis, and the Dexie schema upgrade. They exist so the code-health pass
+      # (limecore#12) has something to refactor against.
+      - name: Test gate
+        run: npm test
