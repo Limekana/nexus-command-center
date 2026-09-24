@@ -34,6 +34,7 @@ import type { Goal, GoalType } from '../types/goals';
 import type { Habit, HabitCompletion } from '../types/habits';
 import type { WorkQualityLog } from '../types/work';
 import type { BraindumpEntry } from '../types/braindump';
+import { selectRequeue, REQUEUE_TAG } from './requeueDropped';
 
 // ============================================================================
 // Push mappers — local entity → remote upsert payload
@@ -331,12 +332,22 @@ async function pushTask(item: SyncQueueItem, ctx: PushContext): Promise<void> {
 
 async function pushCourse(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   // Local Course = subject only. Grades live in their own table now (since
-  // v1.0.3), pushed via pushGrade below. On delete, cascade-soft-delete the
-  // subject's grades server-side; StudyDesk's RLS does the same.
+  // v1.0.3), pushed via pushGrade below.
   if (item.operation === 'delete') {
+    // NCC#57 — soft delete, exactly as StudyDesk's deleteSubject does. A hard
+    // DELETE cascaded server-side through assignments, exams and attachments
+    // with no tombstone, so StudyDesk never learned of it: its reconcile saw
+    // the course missing and re-uploaded it with its children, and the course
+    // came back here on the next pull. study_actions are left alone, as in
+    // StudyDesk (a to-do keeps a dangling course tag rather than vanishing).
     const uuid = legacyIdToUuid(item.entityId);
-    await supabase.from('grades').delete().eq('subject_id', uuid);
-    const { error } = await supabase.from('subjects').delete().eq('id', uuid);
+    const stamp = new Date().toISOString();
+    const tomb = { deleted_at: stamp, updated_at: stamp };
+    for (const table of ['grades', 'assignments', 'exams'] as const) {
+      const { error: childErr } = await supabase.from(table).update(tomb).eq('subject_id', uuid);
+      if (childErr) throw childErr;
+    }
+    const { error } = await supabase.from('subjects').update(tomb).eq('id', uuid);
     if (error) throw error;
     return;
   }
@@ -362,9 +373,11 @@ async function pushCourse(item: SyncQueueItem, ctx: PushContext): Promise<void> 
 
 async function pushGrade(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (item.operation === 'delete') {
+    // NCC#57 — soft delete; StudyDesk only learns of deletes via tombstones.
+    const stamp = new Date().toISOString();
     const { error } = await supabase
       .from('grades')
-      .delete()
+      .update({ deleted_at: stamp, updated_at: stamp })
       .eq('id', legacyIdToUuid(item.entityId));
     if (error) throw error;
     return;
@@ -651,6 +664,12 @@ function isPermanentSyncError(e: unknown): boolean {
 }
 
 export async function pushQueue(userId: string): Promise<PushResult> {
+  // NCC#55 — one-time rescue of accounts and transactions dropped by the old
+  // manual_assets CHECK. See requeueDropped.ts.
+  const requeue = selectRequeue(await db.syncQueue.toArray());
+  for (const it of requeue) {
+    await db.syncQueue.update(it.id, { syncedAt: undefined, lastError: undefined, requeuedFor: REQUEUE_TAG });
+  }
   const pending = await listPending();
   pending.sort((a, b) => {
     const pa = ENTITY_PRIORITY[a.entityType] ?? 99;
