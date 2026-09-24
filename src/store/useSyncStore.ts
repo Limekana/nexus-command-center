@@ -102,6 +102,36 @@ export const useSyncStore = create<SyncStore>((set, get) => ({
         void s.syncNow();
       }
     }, 30_000);
+
+    // NCC#53 — pull when the user comes back to the window. Every trigger
+    // above is gated on pendingCount > 0, so with nothing pending locally the
+    // only pull after sign-in was the realtime channel's — and that channel
+    // has delivered nothing since v1.2.1 (habits, habit_completions and
+    // body_metrics are not in the supabase_realtime publication, and the
+    // server rejects the whole channel for one missing table;
+    // Limekana/limecore#24). An open tab, desktop window or resumed app
+    // therefore showed StudyDesk/LimeLog/other-device data as of launch.
+    //
+    // `focus` as well as `visibilitychange` for the desktop edition, where
+    // switching windows never changes visibility. Throttled: syncNow is a full
+    // push + pull, and alt-tabbing is constant. Starts armed at init so the
+    // launch sync in App.tsx is not immediately doubled.
+    let lastReturnSyncAt = Date.now();
+    const RETURN_SYNC_MIN_MS = 30_000;
+    const onReturn = () => {
+      if (document.visibilityState === 'hidden') return;
+      const s = get();
+      if (!s.isOnline || s.syncing) return;
+      // syncNow records "Not signed in." as an error; a guest returning to the
+      // window has nothing to pull and should not see one.
+      if (!useSessionStore.getState().user) return;
+      const now = Date.now();
+      if (now - lastReturnSyncAt < RETURN_SYNC_MIN_MS) return;
+      lastReturnSyncAt = now;
+      void s.syncNow();
+    };
+    document.addEventListener('visibilitychange', onReturn);
+    window.addEventListener('focus', onReturn);
   },
 
   async refreshPending() {
