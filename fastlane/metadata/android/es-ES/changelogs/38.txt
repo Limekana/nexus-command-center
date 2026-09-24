@@ -1,0 +1,3 @@
+Correcciones de sincronización.
+
+Las cuentas corrientes, de tarjeta de crédito, de inversión y personalizadas ahora se sincronizan con tus otros dispositivos junto con sus transacciones; las que quedaron retenidas se suben solas tras esta actualización. Borrar un curso o una nota en NCC ahora llega bien a StudyDesk, en vez de que el curso vuelva más tarde sin sus tareas. Y al volver a la app, trae los cambios de tus otros dispositivos.
