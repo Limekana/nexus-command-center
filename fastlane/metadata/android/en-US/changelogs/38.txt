@@ -1,0 +1,3 @@
+Sync fixes.
+
+Checking, credit card, investment and custom accounts now sync to your other devices, with their transactions; any that were held back upload by themselves after this update. Deleting a course or grade in NCC now reaches StudyDesk properly, instead of the course coming back later without its assignments. And returning to the app now fetches changes from your other devices.

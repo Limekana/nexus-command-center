@@ -1,0 +1,3 @@
+Corrections de synchronisation.
+
+Les comptes courants, de carte de crédit, d’investissement et personnalisés se synchronisent désormais sur vos autres appareils avec leurs transactions ; ceux qui étaient bloqués s’envoient d’eux-mêmes après cette mise à jour. Supprimer un cours ou une note dans NCC est maintenant bien transmis à StudyDesk, au lieu que le cours revienne plus tard sans ses devoirs. En revenant dans l’appli, elle récupère les modifications de vos autres appareils.

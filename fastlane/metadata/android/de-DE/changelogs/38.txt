@@ -1,0 +1,3 @@
+Sync-Korrekturen.
+
+Giro-, Kreditkarten-, Depot- und eigene Konten werden jetzt samt Buchungen auf deine anderen Geräte synchronisiert; zurückgehaltene Einträge werden nach diesem Update automatisch hochgeladen. Löschst du in NCC einen Kurs oder eine Note, kommt das jetzt richtig in StudyDesk an, statt dass der Kurs später ohne seine Aufgaben zurückkehrt. Und beim Zurückkehren in die App holt sie Änderungen von deinen anderen Geräten.
