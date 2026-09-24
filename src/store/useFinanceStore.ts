@@ -352,10 +352,16 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
   },
 
   async deleteBudgetCategory(id) {
+    // Read the affected transactions before anything is destroyed. Until the
+    // Dexie v23 index (issue #45) this lookup threw, and because the category
+    // was already gone by then the delete was left half-applied: row deleted
+    // and cloud delete queued, but the in-memory list and the orphaned
+    // categoryIds never updated. Reading first means a failure here changes
+    // nothing at all.
+    const txs = await db.transactions.where('categoryId').equals(id).toArray();
     await db.budgetCategories.delete(id);
     await enqueue('budget_category', id, 'delete', { id });
     // Strip categoryId from any transactions referencing it.
-    const txs = await db.transactions.where('categoryId').equals(id).toArray();
     for (const t of txs) {
       await db.transactions.put({ ...t, categoryId: undefined, syncStatus: 'pending' });
       await enqueue('transaction', t.id, 'update', { ...t, categoryId: undefined });
