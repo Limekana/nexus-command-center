@@ -1,0 +1,3 @@
+Perbaikan sinkronisasi.
+
+Akun giro, kartu kredit, investasi, dan kustom kini tersinkron ke perangkat lain beserta transaksinya; yang sempat tertahan akan terunggah sendiri setelah pembaruan ini. Menghapus kursus atau nilai di NCC kini sampai ke StudyDesk dengan benar, alih-alih kursus muncul kembali nanti tanpa tugasnya. Dan saat kembali ke aplikasi, perubahan dari perangkat lain langsung diambil.

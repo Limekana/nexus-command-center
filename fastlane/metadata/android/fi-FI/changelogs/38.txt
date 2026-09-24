@@ -1,0 +1,3 @@
+Synkronointikorjauksia.
+
+Käyttö-, luottokortti-, sijoitus- ja omat tilit synkronoituvat nyt muille laitteillesi tapahtumineen; odottamaan jääneet lähetetään automaattisesti tämän päivityksen jälkeen. Kun poistat NCC:ssä kurssin tai arvosanan, poisto välittyy nyt oikein StudyDeskiin, eikä kurssi palaa myöhemmin ilman tehtäviään. Kun palaat sovellukseen, se hakee muutokset muilta laitteiltasi.

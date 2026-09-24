@@ -98,6 +98,9 @@ export interface SyncQueueItem {
   createdAt: string;
   syncedAt?: string;
   lastError?: string;
+  /** NCC#55 — set when a dropped item was put back in the queue once, so a
+   *  second failure stays dropped instead of retrying every sync. */
+  requeuedFor?: string;
 }
 
 class NexusDB extends Dexie {
