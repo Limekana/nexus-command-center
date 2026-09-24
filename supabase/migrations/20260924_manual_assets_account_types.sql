@@ -1,10 +1,10 @@
 -- NCC#55 — let manual_assets hold every account type NCC can create.
 --
--- ── NOT YET APPLIED ──────────────────────────────────────────────────────
--- Written 2026-09-24. Production DDL is a per-migration decision by the
--- owner. Apply this BEFORE the client change in the same PR reaches users:
--- src/lib/requeueDropped.ts re-queues each dropped account once, and if the
--- constraint still refuses it, that one retry is spent.
+-- ── APPLIED 2026-09-24 ───────────────────────────────────────────────────
+-- Applied to production via apply_migration `manual_assets_account_types`,
+-- owner-approved, before the client change in the same PR shipped (the
+-- one-time re-queue in src/lib/requeueDropped.ts depends on it). Constraint
+-- verified validated; security advisors unchanged (PRE-3 only).
 --
 -- ── WHAT WAS BROKEN ──────────────────────────────────────────────────────
 --
