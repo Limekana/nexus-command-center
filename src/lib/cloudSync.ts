@@ -56,13 +56,34 @@ interface PushContext {
   userId: string;
 }
 
+/**
+ * v1.16 (NCC#56 part 2, registry P6) — delete by writing a tombstone, never
+ * by `DELETE`. A hard delete left no trace, so a second NCC device (phone plus
+ * web, say) never learned of it: the row lived on there, and the next edit on
+ * that device re-created it upstream. A tombstone reaches every device through
+ * `pullAll`, and the server's guard lets it land whatever its stamp while a
+ * later content edit, which never sends `deleted_at`, cannot un-delete it.
+ * `purge_soft_deleted()` hard-deletes the tombstone after 90 days.
+ *
+ * Only for tables that have `deleted_at` AND are in that purge. The children
+ * a hard delete used to cascade to or null out now stay until the purge:
+ * `transactions.category_id` is cleared by deleteBudgetCategory itself;
+ * a deleted account's transactions keep their `account_id`, as they already
+ * did on the device that deleted it; shares of a deleted task or category
+ * stay, and their grantee's pull removes the tombstoned row.
+ */
+async function softDelete(table: string, entityId: string): Promise<void> {
+  const stamp = new Date().toISOString();
+  const { error } = await supabase
+    .from(table)
+    .update({ deleted_at: stamp, updated_at: stamp })
+    .eq('id', legacyIdToUuid(entityId));
+  if (error) throw error;
+}
+
 async function pushTransaction(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (item.operation === 'delete') {
-    const { error } = await supabase
-      .from('transactions')
-      .delete()
-      .eq('id', legacyIdToUuid(item.entityId));
-    if (error) throw error;
+    await softDelete('transactions', item.entityId);
     return;
   }
   const local: Transaction = JSON.parse(item.payload);
@@ -92,11 +113,7 @@ async function pushTransaction(item: SyncQueueItem, ctx: PushContext): Promise<v
 
 async function pushBudgetCategory(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (item.operation === 'delete') {
-    const { error } = await supabase
-      .from('budget_categories')
-      .delete()
-      .eq('id', legacyIdToUuid(item.entityId));
-    if (error) throw error;
+    await softDelete('budget_categories', item.entityId);
     return;
   }
   const local: BudgetCategory = JSON.parse(item.payload);
@@ -141,11 +158,7 @@ async function pushPortfolioHolding(item: SyncQueueItem, ctx: PushContext): Prom
 
 async function pushPortfolioLot(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (item.operation === 'delete') {
-    const { error } = await supabase
-      .from('portfolio_lots')
-      .delete()
-      .eq('id', legacyIdToUuid(item.entityId));
-    if (error) throw error;
+    await softDelete('portfolio_lots', item.entityId);
     return;
   }
   const local: PortfolioLot = JSON.parse(item.payload);
@@ -226,11 +239,7 @@ async function pushPortfolioCashEntry(item: SyncQueueItem, ctx: PushContext): Pr
 
 async function pushManualAsset(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (item.operation === 'delete') {
-    const { error } = await supabase
-      .from('manual_assets')
-      .delete()
-      .eq('id', legacyIdToUuid(item.entityId));
-    if (error) throw error;
+    await softDelete('manual_assets', item.entityId);
     return;
   }
   const local: ManualAsset = JSON.parse(item.payload);
@@ -251,11 +260,7 @@ async function pushManualAsset(item: SyncQueueItem, ctx: PushContext): Promise<v
 
 async function pushWatchlistItem(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (item.operation === 'delete') {
-    const { error } = await supabase
-      .from('watchlist_items')
-      .delete()
-      .eq('id', legacyIdToUuid(item.entityId));
-    if (error) throw error;
+    await softDelete('watchlist_items', item.entityId);
     return;
   }
   const local: WatchlistItem = JSON.parse(item.payload);
@@ -313,11 +318,7 @@ async function pushGoal(item: SyncQueueItem, ctx: PushContext): Promise<void> {
 
 async function pushTask(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (item.operation === 'delete') {
-    const { error } = await supabase
-      .from('tasks')
-      .delete()
-      .eq('id', legacyIdToUuid(item.entityId));
-    if (error) throw error;
+    await softDelete('tasks', item.entityId);
     return;
   }
   const local: Task = JSON.parse(item.payload);
@@ -446,9 +447,11 @@ async function pushAppOpen(item: SyncQueueItem, ctx: PushContext): Promise<void>
 
 // v1.12 Item 10 - Braindump.
 //
-// Delete is a HARD delete, matching pushTask rather than the soft-delete
-// tables: an entry the user threw away is a discarded thought, and nothing
-// downstream needs a tombstone to reconcile against.
+// Delete is a HARD delete, unlike the soft-delete tables: an entry the user
+// threw away is a discarded thought, and nothing downstream needs a tombstone
+// to reconcile against. (pushTask was the hard-delete precedent here until
+// v1.16 moved tasks to tombstones, NCC#56. braindump_entries is not in
+// `purge_soft_deleted()`, so its tombstones would never be cleaned up.)
 async function pushBraindumpEntry(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (item.operation === 'delete') {
     const { error } = await supabase
@@ -1276,11 +1279,18 @@ export async function pullAll(_userId: string): Promise<PullResult> {
   };
 
   // Helper: pull a Supabase table, filter deleted, map back to local shape, write to Dexie.
+  //
+  // v1.16 (NCC#56 part 2) — pass `tombstonesIn`, the local table the rows land
+  // in, and the pull keeps the server's tombstones instead of filtering them
+  // out: only live rows are mapped and written, and every local row the server
+  // has marked deleted is removed (see removeTombstoned). Callers that pass it
+  // must not also filter on `deleted_at`, or no tombstone ever arrives.
   async function pullTable<R, L>(
     table: string,
     extraFilters: { column: string; op: 'is' | 'eq'; value: unknown }[],
     mapRowToLocal: (r: R) => L | null,
-    writeToDexie: (rows: L[]) => Promise<void>
+    writeToDexie: (rows: L[]) => Promise<void>,
+    tombstonesIn?: Table<any, string>
   ): Promise<number> {
     const { data, error } = await selectAll(supabase, table, {
       filter: (q) => {
@@ -1296,14 +1306,19 @@ export async function pullAll(_userId: string): Promise<PullResult> {
       return 0;
     }
     recordSeen(table, data as any[]);
-    const mapped = (data as R[]).map(mapRowToLocal).filter((x): x is L => x !== null);
+    const rows = data as any[];
+    const live = tombstonesIn ? rows.filter((r) => !r.deleted_at) : rows;
+    const mapped = (live as R[]).map(mapRowToLocal).filter((x): x is L => x !== null);
     await writeToDexie(mapped);
+    if (tombstonesIn) {
+      await removeTombstoned(tombstonesIn, rows.filter((r) => r.deleted_at).map((r) => r.id));
+    }
     return mapped.length;
   }
 
   result.transactions = await pullTable<any, Transaction>(
     'transactions',
-    [{ column: 'deleted_at', op: 'is', value: null }],
+    [],
     (r) => {
       // Transfers are stored cloud-side as `expense` + a `[transfer]` description
       // prefix (the cloud `type` CHECK predates the transfer type). Reconstruct the
@@ -1326,12 +1341,13 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     },
     async (rows) => {
       await db.transactions.bulkPut(rows);
-    }
+    },
+    db.transactions
   );
 
   result.budgetCategories = await pullTable<any, BudgetCategory>(
     'budget_categories',
-    [{ column: 'deleted_at', op: 'is', value: null }],
+    [],
     (r) => ({
       id: r.id,
       name: r.name,
@@ -1342,7 +1358,8 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     }),
     async (rows) => {
       await db.budgetCategories.bulkPut(rows);
-    }
+    },
+    db.budgetCategories
   );
 
   result.portfolioHoldings = await pullTable<any, PortfolioHolding>(
@@ -1446,7 +1463,7 @@ export async function pullAll(_userId: string): Promise<PullResult> {
 
   result.tasks = await pullTable<any, Task>(
     'tasks',
-    [{ column: 'deleted_at', op: 'is', value: null }],
+    [],
     (r) => ({
       id: r.id,
       title: r.title,
@@ -1462,7 +1479,8 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     }),
     async (rows) => {
       await db.tasks.bulkPut(rows);
-    }
+    },
+    db.tasks
   );
 
   // study_sessions: resilient fetch — drop the deleted_at filter on schema
@@ -1472,7 +1490,7 @@ export async function pullAll(_userId: string): Promise<PullResult> {
 
   result.manualAssets = await pullTable<any, ManualAsset>(
     'manual_assets',
-    [{ column: 'deleted_at', op: 'is', value: null }],
+    [],
     (r) => {
       // v1.2 follow-up — CTO Account refactor. Server rows still carry the
       // legacy `asset_type` / `value` field names; we mirror them onto the
@@ -1498,12 +1516,13 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     },
     async (rows) => {
       await db.manualAssets.bulkPut(rows);
-    }
+    },
+    db.manualAssets
   );
 
   result.watchlistItems = await pullTable<any, WatchlistItem>(
     'watchlist_items',
-    [{ column: 'deleted_at', op: 'is', value: null }],
+    [],
     (r) => ({
       id: r.id,
       ticker: r.ticker,
@@ -1518,12 +1537,13 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     }),
     async (rows) => {
       await db.watchlistItems.bulkPut(rows);
-    }
+    },
+    db.watchlistItems
   );
 
   result.goals = await pullTable<any, Goal>(
     'goals',
-    [{ column: 'deleted_at', op: 'is', value: null }],
+    [],
     (r) => ({
       id: r.id,
       title: r.title,
@@ -1541,12 +1561,13 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     }),
     async (rows) => {
       await db.goals.bulkPut(rows);
-    }
+    },
+    db.goals
   );
 
   result.portfolioLots = await pullTable<any, PortfolioLot>(
     'portfolio_lots',
-    [{ column: 'deleted_at', op: 'is', value: null }],
+    [],
     (r) => ({
       id: r.id,
       holdingId: r.holding_id,
@@ -1561,7 +1582,8 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     }),
     async (rows) => {
       await db.portfolioLots.bulkPut(rows);
-    }
+    },
+    db.portfolioLots
   );
 
   // v1.3 AUDIT-FSG-5b — extend pullAll coverage so cross-device habit edits
