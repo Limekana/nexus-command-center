@@ -316,6 +316,27 @@ export async function cancelCategory(category: NotificationCategory): Promise<vo
 
 // ─── Tap routing ────────────────────────────────────────────────────────
 
+/** v1.16 (limecore#36) — a route is followed only if it is a plain path
+ *  inside this app: one leading `/`, then no second slash or backslash right
+ *  after it, no backslash anywhere, and no control characters.
+ *
+ *  Why: MainActivity is exported (it is the launcher), and it reads the tap
+ *  route off ANY intent that starts it, so any installed app could launch
+ *  NCC onto a route of its choosing. Every route NCC schedules itself is a
+ *  literal like `/finance/budgets`, which this accepts. What it refuses —
+ *  `//host`, `/\host`, `\\host`, `https://…` — are the shapes of the
+ *  React Router open redirect GHSA-wrjc-x8rr-h8h6, fixed only in RR 7. */
+export function isAppRoute(route: unknown): route is string {
+  return (
+    typeof route === 'string' &&
+    route.length <= 512 &&
+    /^\/(?![/\\])/.test(route) &&
+    !route.includes('\\') &&
+    // eslint-disable-next-line no-control-regex -- matching control characters is the point
+    !/[\u0000-\u001f\u007f]/.test(route)
+  );
+}
+
 /** Subscribe to notification taps. Calls `onOpen(route)` with the route
  *  encoded in the notification's `extra.route` payload. Returns an
  *  unsubscriber. Safe to call on web — returns a no-op unsubscriber.
@@ -329,7 +350,7 @@ export async function onNotificationTap(
   if (!Capacitor.isNativePlatform()) return () => {};
   try {
     const handle = await NexusNotifications.addListener('notificationTap', (event) => {
-      if (event.route) onOpen(event.route);
+      if (isAppRoute(event.route)) onOpen(event.route);
     });
     // v1.3.1 BUG-14 — drain the cold-start buffer. If the app was launched
     // from a notification tap, the native event already fired (before this
@@ -338,7 +359,7 @@ export async function onNotificationTap(
     // the buffer is then empty so this is a cheap no-op.
     try {
       const pending = await NexusNotifications.consumePendingTap();
-      if (pending.route) onOpen(pending.route);
+      if (isAppRoute(pending.route)) onOpen(pending.route);
     } catch (e) {
       console.warn('[notifications] consumePendingTap failed:', (e as Error).message);
     }
@@ -379,7 +400,7 @@ export async function onNotificationAction(
           // Malformed JSON shouldn't break the handler. Just leave extra null.
         }
       }
-      handler({ actionId: event.actionId, route: event.route, extra });
+      handler({ actionId: event.actionId, route: isAppRoute(event.route) ? event.route : '', extra });
     });
     // v1.3.1 BUG-14 — drain the cold-start action buffer (same rationale as
     // onNotificationTap's drain). Cold-start from a "Mark done" tap would
@@ -396,7 +417,7 @@ export async function onNotificationAction(
             // Malformed JSON shouldn't break the drain — handler gets null.
           }
         }
-        handler({ actionId: pending.actionId, route: pending.route, extra });
+        handler({ actionId: pending.actionId, route: isAppRoute(pending.route) ? pending.route : '', extra });
       }
     } catch (e) {
       console.warn('[notifications] consumePendingAction failed:', (e as Error).message);
