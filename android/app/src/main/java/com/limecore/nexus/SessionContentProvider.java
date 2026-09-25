@@ -21,6 +21,14 @@ package com.limecore.nexus;
 // so the practical attack surface is narrow. The token bundle also expires
 // (Supabase refresh) so the blast radius of any misconfiguration is bounded.
 //
+// v1.16 CORRECTION (limecore#35, SSO-1): that reasoning was wrong. Package
+// names are unique per DEVICE only; sideloading enforces nothing, and the
+// bundle carries the refresh token, so "bounded" was an account takeover. A
+// caller must now ALSO be signed with NCC's own key (checkSignatures). All
+// three suite apps are release-signed with the one suite key, so this is the
+// signature permission's guarantee without its debug-build problem: a
+// debuggable NCC skips the check. The sister apps verify the other direction.
+//
 // STORAGE BACKING + CRITICAL TYPE NOTE
 // ───────────────────────────────────────────────────────────────────────────
 // The session bundle is published by NCC's JS layer via Capacitor Preferences,
@@ -51,6 +59,8 @@ import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
@@ -119,6 +129,22 @@ public class SessionContentProvider extends ContentProvider {
                 return emptyCursor();
             }
 
+            // v1.16 (limecore#35, SSO-1) — and it must be signed with OUR key.
+            // A package name is unique per DEVICE, not globally: on a phone
+            // that has NCC but not StudyDesk, any app installed as
+            // `com.StudyDesk.app`, from anywhere and signed by anyone, passed
+            // the allowlist above and walked off with the refresh token. All
+            // three suite apps are release-signed with the one suite key, so
+            // a genuine sister app always matches. A debuggable NCC skips the
+            // check, because debug keys differ between the three projects —
+            // the reason the original signature permission was removed.
+            if (!isDebuggable(ctx)
+                && ctx.getPackageManager().checkSignatures(caller, ctx.getPackageName())
+                    != PackageManager.SIGNATURE_MATCH) {
+                Log.w(TAG, "Rejected SSO query: signature mismatch for " + caller);
+                return emptyCursor();
+            }
+
             SharedPreferences prefs = ctx.getSharedPreferences(
                 CAP_PREFS_NAME, Context.MODE_PRIVATE
             );
@@ -160,6 +186,10 @@ public class SessionContentProvider extends ContentProvider {
             Log.e(TAG, "SSO query failed: " + e.getClass().getSimpleName() + ": " + e.getMessage());
             return emptyCursor();
         }
+    }
+
+    private static boolean isDebuggable(Context ctx) {
+        return (ctx.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
     }
 
     private Cursor emptyCursor() {
