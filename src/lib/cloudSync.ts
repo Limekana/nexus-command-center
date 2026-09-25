@@ -516,12 +516,32 @@ async function pushHabit(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (error) throw error;
 }
 
+// v1.16 (NCC#58). The server's identity for a completion is (habit_id, date) —
+// `UNIQUE (habit_id, date)` — not the client-minted `id`. Two devices marking
+// the same habit on the same day mint two ids for ONE fact. The second push
+// then hit 23505, which `PERMANENT_PG_CODES` treats as permanent, so the item
+// was silently DROPPED: that device's amount never reached the server, and its
+// local row stayed alongside the pulled one, double-counting the day.
+//
+// The issue suggested upserting on the natural key with `id` omitted. That
+// cannot work here: `habit_completions.id` has no default, so every new
+// completion would fail NOT NULL (23502, also "permanent", also dropped).
+// And keeping `id` in an ON CONFLICT (habit_id, date) upsert rewrites the
+// server row's primary key to this device's id — the cross-device ping-pong
+// StudyDesk's attendance went through. So: upsert by id as before, and only
+// on the natural-key collision update the existing row's amount by
+// (habit_id, date), leaving its id alone. The pull then adopts that id.
 async function pushHabitCompletion(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (item.operation === 'delete') {
-    const { error } = await supabase
-      .from('habit_completions')
-      .delete()
-      .eq('id', legacyIdToUuid(item.entityId));
+    // New queue items carry the natural key, so an un-mark removes the day's
+    // completion whatever id the server knows it by. Items queued by an older
+    // build carry only `{ id }` and still delete by id.
+    const target = JSON.parse(item.payload) as { habitId?: string; date?: string };
+    let del = supabase.from('habit_completions').delete();
+    del = target.habitId && target.date
+      ? del.eq('habit_id', legacyIdToUuid(target.habitId)).eq('date', target.date)
+      : del.eq('id', legacyIdToUuid(item.entityId));
+    const { error } = await del;
     if (error) throw error;
     return;
   }
@@ -534,6 +554,15 @@ async function pushHabitCompletion(item: SyncQueueItem, ctx: PushContext): Promi
     amount: local.amount,
   };
   const { error } = await supabase.from('habit_completions').upsert(row);
+  if (error?.code === '23505') {
+    const { error: sameDayErr } = await supabase
+      .from('habit_completions')
+      .update({ amount: row.amount })
+      .eq('habit_id', row.habit_id)
+      .eq('date', row.date);
+    if (sameDayErr) throw sameDayErr;
+    return;
+  }
   if (error) throw error;
 }
 
@@ -978,6 +1007,20 @@ export async function hydrateHabitsFromCloud(
         createdAt: c.created_at,
       }));
       await db.habitCompletions.bulkPut(completions);
+      // v1.16 (NCC#58): one local row per (habit, day), and it is the
+      // server's. A row minted on this device for a day another device had
+      // already recorded — or the same row still held under its legacy id —
+      // would otherwise sit beside the pulled one and count the day twice.
+      // A pending edit on the removed row still reaches the server: its push
+      // lands on the natural-key path in `pushHabitCompletion`.
+      const serverIdByDay = new Map(completions.map((c) => [`${c.habitId}|${c.date}`, c.id]));
+      const shadowed = (await db.habitCompletions.toArray())
+        .filter((l) => {
+          const serverId = serverIdByDay.get(`${legacyIdToUuid(l.habitId)}|${l.date}`);
+          return serverId !== undefined && l.id !== serverId;
+        })
+        .map((l) => l.id);
+      if (shadowed.length > 0) await db.habitCompletions.bulkDelete(shadowed);
       completionCount = completions.length;
     }
   } catch (e) {
