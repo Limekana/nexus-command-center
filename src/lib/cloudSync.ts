@@ -22,6 +22,7 @@
 // This is enough for our usage pattern (occasional cross-device edits, no
 // real concurrent collaboration). Full CRDT is overkill.
 import { supabase } from './supabase';
+import { selectAll } from './selectAll';
 import { db, SyncQueueItem } from '../db/database';
 import { listPending } from '../db/syncQueue';
 import { generateId, legacyIdToUuid } from '../utils/uuid';
@@ -774,11 +775,9 @@ async function fetchWithSoftDeleteFallback(
 ): Promise<{ data: any[] | null; error: string | null }> {
   // Try with `deleted_at IS NULL` first. If the column doesn't exist on
   // StudyDesk's side, retry without that filter and post-filter in JS.
-  const initial = await supabase
-    .from(table)
-    .select('*')
-    .eq('user_id', userId)
-    .is('deleted_at', null);
+  const initial = await selectAll(supabase, table, {
+    filter: (q) => q.eq('user_id', userId).is('deleted_at', null),
+  });
   let data = initial.data;
   const error = initial.error;
   if (error) {
@@ -792,7 +791,7 @@ async function fetchWithSoftDeleteFallback(
       console.warn(
         `[studies-hydrate] ${table}: deleted_at column missing — retrying without filter`,
       );
-      const retry = await supabase.from(table).select('*').eq('user_id', userId);
+      const retry = await selectAll(supabase, table, { filter: (q) => q.eq('user_id', userId) });
       if (retry.error) {
         return { data: null, error: retry.error.message };
       }
@@ -935,10 +934,9 @@ export async function hydrateHabitsFromCloud(
   let completionCount = 0;
 
   try {
-    const { data, error } = await supabase
-      .from('habits')
-      .select('*')
-      .eq('user_id', userId);
+    const { data, error } = await selectAll(supabase, 'habits', {
+      filter: (q) => q.eq('user_id', userId),
+    });
     if (error) throw error;
     if (data) {
       const habits: Habit[] = data.map((h: any) => ({
@@ -966,10 +964,9 @@ export async function hydrateHabitsFromCloud(
   }
 
   try {
-    const { data, error } = await supabase
-      .from('habit_completions')
-      .select('*')
-      .eq('user_id', userId);
+    const { data, error } = await selectAll(supabase, 'habit_completions', {
+      filter: (q) => q.eq('user_id', userId),
+    });
     if (error) throw error;
     if (data) {
       const completions: HabitCompletion[] = data.map((c: any) => ({
@@ -1010,10 +1007,9 @@ export async function hydrateBodyMetricsFromCloud(
   let count = 0;
 
   try {
-    const { data, error } = await supabase
-      .from('body_metrics')
-      .select('*')
-      .eq('user_id', userId);
+    const { data, error } = await selectAll(supabase, 'body_metrics', {
+      filter: (q) => q.eq('user_id', userId),
+    });
     if (error) throw error;
     if (data) {
       const rows: BodyMetric[] = (data as any[]).map((r) => ({
@@ -1058,10 +1054,9 @@ export async function hydrateWorkQualityFromCloud(
   let count = 0;
 
   try {
-    const { data, error } = await supabase
-      .from('work_quality_logs')
-      .select('*')
-      .eq('user_id', userId);
+    const { data, error } = await selectAll(supabase, 'work_quality_logs', {
+      filter: (q) => q.eq('user_id', userId),
+    });
     if (error) throw error;
     if (data) {
       const rows: WorkQualityLog[] = (data as any[]).map((r) => ({
@@ -1105,11 +1100,9 @@ export async function hydrateBraindumpFromCloud(
   const errors: string[] = [];
   let count = 0;
   try {
-    const { data, error } = await supabase
-      .from('braindump_entries')
-      .select('*')
-      .eq('user_id', userId)
-      .is('deleted_at', null);
+    const { data, error } = await selectAll(supabase, 'braindump_entries', {
+      filter: (q) => q.eq('user_id', userId).is('deleted_at', null),
+    });
     if (error) throw error;
     if (data) {
       const rows: BraindumpEntry[] = (data as any[]).map((r) => ({
@@ -1149,10 +1142,9 @@ async function hydrateStockSalesFromCloud(
   const errors: string[] = [];
   let count = 0;
   try {
-    const { data, error } = await supabase
-      .from('stock_sales')
-      .select('*')
-      .eq('user_id', userId);
+    const { data, error } = await selectAll(supabase, 'stock_sales', {
+      filter: (q) => q.eq('user_id', userId),
+    });
     if (error) throw error;
     if (data) {
       const rows: StockSale[] = (data as any[]).map((r) => ({
@@ -1193,10 +1185,9 @@ async function hydratePortfolioCashFromCloud(
   const errors: string[] = [];
   let count = 0;
   try {
-    const { data, error } = await supabase
-      .from('portfolio_cash_entries')
-      .select('*')
-      .eq('user_id', userId);
+    const { data, error } = await selectAll(supabase, 'portfolio_cash_entries', {
+      filter: (q) => q.eq('user_id', userId),
+    });
     if (error) throw error;
     if (data) {
       const rows: PortfolioCashEntry[] = (data as any[]).map((r) => ({
@@ -1254,12 +1245,15 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     mapRowToLocal: (r: R) => L | null,
     writeToDexie: (rows: L[]) => Promise<void>
   ): Promise<number> {
-    let q = supabase.from(table).select('*');
-    for (const f of extraFilters) {
-      if (f.op === 'is') q = q.is(f.column, f.value as null);
-      else q = q.eq(f.column, f.value as string | number);
-    }
-    const { data, error } = await q;
+    const { data, error } = await selectAll(supabase, table, {
+      filter: (q) => {
+        for (const f of extraFilters) {
+          if (f.op === 'is') q = q.is(f.column, f.value as null);
+          else q = q.eq(f.column, f.value as string | number);
+        }
+        return q;
+      },
+    });
     if (error) {
       errors.push(`${table}: ${error.message}`);
       return 0;
@@ -1365,6 +1359,13 @@ export async function pullAll(_userId: string): Promise<PullResult> {
       // progress. Drop any CLOUD-SOURCED ('synced') local session that is no
       // longer in the active cloud set, and cascade-delete its sets. Local
       // unsynced ('pending') sessions are preserved — they haven't pushed yet.
+      //
+      // v1.16 (limecore#28): this prune is only safe because `rows` is the
+      // COMPLETE cloud set. It is a delete keyed on "absent from the pull", so
+      // a pull truncated at the API row cap would delete real workouts from
+      // this device. `pullTable` fetches through `selectAll`, which pages to
+      // completion or returns an error, and on an error this writer is never
+      // called. Keep it that way: never feed this prune a partial list.
       const cloudIds = new Set(rows.map((r) => r.id));
       const localSessions = await db.workoutSessions.toArray();
       const staleIds = localSessions
