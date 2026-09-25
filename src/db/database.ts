@@ -96,6 +96,9 @@ export interface SyncQueueItem {
   operation: 'insert' | 'update' | 'delete';
   payload: string;
   createdAt: string;
+  // v1.16 (limecore#27): the edit's `updated_at`, computed when the edit is
+  // enqueued (src/lib/editStamp.ts). Absent on items queued by older builds.
+  stamp?: string;
   syncedAt?: string;
   lastError?: string;
   /** NCC#55 — set when a dropped item was put back in the queue once, so a
