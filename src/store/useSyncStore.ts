@@ -1,6 +1,7 @@
-import { create } from 'zustand';
+import { create, type StoreApi } from 'zustand';
 import { listPending } from '../db/syncQueue';
 import { fullSync, PushResult, PullResult } from '../lib/cloudSync';
+import { coalesce } from '../lib/coalesce';
 import { useSessionStore } from './useSessionStore';
 import { useFinanceStore } from './useFinanceStore';
 import { useStudiesStore } from './useStudiesStore';
@@ -64,10 +65,64 @@ interface SyncStore {
   syncNow: () => Promise<void>;
 }
 
-// Promise-chain pattern: concurrent syncNow calls don't no-op, they queue up
-// behind the in-flight call. This was the silent-fail bug — adoption's
-// syncNow was being skipped because App.tsx's auto-sync was already running.
-let inflight: Promise<void> | null = null;
+// v1.16 (NCC#58). Concurrent `syncNow` calls must neither no-op nor overlap.
+// The old hand-rolled promise chain got the first right (adoption's syncNow
+// was once skipped because App.tsx's auto-sync was already running) and the
+// second wrong: every caller waiting on the in-flight sync woke up and started
+// its own, so N waiters meant N concurrent full syncs pushing the same queue.
+// `coalesce` runs one sync at a time and folds everyone who asks during it
+// into a single follow-up run. See src/lib/coalesce.ts.
+let requestSync: (() => Promise<void>) | null = null;
+
+async function runSync(set: StoreApi<SyncStore>['setState']): Promise<void> {
+  if (!navigator.onLine) return;
+  const user = useSessionStore.getState().user;
+  if (!user) {
+    set({ lastError: 'Not signed in.' });
+    return;
+  }
+
+  set({ syncing: true, lastError: null });
+  try {
+    const { push, pull } = await fullSync(user.id);
+    // After a successful pull, refresh in-memory state in every data
+    // store so the UI reflects rows that just landed in Dexie (whether
+    // from another device, Realtime, or an external app writing into
+    // the shared Supabase project). Skip the reload if the pull failed
+    // hard — nothing new would be there to surface anyway.
+    if (pull.errors.length === 0) {
+      await reloadDataStores();
+    }
+    const pending = await listPending();
+    // Surface up to 5 of the most recent item errors for diagnostics.
+    const itemErrors = pending
+      .filter((p) => p.lastError)
+      .slice(-5)
+      .map((p) => ({
+        entityType: p.entityType,
+        entityId: p.entityId,
+        message: p.lastError ?? 'unknown',
+      }));
+    const now = new Date().toISOString();
+    localStorage.setItem('sync.lastSyncedAt', now);
+    set({
+      lastSyncedAt: now,
+      pendingCount: pending.length,
+      lastPush: push,
+      lastPull: pull,
+      syncing: false,
+      itemErrors,
+      lastError:
+        push.errors.length > 0
+          ? `${push.errors.length} item(s) failed to upload.`
+          : pull.errors.length > 0
+            ? `Pull error: ${pull.errors[0]}`
+            : null,
+    });
+  } catch (e) {
+    set({ syncing: false, lastError: (e as Error).message });
+  }
+}
 
 export const useSyncStore = create<SyncStore>((set, get) => ({
   isOnline: navigator.onLine,
@@ -139,67 +194,9 @@ export const useSyncStore = create<SyncStore>((set, get) => ({
     set({ pendingCount: pending.length });
   },
 
-  async syncNow() {
-    // Wait for any in-flight sync to finish before starting a new one.
-    if (inflight) {
-      try {
-        await inflight;
-      } catch {
-        /* swallow — we'll do our own attempt */
-      }
-    }
-
-    if (!navigator.onLine) return;
-    const user = useSessionStore.getState().user;
-    if (!user) {
-      set({ lastError: 'Not signed in.' });
-      return;
-    }
-
-    set({ syncing: true, lastError: null });
-    inflight = (async () => {
-      try {
-        const { push, pull } = await fullSync(user.id);
-        // After a successful pull, refresh in-memory state in every data
-        // store so the UI reflects rows that just landed in Dexie (whether
-        // from another device, Realtime, or an external app writing into
-        // the shared Supabase project). Skip the reload if the pull failed
-        // hard — nothing new would be there to surface anyway.
-        if (pull.errors.length === 0) {
-          await reloadDataStores();
-        }
-        const pending = await listPending();
-        // Surface up to 5 of the most recent item errors for diagnostics.
-        const itemErrors = pending
-          .filter((p) => p.lastError)
-          .slice(-5)
-          .map((p) => ({
-            entityType: p.entityType,
-            entityId: p.entityId,
-            message: p.lastError ?? 'unknown',
-          }));
-        const now = new Date().toISOString();
-        localStorage.setItem('sync.lastSyncedAt', now);
-        set({
-          lastSyncedAt: now,
-          pendingCount: pending.length,
-          lastPush: push,
-          lastPull: pull,
-          syncing: false,
-          itemErrors,
-          lastError:
-            push.errors.length > 0
-              ? `${push.errors.length} item(s) failed to upload.`
-              : pull.errors.length > 0
-                ? `Pull error: ${pull.errors[0]}`
-                : null,
-        });
-      } catch (e) {
-        set({ syncing: false, lastError: (e as Error).message });
-      }
-    })();
-    await inflight;
-    inflight = null;
+  syncNow() {
+    requestSync ??= coalesce(() => runSync(set));
+    return requestSync();
   },
 }));
 
