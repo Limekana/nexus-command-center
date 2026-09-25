@@ -83,7 +83,7 @@ describe('selectAll', () => {
     });
     const { data, error } = await selectAll(client, 't');
     expect(data).toBeNull();
-    expect(error.code).toBe('57014');
+    expect(error!.code).toBe('57014');
   });
 
   it('passes an error through untouched, so a message-sniffing caller still works', async () => {
@@ -93,14 +93,14 @@ describe('selectAll', () => {
       failWhen: () => ({ code: '42703', message: 'column t.deleted_at does not exist' }),
     });
     const { error } = await selectAll(client, 't');
-    expect(error.message).toBe('column t.deleted_at does not exist');
+    expect(error!.message).toBe('column t.deleted_at does not exist');
   });
 
   it('refuses to loop forever against a server that ignores the cursor', async () => {
     const client = fakeClient({ t: rowsOf(2500) }, { ignoreGt: true });
     const { data, error } = await selectAll(client, 't');
     expect(data).toBeNull();
-    expect(error.message).toMatch(/cursor did not advance/);
+    expect(error!.message).toMatch(/cursor did not advance/);
   });
 
   it('falls back to the short-page rule when no count comes back', async () => {

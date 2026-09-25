@@ -37,22 +37,51 @@ const MAX_PAGES = 1000;
 
 let warnedShortPage = false;
 
-export interface SelectAllOptions {
+/** A PostgREST error, or one this helper raised itself. Structural, so both
+ *  supabase-js's PostgrestError and a plain Error fit. */
+export interface QueryError {
+  message: string;
+  code?: string;
+}
+
+interface Page<R> {
+  data: R[] | null;
+  error: QueryError | null;
+  count?: number | null;
+}
+
+/** The slice of supabase-js's filter builder this helper and its callers use.
+ *  Declared here rather than imported so the helper does not depend on the
+ *  client's generics — the clients in these apps are not schema-typed. */
+export interface PageQuery<R> extends PromiseLike<Page<R>> {
+  eq(column: string, value: unknown): PageQuery<R>;
+  is(column: string, value: null | boolean): PageQuery<R>;
+  in(column: string, values: readonly unknown[]): PageQuery<R>;
+  order(column: string, options?: { ascending?: boolean }): PageQuery<R>;
+  limit(count: number): PageQuery<R>;
+  gt(column: string, value: string): PageQuery<R>;
+}
+
+export interface QueryClient {
+  from(table: string): { select(columns: string, options?: { count?: 'exact' }): unknown };
+}
+
+export interface SelectAllOptions<R> {
   columns?: string;
   /** Applied to every page, e.g. `(q) => q.eq('user_id', uid)`. */
-  filter?: (q: any) => any;
+  filter?: (q: PageQuery<R>) => PageQuery<R>;
   pageSize?: number;
 }
 
 export interface SelectAllResult<R> {
   data: R[] | null;
-  error: any;
+  error: QueryError | null;
 }
 
-export async function selectAll<R extends { id: string } = any>(
-  client: { from: (table: string) => any },
+export async function selectAll<R extends { id: string } = { id: string }>(
+  client: QueryClient,
   table: string,
-  { columns = '*', filter = (q) => q, pageSize = PAGE_SIZE }: SelectAllOptions = {},
+  { columns = '*', filter = (q) => q, pageSize = PAGE_SIZE }: SelectAllOptions<R> = {},
 ): Promise<SelectAllResult<R>> {
   const rows: R[] = [];
   let total: number | null = null;
@@ -64,8 +93,13 @@ export async function selectAll<R extends { id: string } = any>(
       return { data: null, error: new Error(`selectAll(${table}): gave up after ${MAX_PAGES} pages`) };
     }
 
-    let q = client.from(table).select(columns, page === 0 ? { count: 'exact' } : undefined);
-    q = filter(q).order('id', { ascending: true }).limit(pageSize);
+    // The one cast in this file: supabase-js's builder satisfies `PageQuery`
+    // structurally, but its declared return type is generic over a schema
+    // these clients do not declare.
+    const base = client
+      .from(table)
+      .select(columns, page === 0 ? { count: 'exact' } : undefined) as PageQuery<R>;
+    let q = filter(base).order('id', { ascending: true }).limit(pageSize);
     if (lastId !== null) q = q.gt('id', lastId);
 
     const { data, error, count } = await q;
