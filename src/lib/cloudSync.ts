@@ -23,6 +23,7 @@
 // real concurrent collaboration). Full CRDT is overkill.
 import { supabase } from './supabase';
 import { selectAll } from './selectAll';
+import type { Table } from 'dexie';
 import { db, SyncQueueItem } from '../db/database';
 import { listPending } from '../db/syncQueue';
 import { generateId, legacyIdToUuid } from '../utils/uuid';
@@ -769,40 +770,67 @@ interface StudiesHydrationResult {
   errors: string[];
 }
 
-async function fetchWithSoftDeleteFallback(
-  table: string,
+/**
+ * v1.16 (NCC#56) — every row of a StudyDesk-owned table, tombstones included,
+ * split into the live rows and the ids the server has marked deleted.
+ *
+ * This used to query with `deleted_at IS NULL` and `bulkPut` the result, so
+ * NCC never learned of a delete: a course, grade or study session removed in
+ * StudyDesk (which only ever soft-deletes) stayed on every NCC device that had
+ * pulled it, and kept counting towards NCC's GPA, study hours and Life Score.
+ * The server held 21 soft-deleted courses and 8 soft-deleted grades across
+ * the accounts that use NCC when this was found.
+ *
+ * Pulling the tombstones is what lets the caller remove them. With no filter
+ * on `deleted_at` there is no schema mismatch left to fall back from either,
+ * so the old missing-column retry is gone with it.
+ */
+async function fetchStudyDeskTable(
+  table: 'subjects' | 'grades' | 'study_sessions',
   userId: string,
-): Promise<{ data: any[] | null; error: string | null }> {
-  // Try with `deleted_at IS NULL` first. If the column doesn't exist on
-  // StudyDesk's side, retry without that filter and post-filter in JS.
-  const initial = await selectAll(supabase, table, {
-    filter: (q) => q.eq('user_id', userId).is('deleted_at', null),
+): Promise<{ live: any[]; deletedIds: string[]; error: string | null }> {
+  const { data, error } = await selectAll(supabase, table, {
+    filter: (q) => q.eq('user_id', userId),
   });
-  let data = initial.data;
-  const error = initial.error;
-  if (error) {
-    const msg = error.message ?? '';
-    // PostgREST returns "column does not exist" / 42703. Be generous in the
-    // match since wording can vary across versions.
-    const looksLikeMissingColumn =
-      /deleted_at/i.test(msg) &&
-      (/does not exist/i.test(msg) || /column/i.test(msg));
-    if (looksLikeMissingColumn) {
-      console.warn(
-        `[studies-hydrate] ${table}: deleted_at column missing — retrying without filter`,
-      );
-      const retry = await selectAll(supabase, table, { filter: (q) => q.eq('user_id', userId) });
-      if (retry.error) {
-        return { data: null, error: retry.error.message };
-      }
-      // Drop rows that look soft-deleted if they happen to carry the field
-      // anyway (mixed-schema deployments).
-      data = (retry.data ?? []).filter((r: any) => !r.deleted_at);
-    } else {
-      return { data: null, error: msg };
-    }
+  if (error) return { live: [], deletedIds: [], error: error.message };
+  const live: any[] = [];
+  const deletedIds: string[] = [];
+  for (const r of (data ?? []) as any[]) {
+    if (r.deleted_at) deletedIds.push(r.id);
+    else live.push(r);
   }
-  return { data: data ?? [], error: null };
+  return { live, deletedIds, error: null };
+}
+
+/**
+ * Remove the local rows the server has tombstoned. Returns how many went.
+ *
+ * Matched on the server id AND on `legacyIdToUuid(localId)`, because a row
+ * created by an early NCC build can still sit locally under its legacy id
+ * while the server knows it by the uuid it was pushed as.
+ *
+ * A pending local edit does not save a tombstoned row, and that is
+ * deliberate: it is the rule StudyDesk's merge already applies ("a delete
+ * beats a simultaneous edit"), and the server enforces it too — NCC's subject
+ * and grade upserts never send `deleted_at`, so pushing that edit updates the
+ * tombstoned row's content without un-deleting it. Keeping the row here would
+ * only leave this device disagreeing with every other one.
+ *
+ * Known gap: `purge_soft_deleted()` hard-deletes tombstones older than 90
+ * days, so a device that has not pulled for longer than that never sees the
+ * tombstone and keeps the row.
+ */
+async function removeTombstoned(
+  table: Table<{ id: string }, string>,
+  deletedIds: string[],
+): Promise<number> {
+  if (deletedIds.length === 0) return 0;
+  const dead = new Set(deletedIds);
+  const doomed = (await table.toArray())
+    .filter((r) => dead.has(r.id) || dead.has(legacyIdToUuid(r.id)))
+    .map((r) => r.id);
+  if (doomed.length > 0) await table.bulkDelete(doomed);
+  return doomed.length;
 }
 
 async function hydrateStudiesTables(userId: string): Promise<StudiesHydrationResult> {
@@ -813,12 +841,12 @@ async function hydrateStudiesTables(userId: string): Promise<StudiesHydrationRes
 
   // --- subjects ---
   try {
-    const { data, error } = await fetchWithSoftDeleteFallback('subjects', userId);
+    const { live, deletedIds, error } = await fetchStudyDeskTable('subjects', userId);
     if (error) {
       errors.push(`subjects: ${error}`);
       console.warn('[studies-hydrate] subjects failed:', error);
-    } else if (data) {
-      const courses: Course[] = data.map((s: any) => ({
+    } else {
+      const courses: Course[] = live.map((s: any) => ({
         id: s.id,
         importId: 'cloud',
         name: s.name,
@@ -832,8 +860,9 @@ async function hydrateStudiesTables(userId: string): Promise<StudiesHydrationRes
         createdAt: s.created_at,
       }));
       await db.courses.bulkPut(courses);
+      const removed = await removeTombstoned(db.courses, deletedIds);
       subjectCount = courses.length;
-      console.log(`[studies-hydrate] subjects=${subjectCount}`);
+      console.log(`[studies-hydrate] subjects=${subjectCount} removed=${removed}`);
     }
   } catch (e) {
     errors.push(`subjects: ${(e as Error).message}`);
@@ -842,12 +871,12 @@ async function hydrateStudiesTables(userId: string): Promise<StudiesHydrationRes
 
   // --- grades ---
   try {
-    const { data, error } = await fetchWithSoftDeleteFallback('grades', userId);
+    const { live, deletedIds, error } = await fetchStudyDeskTable('grades', userId);
     if (error) {
       errors.push(`grades: ${error}`);
       console.warn('[studies-hydrate] grades failed:', error);
-    } else if (data) {
-      const grades: Grade[] = data.map((g: any) => ({
+    } else {
+      const grades: Grade[] = live.map((g: any) => ({
         id: g.id,
         subjectId: g.subject_id,
         grade: Number(g.grade),
@@ -858,8 +887,9 @@ async function hydrateStudiesTables(userId: string): Promise<StudiesHydrationRes
         updatedAt: g.updated_at,
       }));
       await db.grades.bulkPut(grades);
+      const removed = await removeTombstoned(db.grades, deletedIds);
       gradeCount = grades.length;
-      console.log(`[studies-hydrate] grades=${gradeCount}`);
+      console.log(`[studies-hydrate] grades=${gradeCount} removed=${removed}`);
     }
   } catch (e) {
     errors.push(`grades: ${(e as Error).message}`);
@@ -868,15 +898,12 @@ async function hydrateStudiesTables(userId: string): Promise<StudiesHydrationRes
 
   // --- study_sessions ---
   try {
-    const { data, error } = await fetchWithSoftDeleteFallback(
-      'study_sessions',
-      userId,
-    );
+    const { live, deletedIds, error } = await fetchStudyDeskTable('study_sessions', userId);
     if (error) {
       errors.push(`study_sessions: ${error}`);
       console.warn('[studies-hydrate] study_sessions failed:', error);
-    } else if (data) {
-      const sessions: StudySession[] = data.map((r: any) => ({
+    } else {
+      const sessions: StudySession[] = live.map((r: any) => ({
         id: r.id,
         startedAt: r.started_at,
         durationMinutes: Number(r.duration_minutes),
@@ -887,8 +914,9 @@ async function hydrateStudiesTables(userId: string): Promise<StudiesHydrationRes
         updatedAt: r.updated_at,
       }));
       await db.studySessions.bulkPut(sessions);
+      const removed = await removeTombstoned(db.studySessions, deletedIds);
       sessionCount = sessions.length;
-      console.log(`[studies-hydrate] study_sessions=${sessionCount}`);
+      console.log(`[studies-hydrate] study_sessions=${sessionCount} removed=${removed}`);
     }
   } catch (e) {
     errors.push(`study_sessions: ${(e as Error).message}`);
