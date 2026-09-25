@@ -24,6 +24,7 @@
 import { supabase } from './supabase';
 import { selectAll } from './selectAll';
 import type { Table } from 'dexie';
+import { recordSeen, stampOf } from './editStamp';
 import { db, SyncQueueItem } from '../db/database';
 import { listPending } from '../db/syncQueue';
 import { generateId, legacyIdToUuid } from '../utils/uuid';
@@ -83,7 +84,7 @@ async function pushTransaction(item: SyncQueueItem, ctx: PushContext): Promise<v
     destination_account_id: local.destinationAccountId ? legacyIdToUuid(local.destinationAccountId) : null,
     description,
     date: local.date,
-    updated_at: item.createdAt,
+    updated_at: stampOf(item),
   };
   const { error } = await supabase.from('transactions').upsert(row);
   if (error) throw error;
@@ -106,7 +107,7 @@ async function pushBudgetCategory(item: SyncQueueItem, ctx: PushContext): Promis
     monthly_limit: local.monthlyLimit,
     currency: 'EUR',
     color: local.icon ?? null,
-    updated_at: item.createdAt,
+    updated_at: stampOf(item),
   };
   const { error } = await supabase.from('budget_categories').upsert(row);
   if (error) throw error;
@@ -132,7 +133,7 @@ async function pushPortfolioHolding(item: SyncQueueItem, ctx: PushContext): Prom
     avg_cost_native: local.avgCostNative ?? null,
     cost_currency: local.costCurrency ?? null,
     sector_override: local.sectorOverride ?? null,
-    updated_at: item.createdAt,
+    updated_at: stampOf(item),
   };
   const { error } = await supabase.from('portfolio_holdings').upsert(row);
   if (error) throw error;
@@ -148,7 +149,7 @@ async function pushPortfolioLot(item: SyncQueueItem, ctx: PushContext): Promise<
     return;
   }
   const local: PortfolioLot = JSON.parse(item.payload);
-  const updatedAt = local.updatedAt || item.createdAt;
+  const updatedAt = stampOf(item, local);
   const row = {
     id: legacyIdToUuid(local.id),
     user_id: ctx.userId,
@@ -233,7 +234,7 @@ async function pushManualAsset(item: SyncQueueItem, ctx: PushContext): Promise<v
     return;
   }
   const local: ManualAsset = JSON.parse(item.payload);
-  const updatedAt = local.updatedAt || item.createdAt;
+  const updatedAt = stampOf(item, local);
   const row = {
     id: legacyIdToUuid(local.id),
     user_id: ctx.userId,
@@ -258,7 +259,7 @@ async function pushWatchlistItem(item: SyncQueueItem, ctx: PushContext): Promise
     return;
   }
   const local: WatchlistItem = JSON.parse(item.payload);
-  const updatedAt = local.updatedAt || item.createdAt;
+  const updatedAt = stampOf(item, local);
   const row = {
     id: legacyIdToUuid(local.id),
     user_id: ctx.userId,
@@ -285,7 +286,7 @@ async function pushGoal(item: SyncQueueItem, ctx: PushContext): Promise<void> {
     return;
   }
   const local: Goal = JSON.parse(item.payload);
-  const updatedAt = local.updatedAt || item.createdAt;
+  const updatedAt = stampOf(item, local);
   const row = {
     id: legacyIdToUuid(local.id),
     user_id: ctx.userId,
@@ -298,8 +299,13 @@ async function pushGoal(item: SyncQueueItem, ctx: PushContext): Promise<void> {
     currency: local.currency ?? null,
     completed: local.completed,
     completed_at: local.completedAt ?? null,
-    deleted_at: local.deletedAt ?? null,
     updated_at: updatedAt,
+    // v1.16 (limecore#27, registry P6): `deleted_at` only when the goal IS
+    // deleted. Sending `deleted_at: null` for every live edit made each one an
+    // explicit revival, so an edit from a device that had not yet seen a
+    // delete made elsewhere would bring the goal back. NCC has no deliberate
+    // goal un-delete, so a live edit leaves the column alone.
+    ...(local.deletedAt ? { deleted_at: local.deletedAt } : {}),
   };
   const { error } = await supabase.from('goals').upsert(row);
   if (error) throw error;
@@ -317,7 +323,7 @@ async function pushTask(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   const local: Task = JSON.parse(item.payload);
   // Prefer the entity's own updatedAt if set (captures the actual edit moment),
   // fall back to the queue createdAt.
-  const updatedAt = local.updatedAt || item.createdAt;
+  const updatedAt = stampOf(item, local);
   const row = {
     id: legacyIdToUuid(local.id),
     user_id: ctx.userId,
@@ -367,7 +373,7 @@ async function pushCourse(item: SyncQueueItem, ctx: PushContext): Promise<void> 
     // is purely a consumer of StudyDesk's archive state but the push
     // shape stays symmetric so the LWW merge isn't lopsided.
     archived_at: local.archivedAt ?? null,
-    updated_at: item.createdAt,
+    updated_at: stampOf(item),
   };
   const { error } = await supabase.from('subjects').upsert(subjectRow);
   if (error) throw error;
@@ -385,7 +391,7 @@ async function pushGrade(item: SyncQueueItem, ctx: PushContext): Promise<void> {
     return;
   }
   const local: Grade = JSON.parse(item.payload);
-  const updatedAt = local.updatedAt || item.createdAt;
+  const updatedAt = stampOf(item, local);
   const row = {
     id: legacyIdToUuid(local.id),
     user_id: ctx.userId,
@@ -459,7 +465,7 @@ async function pushBraindumpEntry(item: SyncQueueItem, ctx: PushContext): Promis
     content: local.content,
     converted_task_id: local.convertedTaskId ?? null,
     created_at: local.createdAt,
-    updated_at: local.updatedAt || item.createdAt,
+    updated_at: stampOf(item, local),
   });
   if (error) throw error;
 }
@@ -498,7 +504,7 @@ async function pushHabit(item: SyncQueueItem, ctx: PushContext): Promise<void> {
     return;
   }
   const local: Habit = JSON.parse(item.payload);
-  const updatedAt = local.updatedAt || item.createdAt;
+  const updatedAt = stampOf(item, local);
   const row = {
     id: legacyIdToUuid(local.id),
     user_id: ctx.userId,
@@ -552,7 +558,7 @@ async function pushWorkQualityLog(item: SyncQueueItem, ctx: PushContext): Promis
     return;
   }
   const local: WorkQualityLog = JSON.parse(item.payload);
-  const updatedAt = local.updatedAt || item.createdAt;
+  const updatedAt = stampOf(item, local);
   const row = {
     id: legacyIdToUuid(local.id),
     user_id: ctx.userId,
@@ -793,6 +799,7 @@ async function fetchStudyDeskTable(
     filter: (q) => q.eq('user_id', userId),
   });
   if (error) return { live: [], deletedIds: [], error: error.message };
+  recordSeen(table, (data ?? []) as any[]);
   const live: any[] = [];
   const deletedIds: string[] = [];
   for (const r of (data ?? []) as any[]) {
@@ -1086,6 +1093,7 @@ export async function hydrateWorkQualityFromCloud(
       filter: (q) => q.eq('user_id', userId),
     });
     if (error) throw error;
+    recordSeen('work_quality_logs', (data ?? []) as any[]);
     if (data) {
       const rows: WorkQualityLog[] = (data as any[]).map((r) => ({
         id: r.id,
@@ -1132,6 +1140,7 @@ export async function hydrateBraindumpFromCloud(
       filter: (q) => q.eq('user_id', userId).is('deleted_at', null),
     });
     if (error) throw error;
+    recordSeen('braindump_entries', (data ?? []) as any[]);
     if (data) {
       const rows: BraindumpEntry[] = (data as any[]).map((r) => ({
         id: r.id,
@@ -1286,6 +1295,7 @@ export async function pullAll(_userId: string): Promise<PullResult> {
       errors.push(`${table}: ${error.message}`);
       return 0;
     }
+    recordSeen(table, data as any[]);
     const mapped = (data as R[]).map(mapRowToLocal).filter((x): x is L => x !== null);
     await writeToDexie(mapped);
     return mapped.length;
