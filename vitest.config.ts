@@ -11,7 +11,9 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts'],
+    // `test/` holds tests for code outside `src` (the Electron main process),
+    // kept out of `electron/` so electron-builder does not ship them.
+    include: ['src/**/*.test.ts', 'test/**/*.test.mjs'],
     // Dexie needs a real IndexedDB; `fake-indexeddb/auto` installs one on
     // globalThis. Loaded for every file rather than per-test so a module that
     // touches `db` at import time cannot throw before a test body runs.
