@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import BottomTabBar from './BottomTabBar';
 import SideNav from './SideNav';
 import OfflineBanner from './OfflineBanner';
+import PolicyUpdatedNote from './PolicyUpdatedNote';
 import { useShellTier, useSidebarRail } from '../lib/useShell';
 import QuickLogFAB from './QuickLogFAB';
 import QuickLogBottomSheet from './QuickLogBottomSheet';
@@ -295,6 +296,8 @@ export default function AppShell() {
           it is a transparent passthrough — flex-1 column inside a column. */}
       <div className="flex flex-1 min-w-0 flex-col">
         <OfflineBanner />
+        {/* v1.16 (limecore#16) — once, for people who used the app under the old policy. */}
+        <PolicyUpdatedNote />
         {/* pb-32 (128px) gives clear space below the last card so it isn't clipped
           * by the fixed BottomTabBar (which is ~80px + its own safe-bottom inset). */}
         {/* v1.2 follow-up — pb-32 → pb-44. The floating panel tab bar sits

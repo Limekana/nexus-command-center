@@ -377,7 +377,10 @@
       "rack": "Rack"
     },
     "themeLockedAria": "{{name}} — tema pendukung, terkunci",
-    "themeSupporterNote": "Rack adalah tema pendukung. Tema ini terbuka saat Anda mendukung pengembangan di Ko-fi, di bawah."
+    "themeSupporterNote": "Rack adalah tema pendukung. Tema ini terbuka saat Anda mendukung pengembangan di Ko-fi, di bawah.",
+    "errorReports": "Kirim laporan kesalahan",
+    "errorReportsSub": "Mati secara bawaan · khusus akun",
+    "errorReportsNote": "Saat aplikasi mengalami kesalahan yang tidak bisa dipulihkan, aplikasi mengirimkan jenis kesalahan, lokasinya di kode kami, versi aplikasi dan Android atau browser, serta layar yang terbuka. Tidak pernah apa yang Anda masukkan. Disimpan 90 hari."
   },
   "lock": {
     "secureAccess": "Akses aman",
@@ -1259,5 +1262,25 @@
     "tasksDone_other": "{{count}} selesai",
     "newPeak": "Puncak baru",
     "log": "Log"
+  },
+  "crash": {
+    "eyebrow": "Kesalahan",
+    "title": "Terjadi masalah",
+    "body": "Layar ini mengalami kesalahan yang tidak bisa dipulihkan. Data Anda aman di perangkat ini.",
+    "reload": "Muat ulang",
+    "send": "Kirim laporan ini",
+    "sending": "Mengirim…",
+    "retry": "Gagal mengirim. Coba lagi",
+    "sent": "Laporan terkirim. Terima kasih.",
+    "guest": "Laporan kesalahan memerlukan akun, jadi tidak ada yang dikirim.",
+    "export": "Ekspor data saya",
+    "exported": "Ekspor diunduh",
+    "whatIsSent": "Laporan menyebutkan kesalahan apa yang terjadi dan di bagian mana kode kami. Laporan tidak pernah berisi apa yang Anda masukkan."
+  },
+  "policy": {
+    "eyebrow": "Kebijakan privasi diperbarui",
+    "body": "Kini mencakup laporan kesalahan, yang tetap mati kecuali Anda menyalakannya, dan pemeriksaan pembaruan F-Droid di Android.",
+    "read": "Baca",
+    "ok": "OK"
   }
 }

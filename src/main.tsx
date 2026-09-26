@@ -11,6 +11,9 @@ import './index.css';
 import './themes/rack.css';
 import { syncTheme } from './lib/theme';
 import { ENTITLEMENT_EVENT } from './lib/entitlement';
+import ErrorBoundary from './components/ErrorBoundary';
+import { installGlobalErrorHandlers } from './lib/errorReports';
+import { notePolicyBaseline } from './lib/policyNotice';
 
 syncTheme();
 window.addEventListener(ENTITLEMENT_EVENT, () => syncTheme());
@@ -18,12 +21,22 @@ window.addEventListener(ENTITLEMENT_EVENT, () => syncTheme());
 // No-op unless this bundle was built by Vercel — see webAnalytics.ts.
 initWebAnalytics();
 
+// v1.16 (limecore#16) — errors outside render (handlers, timers, promises).
+// Reports only while the Settings switch is on; see lib/errorReports.ts.
+installGlobalErrorHandlers();
+// Before onboarding can run: a fresh install starts on the current policy.
+notePolicyBaseline();
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <HashRouter>
-      <ConfirmProvider>
-        <App />
-      </ConfirmProvider>
-    </HashRouter>
+    {/* Outermost, so a throw anywhere below — router and providers included —
+        lands on the recovery screen instead of a blank page (limecore#16). */}
+    <ErrorBoundary>
+      <HashRouter>
+        <ConfirmProvider>
+          <App />
+        </ConfirmProvider>
+      </HashRouter>
+    </ErrorBoundary>
   </React.StrictMode>
 );
