@@ -1290,17 +1290,22 @@ function Toggle({
           rather than "this is live". A 20px amber dot still reads as on at a
           glance, and ten of them read as a panel of switches rather than as
           ten alarms. */}
+      {/* The outline is an inset ring, not a border: a 1px border took layout
+          space, which left an 18px slot for the 20px knob, so the knob sat 1px
+          low and touched the right edge when on. With the ring, 44×24 minus
+          2px padding is exactly the 40×20 the knob and its 20px travel need.
+          The travel flips under RTL, where the knob starts on the right. */}
       <button
         onClick={() => !locked && onChange(!value)}
-        className={`w-11 h-6 rounded-full p-0.5 bg-surface2 border transition-colors flex-shrink-0 ${
-          value ? 'border-primary' : 'border-border'
+        className={`w-11 h-6 rounded-full p-0.5 bg-surface2 ring-1 ring-inset transition flex-shrink-0 ${
+          value ? 'ring-primary' : 'ring-border'
         } ${locked ? 'opacity-60' : ''}`}
         disabled={locked}
         aria-pressed={value}
       >
         <div
           className={`w-5 h-5 rounded-full transition-transform ${
-            value ? 'translate-x-5 bg-primary' : 'bg-text-faint'
+            value ? 'translate-x-5 rtl:-translate-x-5 bg-primary' : 'bg-text-faint'
           }`}
         />
       </button>
