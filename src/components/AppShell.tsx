@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import BottomTabBar from './BottomTabBar';
 import SideNav from './SideNav';
 import OfflineBanner from './OfflineBanner';
+import FdroidUpdateNote from './FdroidUpdateNote';
 import { useShellTier, useSidebarRail } from '../lib/useShell';
 import QuickLogFAB from './QuickLogFAB';
 import QuickLogBottomSheet from './QuickLogBottomSheet';
@@ -330,6 +331,9 @@ export default function AppShell() {
                 within a section (Finance overview → Add Transaction) doesn't
                 re-trigger; only Finance → Studies-style jumps animate. Keeps
                 motion meaningful per the v1.2 design brief. */}
+            {/* v1.16 (#48) — Android only, once a day, off in Settings. Renders
+                nothing unless F-Droid has a newer build than this one. */}
+            <FdroidUpdateNote />
             <PageTransition>
               <Outlet />
             </PageTransition>

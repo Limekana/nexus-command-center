@@ -377,7 +377,9 @@
       "rack": "Rack"
     },
     "themeLockedAria": "{{name}} — سمة للداعمين، مقفلة",
-    "themeSupporterNote": "Rack سمة للداعمين. تُفتح عندما تدعم التطوير على Ko-fi، في الأسفل."
+    "themeSupporterNote": "Rack سمة للداعمين. تُفتح عندما تدعم التطوير على Ko-fi، في الأسفل.",
+    "fdroidCheck": "التحقق من التحديثات على F-Droid",
+    "fdroidCheckNote": "يسأل Nexus Command Center موقع f-droid.org مرة واحدة يوميًا عن أحدث إصدار. لا يُرسل أي شيء عنك. عند إيقافه لا يُرسل الطلب إطلاقًا."
   },
   "lock": {
     "secureAccess": "وصول آمن",
@@ -1304,5 +1306,12 @@
     "tasksDone_other": "أُنجز {{count}}",
     "newPeak": "ذروة جديدة",
     "log": "السجل"
+  },
+  "update": {
+    "eyebrow": "على F-Droid",
+    "title": "صدر Nexus Command Center {{version}}",
+    "versions": "التحديث من {{current}} إلى {{latest}}",
+    "open": "احصل عليه من F-Droid",
+    "later": "لاحقًا"
   }
 }

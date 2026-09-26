@@ -377,7 +377,9 @@
       "rack": "Rack"
     },
     "themeLockedAria": "{{name}} — सपोर्टर थीम, लॉक",
-    "themeSupporterNote": "Rack एक सपोर्टर थीम है। नीचे Ko-fi पर विकास का समर्थन करने पर यह अनलॉक होती है।"
+    "themeSupporterNote": "Rack एक सपोर्टर थीम है। नीचे Ko-fi पर विकास का समर्थन करने पर यह अनलॉक होती है।",
+    "fdroidCheck": "F-Droid पर अपडेट जाँचें",
+    "fdroidCheckNote": "Nexus Command Center दिन में एक बार f-droid.org से नवीनतम संस्करण पूछता है। आपके बारे में कुछ भी नहीं भेजा जाता। इसे बंद करने पर यह अनुरोध बिल्कुल नहीं भेजा जाता।"
   },
   "lock": {
     "secureAccess": "सुरक्षित पहुँच",
@@ -1268,5 +1270,12 @@
     "tasksDone_other": "{{count}} पूरे",
     "newPeak": "नया शिखर",
     "log": "लॉग"
+  },
+  "update": {
+    "eyebrow": "F-Droid पर",
+    "title": "Nexus Command Center {{version}} आ गया है",
+    "versions": "{{current}} से {{latest}} पर अपडेट करें",
+    "open": "F-Droid से पाएँ",
+    "later": "बाद में"
   }
 }

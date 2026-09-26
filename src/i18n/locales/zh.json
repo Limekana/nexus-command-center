@@ -316,7 +316,9 @@
       "rack": "Rack"
     },
     "themeLockedAria": "{{name}}——支持者主题，已锁定",
-    "themeSupporterNote": "Rack 是支持者主题。在下方通过 Ko-fi 支持开发即可解锁。"
+    "themeSupporterNote": "Rack 是支持者主题。在下方通过 Ko-fi 支持开发即可解锁。",
+    "fdroidCheck": "在 F-Droid 上检查更新",
+    "fdroidCheckNote": "Nexus Command Center 每天向 f-droid.org 查询一次最新版本，不会发送任何关于你的信息。关闭后将不再发送该请求。"
   },
   "days": {
     "long": {
@@ -1265,5 +1267,12 @@
     "tasksDone_other": "完成 {{count}} 项",
     "newPeak": "新峰值",
     "log": "日志"
+  },
+  "update": {
+    "eyebrow": "F-Droid 上",
+    "title": "Nexus Command Center {{version}} 已发布",
+    "versions": "从 {{current}} 更新到 {{latest}}",
+    "open": "前往 F-Droid 获取",
+    "later": "稍后"
   }
 }
