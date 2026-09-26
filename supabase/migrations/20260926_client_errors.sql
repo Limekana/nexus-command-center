@@ -24,7 +24,7 @@
 -- P1: a new table only, plus one added statement in purge_soft_deleted(); no
 -- existing column changes. P2: RLS and policies in this same migration.
 -- Tested against Postgres 17: supabase/tests/client_errors.test.sql.
--- NOT yet applied to production — owner confirms before `apply_migration`.
+-- APPLIED to production 2026-09-26 (owner-confirmed) as `v116_client_errors`, version 20260926102322.
 
 -- ── Guard: only extend the purge function we have actually read ─────────────
 -- purge_soft_deleted() is rewritten below with one added block. Replacing a
