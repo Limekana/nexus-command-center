@@ -19,6 +19,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import { APP_LOCK_APPLIES } from '../lib/isDesktop';
 import { IS_DESKTOP } from '../lib/desktop';
 import { checkForDesktopUpdate, runDesktopUpdateAction, useDesktopUpdate } from '../lib/desktopUpdate';
+import { setUpdateCheckEnabled, useFdroidUpdate } from '../lib/fdroidUpdate';
 import { useSyncStore } from '../store/useSyncStore';
 import { useSessionStore, userDisplayName } from '../store/useSessionStore';
 import { useSettingsStore, BaseCurrency, UI_SCALES } from '../store/useSettingsStore';
@@ -1049,6 +1050,7 @@ export default function Settings() {
         <Section title={t('settings.about')}>
           <ListRow label={t('settings.version')} value={pkg.version} />
           {IS_DESKTOP && <DesktopUpdateRow />}
+          {Capacitor.getPlatform() === 'android' && <FdroidUpdateToggle />}
           <ListRow label={t('settings.studio')} value="Limecore" />
           <ListRow label={t('settings.build')} value={t('settings.buildValue')} />
           <button
@@ -1262,6 +1264,22 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <div className="sec mb-2">{title}</div>
       <div className="card space-y-1">{children}</div>
     </div>
+  );
+}
+
+// v1.16 (#48) — the switch the privacy policy promises (#50): off stops the
+// once-a-day request to f-droid.org entirely, not merely the note. Android
+// only, because it is the only build F-Droid ships.
+function FdroidUpdateToggle() {
+  const { t } = useTranslation();
+  const { enabled } = useFdroidUpdate();
+  return (
+    <Toggle
+      label={t('settings.fdroidCheck')}
+      sub={t('settings.fdroidCheckNote')}
+      value={enabled}
+      onChange={setUpdateCheckEnabled}
+    />
   );
 }
 

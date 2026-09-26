@@ -316,7 +316,9 @@
       "rack": "Rack"
     },
     "themeLockedAria": "{{name}} — Unterstützer-Theme, gesperrt",
-    "themeSupporterNote": "Rack ist ein Unterstützer-Theme. Es wird freigeschaltet, wenn du die Entwicklung auf Ko-fi unterstützt (weiter unten)."
+    "themeSupporterNote": "Rack ist ein Unterstützer-Theme. Es wird freigeschaltet, wenn du die Entwicklung auf Ko-fi unterstützt (weiter unten).",
+    "fdroidCheck": "Auf F-Droid nach Updates suchen",
+    "fdroidCheckNote": "Einmal am Tag fragt Nexus Command Center bei f-droid.org nach der neuesten Version. Über dich wird nichts gesendet. Ausgeschaltet unterbleibt die Anfrage ganz."
   },
   "days": {
     "long": {
@@ -1268,5 +1270,12 @@
     "tasksDone_other": "{{count}} erledigt",
     "newPeak": "Neue Spitze",
     "log": "Log"
+  },
+  "update": {
+    "eyebrow": "Auf F-Droid",
+    "title": "Nexus Command Center {{version}} ist da",
+    "versions": "Update von {{current}} auf {{latest}}",
+    "open": "Auf F-Droid holen",
+    "later": "Später"
   }
 }

@@ -316,7 +316,9 @@
       "rack": "Rack"
     },
     "themeLockedAria": "{{name}} — tukijan teema, lukittu",
-    "themeSupporterNote": "Rack on tukijoiden teema. Se avautuu, kun tuet kehitystä Ko-fissa (alempana)."
+    "themeSupporterNote": "Rack on tukijoiden teema. Se avautuu, kun tuet kehitystä Ko-fissa (alempana).",
+    "fdroidCheck": "Tarkista päivitykset F-Droidista",
+    "fdroidCheckNote": "Nexus Command Center kysyy kerran päivässä f-droid.orgilta uusinta versiota. Sinusta ei lähetetä mitään. Kun tämä on pois päältä, kyselyä ei tehdä lainkaan."
   },
   "days": {
     "long": {
@@ -1268,5 +1270,12 @@
     "tasksDone_other": "{{count}} tehty",
     "newPeak": "Uusi huippu",
     "log": "Loki"
+  },
+  "update": {
+    "eyebrow": "F-Droidissa",
+    "title": "Nexus Command Center {{version}} on julkaistu",
+    "versions": "Päivitä versiosta {{current}} versioon {{latest}}",
+    "open": "Hae F-Droidista",
+    "later": "Myöhemmin"
   }
 }
