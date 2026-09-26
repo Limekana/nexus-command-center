@@ -1,11 +1,11 @@
 import { Outlet, useLocation } from 'react-router-dom';
+import PolicyUpdatedNote from './PolicyUpdatedNote';
 import { useEffect, useRef, useState } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import BottomTabBar from './BottomTabBar';
 import SideNav from './SideNav';
 import OfflineBanner from './OfflineBanner';
-import PolicyUpdatedNote from './PolicyUpdatedNote';
 import { useShellTier, useSidebarRail } from '../lib/useShell';
 import QuickLogFAB from './QuickLogFAB';
 import QuickLogBottomSheet from './QuickLogBottomSheet';

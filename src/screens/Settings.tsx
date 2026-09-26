@@ -1269,17 +1269,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function ErrorReportsToggle() {
-  const { t } = useTranslation();
-  const on = useErrorReportsEnabled();
-  return (
-    <>
-      <Toggle label={t('settings.errorReports')} sub={t('settings.errorReportsSub')} value={on} onChange={setErrorReportsEnabled} />
-      <div className="text-[0.625rem] text-text-muted px-1 pb-1 leading-relaxed">{t('settings.errorReportsNote')}</div>
-    </>
-  );
-}
-
 function Toggle({
   label,
   sub,
@@ -1320,5 +1309,16 @@ function Toggle({
         />
       </button>
     </div>
+  );
+}
+
+function ErrorReportsToggle() {
+  const { t } = useTranslation();
+  const on = useErrorReportsEnabled();
+  return (
+    <>
+      <Toggle label={t('settings.errorReports')} sub={t('settings.errorReportsSub')} value={on} onChange={setErrorReportsEnabled} />
+      <div className="text-[0.625rem] text-text-muted px-1 pb-1 leading-relaxed">{t('settings.errorReportsNote')}</div>
+    </>
   );
 }

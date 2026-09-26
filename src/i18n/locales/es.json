@@ -1,4 +1,24 @@
 {
+  "crash": {
+    "eyebrow": "Error",
+    "title": "Algo salió mal",
+    "body": "Esta pantalla encontró un error del que no pudo recuperarse. Tus datos están a salvo en este dispositivo.",
+    "reload": "Recargar",
+    "send": "Enviar este informe",
+    "sending": "Enviando…",
+    "retry": "No se pudo enviar. Reintentar",
+    "sent": "Informe enviado. Gracias.",
+    "guest": "Los informes de errores requieren una cuenta, así que no se envió nada.",
+    "export": "Exportar mis datos",
+    "exported": "Exportación descargada",
+    "whatIsSent": "Un informe indica qué error ocurrió y en qué parte de nuestro código. Nunca incluye lo que escribiste."
+  },
+  "policy": {
+    "eyebrow": "Política de privacidad actualizada",
+    "body": "Ahora incluye los informes de errores, desactivados salvo que los actives, y la comprobación de actualizaciones de F-Droid en Android.",
+    "read": "Leerla",
+    "ok": "Aceptar"
+  },
   "app": {
     "name": "Nexus Command Center",
     "tagline": "El sistema operativo de tu vida"
@@ -152,6 +172,9 @@
     "languageBody": "Puedes cambiarlo cuando quieras en Ajustes."
   },
   "settings": {
+    "errorReports": "Enviar informes de errores",
+    "errorReportsSub": "Desactivado por defecto · solo con cuenta",
+    "errorReportsNote": "Cuando la app encuentra un error del que no puede recuperarse, nos envía qué error fue, en qué parte de nuestro código, la versión de la app y de Android o del navegador, y la pantalla abierta. Nunca lo que escribiste. Se guardan 90 días.",
     "language": "Idioma",
     "title": "Ajustes",
     "account": "Cuenta",
@@ -316,10 +339,7 @@
       "rack": "Rack"
     },
     "themeLockedAria": "{{name}} — tema para quienes apoyan, bloqueado",
-    "themeSupporterNote": "Rack es un tema para quienes apoyan. Se desbloquea al apoyar el desarrollo en Ko-fi, más abajo.",
-    "errorReports": "Enviar informes de errores",
-    "errorReportsSub": "Desactivado por defecto · solo con cuenta",
-    "errorReportsNote": "Cuando la app encuentra un error del que no puede recuperarse, nos envía qué error fue, en qué parte de nuestro código, la versión de la app y de Android o del navegador, y la pantalla abierta. Nunca lo que escribiste. Se guardan 90 días."
+    "themeSupporterNote": "Rack es un tema para quienes apoyan. Se desbloquea al apoyar el desarrollo en Ko-fi, más abajo."
   },
   "days": {
     "long": {
@@ -1280,25 +1300,5 @@
     "tasksDone_other": "{{count}} hechas",
     "newPeak": "Nuevo pico",
     "log": "Registro"
-  },
-  "crash": {
-    "eyebrow": "Error",
-    "title": "Algo salió mal",
-    "body": "Esta pantalla encontró un error del que no pudo recuperarse. Tus datos están a salvo en este dispositivo.",
-    "reload": "Recargar",
-    "send": "Enviar este informe",
-    "sending": "Enviando…",
-    "retry": "No se pudo enviar. Reintentar",
-    "sent": "Informe enviado. Gracias.",
-    "guest": "Los informes de errores requieren una cuenta, así que no se envió nada.",
-    "export": "Exportar mis datos",
-    "exported": "Exportación descargada",
-    "whatIsSent": "Un informe indica qué error ocurrió y en qué parte de nuestro código. Nunca incluye lo que escribiste."
-  },
-  "policy": {
-    "eyebrow": "Política de privacidad actualizada",
-    "body": "Ahora incluye los informes de errores, desactivados salvo que los actives, y la comprobación de actualizaciones de F-Droid en Android.",
-    "read": "Leerla",
-    "ok": "Aceptar"
   }
 }
