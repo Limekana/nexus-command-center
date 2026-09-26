@@ -10,6 +10,7 @@
 
 import { db } from '../db/database';
 import { supabase } from './supabase';
+import { selectAll } from './selectAll';
 
 const EXPORT_SCHEMA_VERSION = 1;
 
@@ -31,7 +32,31 @@ interface ExportPayload {
   counts: Record<string, number>;
   excluded: Record<string, string>;
   data: Record<string, unknown[]>;
+  server?: Record<string, unknown[] | { error: string }>;
   settings: Record<string, unknown>;
+}
+
+/**
+ * v1.16 (limecore#16) — the two things we hold that exist ONLY on the server:
+ * feedback the user sent, and error reports (kept 90 days). Neither is in the
+ * local database, so an export built from it alone would omit them, and the
+ * privacy policy (#50) promises the export includes both. Signed-in only; a
+ * guest has sent neither. A failed read is recorded in the export rather than
+ * dropped, so an incomplete export says so.
+ */
+export const SERVER_ONLY_TABLES = ['feedback', 'client_errors'] as const;
+
+export async function serverOnlyData(userId: string): Promise<Record<string, unknown[] | { error: string }>> {
+  const out: Record<string, unknown[] | { error: string }> = {};
+  for (const table of SERVER_ONLY_TABLES) {
+    try {
+      const { data, error } = await selectAll(supabase, table, { filter: (q) => q.eq('user_id', userId) });
+      out[table] = error ? { error: error.message } : (data ?? []);
+    } catch (e) {
+      out[table] = { error: (e as Error).message };
+    }
+  }
+  return out;
 }
 
 /**
@@ -89,6 +114,7 @@ async function buildExport(user: { id: string; email?: string } | null): Promise
     counts,
     excluded: EXCLUDED,
     data,
+    ...(user ? { server: await serverOnlyData(user.id) } : {}),
     settings,
   };
 }

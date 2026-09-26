@@ -25,6 +25,7 @@ import { useSettingsStore, BaseCurrency, UI_SCALES } from '../store/useSettingsS
 import { useShellTier } from '../lib/useShell';
 import { clearAllLocalData } from '../db/database';
 import { downloadExport, deleteAccount } from '../lib/dataRights';
+import { setErrorReportsEnabled, useErrorReportsEnabled } from '../lib/errorReports';
 import { setApiKey, clearApiKey, maskKey } from '../api/keys';
 import { allBudgetStats, type BudgetStats } from '../api/cache';
 import { biometricCapability } from '../utils/biometric';
@@ -477,6 +478,9 @@ export default function Settings() {
           <div className="text-[0.625rem] text-text-muted px-1 pb-1 leading-relaxed">
             {t('settings.aiTrainingNote')}
           </div>
+          {/* v1.16 (limecore#16) — off by default, accounts only; the note is
+              the consent text the privacy policy (#50) relies on. */}
+          <ErrorReportsToggle />
           <a
             className="py-2 flex items-center justify-between gap-3 active:opacity-80"
             href="https://limekana.github.io/nexus-command-center/legal/privacy.html"
@@ -1305,5 +1309,16 @@ function Toggle({
         />
       </button>
     </div>
+  );
+}
+
+function ErrorReportsToggle() {
+  const { t } = useTranslation();
+  const on = useErrorReportsEnabled();
+  return (
+    <>
+      <Toggle label={t('settings.errorReports')} sub={t('settings.errorReportsSub')} value={on} onChange={setErrorReportsEnabled} />
+      <div className="text-[0.625rem] text-text-muted px-1 pb-1 leading-relaxed">{t('settings.errorReportsNote')}</div>
+    </>
   );
 }
