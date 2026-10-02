@@ -191,7 +191,7 @@ export const useHabitsStore = create<HabitsStore>((set, get) => ({
     const childCompletions = get().completions.filter((c) => c.habitId === id);
     for (const c of childCompletions) {
       await db.habitCompletions.delete(c.id);
-      await enqueue('habit_completion', c.id, 'delete', { id: c.id });
+      await enqueue('habit_completion', c.id, 'delete', { id: c.id, habitId: c.habitId, date: c.date });
     }
     await db.habits.delete(id);
     await enqueue('habit', id, 'delete', { id });
@@ -208,7 +208,7 @@ export const useHabitsStore = create<HabitsStore>((set, get) => ({
     );
     if (existing) {
       await db.habitCompletions.delete(existing.id);
-      await enqueue('habit_completion', existing.id, 'delete', { id: existing.id });
+      await enqueue('habit_completion', existing.id, 'delete', { id: existing.id, habitId: existing.habitId, date: existing.date });
       set({ completions: get().completions.filter((c) => c.id !== existing.id) });
       get()._rearmReminder(habitId);
       return;
@@ -238,7 +238,7 @@ export const useHabitsStore = create<HabitsStore>((set, get) => ({
     if (clamped === 0) {
       if (!existing) return;
       await db.habitCompletions.delete(existing.id);
-      await enqueue('habit_completion', existing.id, 'delete', { id: existing.id });
+      await enqueue('habit_completion', existing.id, 'delete', { id: existing.id, habitId: existing.habitId, date: existing.date });
       set({ completions: get().completions.filter((c) => c.id !== existing.id) });
       get()._rearmReminder(habitId);
       return;

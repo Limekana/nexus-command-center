@@ -25,6 +25,10 @@ export interface FakeOptions {
   /** Tables that do not exist: selects on them fail with 42P01. Any other
    *  table not in `tables` reads as empty. */
   missing?: string[];
+  /** Unique constraints per table, beyond the `id` primary key, e.g.
+   *  `{ habit_completions: [['habit_id', 'date']] }`. A write that would
+   *  duplicate one fails with 23505, as Postgres does. */
+  uniques?: Record<string, string[][]>;
   failWhen?: (req: FakeRequest, n: number) => { code: string; message: string } | null;
 }
 
@@ -33,12 +37,77 @@ export function makeUuids(n: number): string[] {
 }
 
 export function fakeClient(tables: Record<string, any[]>, opts: FakeOptions = {}) {
-  const { maxRows = 1000, withCount = true, ignoreGt = false, missing = [], failWhen } = opts;
+  const { maxRows = 1000, withCount = true, ignoreGt = false, missing = [], uniques = {}, failWhen } = opts;
   const requests: FakeRequest[] = [];
+  /** Every write, in order, for assertions. */
+  const writes: { op: 'upsert' | 'update' | 'delete'; table: string; row?: any; filters: FakeRequest['filters'] }[] = [];
+
+  const rowsOf = (table: string) => (tables[table] ??= []);
+  const collides = (table: string, row: any, exceptId?: string) =>
+    (uniques[table] ?? []).some((cols) =>
+      rowsOf(table).some((r) => r.id !== exceptId && cols.every((c) => r[c] === row[c])),
+    );
+  const dup = (table: string) => ({
+    data: null,
+    error: { code: '23505', message: `duplicate key value violates unique constraint on ${table}` },
+    count: null,
+  });
+
+  function writeBuilder(table: string, op: 'update' | 'delete', patch?: any) {
+    const filters: FakeRequest['filters'] = [];
+    const wb: any = {
+      eq(col: string, val: unknown) {
+        filters.push(['eq', col, val]);
+        return wb;
+      },
+      then(resolve: (v: any) => any, reject?: (e: any) => any) {
+        return Promise.resolve()
+          .then(() => {
+            writes.push({ op, table, row: patch, filters });
+            const hit = rowsOf(table).filter((r) => filters.every((f) => matches(r, f)));
+            if (op === 'delete') {
+              tables[table] = rowsOf(table).filter((r) => !hit.includes(r));
+              return { data: null, error: null, count: null };
+            }
+            for (const r of hit) {
+              if (collides(table, { ...r, ...patch }, r.id)) return dup(table);
+            }
+            for (const r of hit) Object.assign(r, patch);
+            return { data: null, error: null, count: null };
+          })
+          .then(resolve, reject);
+      },
+    };
+    return wb;
+  }
 
   function from(table: string) {
     const req: FakeRequest = { table, filters: [], order: null, limit: null, gt: null, count: null };
     const builder: any = {
+      // PostgREST upsert on the primary key: ON CONFLICT (id) DO UPDATE. Any
+      // OTHER unique constraint still raises 23505.
+      upsert(row: any) {
+        return {
+          then(resolve: (v: any) => any, reject?: (e: any) => any) {
+            return Promise.resolve()
+              .then(() => {
+                writes.push({ op: 'upsert', table, row, filters: [] });
+                const existing = rowsOf(table).find((r) => r.id === row.id);
+                if (collides(table, row, row.id)) return dup(table);
+                if (existing) Object.assign(existing, row);
+                else rowsOf(table).push({ ...row });
+                return { data: null, error: null, count: null };
+              })
+              .then(resolve, reject);
+          },
+        };
+      },
+      update(patch: any) {
+        return writeBuilder(table, 'update', patch);
+      },
+      delete() {
+        return writeBuilder(table, 'delete');
+      },
       select(columns: string, o?: { count?: string }) {
         req.columns = columns;
         req.count = o?.count ?? null;
@@ -99,5 +168,5 @@ export function fakeClient(tables: Record<string, any[]>, opts: FakeOptions = {}
     return { data: rows.slice(0, take), error: null, count: req.count && withCount ? total : null };
   }
 
-  return { from, requests };
+  return { from, requests, writes, tables };
 }
