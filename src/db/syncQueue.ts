@@ -1,5 +1,6 @@
 import { db, SyncQueueItem } from './database';
 import { generateId } from '../utils/uuid';
+import { stampFor } from '../lib/editStamp';
 
 export async function enqueue(
   entityType: SyncQueueItem['entityType'],
@@ -14,6 +15,9 @@ export async function enqueue(
     operation,
     payload: JSON.stringify(payload),
     createdAt: new Date().toISOString(),
+    // v1.16 (limecore#27, registry P6): stamped here, at the edit — never at
+    // push time, when a later pull could lift a stale edit past a newer one.
+    stamp: stampFor(entityType, entityId, operation),
   });
 }
 
