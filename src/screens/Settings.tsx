@@ -19,12 +19,14 @@ import { useAuthStore } from '../store/useAuthStore';
 import { APP_LOCK_APPLIES } from '../lib/isDesktop';
 import { IS_DESKTOP } from '../lib/desktop';
 import { checkForDesktopUpdate, runDesktopUpdateAction, useDesktopUpdate } from '../lib/desktopUpdate';
+import { setUpdateCheckEnabled, useFdroidUpdate } from '../lib/fdroidUpdate';
 import { useSyncStore } from '../store/useSyncStore';
 import { useSessionStore, userDisplayName } from '../store/useSessionStore';
 import { useSettingsStore, BaseCurrency, UI_SCALES } from '../store/useSettingsStore';
 import { useShellTier } from '../lib/useShell';
 import { clearAllLocalData } from '../db/database';
 import { downloadExport, deleteAccount } from '../lib/dataRights';
+import { setErrorReportsEnabled, useErrorReportsEnabled } from '../lib/errorReports';
 import { setApiKey, clearApiKey, maskKey } from '../api/keys';
 import { allBudgetStats, type BudgetStats } from '../api/cache';
 import { biometricCapability } from '../utils/biometric';
@@ -477,6 +479,9 @@ export default function Settings() {
           <div className="text-[0.625rem] text-text-muted px-1 pb-1 leading-relaxed">
             {t('settings.aiTrainingNote')}
           </div>
+          {/* v1.16 (limecore#16) — off by default, accounts only; the note is
+              the consent text the privacy policy (#50) relies on. */}
+          <ErrorReportsToggle />
           <a
             className="py-2 flex items-center justify-between gap-3 active:opacity-80"
             href="https://limekana.github.io/nexus-command-center/legal/privacy.html"
@@ -1049,6 +1054,7 @@ export default function Settings() {
         <Section title={t('settings.about')}>
           <ListRow label={t('settings.version')} value={pkg.version} />
           {IS_DESKTOP && <DesktopUpdateRow />}
+          {Capacitor.getPlatform() === 'android' && <FdroidUpdateToggle />}
           <ListRow label={t('settings.studio')} value="Limecore" />
           <ListRow label={t('settings.build')} value={t('settings.buildValue')} />
           <button
@@ -1265,6 +1271,22 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
+// v1.16 (#48) — the switch the privacy policy promises (#50): off stops the
+// once-a-day request to f-droid.org entirely, not merely the note. Android
+// only, because it is the only build F-Droid ships.
+function FdroidUpdateToggle() {
+  const { t } = useTranslation();
+  const { enabled } = useFdroidUpdate();
+  return (
+    <Toggle
+      label={t('settings.fdroidCheck')}
+      sub={t('settings.fdroidCheckNote')}
+      value={enabled}
+      onChange={setUpdateCheckEnabled}
+    />
+  );
+}
+
 function Toggle({
   label,
   sub,
@@ -1290,20 +1312,36 @@ function Toggle({
           rather than "this is live". A 20px amber dot still reads as on at a
           glance, and ten of them read as a panel of switches rather than as
           ten alarms. */}
+      {/* The outline is an inset ring, not a border: a 1px border took layout
+          space, which left an 18px slot for the 20px knob, so the knob sat 1px
+          low and touched the right edge when on. With the ring, 44×24 minus
+          2px padding is exactly the 40×20 the knob and its 20px travel need.
+          The travel flips under RTL, where the knob starts on the right. */}
       <button
         onClick={() => !locked && onChange(!value)}
-        className={`w-11 h-6 rounded-full p-0.5 bg-surface2 border transition-colors flex-shrink-0 ${
-          value ? 'border-primary' : 'border-border'
+        className={`w-11 h-6 rounded-full p-0.5 bg-surface2 ring-1 ring-inset transition flex-shrink-0 ${
+          value ? 'ring-primary' : 'ring-border'
         } ${locked ? 'opacity-60' : ''}`}
         disabled={locked}
         aria-pressed={value}
       >
         <div
           className={`w-5 h-5 rounded-full transition-transform ${
-            value ? 'translate-x-5 bg-primary' : 'bg-text-faint'
+            value ? 'translate-x-5 rtl:-translate-x-5 bg-primary' : 'bg-text-faint'
           }`}
         />
       </button>
     </div>
+  );
+}
+
+function ErrorReportsToggle() {
+  const { t } = useTranslation();
+  const on = useErrorReportsEnabled();
+  return (
+    <>
+      <Toggle label={t('settings.errorReports')} sub={t('settings.errorReportsSub')} value={on} onChange={setErrorReportsEnabled} />
+      <div className="text-[0.625rem] text-text-muted px-1 pb-1 leading-relaxed">{t('settings.errorReportsNote')}</div>
+    </>
   );
 }

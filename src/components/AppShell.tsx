@@ -1,10 +1,12 @@
 import { Outlet, useLocation } from 'react-router-dom';
+import PolicyUpdatedNote from './PolicyUpdatedNote';
 import { useEffect, useRef, useState } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import BottomTabBar from './BottomTabBar';
 import SideNav from './SideNav';
 import OfflineBanner from './OfflineBanner';
+import FdroidUpdateNote from './FdroidUpdateNote';
 import { useShellTier, useSidebarRail } from '../lib/useShell';
 import QuickLogFAB from './QuickLogFAB';
 import QuickLogBottomSheet from './QuickLogBottomSheet';
@@ -295,6 +297,8 @@ export default function AppShell() {
           it is a transparent passthrough — flex-1 column inside a column. */}
       <div className="flex flex-1 min-w-0 flex-col">
         <OfflineBanner />
+        {/* v1.16 (limecore#16) — once, for people who used the app under the old policy. */}
+        <PolicyUpdatedNote />
         {/* pb-32 (128px) gives clear space below the last card so it isn't clipped
           * by the fixed BottomTabBar (which is ~80px + its own safe-bottom inset). */}
         {/* v1.2 follow-up — pb-32 → pb-44. The floating panel tab bar sits
@@ -330,6 +334,9 @@ export default function AppShell() {
                 within a section (Finance overview → Add Transaction) doesn't
                 re-trigger; only Finance → Studies-style jumps animate. Keeps
                 motion meaningful per the v1.2 design brief. */}
+            {/* v1.16 (#48) — Android only, once a day, off in Settings. Renders
+                nothing unless F-Droid has a newer build than this one. */}
+            <FdroidUpdateNote />
             <PageTransition>
               <Outlet />
             </PageTransition>

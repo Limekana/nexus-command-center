@@ -96,6 +96,9 @@ export interface SyncQueueItem {
   operation: 'insert' | 'update' | 'delete';
   payload: string;
   createdAt: string;
+  // v1.16 (limecore#27): the edit's `updated_at`, computed when the edit is
+  // enqueued (src/lib/editStamp.ts). Absent on items queued by older builds.
+  stamp?: string;
   syncedAt?: string;
   lastError?: string;
   /** NCC#55 — set when a dropped item was put back in the queue once, so a
@@ -852,6 +855,18 @@ class NexusDB extends Dexie {
     // first", and on syncStatus to match every other synced store here.
     this.version(22).stores({
       braindumpEntries: 'id, createdAt, syncStatus',
+    });
+
+    // v23 - v1.16 (issue #45). `deleteBudgetCategory` has queried
+    // `transactions.where('categoryId')` since v1.3.3, but `categoryId` was
+    // never in the index list, so every category delete threw
+    // `KeyPath categoryId on object store transactions is not indexed` and
+    // left the UI stale with orphaned categoryIds behind it. Additive: one new
+    // index on an existing store, no upgrade hook, no data rewritten — Dexie
+    // builds the index from the rows already there. Rows with no `categoryId`
+    // are simply absent from it, which is what the equals() lookup wants.
+    this.version(23).stores({
+      transactions: 'id, date, type, syncStatus, accountId, categoryId',
     });
   }
 }

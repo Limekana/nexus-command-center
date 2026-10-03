@@ -1,0 +1,3 @@
+Synchronisierung, der du vertrauen kannst.
+
+Auf einem anderen Gerät oder in StudyDesk Gelöschtes verschwindet jetzt auch aus NCC, offline gemachte Änderungen überschreiben keine neueren mehr, und eine Gewohnheit, die am selben Tag auf zwei Geräten abgehakt wird, synchronisiert fehlerfrei. Neu in den Einstellungen: ein Hinweis auf neuere Versionen auf F-Droid und optionale Fehlerberichte (standardmäßig aus).

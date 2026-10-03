@@ -22,6 +22,9 @@
 // This is enough for our usage pattern (occasional cross-device edits, no
 // real concurrent collaboration). Full CRDT is overkill.
 import { supabase } from './supabase';
+import { selectAll } from './selectAll';
+import type { Table } from 'dexie';
+import { recordSeen, stampOf } from './editStamp';
 import { db, SyncQueueItem } from '../db/database';
 import { listPending } from '../db/syncQueue';
 import { generateId, legacyIdToUuid } from '../utils/uuid';
@@ -53,13 +56,34 @@ interface PushContext {
   userId: string;
 }
 
+/**
+ * v1.16 (NCC#56 part 2, registry P6) — delete by writing a tombstone, never
+ * by `DELETE`. A hard delete left no trace, so a second NCC device (phone plus
+ * web, say) never learned of it: the row lived on there, and the next edit on
+ * that device re-created it upstream. A tombstone reaches every device through
+ * `pullAll`, and the server's guard lets it land whatever its stamp while a
+ * later content edit, which never sends `deleted_at`, cannot un-delete it.
+ * `purge_soft_deleted()` hard-deletes the tombstone after 90 days.
+ *
+ * Only for tables that have `deleted_at` AND are in that purge. The children
+ * a hard delete used to cascade to or null out now stay until the purge:
+ * `transactions.category_id` is cleared by deleteBudgetCategory itself;
+ * a deleted account's transactions keep their `account_id`, as they already
+ * did on the device that deleted it; shares of a deleted task or category
+ * stay, and their grantee's pull removes the tombstoned row.
+ */
+async function softDelete(table: string, entityId: string): Promise<void> {
+  const stamp = new Date().toISOString();
+  const { error } = await supabase
+    .from(table)
+    .update({ deleted_at: stamp, updated_at: stamp })
+    .eq('id', legacyIdToUuid(entityId));
+  if (error) throw error;
+}
+
 async function pushTransaction(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (item.operation === 'delete') {
-    const { error } = await supabase
-      .from('transactions')
-      .delete()
-      .eq('id', legacyIdToUuid(item.entityId));
-    if (error) throw error;
+    await softDelete('transactions', item.entityId);
     return;
   }
   const local: Transaction = JSON.parse(item.payload);
@@ -81,7 +105,7 @@ async function pushTransaction(item: SyncQueueItem, ctx: PushContext): Promise<v
     destination_account_id: local.destinationAccountId ? legacyIdToUuid(local.destinationAccountId) : null,
     description,
     date: local.date,
-    updated_at: item.createdAt,
+    updated_at: stampOf(item),
   };
   const { error } = await supabase.from('transactions').upsert(row);
   if (error) throw error;
@@ -89,11 +113,7 @@ async function pushTransaction(item: SyncQueueItem, ctx: PushContext): Promise<v
 
 async function pushBudgetCategory(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (item.operation === 'delete') {
-    const { error } = await supabase
-      .from('budget_categories')
-      .delete()
-      .eq('id', legacyIdToUuid(item.entityId));
-    if (error) throw error;
+    await softDelete('budget_categories', item.entityId);
     return;
   }
   const local: BudgetCategory = JSON.parse(item.payload);
@@ -104,7 +124,7 @@ async function pushBudgetCategory(item: SyncQueueItem, ctx: PushContext): Promis
     monthly_limit: local.monthlyLimit,
     currency: 'EUR',
     color: local.icon ?? null,
-    updated_at: item.createdAt,
+    updated_at: stampOf(item),
   };
   const { error } = await supabase.from('budget_categories').upsert(row);
   if (error) throw error;
@@ -130,7 +150,7 @@ async function pushPortfolioHolding(item: SyncQueueItem, ctx: PushContext): Prom
     avg_cost_native: local.avgCostNative ?? null,
     cost_currency: local.costCurrency ?? null,
     sector_override: local.sectorOverride ?? null,
-    updated_at: item.createdAt,
+    updated_at: stampOf(item),
   };
   const { error } = await supabase.from('portfolio_holdings').upsert(row);
   if (error) throw error;
@@ -138,15 +158,11 @@ async function pushPortfolioHolding(item: SyncQueueItem, ctx: PushContext): Prom
 
 async function pushPortfolioLot(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (item.operation === 'delete') {
-    const { error } = await supabase
-      .from('portfolio_lots')
-      .delete()
-      .eq('id', legacyIdToUuid(item.entityId));
-    if (error) throw error;
+    await softDelete('portfolio_lots', item.entityId);
     return;
   }
   const local: PortfolioLot = JSON.parse(item.payload);
-  const updatedAt = local.updatedAt || item.createdAt;
+  const updatedAt = stampOf(item, local);
   const row = {
     id: legacyIdToUuid(local.id),
     user_id: ctx.userId,
@@ -223,15 +239,11 @@ async function pushPortfolioCashEntry(item: SyncQueueItem, ctx: PushContext): Pr
 
 async function pushManualAsset(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (item.operation === 'delete') {
-    const { error } = await supabase
-      .from('manual_assets')
-      .delete()
-      .eq('id', legacyIdToUuid(item.entityId));
-    if (error) throw error;
+    await softDelete('manual_assets', item.entityId);
     return;
   }
   const local: ManualAsset = JSON.parse(item.payload);
-  const updatedAt = local.updatedAt || item.createdAt;
+  const updatedAt = stampOf(item, local);
   const row = {
     id: legacyIdToUuid(local.id),
     user_id: ctx.userId,
@@ -248,15 +260,11 @@ async function pushManualAsset(item: SyncQueueItem, ctx: PushContext): Promise<v
 
 async function pushWatchlistItem(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (item.operation === 'delete') {
-    const { error } = await supabase
-      .from('watchlist_items')
-      .delete()
-      .eq('id', legacyIdToUuid(item.entityId));
-    if (error) throw error;
+    await softDelete('watchlist_items', item.entityId);
     return;
   }
   const local: WatchlistItem = JSON.parse(item.payload);
-  const updatedAt = local.updatedAt || item.createdAt;
+  const updatedAt = stampOf(item, local);
   const row = {
     id: legacyIdToUuid(local.id),
     user_id: ctx.userId,
@@ -283,7 +291,7 @@ async function pushGoal(item: SyncQueueItem, ctx: PushContext): Promise<void> {
     return;
   }
   const local: Goal = JSON.parse(item.payload);
-  const updatedAt = local.updatedAt || item.createdAt;
+  const updatedAt = stampOf(item, local);
   const row = {
     id: legacyIdToUuid(local.id),
     user_id: ctx.userId,
@@ -296,8 +304,13 @@ async function pushGoal(item: SyncQueueItem, ctx: PushContext): Promise<void> {
     currency: local.currency ?? null,
     completed: local.completed,
     completed_at: local.completedAt ?? null,
-    deleted_at: local.deletedAt ?? null,
     updated_at: updatedAt,
+    // v1.16 (limecore#27, registry P6): `deleted_at` only when the goal IS
+    // deleted. Sending `deleted_at: null` for every live edit made each one an
+    // explicit revival, so an edit from a device that had not yet seen a
+    // delete made elsewhere would bring the goal back. NCC has no deliberate
+    // goal un-delete, so a live edit leaves the column alone.
+    ...(local.deletedAt ? { deleted_at: local.deletedAt } : {}),
   };
   const { error } = await supabase.from('goals').upsert(row);
   if (error) throw error;
@@ -305,17 +318,13 @@ async function pushGoal(item: SyncQueueItem, ctx: PushContext): Promise<void> {
 
 async function pushTask(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (item.operation === 'delete') {
-    const { error } = await supabase
-      .from('tasks')
-      .delete()
-      .eq('id', legacyIdToUuid(item.entityId));
-    if (error) throw error;
+    await softDelete('tasks', item.entityId);
     return;
   }
   const local: Task = JSON.parse(item.payload);
   // Prefer the entity's own updatedAt if set (captures the actual edit moment),
   // fall back to the queue createdAt.
-  const updatedAt = local.updatedAt || item.createdAt;
+  const updatedAt = stampOf(item, local);
   const row = {
     id: legacyIdToUuid(local.id),
     user_id: ctx.userId,
@@ -365,7 +374,7 @@ async function pushCourse(item: SyncQueueItem, ctx: PushContext): Promise<void> 
     // is purely a consumer of StudyDesk's archive state but the push
     // shape stays symmetric so the LWW merge isn't lopsided.
     archived_at: local.archivedAt ?? null,
-    updated_at: item.createdAt,
+    updated_at: stampOf(item),
   };
   const { error } = await supabase.from('subjects').upsert(subjectRow);
   if (error) throw error;
@@ -383,7 +392,7 @@ async function pushGrade(item: SyncQueueItem, ctx: PushContext): Promise<void> {
     return;
   }
   const local: Grade = JSON.parse(item.payload);
-  const updatedAt = local.updatedAt || item.createdAt;
+  const updatedAt = stampOf(item, local);
   const row = {
     id: legacyIdToUuid(local.id),
     user_id: ctx.userId,
@@ -438,9 +447,11 @@ async function pushAppOpen(item: SyncQueueItem, ctx: PushContext): Promise<void>
 
 // v1.12 Item 10 - Braindump.
 //
-// Delete is a HARD delete, matching pushTask rather than the soft-delete
-// tables: an entry the user threw away is a discarded thought, and nothing
-// downstream needs a tombstone to reconcile against.
+// Delete is a HARD delete, unlike the soft-delete tables: an entry the user
+// threw away is a discarded thought, and nothing downstream needs a tombstone
+// to reconcile against. (pushTask was the hard-delete precedent here until
+// v1.16 moved tasks to tombstones, NCC#56. braindump_entries is not in
+// `purge_soft_deleted()`, so its tombstones would never be cleaned up.)
 async function pushBraindumpEntry(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (item.operation === 'delete') {
     const { error } = await supabase
@@ -457,7 +468,7 @@ async function pushBraindumpEntry(item: SyncQueueItem, ctx: PushContext): Promis
     content: local.content,
     converted_task_id: local.convertedTaskId ?? null,
     created_at: local.createdAt,
-    updated_at: local.updatedAt || item.createdAt,
+    updated_at: stampOf(item, local),
   });
   if (error) throw error;
 }
@@ -496,7 +507,7 @@ async function pushHabit(item: SyncQueueItem, ctx: PushContext): Promise<void> {
     return;
   }
   const local: Habit = JSON.parse(item.payload);
-  const updatedAt = local.updatedAt || item.createdAt;
+  const updatedAt = stampOf(item, local);
   const row = {
     id: legacyIdToUuid(local.id),
     user_id: ctx.userId,
@@ -515,12 +526,32 @@ async function pushHabit(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (error) throw error;
 }
 
+// v1.16 (NCC#58). The server's identity for a completion is (habit_id, date) —
+// `UNIQUE (habit_id, date)` — not the client-minted `id`. Two devices marking
+// the same habit on the same day mint two ids for ONE fact. The second push
+// then hit 23505, which `PERMANENT_PG_CODES` treats as permanent, so the item
+// was silently DROPPED: that device's amount never reached the server, and its
+// local row stayed alongside the pulled one, double-counting the day.
+//
+// The issue suggested upserting on the natural key with `id` omitted. That
+// cannot work here: `habit_completions.id` has no default, so every new
+// completion would fail NOT NULL (23502, also "permanent", also dropped).
+// And keeping `id` in an ON CONFLICT (habit_id, date) upsert rewrites the
+// server row's primary key to this device's id — the cross-device ping-pong
+// StudyDesk's attendance went through. So: upsert by id as before, and only
+// on the natural-key collision update the existing row's amount by
+// (habit_id, date), leaving its id alone. The pull then adopts that id.
 async function pushHabitCompletion(item: SyncQueueItem, ctx: PushContext): Promise<void> {
   if (item.operation === 'delete') {
-    const { error } = await supabase
-      .from('habit_completions')
-      .delete()
-      .eq('id', legacyIdToUuid(item.entityId));
+    // New queue items carry the natural key, so an un-mark removes the day's
+    // completion whatever id the server knows it by. Items queued by an older
+    // build carry only `{ id }` and still delete by id.
+    const target = JSON.parse(item.payload) as { habitId?: string; date?: string };
+    let del = supabase.from('habit_completions').delete();
+    del = target.habitId && target.date
+      ? del.eq('habit_id', legacyIdToUuid(target.habitId)).eq('date', target.date)
+      : del.eq('id', legacyIdToUuid(item.entityId));
+    const { error } = await del;
     if (error) throw error;
     return;
   }
@@ -533,6 +564,15 @@ async function pushHabitCompletion(item: SyncQueueItem, ctx: PushContext): Promi
     amount: local.amount,
   };
   const { error } = await supabase.from('habit_completions').upsert(row);
+  if (error?.code === '23505') {
+    const { error: sameDayErr } = await supabase
+      .from('habit_completions')
+      .update({ amount: row.amount })
+      .eq('habit_id', row.habit_id)
+      .eq('date', row.date);
+    if (sameDayErr) throw sameDayErr;
+    return;
+  }
   if (error) throw error;
 }
 
@@ -550,7 +590,7 @@ async function pushWorkQualityLog(item: SyncQueueItem, ctx: PushContext): Promis
     return;
   }
   const local: WorkQualityLog = JSON.parse(item.payload);
-  const updatedAt = local.updatedAt || item.createdAt;
+  const updatedAt = stampOf(item, local);
   const row = {
     id: legacyIdToUuid(local.id),
     user_id: ctx.userId,
@@ -768,42 +808,68 @@ interface StudiesHydrationResult {
   errors: string[];
 }
 
-async function fetchWithSoftDeleteFallback(
-  table: string,
+/**
+ * v1.16 (NCC#56) — every row of a StudyDesk-owned table, tombstones included,
+ * split into the live rows and the ids the server has marked deleted.
+ *
+ * This used to query with `deleted_at IS NULL` and `bulkPut` the result, so
+ * NCC never learned of a delete: a course, grade or study session removed in
+ * StudyDesk (which only ever soft-deletes) stayed on every NCC device that had
+ * pulled it, and kept counting towards NCC's GPA, study hours and Life Score.
+ * The server held 21 soft-deleted courses and 8 soft-deleted grades across
+ * the accounts that use NCC when this was found.
+ *
+ * Pulling the tombstones is what lets the caller remove them. With no filter
+ * on `deleted_at` there is no schema mismatch left to fall back from either,
+ * so the old missing-column retry is gone with it.
+ */
+async function fetchStudyDeskTable(
+  table: 'subjects' | 'grades' | 'study_sessions',
   userId: string,
-): Promise<{ data: any[] | null; error: string | null }> {
-  // Try with `deleted_at IS NULL` first. If the column doesn't exist on
-  // StudyDesk's side, retry without that filter and post-filter in JS.
-  const initial = await supabase
-    .from(table)
-    .select('*')
-    .eq('user_id', userId)
-    .is('deleted_at', null);
-  let data = initial.data;
-  const error = initial.error;
-  if (error) {
-    const msg = error.message ?? '';
-    // PostgREST returns "column does not exist" / 42703. Be generous in the
-    // match since wording can vary across versions.
-    const looksLikeMissingColumn =
-      /deleted_at/i.test(msg) &&
-      (/does not exist/i.test(msg) || /column/i.test(msg));
-    if (looksLikeMissingColumn) {
-      console.warn(
-        `[studies-hydrate] ${table}: deleted_at column missing — retrying without filter`,
-      );
-      const retry = await supabase.from(table).select('*').eq('user_id', userId);
-      if (retry.error) {
-        return { data: null, error: retry.error.message };
-      }
-      // Drop rows that look soft-deleted if they happen to carry the field
-      // anyway (mixed-schema deployments).
-      data = (retry.data ?? []).filter((r: any) => !r.deleted_at);
-    } else {
-      return { data: null, error: msg };
-    }
+): Promise<{ live: any[]; deletedIds: string[]; error: string | null }> {
+  const { data, error } = await selectAll(supabase, table, {
+    filter: (q) => q.eq('user_id', userId),
+  });
+  if (error) return { live: [], deletedIds: [], error: error.message };
+  recordSeen(table, (data ?? []) as any[]);
+  const live: any[] = [];
+  const deletedIds: string[] = [];
+  for (const r of (data ?? []) as any[]) {
+    if (r.deleted_at) deletedIds.push(r.id);
+    else live.push(r);
   }
-  return { data: data ?? [], error: null };
+  return { live, deletedIds, error: null };
+}
+
+/**
+ * Remove the local rows the server has tombstoned. Returns how many went.
+ *
+ * Matched on the server id AND on `legacyIdToUuid(localId)`, because a row
+ * created by an early NCC build can still sit locally under its legacy id
+ * while the server knows it by the uuid it was pushed as.
+ *
+ * A pending local edit does not save a tombstoned row, and that is
+ * deliberate: it is the rule StudyDesk's merge already applies ("a delete
+ * beats a simultaneous edit"), and the server enforces it too — NCC's subject
+ * and grade upserts never send `deleted_at`, so pushing that edit updates the
+ * tombstoned row's content without un-deleting it. Keeping the row here would
+ * only leave this device disagreeing with every other one.
+ *
+ * Known gap: `purge_soft_deleted()` hard-deletes tombstones older than 90
+ * days, so a device that has not pulled for longer than that never sees the
+ * tombstone and keeps the row.
+ */
+async function removeTombstoned(
+  table: Table<{ id: string }, string>,
+  deletedIds: string[],
+): Promise<number> {
+  if (deletedIds.length === 0) return 0;
+  const dead = new Set(deletedIds);
+  const doomed = (await table.toArray())
+    .filter((r) => dead.has(r.id) || dead.has(legacyIdToUuid(r.id)))
+    .map((r) => r.id);
+  if (doomed.length > 0) await table.bulkDelete(doomed);
+  return doomed.length;
 }
 
 async function hydrateStudiesTables(userId: string): Promise<StudiesHydrationResult> {
@@ -814,12 +880,12 @@ async function hydrateStudiesTables(userId: string): Promise<StudiesHydrationRes
 
   // --- subjects ---
   try {
-    const { data, error } = await fetchWithSoftDeleteFallback('subjects', userId);
+    const { live, deletedIds, error } = await fetchStudyDeskTable('subjects', userId);
     if (error) {
       errors.push(`subjects: ${error}`);
       console.warn('[studies-hydrate] subjects failed:', error);
-    } else if (data) {
-      const courses: Course[] = data.map((s: any) => ({
+    } else {
+      const courses: Course[] = live.map((s: any) => ({
         id: s.id,
         importId: 'cloud',
         name: s.name,
@@ -833,8 +899,9 @@ async function hydrateStudiesTables(userId: string): Promise<StudiesHydrationRes
         createdAt: s.created_at,
       }));
       await db.courses.bulkPut(courses);
+      const removed = await removeTombstoned(db.courses, deletedIds);
       subjectCount = courses.length;
-      console.log(`[studies-hydrate] subjects=${subjectCount}`);
+      console.log(`[studies-hydrate] subjects=${subjectCount} removed=${removed}`);
     }
   } catch (e) {
     errors.push(`subjects: ${(e as Error).message}`);
@@ -843,12 +910,12 @@ async function hydrateStudiesTables(userId: string): Promise<StudiesHydrationRes
 
   // --- grades ---
   try {
-    const { data, error } = await fetchWithSoftDeleteFallback('grades', userId);
+    const { live, deletedIds, error } = await fetchStudyDeskTable('grades', userId);
     if (error) {
       errors.push(`grades: ${error}`);
       console.warn('[studies-hydrate] grades failed:', error);
-    } else if (data) {
-      const grades: Grade[] = data.map((g: any) => ({
+    } else {
+      const grades: Grade[] = live.map((g: any) => ({
         id: g.id,
         subjectId: g.subject_id,
         grade: Number(g.grade),
@@ -859,8 +926,9 @@ async function hydrateStudiesTables(userId: string): Promise<StudiesHydrationRes
         updatedAt: g.updated_at,
       }));
       await db.grades.bulkPut(grades);
+      const removed = await removeTombstoned(db.grades, deletedIds);
       gradeCount = grades.length;
-      console.log(`[studies-hydrate] grades=${gradeCount}`);
+      console.log(`[studies-hydrate] grades=${gradeCount} removed=${removed}`);
     }
   } catch (e) {
     errors.push(`grades: ${(e as Error).message}`);
@@ -869,15 +937,12 @@ async function hydrateStudiesTables(userId: string): Promise<StudiesHydrationRes
 
   // --- study_sessions ---
   try {
-    const { data, error } = await fetchWithSoftDeleteFallback(
-      'study_sessions',
-      userId,
-    );
+    const { live, deletedIds, error } = await fetchStudyDeskTable('study_sessions', userId);
     if (error) {
       errors.push(`study_sessions: ${error}`);
       console.warn('[studies-hydrate] study_sessions failed:', error);
-    } else if (data) {
-      const sessions: StudySession[] = data.map((r: any) => ({
+    } else {
+      const sessions: StudySession[] = live.map((r: any) => ({
         id: r.id,
         startedAt: r.started_at,
         durationMinutes: Number(r.duration_minutes),
@@ -888,8 +953,9 @@ async function hydrateStudiesTables(userId: string): Promise<StudiesHydrationRes
         updatedAt: r.updated_at,
       }));
       await db.studySessions.bulkPut(sessions);
+      const removed = await removeTombstoned(db.studySessions, deletedIds);
       sessionCount = sessions.length;
-      console.log(`[studies-hydrate] study_sessions=${sessionCount}`);
+      console.log(`[studies-hydrate] study_sessions=${sessionCount} removed=${removed}`);
     }
   } catch (e) {
     errors.push(`study_sessions: ${(e as Error).message}`);
@@ -935,10 +1001,9 @@ export async function hydrateHabitsFromCloud(
   let completionCount = 0;
 
   try {
-    const { data, error } = await supabase
-      .from('habits')
-      .select('*')
-      .eq('user_id', userId);
+    const { data, error } = await selectAll(supabase, 'habits', {
+      filter: (q) => q.eq('user_id', userId),
+    });
     if (error) throw error;
     if (data) {
       const habits: Habit[] = data.map((h: any) => ({
@@ -966,10 +1031,9 @@ export async function hydrateHabitsFromCloud(
   }
 
   try {
-    const { data, error } = await supabase
-      .from('habit_completions')
-      .select('*')
-      .eq('user_id', userId);
+    const { data, error } = await selectAll(supabase, 'habit_completions', {
+      filter: (q) => q.eq('user_id', userId),
+    });
     if (error) throw error;
     if (data) {
       const completions: HabitCompletion[] = data.map((c: any) => ({
@@ -981,6 +1045,20 @@ export async function hydrateHabitsFromCloud(
         createdAt: c.created_at,
       }));
       await db.habitCompletions.bulkPut(completions);
+      // v1.16 (NCC#58): one local row per (habit, day), and it is the
+      // server's. A row minted on this device for a day another device had
+      // already recorded — or the same row still held under its legacy id —
+      // would otherwise sit beside the pulled one and count the day twice.
+      // A pending edit on the removed row still reaches the server: its push
+      // lands on the natural-key path in `pushHabitCompletion`.
+      const serverIdByDay = new Map(completions.map((c) => [`${c.habitId}|${c.date}`, c.id]));
+      const shadowed = (await db.habitCompletions.toArray())
+        .filter((l) => {
+          const serverId = serverIdByDay.get(`${legacyIdToUuid(l.habitId)}|${l.date}`);
+          return serverId !== undefined && l.id !== serverId;
+        })
+        .map((l) => l.id);
+      if (shadowed.length > 0) await db.habitCompletions.bulkDelete(shadowed);
       completionCount = completions.length;
     }
   } catch (e) {
@@ -1010,10 +1088,9 @@ export async function hydrateBodyMetricsFromCloud(
   let count = 0;
 
   try {
-    const { data, error } = await supabase
-      .from('body_metrics')
-      .select('*')
-      .eq('user_id', userId);
+    const { data, error } = await selectAll(supabase, 'body_metrics', {
+      filter: (q) => q.eq('user_id', userId),
+    });
     if (error) throw error;
     if (data) {
       const rows: BodyMetric[] = (data as any[]).map((r) => ({
@@ -1058,11 +1135,11 @@ export async function hydrateWorkQualityFromCloud(
   let count = 0;
 
   try {
-    const { data, error } = await supabase
-      .from('work_quality_logs')
-      .select('*')
-      .eq('user_id', userId);
+    const { data, error } = await selectAll(supabase, 'work_quality_logs', {
+      filter: (q) => q.eq('user_id', userId),
+    });
     if (error) throw error;
+    recordSeen('work_quality_logs', (data ?? []) as any[]);
     if (data) {
       const rows: WorkQualityLog[] = (data as any[]).map((r) => ({
         id: r.id,
@@ -1105,12 +1182,11 @@ export async function hydrateBraindumpFromCloud(
   const errors: string[] = [];
   let count = 0;
   try {
-    const { data, error } = await supabase
-      .from('braindump_entries')
-      .select('*')
-      .eq('user_id', userId)
-      .is('deleted_at', null);
+    const { data, error } = await selectAll(supabase, 'braindump_entries', {
+      filter: (q) => q.eq('user_id', userId).is('deleted_at', null),
+    });
     if (error) throw error;
+    recordSeen('braindump_entries', (data ?? []) as any[]);
     if (data) {
       const rows: BraindumpEntry[] = (data as any[]).map((r) => ({
         id: r.id,
@@ -1149,10 +1225,9 @@ async function hydrateStockSalesFromCloud(
   const errors: string[] = [];
   let count = 0;
   try {
-    const { data, error } = await supabase
-      .from('stock_sales')
-      .select('*')
-      .eq('user_id', userId);
+    const { data, error } = await selectAll(supabase, 'stock_sales', {
+      filter: (q) => q.eq('user_id', userId),
+    });
     if (error) throw error;
     if (data) {
       const rows: StockSale[] = (data as any[]).map((r) => ({
@@ -1193,10 +1268,9 @@ async function hydratePortfolioCashFromCloud(
   const errors: string[] = [];
   let count = 0;
   try {
-    const { data, error } = await supabase
-      .from('portfolio_cash_entries')
-      .select('*')
-      .eq('user_id', userId);
+    const { data, error } = await selectAll(supabase, 'portfolio_cash_entries', {
+      filter: (q) => q.eq('user_id', userId),
+    });
     if (error) throw error;
     if (data) {
       const rows: PortfolioCashEntry[] = (data as any[]).map((r) => ({
@@ -1248,30 +1322,46 @@ export async function pullAll(_userId: string): Promise<PullResult> {
   };
 
   // Helper: pull a Supabase table, filter deleted, map back to local shape, write to Dexie.
+  //
+  // v1.16 (NCC#56 part 2) — pass `tombstonesIn`, the local table the rows land
+  // in, and the pull keeps the server's tombstones instead of filtering them
+  // out: only live rows are mapped and written, and every local row the server
+  // has marked deleted is removed (see removeTombstoned). Callers that pass it
+  // must not also filter on `deleted_at`, or no tombstone ever arrives.
   async function pullTable<R, L>(
     table: string,
     extraFilters: { column: string; op: 'is' | 'eq'; value: unknown }[],
     mapRowToLocal: (r: R) => L | null,
-    writeToDexie: (rows: L[]) => Promise<void>
+    writeToDexie: (rows: L[]) => Promise<void>,
+    tombstonesIn?: Table<any, string>
   ): Promise<number> {
-    let q = supabase.from(table).select('*');
-    for (const f of extraFilters) {
-      if (f.op === 'is') q = q.is(f.column, f.value as null);
-      else q = q.eq(f.column, f.value as string | number);
-    }
-    const { data, error } = await q;
+    const { data, error } = await selectAll(supabase, table, {
+      filter: (q) => {
+        for (const f of extraFilters) {
+          if (f.op === 'is') q = q.is(f.column, f.value as null);
+          else q = q.eq(f.column, f.value as string | number);
+        }
+        return q;
+      },
+    });
     if (error) {
       errors.push(`${table}: ${error.message}`);
       return 0;
     }
-    const mapped = (data as R[]).map(mapRowToLocal).filter((x): x is L => x !== null);
+    recordSeen(table, data as any[]);
+    const rows = data as any[];
+    const live = tombstonesIn ? rows.filter((r) => !r.deleted_at) : rows;
+    const mapped = (live as R[]).map(mapRowToLocal).filter((x): x is L => x !== null);
     await writeToDexie(mapped);
+    if (tombstonesIn) {
+      await removeTombstoned(tombstonesIn, rows.filter((r) => r.deleted_at).map((r) => r.id));
+    }
     return mapped.length;
   }
 
   result.transactions = await pullTable<any, Transaction>(
     'transactions',
-    [{ column: 'deleted_at', op: 'is', value: null }],
+    [],
     (r) => {
       // Transfers are stored cloud-side as `expense` + a `[transfer]` description
       // prefix (the cloud `type` CHECK predates the transfer type). Reconstruct the
@@ -1294,12 +1384,13 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     },
     async (rows) => {
       await db.transactions.bulkPut(rows);
-    }
+    },
+    db.transactions
   );
 
   result.budgetCategories = await pullTable<any, BudgetCategory>(
     'budget_categories',
-    [{ column: 'deleted_at', op: 'is', value: null }],
+    [],
     (r) => ({
       id: r.id,
       name: r.name,
@@ -1310,7 +1401,8 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     }),
     async (rows) => {
       await db.budgetCategories.bulkPut(rows);
-    }
+    },
+    db.budgetCategories
   );
 
   result.portfolioHoldings = await pullTable<any, PortfolioHolding>(
@@ -1365,6 +1457,13 @@ export async function pullAll(_userId: string): Promise<PullResult> {
       // progress. Drop any CLOUD-SOURCED ('synced') local session that is no
       // longer in the active cloud set, and cascade-delete its sets. Local
       // unsynced ('pending') sessions are preserved — they haven't pushed yet.
+      //
+      // v1.16 (limecore#28): this prune is only safe because `rows` is the
+      // COMPLETE cloud set. It is a delete keyed on "absent from the pull", so
+      // a pull truncated at the API row cap would delete real workouts from
+      // this device. `pullTable` fetches through `selectAll`, which pages to
+      // completion or returns an error, and on an error this writer is never
+      // called. Keep it that way: never feed this prune a partial list.
       const cloudIds = new Set(rows.map((r) => r.id));
       const localSessions = await db.workoutSessions.toArray();
       const staleIds = localSessions
@@ -1407,7 +1506,7 @@ export async function pullAll(_userId: string): Promise<PullResult> {
 
   result.tasks = await pullTable<any, Task>(
     'tasks',
-    [{ column: 'deleted_at', op: 'is', value: null }],
+    [],
     (r) => ({
       id: r.id,
       title: r.title,
@@ -1423,7 +1522,8 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     }),
     async (rows) => {
       await db.tasks.bulkPut(rows);
-    }
+    },
+    db.tasks
   );
 
   // study_sessions: resilient fetch — drop the deleted_at filter on schema
@@ -1433,7 +1533,7 @@ export async function pullAll(_userId: string): Promise<PullResult> {
 
   result.manualAssets = await pullTable<any, ManualAsset>(
     'manual_assets',
-    [{ column: 'deleted_at', op: 'is', value: null }],
+    [],
     (r) => {
       // v1.2 follow-up — CTO Account refactor. Server rows still carry the
       // legacy `asset_type` / `value` field names; we mirror them onto the
@@ -1459,12 +1559,13 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     },
     async (rows) => {
       await db.manualAssets.bulkPut(rows);
-    }
+    },
+    db.manualAssets
   );
 
   result.watchlistItems = await pullTable<any, WatchlistItem>(
     'watchlist_items',
-    [{ column: 'deleted_at', op: 'is', value: null }],
+    [],
     (r) => ({
       id: r.id,
       ticker: r.ticker,
@@ -1479,12 +1580,13 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     }),
     async (rows) => {
       await db.watchlistItems.bulkPut(rows);
-    }
+    },
+    db.watchlistItems
   );
 
   result.goals = await pullTable<any, Goal>(
     'goals',
-    [{ column: 'deleted_at', op: 'is', value: null }],
+    [],
     (r) => ({
       id: r.id,
       title: r.title,
@@ -1502,12 +1604,13 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     }),
     async (rows) => {
       await db.goals.bulkPut(rows);
-    }
+    },
+    db.goals
   );
 
   result.portfolioLots = await pullTable<any, PortfolioLot>(
     'portfolio_lots',
-    [{ column: 'deleted_at', op: 'is', value: null }],
+    [],
     (r) => ({
       id: r.id,
       holdingId: r.holding_id,
@@ -1522,7 +1625,8 @@ export async function pullAll(_userId: string): Promise<PullResult> {
     }),
     async (rows) => {
       await db.portfolioLots.bulkPut(rows);
-    }
+    },
+    db.portfolioLots
   );
 
   // v1.3 AUDIT-FSG-5b — extend pullAll coverage so cross-device habit edits
