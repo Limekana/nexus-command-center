@@ -1,0 +1,3 @@
+Sinkronisasi yang bisa diandalkan.
+
+Item yang dihapus di perangkat lain atau di StudyDesk kini juga hilang dari NCC, perubahan offline tidak lagi menimpa perubahan yang lebih baru, dan kebiasaan yang dicentang di dua perangkat pada hari yang sama tersinkron tanpa galat. Baru di Pengaturan: pemberitahuan versi baru di F-Droid dan laporan galat opsional (nonaktif secara bawaan).

@@ -1,0 +1,3 @@
+Une synchronisation fiable.
+
+Ce que vous supprimez sur un autre appareil ou dans StudyDesk disparaît désormais de NCC, une modification hors ligne n'écrase plus une plus récente, et une habitude cochée le même jour sur deux appareils se synchronise sans erreur. Nouveau dans Réglages : un avis quand une version plus récente est sur F-Droid, et des rapports d'erreur facultatifs (désactivés par défaut).

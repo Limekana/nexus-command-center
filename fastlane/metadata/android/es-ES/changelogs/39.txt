@@ -1,0 +1,3 @@
+Una sincronización en la que puedes confiar.
+
+Lo que borras en otro dispositivo o en StudyDesk ahora desaparece de NCC, un cambio hecho sin conexión ya no sobrescribe otro más reciente y un hábito marcado en dos dispositivos el mismo día se sincroniza sin errores. Nuevo en Ajustes: un aviso cuando hay una versión más reciente en F-Droid e informes de errores opcionales (desactivados por defecto).

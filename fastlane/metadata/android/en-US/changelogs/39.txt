@@ -1,0 +1,3 @@
+Sync you can trust.
+
+Items deleted on another device or in StudyDesk now disappear from NCC, an edit made offline no longer overwrites a newer one, and a habit ticked on two devices on the same day syncs without errors. New in Settings: a notice when a newer NCC is on F-Droid, and optional error reports (off by default) that help fix crashes. Settings switches are properly aligned again, also in right-to-left languages.

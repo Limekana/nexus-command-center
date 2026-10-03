@@ -1,0 +1,3 @@
+Synkronointi, johon voi luottaa.
+
+Toisella laitteella tai StudyDeskissä poistetut kohteet katoavat nyt myös NCC:stä, offline-tilassa tehty muutos ei enää korvaa uudempaa, ja samana päivänä kahdella laitteella kuitattu tapa synkronoituu ilman virheitä. Uutta asetuksissa: ilmoitus F-Droidin uudemmasta versiosta sekä vapaaehtoiset virheraportit (oletuksena pois päältä). Asetusten kytkimet ovat taas kohdallaan.
