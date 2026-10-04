@@ -4,7 +4,7 @@ import { HashRouter } from 'react-router-dom';
 import App from './App';
 import { ConfirmProvider } from './components/ConfirmDialog';
 import { initWebAnalytics } from './lib/webAnalytics';
-import './i18n';
+import { i18nReady } from './i18n';
 import './index.css';
 // v1.15 (Item 13) — additive: every rule is scoped to [data-theme='rack'],
 // so without the attribute the app renders the free theme unchanged.
@@ -27,16 +27,20 @@ installGlobalErrorHandlers();
 // Before onboarding can run: a fresh install starts on the current policy.
 notePolicyBaseline();
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    {/* Outermost, so a throw anywhere below — router and providers included —
-        lands on the recovery screen instead of a blank page (limecore#16). */}
-    <ErrorBoundary>
-      <HashRouter>
-        <ConfirmProvider>
-          <App />
-        </ConfirmProvider>
-      </HashRouter>
-    </ErrorBoundary>
-  </React.StrictMode>
-);
+// v1.17 (limecore#18): the active language is its own chunk now. Render once it
+// has loaded, so the first paint is not English for a frame.
+void i18nReady.then(() => {
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      {/* Outermost, so a throw anywhere below — router and providers included —
+          lands on the recovery screen instead of a blank page (limecore#16). */}
+      <ErrorBoundary>
+        <HashRouter>
+          <ConfirmProvider>
+            <App />
+          </ConfirmProvider>
+        </HashRouter>
+      </ErrorBoundary>
+    </React.StrictMode>
+  );
+});
