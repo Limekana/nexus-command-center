@@ -14,6 +14,7 @@ import { ENTITLEMENT_EVENT } from './lib/entitlement';
 import ErrorBoundary from './components/ErrorBoundary';
 import { installGlobalErrorHandlers } from './lib/errorReports';
 import { notePolicyBaseline } from './lib/policyNotice';
+import { installStaleChunkReload } from './lib/staleChunkReload';
 
 syncTheme();
 window.addEventListener(ENTITLEMENT_EVENT, () => syncTheme());
@@ -26,6 +27,9 @@ initWebAnalytics();
 installGlobalErrorHandlers();
 // Before onboarding can run: a fresh install starts on the current policy.
 notePolicyBaseline();
+// Web only: a tab older than the current deploy reloads instead of failing to
+// load a screen or language chunk (limecore#13).
+installStaleChunkReload();
 
 // v1.17 (limecore#18): the active language is its own chunk now. Render once it
 // has loaded, so the first paint is not English for a frame.
