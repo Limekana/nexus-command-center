@@ -484,7 +484,7 @@ export default function Settings() {
           <ErrorReportsToggle />
           <a
             className="py-2 flex items-center justify-between gap-3 active:opacity-80"
-            href="https://limekana.github.io/nexus-command-center/legal/privacy.html"
+            href="https://limecore.dev/privacy"
             target="_blank"
             rel="noopener noreferrer"
           >
