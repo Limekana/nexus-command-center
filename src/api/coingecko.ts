@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { loadAxios } from './http';
 import { Capacitor } from '@capacitor/core';
 import { readCache, writeCache, shouldFetch, recordCall } from './cache';
 import { lastProviderErrors } from './yahoo';
@@ -59,6 +59,7 @@ export async function getCryptoPrices(
   }
   try {
     recordCall('coingecko', 'coingecko');
+    const axios = await loadAxios();
     const { data } = await axios.get<CoinMarketRow[]>(`${BASE_URL}/coins/markets`, {
       params: {
         vs_currency: 'eur',

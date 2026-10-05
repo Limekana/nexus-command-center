@@ -2,7 +2,7 @@
 // We cache a single "rates anchored to USD" snapshot for 12 hours and derive
 // any from→to conversion from it.
 
-import axios from 'axios';
+import { loadAxios } from './http';
 import { Capacitor } from '@capacitor/core';
 import { readCache, writeCache } from './cache';
 
@@ -35,6 +35,7 @@ async function loadFromCache(): Promise<RatesPayload | null> {
 
 async function fetchFresh(): Promise<RatesPayload | null> {
   try {
+    const axios = await loadAxios();
     const { data } = await axios.get<{ result: string; base_code: string; rates: Record<string, number> }>(URL, { timeout: 8000 });
     if (data?.result !== 'success' || !data.rates) return null;
     const payload: RatesPayload = { base: 'USD', rates: data.rates, ts: Date.now() };
