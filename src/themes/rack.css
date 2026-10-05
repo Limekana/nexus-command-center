@@ -117,14 +117,6 @@
   border-radius: 2px;
 }
 
-/* The live panel loses v1.10's accent edge — on a faceplate a status colour
-   would read as a skin. Live-ness is stated by an LED in the label row
-   instead, which is what `.rack-led` is for. */
-[data-theme='rack'] .panel-live {
-  border-color: rgb(var(--c-border));
-  box-shadow: inset 0 1px 0 var(--chamfer-lit), inset 0 -1px 0 var(--chamfer-shadow);
-}
-
 /* The index mark carries over from v1.10 unchanged in meaning — it just
    becomes a lit switch cap. */
 [data-theme='rack'] .chip-on,
