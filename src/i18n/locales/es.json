@@ -61,7 +61,6 @@
     "collapseSidebar": "Contraer barra lateral",
     "expandSidebar": "Expandir barra lateral",
     "updateShort": "Actualización disponible",
-    "updateAvailable": "Actualización disponible: v{{version}}",
     "updateDownloading": "Descargando… {{percent}} %",
     "updateReady": "Reiniciar para actualizar"
   },
@@ -116,7 +115,6 @@
     "creatingAccount": "Creando cuenta…",
     "haveAccount": "¿Ya tienes cuenta?",
     "signIn": "Iniciar sesión",
-    "checkEmailTitle": "Revisa tu correo",
     "checkEmailBody": "Enviamos un enlace de confirmación a <1>{{email}}</1>. Haz clic en él y vuelve aquí para iniciar sesión.",
     "backToSignIn": "Volver a iniciar sesión",
     "errNameRequired": "Introduce tu nombre.",
@@ -678,8 +676,7 @@
       "autoUpdates": "Actualiza automáticamente {{name}}",
       "perMonth": "{{amount}} / mes",
       "deleteConfirm": "¿Eliminar “{{name}}”? Las transacciones etiquetadas perderán la etiqueta.",
-      "shareTitle": "Compartir “{{name}}”",
-      "customIcon": "Icono personalizado"
+      "shareTitle": "Compartir “{{name}}”"
     },
     "ov": {
       "addTransaction": "Añadir transacción",

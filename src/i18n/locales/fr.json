@@ -61,7 +61,6 @@
     "collapseSidebar": "Réduire la barre latérale",
     "expandSidebar": "Développer la barre latérale",
     "updateShort": "Mise à jour disponible",
-    "updateAvailable": "Mise à jour disponible : v{{version}}",
     "updateDownloading": "Téléchargement… {{percent}} %",
     "updateReady": "Redémarrer pour mettre à jour"
   },
@@ -116,7 +115,6 @@
     "creatingAccount": "Création du compte…",
     "haveAccount": "Vous avez déjà un compte ?",
     "signIn": "Se connecter",
-    "checkEmailTitle": "Vérifiez votre e-mail",
     "checkEmailBody": "Nous avons envoyé un lien de confirmation à <1>{{email}}</1>. Cliquez dessus, puis revenez ici pour vous connecter.",
     "backToSignIn": "Retour à la connexion",
     "errNameRequired": "Saisissez votre nom.",
@@ -678,8 +676,7 @@
       "autoUpdates": "Met à jour {{name}}",
       "perMonth": "{{amount}} / mois",
       "deleteConfirm": "Supprimer “{{name}}” ? Les transactions associées seront désétiquetées.",
-      "shareTitle": "Partager “{{name}}”",
-      "customIcon": "Icône personnalisée"
+      "shareTitle": "Partager “{{name}}”"
     },
     "ov": {
       "addTransaction": "Ajouter une transaction",

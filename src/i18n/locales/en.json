@@ -61,7 +61,6 @@
     "collapseSidebar": "Collapse sidebar",
     "expandSidebar": "Expand sidebar",
     "updateShort": "Update available",
-    "updateAvailable": "Update available: v{{version}}",
     "updateDownloading": "Downloading… {{percent}}%",
     "updateReady": "Restart to update"
   },
@@ -116,7 +115,6 @@
     "creatingAccount": "Creating account…",
     "haveAccount": "Already have an account?",
     "signIn": "Sign in",
-    "checkEmailTitle": "Check your email",
     "checkEmailBody": "We sent a confirmation link to <1>{{email}}</1>. Click it to verify, then come back here and sign in.",
     "backToSignIn": "Back to Sign In",
     "errNameRequired": "Enter your name.",
@@ -678,8 +676,7 @@
       "autoUpdates": "Auto-updates {{name}}",
       "perMonth": "{{amount}} / month",
       "deleteConfirm": "Delete “{{name}}”? Transactions tagged to it will be untagged.",
-      "shareTitle": "Share “{{name}}”",
-      "customIcon": "Custom icon"
+      "shareTitle": "Share “{{name}}”"
     },
     "ov": {
       "addTransaction": "Add transaction",

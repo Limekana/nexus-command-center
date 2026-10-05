@@ -61,7 +61,6 @@
     "collapseSidebar": "折叠侧边栏",
     "expandSidebar": "展开侧边栏",
     "updateShort": "有可用更新",
-    "updateAvailable": "有可用更新：v{{version}}",
     "updateDownloading": "正在下载… {{percent}}%",
     "updateReady": "重启以更新"
   },
@@ -116,7 +115,6 @@
     "creatingAccount": "正在创建账户…",
     "haveAccount": "已有账户？",
     "signIn": "登录",
-    "checkEmailTitle": "请查收邮件",
     "checkEmailBody": "我们已向 <1>{{email}}</1> 发送确认链接。点击链接完成验证后，返回此处登录。",
     "backToSignIn": "返回登录",
     "errNameRequired": "请输入你的姓名。",
@@ -678,8 +676,7 @@
       "autoUpdates": "自动更新 {{name}}",
       "perMonth": "{{amount}} / 月",
       "deleteConfirm": "删除“{{name}}”？标记到它的交易将取消标记。",
-      "shareTitle": "共享“{{name}}”",
-      "customIcon": "自定义图标"
+      "shareTitle": "共享“{{name}}”"
     },
     "ov": {
       "addTransaction": "添加交易",

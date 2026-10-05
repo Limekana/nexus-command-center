@@ -61,7 +61,6 @@
     "collapseSidebar": "Kutista sivupalkki",
     "expandSidebar": "Laajenna sivupalkki",
     "updateShort": "Päivitys saatavilla",
-    "updateAvailable": "Päivitys saatavilla: v{{version}}",
     "updateDownloading": "Ladataan… {{percent}} %",
     "updateReady": "Käynnistä uudelleen ja päivitä"
   },
@@ -116,7 +115,6 @@
     "creatingAccount": "Luodaan tiliä…",
     "haveAccount": "Onko sinulla jo tili?",
     "signIn": "Kirjaudu sisään",
-    "checkEmailTitle": "Tarkista sähköpostisi",
     "checkEmailBody": "Lähetimme vahvistuslinkin osoitteeseen <1>{{email}}</1>. Klikkaa sitä ja palaa sitten tänne kirjautumaan.",
     "backToSignIn": "Takaisin kirjautumiseen",
     "errNameRequired": "Syötä nimesi.",
@@ -678,8 +676,7 @@
       "autoUpdates": "Päivittää automaattisesti {{name}}",
       "perMonth": "{{amount}} / kk",
       "deleteConfirm": "Poistetaanko “{{name}}”? Siihen merkityt tapahtumat menettävät merkinnän.",
-      "shareTitle": "Jaa “{{name}}”",
-      "customIcon": "Oma kuvake"
+      "shareTitle": "Jaa “{{name}}”"
     },
     "ov": {
       "addTransaction": "Lisää tapahtuma",

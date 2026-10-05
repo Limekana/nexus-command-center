@@ -46,7 +46,6 @@
     "creatingAccount": "جارٍ إنشاء الحساب…",
     "haveAccount": "لديك حساب بالفعل؟",
     "signIn": "تسجيل الدخول",
-    "checkEmailTitle": "تحقّق من بريدك الإلكتروني",
     "checkEmailBody": "أرسلنا رابط تأكيد إلى <1>{{email}}</1>. اضغط عليه للتحقق ثم عد إلى هنا لتسجيل الدخول.",
     "backToSignIn": "العودة إلى تسجيل الدخول",
     "errNameRequired": "أدخل اسمك.",
@@ -117,7 +116,6 @@
     "collapseSidebar": "طي الشريط الجانبي",
     "expandSidebar": "توسيع الشريط الجانبي",
     "updateShort": "يتوفر تحديث",
-    "updateAvailable": "يتوفر تحديث: v{{version}}",
     "updateDownloading": "جارٍ التنزيل… {{percent}}٪",
     "updateReady": "إعادة التشغيل للتحديث"
   },
@@ -786,8 +784,7 @@
       "autoUpdates": "يحدّث {{name}} تلقائيًا",
       "perMonth": "{{amount}} / شهر",
       "deleteConfirm": "حذف «{{name}}»؟ ستفقد المعاملات الموسومة بها وسمها.",
-      "shareTitle": "مشاركة «{{name}}»",
-      "customIcon": "أيقونة مخصصة"
+      "shareTitle": "مشاركة «{{name}}»"
     },
     "ov": {
       "addTransaction": "إضافة معاملة",
