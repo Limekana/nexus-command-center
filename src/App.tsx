@@ -10,6 +10,7 @@ import { useSyncStore } from './store/useSyncStore';
 import { seedIfEmpty } from './db/seed';
 import { clearAllLocalData } from './db/database';
 import { supabase } from './lib/supabase';
+import { useTranslation } from 'react-i18next';
 import { startRealtime, stopRealtime } from './lib/realtime';
 import { hydrateStudiesFromCloud, hydrateHabitsFromCloud, hydrateBodyMetricsFromCloud, hydrateWorkQualityFromCloud, hydrateBraindumpFromCloud } from './lib/cloudSync';
 import { watchAppOpens } from './lib/appOpens';
@@ -72,6 +73,7 @@ export default function App() {
   const sessionLoading = useSessionStore((s) => s.loading);
   const initSession = useSessionStore((s) => s.init);
   const syncNow = useSyncStore((s) => s.syncNow);
+  const { t } = useTranslation();
 
   // Guest-mode flag — when true, App.tsx skips the auth gate even with no
   // Supabase session. Loaded once on mount, then re-evaluated whenever the
@@ -367,7 +369,7 @@ export default function App() {
   if (sessionLoading || guestMode === null) {
     return (
       <div className="min-h-full bg-bg text-text flex items-center justify-center">
-        <div className="text-text-muted text-xs uppercase tracking-wider">Loading</div>
+        <div className="text-text-muted text-xs uppercase tracking-wider">{t('common.loading')}</div>
       </div>
     );
   }

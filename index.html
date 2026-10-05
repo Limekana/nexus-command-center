@@ -63,6 +63,11 @@
       React mounts. Styled inline to match App.tsx's sessionLoading view so
       the handoff between this and React's loading screen is seamless — no
       black flash, no font swap pop.
+
+      It carries no word on purpose (v1.17, NCC#113). It paints before any
+      JS, so it cannot know the user's language, and an English "Loading"
+      here flipped to "Ladataan…" a moment later. React's view says
+      t('common.loading') in the active language instead.
     -->
     <div id="root">
       <div style="
@@ -78,7 +83,7 @@
         letter-spacing: 0.16em;
         text-transform: uppercase;
         font-weight: 500;
-      ">Loading</div>
+      "></div>
     </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
