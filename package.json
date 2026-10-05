@@ -9,6 +9,7 @@
     "prepare": "git config core.hooksPath .githooks || true",
     "check:ime": "node scripts/check-ime.mjs",
     "check:secrets": "node scripts/check-secrets.mjs --all",
+    "check:assets": "node scripts/check-assets.mjs",
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "test:watch": "vitest",
