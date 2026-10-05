@@ -23,6 +23,11 @@ import { supabase } from '../lib/supabase';
 import { isComposing } from '../lib/imeSubmit';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Where the confirmation links land. The flag lets limecore.dev/confirmed say
+// "email changed" rather than "account confirmed". If this URL is not on
+// Supabase's redirect allow list, Supabase uses the Site URL (the same page,
+// without the flag) and the change still completes.
+const REDIRECT = 'https://limecore.dev/confirmed?flow=email-change';
 
 export default function ChangeEmail({ user }: { user: User }) {
   const { t } = useTranslation();
@@ -57,7 +62,7 @@ export default function ChangeEmail({ user }: { user: User }) {
     setBusy(true);
     setMsg(null);
     try {
-      const { error } = await supabase.auth.updateUser({ email: next });
+      const { error } = await supabase.auth.updateUser({ email: next }, { emailRedirectTo: REDIRECT });
       if (error) throw error;
       setPending(next);
       setValue('');
