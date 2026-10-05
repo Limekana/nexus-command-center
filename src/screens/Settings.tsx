@@ -9,6 +9,7 @@ import { type Lang } from '../i18n';
 import LanguageGrid from '../components/LanguageGrid';
 import AppHeader from '../components/AppHeader';
 import ListRow from '../components/ListRow';
+import ChangeEmail from '../components/ChangeEmail';
 import { useLifeProfileStore } from '../store/useLifeProfileStore';
 import { enabledDomains } from '../lib/lifeProfile';
 import pkg from '../../package.json';
@@ -300,6 +301,8 @@ export default function Settings() {
               >
                 {t('settings.sendPwReset')}
               </button>
+              {/* v1.17 (limecore#10): email/password accounts only. */}
+              <ChangeEmail user={user} />
               <button
                 className="btn-ghost w-full mt-2 text-danger border-danger/40"
                 onClick={() => setSignOutOpen(true)}
