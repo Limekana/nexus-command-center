@@ -23,7 +23,7 @@ import { readFileSync, statSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const BUDGET_KIB = 975; // measured 2026-10-04 after limecore#13: 939.9 KiB
+const BUDGET_KIB = 915; // measured 2026-10-05 after limecore#12 (axios + CSV importer out of startup): 880.7 KiB
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(ROOT, 'dist');
