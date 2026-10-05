@@ -60,17 +60,3 @@ export async function decrypt(alias: string, ciphertext: string, iv: string): Pr
   const { plaintext } = await LimecoreKeystore.decrypt({ alias, ciphertext, iv });
   return plaintext;
 }
-
-/** Check whether a key exists at the alias without trying to use it. */
-export async function hasKey(alias: string): Promise<boolean> {
-  if (!keystoreAvailable()) return false;
-  const { exists } = await LimecoreKeystore.hasKey({ alias });
-  return exists;
-}
-
-/** Delete a key. Used to invalidate stored blobs (the encrypted data
- *  becomes permanently unrecoverable). */
-export async function deleteKey(alias: string): Promise<void> {
-  if (!keystoreAvailable()) return;
-  await LimecoreKeystore.deleteKey({ alias });
-}

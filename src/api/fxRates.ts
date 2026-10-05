@@ -67,25 +67,6 @@ export function normalizeCurrency(amount: number, currency: string): { amount: n
   return { amount, currency: c || 'USD' };
 }
 
-// Convert `amount` from `from` currency into `to` currency using cached rates.
-// Returns null if rates aren't loaded or either currency is unknown.
-export async function convert(amount: number, from: string, to: string): Promise<number | null> {
-  const norm = normalizeCurrency(amount, from);
-  const fromCur = norm.currency;
-  const value = norm.amount;
-  if (fromCur === to) return value;
-
-  const payload = await ensureFxRates();
-  if (!payload) return null;
-  const rates = payload.rates;
-  // USD is the anchor: rates[X] = how many X per 1 USD.
-  const usd = fromCur === 'USD' ? value : value / (rates[fromCur] ?? NaN);
-  if (!isFinite(usd)) return null;
-  if (to === 'USD') return usd;
-  const result = usd * (rates[to] ?? NaN);
-  return isFinite(result) ? result : null;
-}
-
 // Synchronous variant for use inside selectors when rates are already loaded.
 export function convertSync(
   amount: number,
