@@ -86,7 +86,7 @@ export default function YearReview() {
 
   return (
     <>
-      <AppHeader title={t('yearReview.title')} back="/review" backLabel={t('yearReview.back')} showAvatar={false} />
+      <AppHeader title={t('yearReview.title')} back="/review" backLabel={t('weeklyReview.title')} showAvatar={false} />
       <div className="space-y-3">
         {/* Anchor stepper */}
         <div className="card flex items-center justify-between">
