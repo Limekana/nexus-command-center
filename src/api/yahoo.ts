@@ -11,7 +11,7 @@
 // (returns 401/403/empty), which was silently breaking refresh and leaving
 // the cache permanently stale. We send a desktop Chrome UA + Accept-Language.
 
-import axios from 'axios';
+import { loadAxios } from './http';
 import { Capacitor } from '@capacitor/core';
 import { CapacitorHttp } from '@capacitor/core';
 import type { FinnhubQuote } from './finnhub';
@@ -154,6 +154,7 @@ async function fetchYahoo(
     return body as YahooChartResponse;
   }
   // Web fallback (dev preview only — CORS will likely block this in browser).
+  const axios = await loadAxios();
   const { data } = await axios.get<YahooChartResponse>(url, {
     headers: WEB_HEADERS,
     timeout: 8000,

@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { loadAxios } from './http';
 import { Capacitor, CapacitorHttp } from '@capacitor/core';
 import { readCache, writeCache, shouldFetch, recordCall } from './cache';
 import { getApiKey } from './keys';
@@ -83,6 +83,7 @@ export async function finnhubGet<T>(
 
   // Web dev preview: through Vite's /fh proxy so CORS is handled at the
   // dev-server layer and the browser sees a same-origin request.
+  const axios = await loadAxios();
   const { data } = await axios.get<T>(`${BASE_URL}${path}`, {
     params: cleanParams,
     headers: { 'X-Finnhub-Token': apiKey },

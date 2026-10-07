@@ -94,7 +94,9 @@ describe('pullAll', () => {
     expect(result.errors).toEqual([]);
     expect(await db.workoutSessions.count()).toBe(1200);
     expect(await db.workoutSets.count()).toBe(1200);
-  });
+    // 1,200 rows through fake-indexeddb take ~2 s locally and went past vitest's
+    // 5 s default on a loaded CI runner (NCC#120). The bound is for hangs only.
+  }, 30_000);
 
   it('prunes nothing when a later page fails — a partial pull is never treated as complete', async () => {
     const w = workouts(1200);

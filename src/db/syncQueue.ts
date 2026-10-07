@@ -21,13 +21,6 @@ export async function enqueue(
   });
 }
 
-export async function pendingCount(): Promise<number> {
-  return db.syncQueue.where('syncedAt').equals('').or('syncedAt').equals(undefined as any).count().catch(async () => {
-    const all = await db.syncQueue.toArray();
-    return all.filter((q) => !q.syncedAt).length;
-  });
-}
-
 export async function listPending(): Promise<SyncQueueItem[]> {
   const all = await db.syncQueue.toArray();
   return all.filter((q) => !q.syncedAt);

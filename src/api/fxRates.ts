@@ -2,7 +2,7 @@
 // We cache a single "rates anchored to USD" snapshot for 12 hours and derive
 // any from→to conversion from it.
 
-import axios from 'axios';
+import { loadAxios } from './http';
 import { Capacitor } from '@capacitor/core';
 import { readCache, writeCache } from './cache';
 
@@ -35,6 +35,7 @@ async function loadFromCache(): Promise<RatesPayload | null> {
 
 async function fetchFresh(): Promise<RatesPayload | null> {
   try {
+    const axios = await loadAxios();
     const { data } = await axios.get<{ result: string; base_code: string; rates: Record<string, number> }>(URL, { timeout: 8000 });
     if (data?.result !== 'success' || !data.rates) return null;
     const payload: RatesPayload = { base: 'USD', rates: data.rates, ts: Date.now() };
@@ -65,25 +66,6 @@ export function normalizeCurrency(amount: number, currency: string): { amount: n
   if (currency === 'ZAc') return { amount: amount / 100, currency: 'ZAR' };
   if (currency === 'ILA') return { amount: amount / 100, currency: 'ILS' };
   return { amount, currency: c || 'USD' };
-}
-
-// Convert `amount` from `from` currency into `to` currency using cached rates.
-// Returns null if rates aren't loaded or either currency is unknown.
-export async function convert(amount: number, from: string, to: string): Promise<number | null> {
-  const norm = normalizeCurrency(amount, from);
-  const fromCur = norm.currency;
-  const value = norm.amount;
-  if (fromCur === to) return value;
-
-  const payload = await ensureFxRates();
-  if (!payload) return null;
-  const rates = payload.rates;
-  // USD is the anchor: rates[X] = how many X per 1 USD.
-  const usd = fromCur === 'USD' ? value : value / (rates[fromCur] ?? NaN);
-  if (!isFinite(usd)) return null;
-  if (to === 'USD') return usd;
-  const result = usd * (rates[to] ?? NaN);
-  return isFinite(result) ? result : null;
 }
 
 // Synchronous variant for use inside selectors when rates are already loaded.

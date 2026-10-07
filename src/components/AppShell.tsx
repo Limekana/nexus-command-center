@@ -1,6 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import PolicyUpdatedNote from './PolicyUpdatedNote';
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import BottomTabBar from './BottomTabBar';
@@ -338,7 +338,12 @@ export default function AppShell() {
                 nothing unless F-Droid has a newer build than this one. */}
             <FdroidUpdateNote />
             <PageTransition>
-              <Outlet />
+              {/* v1.17 (limecore#13) — screens are lazy chunks. The boundary
+                  sits here, inside the shell, so the tab bar and side nav
+                  stay put while a screen's chunk loads. */}
+              <Suspense fallback={null}>
+                <Outlet />
+              </Suspense>
             </PageTransition>
           </div>
         </main>

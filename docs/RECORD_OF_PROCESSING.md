@@ -10,7 +10,7 @@ account system, one database.
 > available to the supervisory authority on request. It does not require
 > publication, and the security section below is a reason not to publish it. The
 > public-facing description of the same processing is
-> [`docs/legal/privacy.html`](./legal/privacy.html).
+> [limecore.dev/privacy](https://limecore.dev/privacy).
 >
 > **Why it exists at all:** the under-250-employee exemption in Art. 30(5) falls
 > away when processing is not occasional. Continuous background sync across
@@ -246,6 +246,7 @@ Everything else goes to l1m3core@gmail.com, answered within one calendar month.
 
 | Date | Change |
 |---|---|
+| 2026-10-06 | The privacy-policy link above now points to `limecore.dev/privacy`, the only live copy since 2026-10-04 (limecore#32). The stale copy this file used to link, `docs/legal/privacy.html`, is deleted along with `docs/legal/terms.html` and `docs/index.html` (NCC#109). |
 | 2026-09-15 | **Recorded Vercel's transfer basis, closing `O-8`.** Its DPA incorporates the 2021 SCCs (2021/914) Module Two and the UK IDTA, deemed signed on entering the agreement — the basis existed, nobody had written it down. Also: added **IP addresses** to §3, which had omitted them entirely and so let §5 claim more than the facts support; set out three minimisation options in §5 and named the best one (delete the `/fh/*` rewrite if Finnhub sends CORS headers, so a user's own API key stops transiting our infrastructure at all); raised **`O-9`** on Vercel's Hobby plan being non-commercial-use while the suite carries a Ko-fi link and supporter tiers; and flagged that this document and the suite registry share an id namespace without sharing a numbering (`O-6`/`PRE-3`, and two different `O-7`s). |
 | 2026-09-13 | Corrected §7's outstanding-items table: `O-3`, `O-4`, `C-1` and `C-2` were closed on 2026-08-01 and never struck off, so the document overstated the open exposure for six weeks. `O-6` re-verified against the live security advisor (still the only finding on the project). Also recorded that this file is not served by GitHub Pages — `gh-pages` carries only `index.html` and `legal/` — which had been assumed rather than checked. |
 | 2026-09-13 | Added **Vercel** as a processor for the browser version of NCC — hosting and the market-data proxy — with the transfer question logged as `O-8`. It had been live since 2026-08-14 and was missing from §4 and §5 entirely. Corrects the `PRIV-1` premise on the way past: the Finnhub key travels in an `X-Finnhub-Token` HEADER, not a `?token=` query parameter, so it is not in the request path an access log records. The transit through infrastructure we rent is real and is now disclosed; the key-in-the-URL part was not. |

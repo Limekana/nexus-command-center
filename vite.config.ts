@@ -20,6 +20,12 @@ export default defineConfig({
   resolve: {
     alias: { '@': path.resolve(__dirname, './src') },
   },
+  // v1.17 (limecore#12): console.log/info/debug land in Android logcat, which
+  // other tools on the device can read, and some print counts of the user's
+  // data. Production builds drop them; warn and error stay for diagnosis.
+  esbuild: process.env.NODE_ENV === 'production'
+    ? { pure: ['console.log', 'console.info', 'console.debug'], drop: ['debugger'] }
+    : undefined,
   server: {
     host: lanDev ? true : 'localhost',
     port: 5173,

@@ -230,7 +230,7 @@ export function withWeight(profile: LifeProfile, target: DomainKey, desired: num
   if (!enabled.includes(target)) return profile;
   const others = enabled.filter((d) => d !== target);
   if (others.length === 0) {
-    return setDomains(profile, { ...zeroAll(), [target]: 100 });
+    return setDomains({ ...zeroAll(), [target]: 100 });
   }
   const maxForTarget = 100 - MIN_DOMAIN_WEIGHT * others.length;
   const w = clampInt(desired, MIN_DOMAIN_WEIGHT, maxForTarget);
@@ -238,7 +238,7 @@ export function withWeight(profile: LifeProfile, target: DomainKey, desired: num
   const next = zeroAll();
   next[target] = w;
   others.forEach((d, i) => (next[d] = balanced[i]));
-  return setDomains(profile, next);
+  return setDomains(next);
 }
 
 /** Enable or disable `target`. Disabling redistributes its weight equally to
@@ -259,7 +259,7 @@ export function withDomainEnabled(profile: LifeProfile, target: DomainKey, enabl
     const balanced = balance(others.map((d) => profile.domains[d]), 100);
     const next = zeroAll();
     others.forEach((d, i) => (next[d] = balanced[i]));
-    return setDomains(profile, next);
+    return setDomains(next);
   }
 
   // Enabling — give it the average of the currently-enabled domains, then
@@ -272,12 +272,12 @@ export function withDomainEnabled(profile: LifeProfile, target: DomainKey, enabl
   const next = zeroAll();
   next[target] = start;
   currentlyEnabled.forEach((d, i) => (next[d] = balanced[i]));
-  return setDomains(profile, next);
+  return setDomains(next);
 }
 
 // ─── internals ───────────────────────────────────────────────────────────
 
-function setDomains(profile: LifeProfile, domains: Record<DomainKey, number>): LifeProfile {
+function setDomains(domains: Record<DomainKey, number>): LifeProfile {
   return { preset: 'custom', domains };
 }
 

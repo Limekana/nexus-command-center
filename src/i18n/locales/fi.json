@@ -61,7 +61,6 @@
     "collapseSidebar": "Kutista sivupalkki",
     "expandSidebar": "Laajenna sivupalkki",
     "updateShort": "Päivitys saatavilla",
-    "updateAvailable": "Päivitys saatavilla: v{{version}}",
     "updateDownloading": "Ladataan… {{percent}} %",
     "updateReady": "Käynnistä uudelleen ja päivitä"
   },
@@ -116,7 +115,6 @@
     "creatingAccount": "Luodaan tiliä…",
     "haveAccount": "Onko sinulla jo tili?",
     "signIn": "Kirjaudu sisään",
-    "checkEmailTitle": "Tarkista sähköpostisi",
     "checkEmailBody": "Lähetimme vahvistuslinkin osoitteeseen <1>{{email}}</1>. Klikkaa sitä ja palaa sitten tänne kirjautumaan.",
     "backToSignIn": "Takaisin kirjautumiseen",
     "errNameRequired": "Syötä nimesi.",
@@ -276,6 +274,17 @@
     "wrongPin": "Väärä PIN — pyyhintä peruutettu.",
     "pwResetFail": "Palautusviestiä ei voitu lähettää: {{msg}}",
     "pwResetSent": "Salasanan palautusviesti lähetetty. Tarkista postilaatikkosi.",
+    "changeEmail": "Vaihda sähköposti",
+    "changeEmailWhy": "Tämä vaihtaa sähköpostin, jolla kirjaudut StudyDeskiin, NCC:hen ja LimeLogiin. Lähetämme linkin nykyiseen osoitteeseesi ja toisen uuteen osoitteeseen, ja muutos tulee voimaan, kun olet avannut molemmat.",
+    "changeEmailLabel": "Uusi sähköposti",
+    "changeEmailSend": "Lähetä linkit",
+    "changeEmailPending": "Odottaa vahvistusta: {{next}}. Avaa linkit, jotka lähetimme osoitteisiin {{current}} ja {{next}}. Siihen asti kirjaudu osoitteella {{current}}.",
+    "changeEmailSame": "Tämä on jo sähköpostisi.",
+    "changeEmailTaken": "Toinen tili käyttää jo tätä osoitetta.",
+    "changeEmailRateLimit": "Sähköposteja lähetettiin juuri liian monta. Yritä myöhemmin uudelleen.",
+    "changeEmailFailed": "Linkkejä ei voitu lähettää. Tarkista yhteys ja yritä uudelleen.",
+    "changeEmailInvalid": "Tämä ei näytä sähköpostiosoitteelta.",
+    "changeEmailGoogle": "Kirjaudut Googlella, joten sähköpostisi on Google-osoitteesi.",
     "signOutTitle": "Kirjaudutaanko ulos?",
     "signOutBlurb": "Valitse, mitä tällä laitteella jo tallennetuille tiedoille tapahtuu. Pilvitiedot säilyvät kummassakin tapauksessa.",
     "keepLocal": "Säilytä paikalliset tiedot",
@@ -678,8 +687,7 @@
       "autoUpdates": "Päivittää automaattisesti {{name}}",
       "perMonth": "{{amount}} / kk",
       "deleteConfirm": "Poistetaanko “{{name}}”? Siihen merkityt tapahtumat menettävät merkinnän.",
-      "shareTitle": "Jaa “{{name}}”",
-      "customIcon": "Oma kuvake"
+      "shareTitle": "Jaa “{{name}}”"
     },
     "ov": {
       "addTransaction": "Lisää tapahtuma",
