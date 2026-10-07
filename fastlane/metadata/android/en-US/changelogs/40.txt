@@ -1,0 +1,3 @@
+Faster and lighter.
+
+NCC starts faster: languages and screens load only when you need them, and the app is smaller. Habits and body metrics sync live between your devices again. You can now change your login email, and your Ko-fi supporter status follows it. The startup screen and the Year in Review back link show proper text in your language. Desktop: updates install again, including from 1.15 and 1.16.

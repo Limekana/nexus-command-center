@@ -1,0 +1,3 @@
+Nopeampi ja kevyempi.
+
+NCC käynnistyy nopeammin: kielet ja näkymät ladataan vasta kun tarvitset niitä, ja sovellus on pienempi. Tavat ja kehon mittaukset synkronoituvat taas heti laitteidesi välillä. Voit nyt vaihtaa kirjautumissähköpostisi, ja Ko-fi-tukijatilasi seuraa mukana. Työpöytä: päivitykset asentuvat taas, myös versioista 1.15 ja 1.16.
