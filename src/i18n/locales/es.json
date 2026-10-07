@@ -61,7 +61,6 @@
     "collapseSidebar": "Contraer barra lateral",
     "expandSidebar": "Expandir barra lateral",
     "updateShort": "Actualización disponible",
-    "updateAvailable": "Actualización disponible: v{{version}}",
     "updateDownloading": "Descargando… {{percent}} %",
     "updateReady": "Reiniciar para actualizar"
   },
@@ -116,7 +115,6 @@
     "creatingAccount": "Creando cuenta…",
     "haveAccount": "¿Ya tienes cuenta?",
     "signIn": "Iniciar sesión",
-    "checkEmailTitle": "Revisa tu correo",
     "checkEmailBody": "Enviamos un enlace de confirmación a <1>{{email}}</1>. Haz clic en él y vuelve aquí para iniciar sesión.",
     "backToSignIn": "Volver a iniciar sesión",
     "errNameRequired": "Introduce tu nombre.",
@@ -276,6 +274,17 @@
     "wrongPin": "PIN incorrecto — borrado cancelado.",
     "pwResetFail": "No se pudo enviar el correo de restablecimiento: {{msg}}",
     "pwResetSent": "Correo de restablecimiento enviado. Revisa tu bandeja de entrada.",
+    "changeEmail": "Cambiar correo",
+    "changeEmailWhy": "Esto cambia el correo con el que inicias sesión en StudyDesk, NCC y LimeLog. Enviamos un enlace a tu dirección actual y otro a la nueva, y el cambio se aplica cuando hayas abierto los dos.",
+    "changeEmailLabel": "Correo nuevo",
+    "changeEmailSend": "Enviar enlaces",
+    "changeEmailPending": "Pendiente de confirmación: {{next}}. Abre los enlaces enviados a {{current}} y a {{next}}. Hasta entonces, inicia sesión con {{current}}.",
+    "changeEmailSame": "Ese ya es tu correo.",
+    "changeEmailTaken": "Otra cuenta ya usa esa dirección.",
+    "changeEmailRateLimit": "Se enviaron demasiados correos hace un momento. Inténtalo más tarde.",
+    "changeEmailFailed": "No se pudieron enviar los enlaces. Revisa tu conexión e inténtalo de nuevo.",
+    "changeEmailInvalid": "Eso no parece un correo electrónico.",
+    "changeEmailGoogle": "Inicias sesión con Google, así que tu correo es tu dirección de Google.",
     "signOutTitle": "¿Cerrar sesión?",
     "signOutBlurb": "Elige qué pasa con los datos ya guardados en este dispositivo. Los datos en la nube quedan intactos en ambos casos.",
     "keepLocal": "Conservar datos locales",
@@ -678,8 +687,7 @@
       "autoUpdates": "Actualiza automáticamente {{name}}",
       "perMonth": "{{amount}} / mes",
       "deleteConfirm": "¿Eliminar “{{name}}”? Las transacciones etiquetadas perderán la etiqueta.",
-      "shareTitle": "Compartir “{{name}}”",
-      "customIcon": "Icono personalizado"
+      "shareTitle": "Compartir “{{name}}”"
     },
     "ov": {
       "addTransaction": "Añadir transacción",

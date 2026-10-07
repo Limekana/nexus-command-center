@@ -62,7 +62,7 @@ const callTimestamps: Record<string, number[]> = {};
 const lastFetchAt: Record<string, number> = {};
 
 // Per-bucket configurable soft-refresh interval. Defaults to 60s for quote
-// buckets, 30 min for everything else — adjust via setSoftInterval.
+// buckets, 30 min for everything else.
 const softIntervalMs: Record<string, number> = {
   finnhub: 60_000,        // quote endpoint
   yahoo: 60_000,           // quote endpoint
@@ -76,10 +76,6 @@ const softIntervalMs: Record<string, number> = {
   'yahoo-spark': 6 * 60 * 60_000,             // 6h
   'yahoo-summary': 24 * 60 * 60_000,          // 24h international fallback
 };
-
-export function setSoftInterval(bucket: string, ms: number): void {
-  softIntervalMs[bucket] = ms;
-}
 
 // Daily budget per provider (keyed in localStorage by `apibudget_${provider}_${YYYY-MM-DD}`).
 // Default caps are generous: enough for ~10 holdings × 5 refresh-types × a few refreshes/day,

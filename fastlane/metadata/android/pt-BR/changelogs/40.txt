@@ -1,0 +1,3 @@
+Mais rápido e mais leve.
+
+O NCC abre mais rápido: idiomas e telas carregam só quando você precisa, e o app ficou menor. Hábitos e medidas corporais voltam a sincronizar na hora entre seus aparelhos. Agora você pode trocar o e-mail de login, e seu status de apoiador no Ko-fi acompanha. Desktop: as atualizações voltam a ser instaladas, inclusive a partir da 1.15 e 1.16.

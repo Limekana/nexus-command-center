@@ -4,7 +4,7 @@
 //
 // Cache 6h since news is not real-time anyway.
 
-import axios from 'axios';
+import { loadAxios } from './http';
 import { Capacitor, CapacitorHttp } from '@capacitor/core';
 import { db } from '../db/database';
 import { getApiKey } from './keys';
@@ -69,6 +69,7 @@ async function fetchYahooNews(): Promise<NewsItem[]> {
     if (res.status >= 400) throw new Error(`Yahoo news HTTP ${res.status}`);
     data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
   } else {
+    const axios = await loadAxios();
     const r = await axios.get(url, { headers: WEB_HEADERS, timeout: 10_000 });
     data = r.data;
   }

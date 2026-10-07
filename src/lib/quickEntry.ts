@@ -18,7 +18,7 @@
 // overlay show live suggestions for a half-typed token — there is no such thing
 // as a "partially parsed" state to special-case.
 
-import { parseAmount } from './csvImport';
+import { parseAmount } from './parseAmount';
 
 export interface QuickEntryDraft {
   /** Positive magnitude. Direction is in `type`, as everywhere else. */

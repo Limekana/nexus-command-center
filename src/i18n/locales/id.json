@@ -46,7 +46,6 @@
     "creatingAccount": "Membuat akun…",
     "haveAccount": "Sudah punya akun?",
     "signIn": "Masuk",
-    "checkEmailTitle": "Periksa emailmu",
     "checkEmailBody": "Kami mengirim tautan konfirmasi ke <1>{{email}}</1>. Ketuk untuk memverifikasi, lalu kembali ke sini untuk masuk.",
     "backToSignIn": "Kembali ke Masuk",
     "errNameRequired": "Masukkan namamu.",
@@ -117,7 +116,6 @@
     "collapseSidebar": "Ciutkan bilah sisi",
     "expandSidebar": "Perluas bilah sisi",
     "updateShort": "Pembaruan tersedia",
-    "updateAvailable": "Pembaruan tersedia: v{{version}}",
     "updateDownloading": "Mengunduh… {{percent}}%",
     "updateReady": "Mulai ulang untuk memperbarui"
   },
@@ -337,6 +335,17 @@
     "wrongPin": "PIN salah — penghapusan dibatalkan.",
     "pwResetFail": "Tidak dapat mengirim email atur ulang: {{msg}}",
     "pwResetSent": "Email atur ulang kata sandi terkirim. Periksa kotak masukmu.",
+    "changeEmail": "Ganti email",
+    "changeEmailWhy": "Ini mengganti email yang kamu gunakan untuk masuk ke StudyDesk, NCC, dan LimeLog. Kami mengirim satu tautan ke alamatmu saat ini dan satu ke alamat baru, dan perubahan berlaku setelah kamu membuka keduanya.",
+    "changeEmailLabel": "Email baru",
+    "changeEmailSend": "Kirim tautan",
+    "changeEmailPending": "Menunggu konfirmasi: {{next}}. Buka tautan yang dikirim ke {{current}} dan ke {{next}}. Sampai saat itu, masuk dengan {{current}}.",
+    "changeEmailSame": "Itu sudah emailmu.",
+    "changeEmailTaken": "Akun lain sudah memakai alamat itu.",
+    "changeEmailRateLimit": "Terlalu banyak email baru saja dikirim. Coba lagi nanti.",
+    "changeEmailFailed": "Tautan tidak bisa dikirim. Periksa koneksimu lalu coba lagi.",
+    "changeEmailInvalid": "Itu sepertinya bukan alamat email.",
+    "changeEmailGoogle": "Kamu masuk dengan Google, jadi email kamu adalah alamat Google kamu.",
     "signOutTitle": "Keluar?",
     "signOutBlurb": "Pilih apa yang terjadi pada data yang sudah tersimpan di perangkat ini. Data di awan tidak terpengaruh.",
     "keepLocal": "Simpan data lokal",
@@ -786,8 +795,7 @@
       "autoUpdates": "Memperbarui {{name}} otomatis",
       "perMonth": "{{amount}} / bulan",
       "deleteConfirm": "Hapus “{{name}}”? Transaksi yang ditandai dengannya akan kehilangan tanda.",
-      "shareTitle": "Bagikan “{{name}}”",
-      "customIcon": "Ikon khusus"
+      "shareTitle": "Bagikan “{{name}}”"
     },
     "ov": {
       "addTransaction": "Tambah transaksi",

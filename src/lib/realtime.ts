@@ -32,10 +32,14 @@ import { supabase } from './supabase';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { useSyncStore } from '../store/useSyncStore';
 
+// limecore#24: every table in the two lists below must be in the
+// `supabase_realtime` publication, or the server rejects the whole channel.
+// realtime.tables.test.ts fails on one that is not.
+
 // Tables that scope per-user. These get the `user_id=eq.<uid>` filter so
 // only the current user's WAL events reach NCC. (RLS does the same thing
 // post-broadcast anyway — this is the defense-in-depth + bandwidth fix.)
-const USER_SCOPED_TABLES = [
+export const USER_SCOPED_TABLES = [
   'transactions',
   'portfolio_holdings',
   'subjects',
@@ -64,7 +68,7 @@ const USER_SCOPED_TABLES = [
 // filter would suppress those events. The share-link tables (`*_shares`)
 // have the same property by design. Leave these unfiltered; RLS handles
 // scope correctly.
-const SHARING_AWARE_TABLES = [
+export const SHARING_AWARE_TABLES = [
   'budget_categories',
   'budget_category_shares',
   'tasks',

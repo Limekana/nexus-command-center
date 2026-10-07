@@ -46,7 +46,6 @@
     "creatingAccount": "Criando conta…",
     "haveAccount": "Já tem uma conta?",
     "signIn": "Entrar",
-    "checkEmailTitle": "Confira seu e-mail",
     "checkEmailBody": "Enviamos um link de confirmação para <1>{{email}}</1>. Toque nele para verificar e volte aqui para entrar.",
     "backToSignIn": "Voltar para entrar",
     "errNameRequired": "Digite seu nome.",
@@ -117,7 +116,6 @@
     "collapseSidebar": "Recolher barra lateral",
     "expandSidebar": "Expandir barra lateral",
     "updateShort": "Atualização disponível",
-    "updateAvailable": "Atualização disponível: v{{version}}",
     "updateDownloading": "Baixando… {{percent}}%",
     "updateReady": "Reiniciar para atualizar"
   },
@@ -337,6 +335,17 @@
     "wrongPin": "PIN incorreto — exclusão cancelada.",
     "pwResetFail": "Não foi possível enviar o e-mail: {{msg}}",
     "pwResetSent": "E-mail de redefinição enviado. Confira sua caixa de entrada.",
+    "changeEmail": "Alterar e-mail",
+    "changeEmailWhy": "Isso altera o e-mail com que você entra no StudyDesk, no NCC e no LimeLog. Enviamos um link para o seu endereço atual e outro para o novo, e a alteração vale assim que você abrir os dois.",
+    "changeEmailLabel": "Novo e-mail",
+    "changeEmailSend": "Enviar links",
+    "changeEmailPending": "Aguardando confirmação: {{next}}. Abra os links enviados para {{current}} e para {{next}}. Até lá, entre com {{current}}.",
+    "changeEmailSame": "Esse já é o seu e-mail.",
+    "changeEmailTaken": "Outra conta já usa esse endereço.",
+    "changeEmailRateLimit": "Muitos e-mails foram enviados agora há pouco. Tente novamente mais tarde.",
+    "changeEmailFailed": "Não foi possível enviar os links. Verifique sua conexão e tente novamente.",
+    "changeEmailInvalid": "Isso não parece um endereço de e-mail.",
+    "changeEmailGoogle": "Você entra com o Google, então seu e-mail é o seu endereço do Google.",
     "signOutTitle": "Sair da conta?",
     "signOutBlurb": "Escolha o que acontece com os dados já salvos neste aparelho. Os dados na nuvem não são afetados.",
     "keepLocal": "Manter dados locais",
@@ -786,8 +795,7 @@
       "autoUpdates": "Atualiza {{name}} automaticamente",
       "perMonth": "{{amount}} / mês",
       "deleteConfirm": "Excluir “{{name}}”? As transações marcadas com ela ficarão sem categoria.",
-      "shareTitle": "Compartilhar “{{name}}”",
-      "customIcon": "Ícone personalizado"
+      "shareTitle": "Compartilhar “{{name}}”"
     },
     "ov": {
       "addTransaction": "Adicionar transação",

@@ -15,7 +15,7 @@
 //                     sentiment). Tick at end-of-day; computing once per
 //                     calendar day per holding in a single batched pass
 //                     is exactly the right rhythm.
-//   TIER_ONOPEN_MS  — Live price + intraday change. Refreshes whenever
+//   On open         — Live price + intraday change. Refreshes whenever
 //                     the user opens the app + on the existing 20-min
 //                     resume tick.
 //
@@ -32,11 +32,8 @@
 
 const TIER_WEEKLY_MS = 7 * 24 * 60 * 60 * 1000;
 const TIER_DAILY_MS  = 24 * 60 * 60 * 1000;
-/** "On open" isn't strictly a Dexie cache value — quotes refresh via the
- *  existing portfolio refresh flow (60s soft floor + 20min resume tick).
- *  Exposed here for documentation symmetry (kept, unused by design — `_`
- *  prefix silences the lint gate rather than deleting the documentation). */
-const _TIER_ONOPEN_MS = 60 * 1000;
+// "On open" has no constant: it isn't a Dexie cache value. Quotes refresh via
+// the existing portfolio refresh flow (60s soft floor + 20min resume tick).
 
 // ── Sweep timestamps (localStorage) ───────────────────────────────────────
 //

@@ -61,7 +61,6 @@
     "collapseSidebar": "Collapse sidebar",
     "expandSidebar": "Expand sidebar",
     "updateShort": "Update available",
-    "updateAvailable": "Update available: v{{version}}",
     "updateDownloading": "Downloading… {{percent}}%",
     "updateReady": "Restart to update"
   },
@@ -116,7 +115,6 @@
     "creatingAccount": "Creating account…",
     "haveAccount": "Already have an account?",
     "signIn": "Sign in",
-    "checkEmailTitle": "Check your email",
     "checkEmailBody": "We sent a confirmation link to <1>{{email}}</1>. Click it to verify, then come back here and sign in.",
     "backToSignIn": "Back to Sign In",
     "errNameRequired": "Enter your name.",
@@ -276,6 +274,17 @@
     "wrongPin": "Wrong PIN — wipe cancelled.",
     "pwResetFail": "Could not send reset email: {{msg}}",
     "pwResetSent": "Password reset email sent. Check your inbox.",
+    "changeEmail": "Change email",
+    "changeEmailWhy": "This changes the email you sign in with, in StudyDesk, NCC and LimeLog. We send a link to your current address and one to the new address, and the change takes effect once you have opened both.",
+    "changeEmailLabel": "New email",
+    "changeEmailSend": "Send links",
+    "changeEmailPending": "Waiting for confirmation: {{next}}. Open the links sent to {{current}} and to {{next}}. Until then, sign in with {{current}}.",
+    "changeEmailSame": "That is already your email.",
+    "changeEmailTaken": "Another account already uses that address.",
+    "changeEmailRateLimit": "Too many emails were sent just now. Try again later.",
+    "changeEmailFailed": "Couldn't send the links. Check your connection and try again.",
+    "changeEmailInvalid": "That doesn't look like an email address.",
+    "changeEmailGoogle": "You sign in with Google, so your email is your Google address.",
     "signOutTitle": "Sign out?",
     "signOutBlurb": "Choose what happens to data already saved on this device. Cloud data is untouched either way.",
     "keepLocal": "Keep local data",
@@ -678,8 +687,7 @@
       "autoUpdates": "Auto-updates {{name}}",
       "perMonth": "{{amount}} / month",
       "deleteConfirm": "Delete “{{name}}”? Transactions tagged to it will be untagged.",
-      "shareTitle": "Share “{{name}}”",
-      "customIcon": "Custom icon"
+      "shareTitle": "Share “{{name}}”"
     },
     "ov": {
       "addTransaction": "Add transaction",

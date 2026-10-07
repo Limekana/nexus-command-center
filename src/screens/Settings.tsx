@@ -9,12 +9,11 @@ import { type Lang } from '../i18n';
 import LanguageGrid from '../components/LanguageGrid';
 import AppHeader from '../components/AppHeader';
 import ListRow from '../components/ListRow';
+import ChangeEmail from '../components/ChangeEmail';
 import { useLifeProfileStore } from '../store/useLifeProfileStore';
 import { enabledDomains } from '../lib/lifeProfile';
 import pkg from '../../package.json';
 import { Capacitor } from '@capacitor/core';
-import { enqueue } from '../db/syncQueue';
-import { generateId } from '../utils/uuid';
 import { useAuthStore } from '../store/useAuthStore';
 import { APP_LOCK_APPLIES } from '../lib/isDesktop';
 import { IS_DESKTOP } from '../lib/desktop';
@@ -25,27 +24,17 @@ import { useSessionStore, userDisplayName } from '../store/useSessionStore';
 import { useSettingsStore, BaseCurrency, UI_SCALES } from '../store/useSettingsStore';
 import { useShellTier } from '../lib/useShell';
 import { clearAllLocalData } from '../db/database';
-import { downloadExport, deleteAccount } from '../lib/dataRights';
 import { setErrorReportsEnabled, useErrorReportsEnabled } from '../lib/errorReports';
-import { setApiKey, clearApiKey, maskKey } from '../api/keys';
-import { allBudgetStats, type BudgetStats } from '../api/cache';
 import { biometricCapability } from '../utils/biometric';
-import {
-  notificationsAvailable,
-  requestNotificationPermission,
-  scheduleWeeklyReview,
-  cancelWeeklyReview,
-} from '../lib/weeklyNotification';
-import { cancelCategory, type NotificationCategory } from '../lib/notifications';
-import { rearmTaskReminders } from '../lib/taskReminders';
-import { runPortfolioEodTick } from '../lib/portfolioEod';
-import { runNewsAlertsTick } from '../lib/newsAlerts';
-import { runWatchlistAlertsTick } from '../lib/watchlistAlerts';
 import { supabase } from '../lib/supabase';
 import { withCaptcha } from '../lib/captcha';
 import { setGuestMode } from '../lib/guestMode';
-import Glyph from '../components/Glyph';
 import ThemePicker from '../components/ThemePicker';
+import { Section, Toggle } from './settings/parts';
+import NotificationsSection from './settings/NotificationsSection';
+import FeedbackSection from './settings/FeedbackSection';
+import { ApiKeysSection, ApiUsageSection } from './settings/ApiSections';
+import YourDataSection from './settings/YourDataSection';
 
 // Auto-lock intervals. The "Never" option was removed deliberately — leaving
 // a phone permanently unlocked defeats the purpose of the PIN/biometric gate.
@@ -58,17 +47,6 @@ export default function Settings() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const currentLang = (i18n.language || 'en').split('-')[0] as Lang;
-  // ── Feedback (v1.10) ──────────────────────────────────────────────────
-  // Queued through the existing syncQueue rather than posted directly, so a
-  // report written with no signal survives to the next drain. enqueue() is
-  // fire-and-forget by design; a delivery problem surfaces in the sync banner
-  // like every other queued write.
-  const FEEDBACK_CATEGORIES = ['bug', 'idea', 'praise', 'other'] as const;
-  const FEEDBACK_MAX = 4000;
-  const [fbCategory, setFbCategory] = useState<string>('bug');
-  const [fbRating, setFbRating] = useState(0);
-  const [fbMessage, setFbMessage] = useState('');
-  const [fbNotice, setFbNotice] = useState<string | null>(null);
   const lifeProfile = useLifeProfileStore((s) => s.profile);
   const biometricEnabled = useAuthStore((s) => s.biometricEnabled);
   const setBiometric = useAuthStore((s) => s.setBiometric);
@@ -88,26 +66,8 @@ export default function Settings() {
   const uiScale = useSettingsStore((s) => s.uiScale);
   const setUiScale = useSettingsStore((s) => s.setUiScale);
   const autoScale = useShellTier() === 'desktop' ? 1.2 : 1;
-  const weeklyReminder = useSettingsStore((s) => s.weeklyReminder);
-  const setWeeklyReminder = useSettingsStore((s) => s.setWeeklyReminder);
-  const notifMasterEnabled = useSettingsStore((s) => s.notifMasterEnabled);
-  const setNotifMasterEnabled = useSettingsStore((s) => s.setNotifMasterEnabled);
-  const notifTasksEnabled = useSettingsStore((s) => s.notifTasksEnabled);
-  const setNotifTasksEnabled = useSettingsStore((s) => s.setNotifTasksEnabled);
-  const notifBudgetsEnabled = useSettingsStore((s) => s.notifBudgetsEnabled);
-  const setNotifBudgetsEnabled = useSettingsStore((s) => s.setNotifBudgetsEnabled);
-  const notifPortfolioEodEnabled = useSettingsStore((s) => s.notifPortfolioEodEnabled);
-  const setNotifPortfolioEodEnabled = useSettingsStore((s) => s.setNotifPortfolioEodEnabled);
-  const notifNewsEnabled = useSettingsStore((s) => s.notifNewsEnabled);
-  const setNotifNewsEnabled = useSettingsStore((s) => s.setNotifNewsEnabled);
-  const notifWatchlistEnabled = useSettingsStore((s) => s.notifWatchlistEnabled);
-  const setNotifWatchlistEnabled = useSettingsStore((s) => s.setNotifWatchlistEnabled);
   const aiEnabled = useSettingsStore((s) => s.aiEnabled);
   const setAiEnabled = useSettingsStore((s) => s.setAiEnabled);
-  const notifMacroKeywordsEnabled = useSettingsStore((s) => s.notifMacroKeywordsEnabled);
-  const setNotifMacroKeywordsEnabled = useSettingsStore((s) => s.setNotifMacroKeywordsEnabled);
-  const [notifAvailable, setNotifAvailable] = useState(false);
-  const [notifMsg, setNotifMsg] = useState<string | null>(null);
 
   const isOnline = useSyncStore((s) => s.isOnline);
   const lastSyncedAt = useSyncStore((s) => s.lastSyncedAt);
@@ -118,67 +78,18 @@ export default function Settings() {
   const lastError = useSyncStore((s) => s.lastError);
   const itemErrors = useSyncStore((s) => s.itemErrors);
   const refreshPending = useSyncStore((s) => s.refreshPending);
-  const [finnhubKey, setFinnhubKey] = useState('');
-  const [finnhubKey2, setFinnhubKey2] = useState('');
-  // Which slot the user is currently editing — null means no editor open.
-  const [editingSlot, setEditingSlot] = useState<null | 'finnhub' | 'finnhub2'>(null);
-  const [keyDraft, setKeyDraft] = useState('');
-  const [budgets, setBudgets] = useState<BudgetStats[]>([]);
   const [bioAvailable, setBioAvailable] = useState(false);
   const [bioReason, setBioReason] = useState('');
   const [signOutOpen, setSignOutOpen] = useState(false);
   const [signOutBusy, setSignOutBusy] = useState(false);
-  const [exporting, setExporting] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [dataMsg, setDataMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    // Read both slots separately (getApiKey('finnhub') without the slot name
-    // would round-robin and obscure which one is empty in the UI).
-    void (async () => {
-      const { Preferences } = await import('@capacitor/preferences');
-      try {
-        const k1 = await Preferences.get({ key: 'apikey_finnhub' });
-        const k2 = await Preferences.get({ key: 'apikey_finnhub2' });
-        setFinnhubKey(k1.value ?? '');
-        setFinnhubKey2(k2.value ?? '');
-      } catch {
-        setFinnhubKey(localStorage.getItem('apikey_finnhub') ?? '');
-        setFinnhubKey2(localStorage.getItem('apikey_finnhub2') ?? '');
-      }
-    })();
     biometricCapability().then((c) => {
       setBioAvailable(c.available);
       setBioReason(c.reason);
     });
-    notificationsAvailable().then(setNotifAvailable);
-    // HYG-4: The initial read pairs with the 5s interval below; both write the same
-    // state, and dropping this one would leave the panel blank until the first
-    // tick.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setBudgets(allBudgetStats());
     void refreshPending();
-    // Refresh budget meters every 5s while the screen is open so the user
-    // sees usage tick up as the app fires background refreshes.
-    const id = setInterval(() => setBudgets(allBudgetStats()), 5000);
-    return () => clearInterval(id);
   }, [refreshPending]);
-
-  const onSaveKey = async () => {
-    if (!editingSlot || !keyDraft.trim()) return;
-    await setApiKey(editingSlot, keyDraft.trim());
-    if (editingSlot === 'finnhub') setFinnhubKey(keyDraft.trim());
-    else setFinnhubKey2(keyDraft.trim());
-    setEditingSlot(null);
-    setKeyDraft('');
-  };
-
-  const onClearKey = async (slot: 'finnhub' | 'finnhub2') => {
-    if (!(await confirm({ message: t('settings.clearKeyConfirm') }))) return;
-    await clearApiKey(slot);
-    if (slot === 'finnhub') setFinnhubKey('');
-    else setFinnhubKey2('');
-  };
 
   const onClearAll = async () => {
     if (!(await confirm({ message: t('settings.clearAllConfirm') }))) return;
@@ -223,43 +134,6 @@ export default function Settings() {
     }
   };
 
-  // ── GDPR Art. 20 — portability ────────────────────────────────────────────
-  const onExport = async () => {
-    setDataMsg(null);
-    setExporting(true);
-    try {
-      const name = await downloadExport(user ? { id: user.id, email: user.email } : null);
-      setDataMsg(t('settings.exportDone', { name }));
-    } catch (e) {
-      setDataMsg(t('settings.exportFailed', { msg: (e as Error).message }));
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  // ── GDPR Art. 17 — erasure ────────────────────────────────────────────────
-  // Two confirmations, because this is irreversible, there is no recovery
-  // window, and one account spans all three apps — so this erases LimeLog and
-  // StudyDesk data too, which the second confirmation says explicitly.
-  const onDeleteAccount = async () => {
-    if (!(await confirm({ message: t('settings.deleteAccountConfirm1') }))) return;
-    if (!(await confirm({ message: t('settings.deleteAccountConfirm2') }))) return;
-    setDataMsg(null);
-    setDeleting(true);
-    try {
-      await deleteAccount({
-        clearLocal: async () => {
-          await clearAllLocalData();
-          localStorage.clear();
-        },
-      });
-      location.reload();
-    } catch (e) {
-      setDataMsg(t('settings.deleteAccountFailed', { msg: (e as Error).message }));
-      setDeleting(false);
-    }
-  };
-
   const onChangePassword = async () => {
     if (!user?.email) return;
     const { error } = await withCaptcha((captchaToken) =>
@@ -300,6 +174,8 @@ export default function Settings() {
               >
                 {t('settings.sendPwReset')}
               </button>
+              {/* v1.17 (limecore#10): email/password accounts only. */}
+              <ChangeEmail user={user} />
               <button
                 className="btn-ghost w-full mt-2 text-danger border-danger/40"
                 onClick={() => setSignOutOpen(true)}
@@ -484,7 +360,7 @@ export default function Settings() {
           <ErrorReportsToggle />
           <a
             className="py-2 flex items-center justify-between gap-3 active:opacity-80"
-            href="https://limekana.github.io/nexus-command-center/legal/privacy.html"
+            href="https://limecore.dev/privacy"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -499,25 +375,7 @@ export default function Settings() {
         {/* ── Your data — GDPR Art. 17 / 20 ──────────────────────────────
              Buttons rather than a "write to us" address: a right the user has
              to request is a right most of them never exercise. */}
-        <Section title={t('settings.yourData')}>
-          <div className="text-[0.625rem] text-text-muted px-1 pb-2 leading-relaxed">
-            {t('settings.yourDataNote')}
-          </div>
-          <button className="btn-ghost w-full" onClick={onExport} disabled={exporting}>
-            {exporting ? t('settings.exporting') : t('settings.exportData')}
-          </button>
-          <button
-            className="btn-ghost w-full mt-2 text-danger border-danger/40"
-            onClick={onDeleteAccount}
-            disabled={deleting}
-          >
-            {deleting ? t('settings.deletingAccount') : t('settings.deleteAccount')}
-          </button>
-          <div className="text-[0.625rem] text-text-muted px-1 pt-2 leading-relaxed">
-            {t('settings.deleteAccountNote')}
-          </div>
-          {dataMsg && <div className="text-[0.625rem] text-warning mt-1 px-1">{dataMsg}</div>}
-        </Section>
+        <YourDataSection />
 
         {/* ── Support ────────────────────────────────────────────────────
              A link out, nothing more. No entitlements, no supporter-only
@@ -581,82 +439,7 @@ export default function Settings() {
              cheapest confound, so the next reading of that table means
              something. ── */
         }
-        <Section title={t('settings.feedback')}>
-          <p className="text-sm text-muted mb-3">{t('settings.feedbackBlurb')}</p>
-
-          <div className="flex flex-wrap gap-2 mb-3" role="group" aria-label={t('settings.feedbackCategory')}>
-            {FEEDBACK_CATEGORIES.map((c) => (
-              <button
-                key={c}
-                type="button"
-                className={fbCategory === c ? 'pill pill-active' : 'pill'}
-                onClick={() => setFbCategory(c)}
-                aria-pressed={fbCategory === c}
-              >
-                {t(`settings.fbCat.${c}`)}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex gap-1 mb-3" role="group" aria-label={t('settings.feedbackRating')}>
-            {[1, 2, 3, 4, 5].map((n) => (
-              <button
-                key={n}
-                type="button"
-                className={n <= fbRating ? 'text-xl text-accent' : 'text-xl text-muted'}
-                onClick={() => setFbRating(n === fbRating ? 0 : n)}
-                aria-label={t('settings.feedbackRatingN', { n })}
-                aria-pressed={n <= fbRating}
-              >
-                <Glyph name="star" size={18} filled={n <= fbRating} />
-              </button>
-            ))}
-          </div>
-
-          <textarea
-            className="input w-full min-h-[98px] resize-y"
-            value={fbMessage}
-            maxLength={FEEDBACK_MAX}
-            onChange={(e) => {
-              setFbMessage(e.target.value);
-              if (fbNotice) setFbNotice(null);
-            }}
-            placeholder={t('settings.feedbackPlaceholder')}
-            aria-label={t('settings.feedback')}
-          />
-          <div className="text-xs text-muted text-right mt-1">
-            {fbMessage.length}/{FEEDBACK_MAX}
-          </div>
-
-          <button
-            className="btn-ghost w-full mt-2"
-            disabled={!fbMessage.trim()}
-            onClick={() => {
-              const body = fbMessage.trim();
-              if (!body) { setFbNotice(t('settings.feedbackEmpty')); return; }
-              if (!user) { setFbNotice(t('settings.feedbackSignIn')); return; }
-              const id = generateId();
-              void enqueue('feedback', id, 'insert', {
-                id,
-                category: fbCategory,
-                rating: fbRating || null,
-                message: body,
-                appVersion: pkg.version,
-                platform: Capacitor.getPlatform(),
-              });
-              setFbMessage('');
-              setFbRating(0);
-              setFbNotice(t('settings.feedbackThanks'));
-            }}
-          >
-            {t('settings.feedbackSend')}
-          </button>
-
-          {fbNotice && <p className="text-sm text-muted mt-2">{fbNotice}</p>}
-          <p className="text-xs text-muted mt-2">
-            {t('settings.feedbackMeta', { app: 'Nexus Command Center', version: pkg.version })}
-          </p>
-        </Section>
+        <FeedbackSection />
 
 
         <Section title={t('settings.lifeProfile')}>
@@ -725,331 +508,11 @@ export default function Settings() {
           </div>
         </Section>
 
-        <Section title={t('settings.notifications')}>
-          {/* Informational warning when the plugin reports unavailable. Toggles
-              below are NOT locked anymore — the previous behavior gated them
-              behind `notifAvailable`, but on devices where the Capacitor
-              LocalNotifications bridge is wedged, notificationsAvailable()
-              returns false and ALL clicks were silently ignored. Now the user
-              can always toggle; downstream alert modules check their own
-              permission state before scheduling, so a misleading "off" state
-              never produces unwanted alerts. */}
-          {!notifAvailable && (
-            <div className="text-[0.625rem] text-warning px-1 py-1">
-              {t('settings.notifPluginUnavail')}
-            </div>
-          )}
-          {/* Master kill-switch. Off = nothing fires regardless of sub-toggle
-              state. Flipping ON triggers the OS permission prompt (same flow
-              the first-launch modal uses), so this works as the fallback if
-              the modal didn't show. Flipping OFF cancels every pending
-              notification across all 5 categories. Sub-toggles retain their
-              individual state so the user can toggle the master back on
-              without losing prior preferences. */}
-          <Toggle
-            label={t('settings.notifMaster')}
-            sub={
-              notifMasterEnabled
-                ? t('settings.notifMasterOnSub')
-                : t('settings.notifMasterOffSub')
-            }
-            value={notifMasterEnabled}
-            onChange={async (on) => {
-              setNotifMsg(null);
-              if (on) {
-                // OPTIMISTIC FLIP — same rationale as handleNotifToggle:
-                // flip first so the UI is responsive, request perm in the
-                // background, never block. If the plugin bridge hangs we
-                // still have a working toggle; downstream scheduling will
-                // succeed once perm is actually granted at the OS level
-                // (and silently no-op until then).
-                await setNotifMasterEnabled(true);
-                // Default the 4 main categories ON the FIRST time master
-                // is enabled (matches the explainer modal's behavior). If
-                // the user has flipped these before, leave their picks alone.
-                const anySubOn =
-                  notifTasksEnabled || notifBudgetsEnabled ||
-                  notifPortfolioEodEnabled || notifNewsEnabled || notifWatchlistEnabled || weeklyReminder;
-                if (!anySubOn) {
-                  await Promise.all([
-                    setNotifTasksEnabled(true),
-                    setNotifBudgetsEnabled(true),
-                    setNotifPortfolioEodEnabled(true),
-                    setNotifNewsEnabled(true),
-                    setNotifWatchlistEnabled(true),
-                  ]);
-                  void rearmTaskReminders();
-                  void runPortfolioEodTick();
-                  void runNewsAlertsTick();
-                  void runWatchlistAlertsTick();
-                }
-                // Background perm check. If it fails (most likely the
-                // plugin bridge is wedged), warn the user but leave the
-                // toggle on — they may have already granted at the OS
-                // level, in which case downstream scheduling works fine
-                // even though our perm-check call hangs/fails.
-                void (async () => {
-                  try {
-                    const perm = await requestNotificationPermission();
-                    if (!perm.ok) {
-                      setNotifMsg(
-                        (perm.reason ?? t('settings.permCheckFailed')) +
-                          t('settings.permMasterTail'),
-                      );
-                    }
-                  } catch (e) {
-                    setNotifMsg((e as Error).message);
-                  }
-                })();
-              } else {
-                await setNotifMasterEnabled(false);
-                // Wipe every pending alarm across all five categories so
-                // nothing fires after the user has explicitly turned the
-                // master switch off. Sub-toggles keep their bool state.
-                await Promise.all([
-                  cancelCategory('weekly-review'),
-                  cancelCategory('tasks'),
-                  cancelCategory('budgets'),
-                  cancelCategory('portfolio-eod'),
-                  cancelCategory('news'),
-                  cancelCategory('watchlist'),
-                ]);
-              }
-            }}
-          />
-          <Toggle
-            label={t('settings.weeklyReviewLabel')}
-            sub={t('settings.weeklyReviewSub')}
-            value={weeklyReminder}
-            locked={!notifMasterEnabled}
-            onChange={async (on) => {
-              setNotifMsg(null);
-              if (on) {
-                // Optimistic — flip the toggle, then schedule + check perm
-                // in the background. Same rationale as the master toggle:
-                // if the plugin bridge hangs, the UI shouldn't.
-                await setWeeklyReminder(true);
-                void (async () => {
-                  try {
-                    const perm = await requestNotificationPermission();
-                    if (!perm.ok) {
-                      setNotifMsg(
-                        (perm.reason ?? t('settings.permCheckFailed')) +
-                          t('settings.permWeeklyTail'),
-                      );
-                      return;
-                    }
-                    const sched = await scheduleWeeklyReview();
-                    if (!sched.ok) {
-                      setNotifMsg(sched.reason ?? t('settings.failedSchedule'));
-                    }
-                  } catch (e) {
-                    setNotifMsg((e as Error).message);
-                  }
-                })();
-              } else {
-                await setWeeklyReminder(false);
-                await cancelWeeklyReview();
-              }
-            }}
-          />
-          <Toggle
-            label={t('settings.taskReminders')}
-            sub={t('settings.taskRemindersSub')}
-            value={notifTasksEnabled}
-            locked={!notifMasterEnabled}
-            onChange={(on) => handleNotifToggle({
-              on,
-              category: 'tasks',
-              setEnabled: setNotifTasksEnabled,
-              requestPerm: requestNotificationPermission,
-              setMsg: setNotifMsg,
-              t,
-              // On flip-on, schedule alarms for every existing incomplete
-              // task — otherwise the user has to add a new task before any
-              // notifications show up.
-              onAfterEnable: rearmTaskReminders,
-            })}
-          />
-          <Toggle
-            label={t('settings.budgetAlerts')}
-            sub={t('settings.budgetAlertsSub')}
-            value={notifBudgetsEnabled}
-            locked={!notifMasterEnabled}
-            onChange={(on) => handleNotifToggle({
-              on,
-              category: 'budgets',
-              setEnabled: setNotifBudgetsEnabled,
-              requestPerm: requestNotificationPermission,
-              setMsg: setNotifMsg,
-              t,
-            })}
-          />
-          <Toggle
-            label={t('settings.portfolioEod')}
-            sub={t('settings.portfolioEodSub')}
-            value={notifPortfolioEodEnabled}
-            locked={!notifMasterEnabled}
-            onChange={(on) => handleNotifToggle({
-              on,
-              category: 'portfolio-eod',
-              setEnabled: setNotifPortfolioEodEnabled,
-              requestPerm: requestNotificationPermission,
-              setMsg: setNotifMsg,
-              t,
-              // Prime today's 4:05pm + 4:35pm alarms immediately on flip-on
-              // (if today is a trading day, etc.). Otherwise the user
-              // wouldn't get any notification until the next portfolio
-              // refresh or app cold-start.
-              onAfterEnable: runPortfolioEodTick,
-            })}
-          />
-          <Toggle
-            label={t('settings.marketNews')}
-            sub={t('settings.marketNewsSub')}
-            value={notifNewsEnabled}
-            locked={!notifMasterEnabled}
-            onChange={(on) => handleNotifToggle({
-              on,
-              category: 'news',
-              setEnabled: setNotifNewsEnabled,
-              requestPerm: requestNotificationPermission,
-              setMsg: setNotifMsg,
-              t,
-              // Scan whatever news is already in store. If the portfolio
-              // hasn't refreshed yet this is a no-op; the next refresh
-              // will populate news and fire then.
-              onAfterEnable: runNewsAlertsTick,
-            })}
-          />
-          {/* Macro-headline classifier is noisier (Fed/CPI/jobs keywords on
-              general headlines), so it's off by default and gated under News.
-              When News is off this toggle does nothing — we lock it visually
-              to make that clear. */}
-          <Toggle
-            label={t('settings.macroHeadlines')}
-            sub={t('settings.macroHeadlinesSub')}
-            value={notifMacroKeywordsEnabled}
-            locked={!notifMasterEnabled || !notifNewsEnabled}
-            onChange={setNotifMacroKeywordsEnabled}
-          />
-          {/* v1.15 Item 9 — targets have always been settable on the Watchlist;
-              this is what makes one worth setting. Below the news pair rather
-              than inside it: a target is the user's own number, not a story. */}
-          <Toggle
-            label={t('settings.watchlistAlerts')}
-            sub={t('settings.watchlistAlertsSub')}
-            value={notifWatchlistEnabled}
-            locked={!notifMasterEnabled}
-            onChange={(on) => handleNotifToggle({
-              on,
-              category: 'watchlist',
-              setEnabled: setNotifWatchlistEnabled,
-              requestPerm: requestNotificationPermission,
-              setMsg: setNotifMsg,
-              t,
-              onAfterEnable: runWatchlistAlertsTick,
-            })}
-          />
-          {notifMsg && (
-            <div className="text-[0.625rem] text-warning mt-1">{notifMsg}</div>
-          )}
-        </Section>
+        <NotificationsSection />
 
-        <Section title={t('settings.apiKeys')}>
-          {editingSlot ? (
-            <div className="space-y-2 py-2">
-              <div className="text-[0.625rem] uppercase tracking-wider text-text-muted">
-                {editingSlot === 'finnhub' ? t('settings.finnhubSlot1') : t('settings.finnhubSlot2')}
-              </div>
-              <input
-                className="input"
-                placeholder={t('settings.finnhubPlaceholder')}
-                value={keyDraft}
-                onChange={(e) => setKeyDraft(e.target.value)}
-                autoFocus
-                autoCapitalize="off"
-                autoCorrect="off"
-                spellCheck={false}
-              />
-              <div className="flex gap-2">
-                <button className="btn flex-1" onClick={onSaveKey}>
-                  {t('common.save')}
-                </button>
-                <button
-                  className="btn-ghost flex-1"
-                  onClick={() => setEditingSlot(null)}
-                >
-                  {t('common.cancel')}
-                </button>
-              </div>
-              <div className="text-[0.625rem] text-text-muted">
-                {t('settings.finnhubHelp')}
-              </div>
-            </div>
-          ) : (
-            <>
-              {!finnhubKey && !finnhubKey2 && (
-                <div className="alert alert-warn text-xs mb-2">
-                  <span className="w-2 h-2 rounded-full bg-warning" />
-                  <span className="flex-1">
-                    {t('settings.noFinnhubKey')}
-                  </span>
-                </div>
-              )}
-              <FinnhubKeyRow
-                label={t('settings.finnhubKey1')}
-                value={finnhubKey}
-                onEdit={() => {
-                  setKeyDraft('');
-                  setEditingSlot('finnhub');
-                }}
-                onClear={() => onClearKey('finnhub')}
-              />
-              <FinnhubKeyRow
-                label={t('settings.finnhubKey2')}
-                value={finnhubKey2}
-                onEdit={() => {
-                  setKeyDraft('');
-                  setEditingSlot('finnhub2');
-                }}
-                onClear={() => onClearKey('finnhub2')}
-              />
-              <div className="text-[0.625rem] text-text-muted py-1 px-1">
-                {t('settings.twoSlots')}
-              </div>
-              <ListRow label="CoinGecko" tag={{ text: t('settings.tagFree'), tone: 'green' }} />
-              <ListRow label="Yahoo Finance" tag={{ text: t('settings.tagFreeFallback'), tone: 'green' }} />
-              <ListRow label="Health Connect" tag={{ text: t('settings.tagSamsung'), tone: 'muted' }} />
-            </>
-          )}
-        </Section>
+        <ApiKeysSection />
 
-        <Section title={t('settings.apiUsageToday')}>
-          {budgets.map((b) => {
-            const pct = b.max > 0 ? Math.min(100, (b.used / b.max) * 100) : 0;
-            const exhausted = b.used >= b.max;
-            return (
-              <div key={b.provider} className="py-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="capitalize">{b.provider}</span>
-                  <span className={exhausted ? 'text-danger' : 'text-text-muted'}>
-                    {b.used} / {b.max}
-                  </span>
-                </div>
-                <div className="h-1 bg-surface2 rounded-sm mt-1 overflow-hidden">
-                  <div
-                    className={`h-full ${exhausted ? 'bg-danger' : pct > 75 ? 'bg-warning' : 'bg-text-muted'}`}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-          <div className="text-[0.625rem] text-text-muted">
-            {t('settings.apiUsageResets')}
-          </div>
-        </Section>
+        <ApiUsageSection />
 
         <Section title={t('settings.about')}>
           <ListRow label={t('settings.version')} value={pkg.version} />
@@ -1109,131 +572,6 @@ export default function Settings() {
   );
 }
 
-// Shared turn-on/turn-off flow for every per-category notification toggle.
-//
-// Turn ON:
-//   1. Request OS permission (no-op if already granted)
-//   2. If denied, surface the reason via setMsg and bail — toggle stays off
-//   3. Save the enabled flag
-//   4. Optional `onAfterEnable` hook — used by categories that maintain
-//      per-row schedules (Task Reminders re-arms every existing task,
-//      Portfolio EoD primes its 4:05pm + 4:35pm alarms, etc.). Without this
-//      hook the user would have to add a new task / wait for the next
-//      portfolio refresh before any notifications actually appeared.
-//
-// Turn OFF:
-//   1. Save the disabled flag immediately so any racing scheduler bails
-//   2. Cancel every pending notification in the category — without this,
-//      already-scheduled alarms would still fire after the user turned the
-//      category off
-// Optimistic toggle flow. The OLD version awaited requestPerm() before
-// flipping the toggle — fine when the plugin works, but a hard hang for
-// users where the Capacitor LocalNotifications bridge gets wedged
-// (checkPermissions/requestPermissions never resolve, even with OS perm
-// granted). Symptom: the toggle visually doesn't move because the await
-// in onChange never returns.
-//
-// New flow:
-//   1. Flip the toggle state immediately so the UI is responsive.
-//   2. Kick the perm request in the background (don't await).
-//   3. If perm comes back NOT ok, show a warning — but leave the toggle ON.
-//      The downstream schedulers (budgetAlerts, taskReminders, etc.) all
-//      do their own permission check before scheduling, so if perm really
-//      is denied nothing fires. The toggle being "on" is just the user's
-//      stated intent; whether notifs actually appear depends on OS perm.
-//   4. If perm comes back ok, no message — silent success.
-//
-// Turn-off path stays synchronous because cancelling is fast and the user
-// expects "off" to mean "stop scheduling" immediately.
-async function handleNotifToggle(opts: {
-  on: boolean;
-  category: NotificationCategory;
-  setEnabled: (on: boolean) => Promise<void>;
-  requestPerm: () => Promise<{ ok: boolean; reason?: string }>;
-  setMsg: (msg: string | null) => void;
-  t: (key: string) => string;
-  onAfterEnable?: () => Promise<void> | void;
-}): Promise<void> {
-  const { on, category, setEnabled, requestPerm, setMsg, t, onAfterEnable } = opts;
-  setMsg(null);
-  if (on) {
-    // Step 1 — flip immediately. UI is responsive even if perm hangs.
-    await setEnabled(true);
-    // Step 2 — kick perm request in background. NOT awaited.
-    void (async () => {
-      try {
-        const perm = await requestPerm();
-        if (!perm.ok) {
-          setMsg(
-            (perm.reason ?? t('settings.permCheckFailed')) +
-              t('settings.permToggleTail'),
-          );
-        }
-      } catch (e) {
-        setMsg((e as Error).message);
-      }
-    })();
-    // Step 3 — run the per-category re-arm hook (also non-blocking from
-    // the toggle's perspective; schedulers handle their own errors).
-    if (onAfterEnable) {
-      void (async () => {
-        try {
-          await onAfterEnable();
-        } catch (e) {
-          setMsg((e as Error).message);
-        }
-      })();
-    }
-  } else {
-    await setEnabled(false);
-    await cancelCategory(category);
-  }
-}
-
-// Row for one Finnhub key slot. Shows masked value + "Set" button when empty,
-// or masked value + edit/remove actions when populated. Keeps the visual
-// uniform between filled and empty so users see the slot exists.
-function FinnhubKeyRow({
-  label,
-  value,
-  onEdit,
-  onClear,
-}: {
-  label: string;
-  value: string;
-  onEdit: () => void;
-  onClear: () => void;
-}) {
-  const { t } = useTranslation();
-
-  return (
-    <div className="py-2 flex items-center justify-between gap-2">
-      <div className="min-w-0">
-        <div className="text-sm">{label}</div>
-        <div className={`text-[0.625rem] ${value ? 'text-text-muted' : 'text-warning'}`}>
-          {value ? maskKey(value) : t('settings.notSet')}
-        </div>
-      </div>
-      <div className="flex gap-1 flex-shrink-0">
-        <button
-          onClick={onEdit}
-          className="chip-micro py-1 press-spring"
-        >
-          {value ? t('common.edit') : t('settings.set')}
-        </button>
-        {value && (
-          <button
-            onClick={onClear}
-            className="chip-micro py-1 active:text-danger active:border-danger"
-          >
-            <Glyph name="close" size={11} />
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
 // v1.15 (Item 12) — the Settings half of desktop updates. With nothing known
 // yet, tapping re-asks GitHub (skipping the once-per-launch cache). Once a
 // newer release is known it downloads it, then installs it; when the updater
@@ -1262,15 +600,6 @@ function DesktopUpdateRow() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <div className="sec mb-2">{title}</div>
-      <div className="card space-y-1">{children}</div>
-    </div>
-  );
-}
-
 // v1.16 (#48) — the switch the privacy policy promises (#50): off stops the
 // once-a-day request to f-droid.org entirely, not merely the note. Android
 // only, because it is the only build F-Droid ships.
@@ -1284,54 +613,6 @@ function FdroidUpdateToggle() {
       value={enabled}
       onChange={setUpdateCheckEnabled}
     />
-  );
-}
-
-function Toggle({
-  label,
-  sub,
-  value,
-  onChange,
-  locked,
-}: {
-  label: string;
-  sub?: string;
-  value: boolean;
-  onChange: (v: boolean) => void;
-  locked?: boolean;
-}) {
-  return (
-    <div className="py-2 flex items-center justify-between gap-3">
-      <div className="min-w-0">
-        <div className="text-sm">{label}</div>
-        {sub && <div className="text-[0.625rem] text-text-muted">{sub}</div>}
-      </div>
-      {/* The track stays neutral and the KNOB carries the accent. Settings
-          has a dozen of these; filling each whole track amber put a dozen
-          accent slabs on one screen and made the accent mean "a switch exists"
-          rather than "this is live". A 20px amber dot still reads as on at a
-          glance, and ten of them read as a panel of switches rather than as
-          ten alarms. */}
-      {/* The outline is an inset ring, not a border: a 1px border took layout
-          space, which left an 18px slot for the 20px knob, so the knob sat 1px
-          low and touched the right edge when on. With the ring, 44×24 minus
-          2px padding is exactly the 40×20 the knob and its 20px travel need.
-          The travel flips under RTL, where the knob starts on the right. */}
-      <button
-        onClick={() => !locked && onChange(!value)}
-        className={`w-11 h-6 rounded-full p-0.5 bg-surface2 ring-1 ring-inset transition flex-shrink-0 ${
-          value ? 'ring-primary' : 'ring-border'
-        } ${locked ? 'opacity-60' : ''}`}
-        disabled={locked}
-        aria-pressed={value}
-      >
-        <div
-          className={`w-5 h-5 rounded-full transition-transform ${
-            value ? 'translate-x-5 rtl:-translate-x-5 bg-primary' : 'bg-text-faint'
-          }`}
-        />
-      </button>
-    </div>
   );
 }
 

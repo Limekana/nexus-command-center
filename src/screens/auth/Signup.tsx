@@ -269,7 +269,7 @@ export default function Signup() {
         <p className="text-[0.625rem] text-text-muted mt-6 leading-relaxed text-center">
           {t('auth.ageNote')}{' '}
           <a
-            href="https://limekana.github.io/nexus-command-center/legal/privacy.html"
+            href="https://limecore.dev/privacy"
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary"

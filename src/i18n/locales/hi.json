@@ -46,7 +46,6 @@
     "creatingAccount": "खाता बनाया जा रहा है…",
     "haveAccount": "पहले से खाता है?",
     "signIn": "साइन इन करें",
-    "checkEmailTitle": "अपना ईमेल देखें",
     "checkEmailBody": "हमने <1>{{email}}</1> पर पुष्टि लिंक भेजा है। उस पर टैप करके सत्यापित करें, फिर यहाँ लौटकर साइन इन करें।",
     "backToSignIn": "साइन इन पर वापस जाएँ",
     "errNameRequired": "अपना नाम दर्ज करें।",
@@ -117,7 +116,6 @@
     "collapseSidebar": "साइडबार छोटा करें",
     "expandSidebar": "साइडबार बड़ा करें",
     "updateShort": "अपडेट उपलब्ध",
-    "updateAvailable": "अपडेट उपलब्ध: v{{version}}",
     "updateDownloading": "डाउनलोड हो रहा है… {{percent}}%",
     "updateReady": "अपडेट के लिए रीस्टार्ट करें"
   },
@@ -337,6 +335,17 @@
     "wrongPin": "ग़लत PIN — मिटाना रद्द।",
     "pwResetFail": "रीसेट ईमेल नहीं भेजा जा सका: {{msg}}",
     "pwResetSent": "पासवर्ड रीसेट ईमेल भेजा गया। अपना इनबॉक्स देखें।",
+    "changeEmail": "ईमेल बदलें",
+    "changeEmailWhy": "इससे वह ईमेल बदलता है जिससे आप StudyDesk, NCC और LimeLog में साइन इन करते हैं। हम एक लिंक आपके मौजूदा पते पर और एक नए पते पर भेजते हैं, और दोनों खोलने के बाद बदलाव लागू होता है।",
+    "changeEmailLabel": "नया ईमेल",
+    "changeEmailSend": "लिंक भेजें",
+    "changeEmailPending": "पुष्टि का इंतज़ार: {{next}}। {{current}} और {{next}} पर भेजे गए लिंक खोलें। तब तक {{current}} से साइन इन करें।",
+    "changeEmailSame": "यह पहले से आपका ईमेल है।",
+    "changeEmailTaken": "यह पता पहले से किसी दूसरे खाते में इस्तेमाल हो रहा है।",
+    "changeEmailRateLimit": "अभी बहुत सारे ईमेल भेजे गए। बाद में फिर कोशिश करें।",
+    "changeEmailFailed": "लिंक नहीं भेजे जा सके। अपना कनेक्शन जाँचें और फिर कोशिश करें।",
+    "changeEmailInvalid": "यह ईमेल पता नहीं लगता।",
+    "changeEmailGoogle": "आप Google से साइन इन करते हैं, इसलिए आपका ईमेल आपका Google पता है।",
     "signOutTitle": "साइन आउट करें?",
     "signOutBlurb": "चुनें कि इस डिवाइस पर पहले से सहेजे डेटा का क्या हो। क्लाउड डेटा दोनों ही स्थिति में सुरक्षित रहेगा।",
     "keepLocal": "स्थानीय डेटा रखें",
@@ -786,8 +795,7 @@
       "autoUpdates": "{{name}} को अपने आप अपडेट करता है",
       "perMonth": "{{amount}} / माह",
       "deleteConfirm": "“{{name}}” मिटाएँ? इससे टैग किए लेन-देन का टैग हट जाएगा।",
-      "shareTitle": "“{{name}}” साझा करें",
-      "customIcon": "कस्टम आइकन"
+      "shareTitle": "“{{name}}” साझा करें"
     },
     "ov": {
       "addTransaction": "लेन-देन जोड़ें",
