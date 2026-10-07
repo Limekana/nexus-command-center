@@ -286,6 +286,7 @@
     "changeEmailRateLimit": "Trop d'e-mails viennent d'être envoyés. Réessayez plus tard.",
     "changeEmailFailed": "Impossible d'envoyer les liens. Vérifiez votre connexion et réessayez.",
     "changeEmailInvalid": "Cela ne ressemble pas à une adresse e-mail.",
+    "changeEmailGoogle": "Vous vous connectez avec Google, donc votre e-mail est votre adresse Google.",
     "signOutTitle": "Se déconnecter ?",
     "signOutBlurb": "Choisissez ce qu’il advient des données déjà enregistrées sur cet appareil. Les données cloud restent intactes dans les deux cas.",
     "keepLocal": "Conserver les données locales",

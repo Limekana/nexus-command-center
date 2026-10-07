@@ -53,7 +53,14 @@ export default function ChangeEmail({ user }: { user: User }) {
     return () => { live = false; };
   }, [user.id, usesPassword]);
 
-  if (!usesPassword) return null;
+  // A Google account's address comes from Google, so there is nothing to
+  // change here. Say so rather than leave a gap where the control would be:
+  // the owner went looking for it on a Google account (2026-10-06).
+  if (!usesPassword) {
+    return !user.is_anonymous && providers.includes('google')
+      ? <div className="text-[0.625rem] text-text-muted mt-2">{t('settings.changeEmailGoogle')}</div>
+      : null;
+  }
 
   const send = async () => {
     const next = value.trim().toLowerCase();

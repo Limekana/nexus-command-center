@@ -286,6 +286,7 @@
     "changeEmailRateLimit": "Too many emails were sent just now. Try again later.",
     "changeEmailFailed": "Couldn't send the links. Check your connection and try again.",
     "changeEmailInvalid": "That doesn't look like an email address.",
+    "changeEmailGoogle": "You sign in with Google, so your email is your Google address.",
     "signOutTitle": "Sign out?",
     "signOutBlurb": "Choose what happens to data already saved on this device. Cloud data is untouched either way.",
     "keepLocal": "Keep local data",

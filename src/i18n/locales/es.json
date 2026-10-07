@@ -286,6 +286,7 @@
     "changeEmailRateLimit": "Se enviaron demasiados correos hace un momento. Inténtalo más tarde.",
     "changeEmailFailed": "No se pudieron enviar los enlaces. Revisa tu conexión e inténtalo de nuevo.",
     "changeEmailInvalid": "Eso no parece un correo electrónico.",
+    "changeEmailGoogle": "Inicias sesión con Google, así que tu correo es tu dirección de Google.",
     "signOutTitle": "¿Cerrar sesión?",
     "signOutBlurb": "Elige qué pasa con los datos ya guardados en este dispositivo. Los datos en la nube quedan intactos en ambos casos.",
     "keepLocal": "Conservar datos locales",

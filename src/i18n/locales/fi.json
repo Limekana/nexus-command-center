@@ -286,6 +286,7 @@
     "changeEmailRateLimit": "Sähköposteja lähetettiin juuri liian monta. Yritä myöhemmin uudelleen.",
     "changeEmailFailed": "Linkkejä ei voitu lähettää. Tarkista yhteys ja yritä uudelleen.",
     "changeEmailInvalid": "Tämä ei näytä sähköpostiosoitteelta.",
+    "changeEmailGoogle": "Kirjaudut Googlella, joten sähköpostisi on Google-osoitteesi.",
     "signOutTitle": "Kirjaudutaanko ulos?",
     "signOutBlurb": "Valitse, mitä tällä laitteella jo tallennetuille tiedoille tapahtuu. Pilvitiedot säilyvät kummassakin tapauksessa.",
     "keepLocal": "Säilytä paikalliset tiedot",

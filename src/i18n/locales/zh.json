@@ -286,6 +286,7 @@
     "changeEmailRateLimit": "刚才发送的邮件太多。请稍后再试。",
     "changeEmailFailed": "无法发送链接。请检查网络连接后重试。",
     "changeEmailInvalid": "这看起来不像电子邮箱地址。",
+    "changeEmailGoogle": "你使用 Google 登录，因此你的电子邮箱就是你的 Google 地址。",
     "signOutTitle": "退出登录？",
     "signOutBlurb": "选择此设备上已保存数据的去向。两种方式云端数据均不受影响。",
     "keepLocal": "保留本地数据",

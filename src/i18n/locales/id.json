@@ -347,6 +347,7 @@
     "changeEmailRateLimit": "Terlalu banyak email baru saja dikirim. Coba lagi nanti.",
     "changeEmailFailed": "Tautan tidak bisa dikirim. Periksa koneksimu lalu coba lagi.",
     "changeEmailInvalid": "Itu sepertinya bukan alamat email.",
+    "changeEmailGoogle": "Kamu masuk dengan Google, jadi email kamu adalah alamat Google kamu.",
     "signOutTitle": "Keluar?",
     "signOutBlurb": "Pilih apa yang terjadi pada data yang sudah tersimpan di perangkat ini. Data di awan tidak terpengaruh.",
     "keepLocal": "Simpan data lokal",
