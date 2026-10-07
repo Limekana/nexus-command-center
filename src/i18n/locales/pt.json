@@ -46,7 +46,6 @@
     "creatingAccount": "Criando conta…",
     "haveAccount": "Já tem uma conta?",
     "signIn": "Entrar",
-    "checkEmailTitle": "Confira seu e-mail",
     "checkEmailBody": "Enviamos um link de confirmação para <1>{{email}}</1>. Toque nele para verificar e volte aqui para entrar.",
     "backToSignIn": "Voltar para entrar",
     "errNameRequired": "Digite seu nome.",
@@ -117,7 +116,6 @@
     "collapseSidebar": "Recolher barra lateral",
     "expandSidebar": "Expandir barra lateral",
     "updateShort": "Atualização disponível",
-    "updateAvailable": "Atualização disponível: v{{version}}",
     "updateDownloading": "Baixando… {{percent}}%",
     "updateReady": "Reiniciar para atualizar"
   },
@@ -786,8 +784,7 @@
       "autoUpdates": "Atualiza {{name}} automaticamente",
       "perMonth": "{{amount}} / mês",
       "deleteConfirm": "Excluir “{{name}}”? As transações marcadas com ela ficarão sem categoria.",
-      "shareTitle": "Compartilhar “{{name}}”",
-      "customIcon": "Ícone personalizado"
+      "shareTitle": "Compartilhar “{{name}}”"
     },
     "ov": {
       "addTransaction": "Adicionar transação",

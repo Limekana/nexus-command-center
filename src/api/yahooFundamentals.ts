@@ -20,7 +20,7 @@
 //
 // On Android we use CapacitorHttp to bypass CORS (same pattern as quotes).
 
-import axios from 'axios';
+import { loadAxios } from './http';
 import { Capacitor, CapacitorHttp } from '@capacitor/core';
 import { db } from '../db/database';
 import { shouldFetch, recordCall } from './cache';
@@ -194,6 +194,7 @@ async function fetchJson(
     }
     // Web — no cookies + CORS make crumb auth impossible. The chart-meta
     // path is the right fallback in dev.
+    const axios = await loadAxios();
     const { data, status } = await axios.get(buildUrl(crumb), {
       headers: WEB_HEADERS,
       timeout: 10_000,

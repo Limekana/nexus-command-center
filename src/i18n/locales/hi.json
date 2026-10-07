@@ -46,7 +46,6 @@
     "creatingAccount": "खाता बनाया जा रहा है…",
     "haveAccount": "पहले से खाता है?",
     "signIn": "साइन इन करें",
-    "checkEmailTitle": "अपना ईमेल देखें",
     "checkEmailBody": "हमने <1>{{email}}</1> पर पुष्टि लिंक भेजा है। उस पर टैप करके सत्यापित करें, फिर यहाँ लौटकर साइन इन करें।",
     "backToSignIn": "साइन इन पर वापस जाएँ",
     "errNameRequired": "अपना नाम दर्ज करें।",
@@ -117,7 +116,6 @@
     "collapseSidebar": "साइडबार छोटा करें",
     "expandSidebar": "साइडबार बड़ा करें",
     "updateShort": "अपडेट उपलब्ध",
-    "updateAvailable": "अपडेट उपलब्ध: v{{version}}",
     "updateDownloading": "डाउनलोड हो रहा है… {{percent}}%",
     "updateReady": "अपडेट के लिए रीस्टार्ट करें"
   },
@@ -786,8 +784,7 @@
       "autoUpdates": "{{name}} को अपने आप अपडेट करता है",
       "perMonth": "{{amount}} / माह",
       "deleteConfirm": "“{{name}}” मिटाएँ? इससे टैग किए लेन-देन का टैग हट जाएगा।",
-      "shareTitle": "“{{name}}” साझा करें",
-      "customIcon": "कस्टम आइकन"
+      "shareTitle": "“{{name}}” साझा करें"
     },
     "ov": {
       "addTransaction": "लेन-देन जोड़ें",

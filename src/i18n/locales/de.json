@@ -61,7 +61,6 @@
     "collapseSidebar": "Seitenleiste einklappen",
     "expandSidebar": "Seitenleiste ausklappen",
     "updateShort": "Update verfügbar",
-    "updateAvailable": "Update verfügbar: v{{version}}",
     "updateDownloading": "Wird geladen… {{percent}} %",
     "updateReady": "Neu starten und aktualisieren"
   },
@@ -116,7 +115,6 @@
     "creatingAccount": "Konto wird erstellt…",
     "haveAccount": "Bereits ein Konto?",
     "signIn": "Anmelden",
-    "checkEmailTitle": "Prüfe deine E-Mails",
     "checkEmailBody": "Wir haben einen Bestätigungslink an <1>{{email}}</1> gesendet. Klicke ihn an und komm dann hierher zurück, um dich anzumelden.",
     "backToSignIn": "Zurück zur Anmeldung",
     "errNameRequired": "Gib deinen Namen ein.",
@@ -678,8 +676,7 @@
       "autoUpdates": "Aktualisiert automatisch {{name}}",
       "perMonth": "{{amount}} / Monat",
       "deleteConfirm": "„{{name}}“ löschen? Zugeordnete Transaktionen verlieren die Markierung.",
-      "shareTitle": "„{{name}}“ teilen",
-      "customIcon": "Eigenes Symbol"
+      "shareTitle": "„{{name}}“ teilen"
     },
     "ov": {
       "addTransaction": "Transaktion hinzufügen",

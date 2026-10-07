@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
@@ -22,34 +22,8 @@ import ReferralPrompt from './components/ReferralPrompt';
 import NotificationsExplainerModal from './components/NotificationsExplainerModal';
 import LockScreen from './screens/LockScreen';
 import Login from './screens/auth/Login';
-import Signup from './screens/auth/Signup';
 import AppShell from './components/AppShell';
 import Dashboard from './screens/Dashboard';
-import FinanceOverview from './screens/finance/FinanceOverview';
-import AddTransaction from './screens/finance/AddTransaction';
-import Portfolio from './screens/finance/Portfolio';
-import ManageBudgets from './screens/finance/ManageBudgets';
-import ImportTransactions from './screens/finance/ImportTransactions';
-import ManageHoldings from './screens/finance/ManageHoldings';
-import ManageLots from './screens/finance/ManageLots';
-import NetWorth from './screens/finance/NetWorth';
-import AccountDetail from './screens/finance/AccountDetail';
-import WhatIf from './screens/finance/WhatIf';
-import Watchlist from './screens/finance/Watchlist';
-import Insights from './screens/finance/Insights';
-import SavingsGoals from './screens/finance/SavingsGoals';
-import TasksOverview from './screens/tasks/TasksOverview';
-import AddTask from './screens/tasks/AddTask';
-import HabitsOverview from './screens/habits/HabitsOverview';
-import AddHabit from './screens/habits/AddHabit';
-import Braindump from './screens/Braindump';
-import Life from './screens/Life';
-import WeeklyReview from './screens/WeeklyReview';
-import YearReview from './screens/YearReview';
-import Goals from './screens/Goals';
-import Settings from './screens/Settings';
-import LifeProfileSettings from './screens/LifeProfileSettings';
-import Onboarding from './screens/Onboarding';
 import { onNotificationTap, scheduleWeeklyReview } from './lib/weeklyNotification';
 import { onNotificationAction } from './lib/notifications';
 import { installRatingHistory } from './lib/ratingHistory';
@@ -63,6 +37,37 @@ import { useFinanceStore } from './store/useFinanceStore';
 import { isOnboarded, setOnboarded, hydrateOnboardedFromCloud, markOnboardedCloud } from './lib/onboarding';
 import { desktop } from './lib/desktop';
 import { checkForDesktopUpdate } from './lib/desktopUpdate';
+
+// v1.17 (limecore#13): every screen a launch cannot open on is its own chunk,
+// loaded the first time it is visited. Login, the lock screen and the
+// Dashboard stay in the entry chunk because one of them is always the first
+// thing a launch shows.
+const Signup = lazy(() => import('./screens/auth/Signup'));
+const Onboarding = lazy(() => import('./screens/Onboarding'));
+const FinanceOverview = lazy(() => import('./screens/finance/FinanceOverview'));
+const AddTransaction = lazy(() => import('./screens/finance/AddTransaction'));
+const Portfolio = lazy(() => import('./screens/finance/Portfolio'));
+const ManageBudgets = lazy(() => import('./screens/finance/ManageBudgets'));
+const ImportTransactions = lazy(() => import('./screens/finance/ImportTransactions'));
+const ManageHoldings = lazy(() => import('./screens/finance/ManageHoldings'));
+const ManageLots = lazy(() => import('./screens/finance/ManageLots'));
+const NetWorth = lazy(() => import('./screens/finance/NetWorth'));
+const AccountDetail = lazy(() => import('./screens/finance/AccountDetail'));
+const WhatIf = lazy(() => import('./screens/finance/WhatIf'));
+const Watchlist = lazy(() => import('./screens/finance/Watchlist'));
+const Insights = lazy(() => import('./screens/finance/Insights'));
+const SavingsGoals = lazy(() => import('./screens/finance/SavingsGoals'));
+const TasksOverview = lazy(() => import('./screens/tasks/TasksOverview'));
+const AddTask = lazy(() => import('./screens/tasks/AddTask'));
+const HabitsOverview = lazy(() => import('./screens/habits/HabitsOverview'));
+const AddHabit = lazy(() => import('./screens/habits/AddHabit'));
+const Braindump = lazy(() => import('./screens/Braindump'));
+const Life = lazy(() => import('./screens/Life'));
+const WeeklyReview = lazy(() => import('./screens/WeeklyReview'));
+const YearReview = lazy(() => import('./screens/YearReview'));
+const Goals = lazy(() => import('./screens/Goals'));
+const Settings = lazy(() => import('./screens/Settings'));
+const LifeProfileSettings = lazy(() => import('./screens/LifeProfileSettings'));
 
 export default function App() {
   const unlocked = useAuthStore((s) => s.unlocked);
@@ -378,11 +383,15 @@ export default function App() {
   // flag) all no-op gracefully when `session` is null.
   if (!session && !guestMode) {
     return (
-      <Routes>
-        <Route path="/auth/login" element={<Login />} />
-        <Route path="/auth/signup" element={<Signup />} />
-        <Route path="*" element={<Navigate to="/auth/login" replace />} />
-      </Routes>
+      // Signup is a lazy chunk (limecore#13); it loads from local assets in a
+      // frame or two, so nothing is shown meanwhile.
+      <Suspense fallback={null}>
+        <Routes>
+          <Route path="/auth/login" element={<Login />} />
+          <Route path="/auth/signup" element={<Signup />} />
+          <Route path="*" element={<Navigate to="/auth/login" replace />} />
+        </Routes>
+      </Suspense>
     );
   }
 
@@ -414,13 +423,15 @@ export default function App() {
   // profile into local storage.
   if (!onboarded && (!session || (lifeProfileLoaded && onboardChecked)) && !isOnboarded()) {
     return (
-      <Onboarding
-        onDone={() => {
-          setOnboarded();
-          void markOnboardedCloud();
-          setOnboardedState(true);
-        }}
-      />
+      <Suspense fallback={null}>
+        <Onboarding
+          onDone={() => {
+            setOnboarded();
+            void markOnboardedCloud();
+            setOnboardedState(true);
+          }}
+        />
+      </Suspense>
     );
   }
 

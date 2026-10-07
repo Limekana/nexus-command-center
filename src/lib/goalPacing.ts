@@ -136,28 +136,3 @@ export function pacingFor(
     remainingPerWeek: weeksLeft > 0 ? remaining / weeksLeft : null,
   };
 }
-
-/**
- * Cumulative total from dated entries, from `startDate` forward.
- *
- * Deliberately total and order-independent: entries arrive from Dexie, from a
- * cloud pull and from a realtime echo, in no guaranteed order, and a running
- * total that depended on arrival order would disagree with itself between
- * devices.
- */
-export function cumulativeSince(
-  entries: Array<{ date?: string; amount?: number; deletedAt?: string } | null | undefined>,
-  startDate?: string,
-): number {
-  const from = startDate ? midnightUTC(startDate) : null;
-  let sum = 0;
-  for (const e of entries || []) {
-    if (!e || e.deletedAt) continue;
-    const when = midnightUTC(e.date ?? '');
-    if (when === null) continue;
-    if (from !== null && when < from) continue;
-    const amt = Number(e.amount);
-    sum += Number.isFinite(amt) ? amt : 1; // a bare completion counts as one
-  }
-  return sum;
-}
