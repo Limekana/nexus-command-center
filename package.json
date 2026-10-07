@@ -10,6 +10,7 @@
     "check:ime": "node scripts/check-ime.mjs",
     "check:bundle-size": "node scripts/check-bundle-size.mjs",
     "check:secrets": "node scripts/check-secrets.mjs --all",
+    "check:desktop-paths": "node scripts/check-desktop-paths.mjs",
     "check:assets": "node scripts/check-assets.mjs",
     "build": "tsc -b && vite build",
     "test": "vitest run",
@@ -21,7 +22,7 @@
     "cap:open": "cap open android",
     "icons": "node scripts/build-icons.mjs && capacitor-assets generate --android",
     "electron:dev": "electron .",
-    "electron:build": "npm run build && node electron/build.cjs --win --publish never"
+    "electron:build": "npm run build && node electron/build.cjs --win --publish never && npm run check:desktop-paths"
   },
   "dependencies": {
     "@aparajita/capacitor-biometric-auth": "^9.1.2",
@@ -75,7 +76,8 @@
     },
     "files": [
       "dist/**/*",
-      "electron/**/*"
+      "electron/**/*",
+      "!**/node_modules/**/{android,ios}/**"
     ],
     "win": {
       "target": "nsis",
@@ -84,6 +86,7 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
+      "include": "resources/installer.nsh",
       "artifactName": "NexusCommandCenter-Desktop-Setup-${version}.${ext}"
     },
     "publish": [
