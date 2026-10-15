@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
@@ -30,7 +30,7 @@ import { onNotificationAction } from './lib/notifications';
 import { installRatingHistory } from './lib/ratingHistory';
 import { useTaskStore } from './store/useTaskStore';
 import { useSettingsStore } from './store/useSettingsStore';
-import { useHabitsStore } from './store/useHabitsStore';
+import { useHabitsStore, rearmHabitsWhenNotificationsOn } from './store/useHabitsStore';
 import { useBodyMetricsStore } from './store/useBodyMetricsStore';
 import { useWorkQualityStore } from './store/useWorkQualityStore';
 import { useLifeProfileStore } from './store/useLifeProfileStore';
@@ -512,13 +512,33 @@ function NotificationBridge() {
     }
   }, [settingsLoaded, weeklyReminder]);
 
+  // v1.18.1 (NCC#151): re-arm habit reminders once settings and habits are
+  // loaded with notifications on, and each time the master switch turns back
+  // on. A store subscription with its own edge check, so it acts on those
+  // transitions only, not on renders.
+  useEffect(() => rearmHabitsWhenNotificationsOn(), []);
+
+  // v1.18.1 (NCC#143): subscribed ONCE. `navigate` changes identity with
+  // the route (React Router 7, HashRouter), and every re-subscription drained
+  // the native buffer again, replaying an old tap or "Mark done". The
+  // handlers read the current navigate through a ref instead.
+  const navigateRef = useRef(navigate);
+  useEffect(() => {
+    navigateRef.current = navigate;
+  }, [navigate]);
+
   useEffect(() => {
     let unsub: () => void = () => {};
-    onNotificationTap((route) => navigate(route)).then((u) => {
-      unsub = u;
+    let cancelled = false;
+    onNotificationTap((route) => navigateRef.current(route)).then((u) => {
+      if (cancelled) u();
+      else unsub = u;
     });
-    return () => unsub();
-  }, [navigate]);
+    return () => {
+      cancelled = true;
+      unsub();
+    };
+  }, []);
 
   // Action-button taps. Each action ID maps to a different side-effect:
   //   'done'  → mark a task complete (extra.taskId)
@@ -528,23 +548,32 @@ function NotificationBridge() {
   // before this fires, so no manual cancel is needed.
   useEffect(() => {
     let unsub: () => void = () => {};
+    let cancelled = false;
     onNotificationAction((payload) => {
       const { actionId, route, extra } = payload;
       if (actionId === 'done' && extra && typeof extra.taskId === 'string') {
-        // Fire-and-forget — toggleComplete handles its own persistence.
-        void useTaskStore.getState().toggleComplete(extra.taskId);
+        // Fire-and-forget — setComplete handles its own persistence.
+        // v1.18.1 (NCC#143): set, not toggle. The same "Mark done" can arrive
+        // twice (live, then from the native buffer), and a toggle undid it.
+        void useTaskStore.getState().setComplete(extra.taskId, true);
         return;
       }
       if (actionId === 'view' && route) {
-        navigate(route);
+        navigateRef.current(route);
         return;
       }
       // Unknown actionId — log so we notice if a new scheduler ships an
       // action ID without a corresponding handler.
       console.warn('[notifications] unhandled action', actionId);
-    }).then((u) => { unsub = u; });
-    return () => unsub();
-  }, [navigate]);
+    }).then((u) => {
+      if (cancelled) u();
+      else unsub = u;
+    });
+    return () => {
+      cancelled = true;
+      unsub();
+    };
+  }, []);
 
   return null;
 }

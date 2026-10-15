@@ -9,6 +9,7 @@ package com.limecore.nexus;
 // have ~10s before the system kills them. Posting a notification is far
 // under that budget.
 
+import android.app.AlarmManager;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -23,6 +24,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Calendar;
+
 public class NotificationAlarmReceiver extends BroadcastReceiver {
 
     private static final String TAG = "NexusNotifications";
@@ -34,6 +37,10 @@ public class NotificationAlarmReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        // v1.18.1 (NCC#138): a daily reminder re-arms itself first, so a
+        // failure further down cannot stop tomorrow's.
+        rearmIfDaily(context, intent);
+
         int id = intent.getIntExtra(NexusNotificationsPlugin.EXTRA_ID, 0);
         String title = intent.getStringExtra(NexusNotificationsPlugin.EXTRA_TITLE);
         String body = intent.getStringExtra(NexusNotificationsPlugin.EXTRA_BODY);
@@ -137,5 +144,67 @@ public class NotificationAlarmReceiver extends BroadcastReceiver {
             // before scheduling, but defensively we don't crash the receiver.
             Log.w(TAG, "POST_NOTIFICATIONS not granted: " + se.getMessage());
         }
+    }
+
+    /** v1.18.1 (NCC#138) — `every: "day"` used to be ignored, so the daily
+     *  habit reminder fired once and then stayed silent until the app was
+     *  opened again. When this alarm fires, schedule it again for the next
+     *  occurrence of the wall-clock time it was asked for (EXTRA_HOUR /
+     *  EXTRA_MINUTE), in the device's time zone as it is now. Built by the
+     *  plugin's alarmPendingIntent from a fresh intent for this receiver with
+     *  the extras copied over, so cancel() in the plugin still finds it.
+     *  Not covered: a reboot or force-stop clears all alarms until the app
+     *  is opened again (no boot receiver; the owner's call, see NCC#138). */
+    private static void rearmIfDaily(Context context, Intent intent) {
+        if (!"day".equals(intent.getStringExtra(NexusNotificationsPlugin.EXTRA_EVERY))) return;
+        int id = intent.getIntExtra(NexusNotificationsPlugin.EXTRA_ID, 0);
+        int hour = intent.getIntExtra(NexusNotificationsPlugin.EXTRA_HOUR, -1);
+        int minute = intent.getIntExtra(NexusNotificationsPlugin.EXTRA_MINUTE, -1);
+        if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+            Log.w(TAG, "Daily reminder id=" + id + " has no time of day; not re-armed");
+            return;
+        }
+        long fireAt = nextDailyFire(hour, minute, System.currentTimeMillis());
+
+        Intent again = new Intent(context, NotificationAlarmReceiver.class);
+        again.putExtras(intent);
+        PendingIntent pi = NexusNotificationsPlugin.alarmPendingIntent(context, id, again);
+        AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        if (am == null) {
+            Log.w(TAG, "AlarmManager unavailable; daily reminder id=" + id + " not re-armed");
+            return;
+        }
+        NexusNotificationsPlugin.setAlarm(am, fireAt, pi);
+    }
+
+    /** v1.18.1 (NCC#138) — the next hour:minute on the wall clock strictly
+     *  after `now`, in the current default time zone (read at each call, so a
+     *  zone change since scheduling is followed).
+     *
+     *  Today or tomorrow is chosen by comparing wall-clock fields, not
+     *  instants. Alarms never fire early, so a reminder that just fired reads
+     *  at or past its hour:minute and goes to tomorrow, even in the repeated
+     *  hour of a DST fall-back, where today's 01:30 can resolve to the later
+     *  of the two instants and an instant comparison would fire it twice. One
+     *  that fired late, past midnight, still gets today's. A time in the
+     *  skipped hour of a spring-forward day resolves past the gap (lenient
+     *  Calendar), and the next day is back on time: nothing carries over. */
+    static long nextDailyFire(int hour, int minute, long now) {
+        Calendar next = Calendar.getInstance();
+        next.setTimeInMillis(now);
+        int nowHour = next.get(Calendar.HOUR_OF_DAY);
+        int nowMinute = next.get(Calendar.MINUTE);
+        next.set(Calendar.HOUR_OF_DAY, hour);
+        next.set(Calendar.MINUTE, minute);
+        next.set(Calendar.SECOND, 0);
+        next.set(Calendar.MILLISECOND, 0);
+        if (nowHour > hour || (nowHour == hour && nowMinute >= minute)) {
+            next.add(Calendar.DAY_OF_MONTH, 1);
+        }
+        // Belt and braces for a resolution quirk: never at or before now.
+        while (next.getTimeInMillis() <= now) {
+            next.add(Calendar.DAY_OF_MONTH, 1);
+        }
+        return next.getTimeInMillis();
     }
 }
